@@ -1,0 +1,12 @@
+hecho los demas
+
+APARTADO PEDIDOS 
+*Call to undefined method App\Models\Base::producto() el problema esta en la reclacion polimorfica de base con exitencia o del stock
+*que hay que hacer exactamente ?
+SUGERENCIAS
+*hay que cambiar algunas cosas el formato de mostrar descripcion mas en etiqueta usada , base , editarCompra
+DISTRIBUCION 
+*problema con estado con el atributo en si no se conoce como enterio hay que cambiarlo a boolean
+* hay usar  use Jantinnerezo\LivewireAlert\Facades\LivewireAlert; con livewire alert para que no de conflicto en las notoficaciones 
+hay que cambiarlos cada alerta con esto  LivewireAlert::error('Error', 'Ocurrió un error: ' . $e->getMessage())->show();
+* se recomienda usar existencias como nombre no solamente existencia en los atributos globales

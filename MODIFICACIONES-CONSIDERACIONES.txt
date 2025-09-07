@@ -1,0 +1,45 @@
+el proceso,  
+
+cliente depuracion, verificacion de la base de datos del excel eliminando duplicados etc. categorizacion para antiguos.
+agregar 2 campos, verificado, categoria, 
+
+reportes, 
+
+precio para los clientes, 
+
+los usuarios ver la manera que los usuarios habituales tengan su categoria al descargar la app y se verifiquen.
+ver como subir el proyecto a la nube
+roles
+
+EN PRODUCCION
+- elaboracion, se tiene que especificar cual entra y mostrar las bases que pueden salir de esa preforma, se debe restas y aumentar la cantidad de las existencias involucradas
+- embotellado y etiquetado, lo propio
+
+EN ALMACEN
+- mostrar cantidades e imagenes
+
+VENTA
+que se le asigne items al distribuidor
+
+
+TRADUCIR AL ESPAÑOLS EL PROYECTO
+
+COMPLETAR registro de usuarios en personal, que se registre tambien su usuario
+
+TRABAJAR el modulo de compras
+
+EN proveedores campo tipo agregar bases
+
+ARIEL TRABAJA EN base
+
+
+
+REPORTES:
+- Cotizaciones de todos los articulos del almacen, para que se pueda imprimir adjuntar la fecha de impresion a la Cotizacion.
+
+
+TRABAJOS POR HACER
+
+- en base a elaboracion hacer embotellado, etiquetado y traspaso
+- completar compras
+
