@@ -38,7 +38,7 @@ class Cliente extends Component
     public $rol_id = '';
 
     public $coordenadas;
-    protected $paginationTheme = 'tailwind';
+
 
     public function render()
     {
@@ -50,10 +50,11 @@ class Cliente extends Component
                 ->orWhere('correo', 'like', '%' . $this->search . '%');
         })
             ->orderBy('id', 'desc')
-            ->paginate(5);
+            ->get(); // <-- aquí reemplazamos paginate() por get()
 
         return view('livewire.cliente', compact('clientes'));
     }
+
 
     public function updatingSearch()
     {
