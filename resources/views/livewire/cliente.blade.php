@@ -263,83 +263,98 @@
 
     <!-- Modal de detalle -->
     @if ($detalleModal)
-    <div class="modal-first">
-        <div class="modal-center">
-            <div class="modal-hiden">
-                <div class="center-col">
-                    <h3 class="p-text">Detalles del Cliente</h3>
-                    <div class="over-col">
-                        <dl class="grid grid-cols-2 gap-4">
-                            <!-- Nombre -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Nombre</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $clienteSeleccionado->nombre ?? 'No disponible' }}
-                                </dd>
-                            </div>
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white text-cyan-950 rounded-lg shadow-lg w-full max-w-3xl p-6 relative overflow-y-auto max-h-[90vh]">
 
-                            <!-- Empresa -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Empresa</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $clienteSeleccionado->empresa ?? 'N/A' }}
-                                </dd>
-                            </div>
-
-                            <!-- NIT/CI -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">NIT/CI</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $clienteSeleccionado->nitCi ?? 'N/A' }}
-                                </dd>
-                            </div>
-
-                            <!-- Teléfono -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Teléfono</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $clienteSeleccionado->telefono ?? 'N/A' }}
-                                </dd>
-                            </div>
-
-                            <!-- Correo -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Correo</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $clienteSeleccionado->correo ?? 'N/A' }}
-                                </dd>
-                            </div>
-
-                            <!-- Estado -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Estado</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    <span class="text-{{ $clienteSeleccionado->estado ? 'green' : 'red' }}-500">
-                                        {{ $clienteSeleccionado->estado ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
-
-                    <!-- Botón de Cerrar Modal -->
-                    <div class="mt-6 flex justify-center w-full">
-                        <button type="button" wire:click="cerrarModal"
-                            class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg></button>
-                    </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Nombre -->
+                <div>
+                    <dt class="text-sm font-semibold">Nombre</dt>
+                    <dd class="mt-1 text-sm">{{ $clienteSeleccionado->nombre ?? 'No disponible' }}</dd>
                 </div>
+
+                <!-- Empresa -->
+                <div>
+                    <dt class="text-sm font-semibold">Empresa</dt>
+                    <dd class="mt-1 text-sm">{{ $clienteSeleccionado->empresa ?? 'N/A' }}</dd>
+                </div>
+
+                <!-- NIT/CI -->
+                <div>
+                    <dt class="text-sm font-semibold">NIT/CI</dt>
+                    <dd class="mt-1 text-sm">{{ $clienteSeleccionado->nitCi ?? 'N/A' }}</dd>
+                </div>
+
+                <!-- Teléfono -->
+                <div>
+                    <dt class="text-sm font-semibold">Teléfono</dt>
+                    <dd class="mt-1 text-sm">{{ $clienteSeleccionado->telefono ?? 'N/A' }}</dd>
+                </div>
+
+                <!-- Correo -->
+                <div>
+                    <dt class="text-sm font-semibold">Correo</dt>
+                    <dd class="mt-1 text-sm">{{ $clienteSeleccionado->correo ?? 'N/A' }}</dd>
+                </div>
+
+                <!-- Estado -->
+                <div>
+                    <dt class="text-sm font-semibold">Estado</dt>
+                    <dd class="mt-1">
+                        @if ($clienteSeleccionado->estado)
+                        <span class="px-3 py-1 text-sm font-semibold text-white bg-cyan-600 rounded-full shadow">
+                            Activo
+                        </span>
+                        @else
+                        <span class="px-3 py-1 text-sm font-semibold text-cyan-950 bg-cyan-200 rounded-full shadow">
+                            Inactivo
+                        </span>
+                        @endif
+                    </dd>
+                </div>
+
+                <!-- Categoría -->
+                <div>
+                    <dt class="text-sm font-semibold">Categoría</dt>
+                    <dd class="mt-1">
+                        @if ($clienteSeleccionado->categoria == 1)
+                        <span class="px-3 py-1 text-sm font-semibold text-white bg-cyan-600 rounded-full shadow">
+                            Cliente Nuevo
+                        </span>
+                        @elseif ($clienteSeleccionado->categoria == 2)
+                        <span class="px-3 py-1 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow">
+                            Cliente Regular
+                        </span>
+                        @elseif ($clienteSeleccionado->categoria == 3)
+                        <span class="px-3 py-1 text-sm font-semibold text-white bg-purple-600 rounded-full shadow">
+                            Cliente VIP
+                        </span>
+                        @else
+                        <span class="px-3 py-1 text-sm font-semibold text-gray-700 bg-gray-200 rounded-full shadow">
+                            N/A
+                        </span>
+                        @endif
+                    </dd>
+                </div>
+            </div>
+
+            <!-- Botón de Cerrar Modal -->
+            <div class="mt-6 flex justify-center w-full">
+                <button type="button" wire:click="cerrarModal"
+                    class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M18 6l-12 12" />
+                        <path d="M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
     @endif
+
 
 
 </div>
