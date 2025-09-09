@@ -8,8 +8,8 @@
                 placeholder="Buscar por cliente..."
                 class="flex-1 border rounded px-3 py-2" />
 
-            <!-- Botón Crear Cliente -->
-            <button wire:click="abrirModal('create')"
+            <a href="{{ route('cliente.registrar') }}"
+
                 class="bg-cyan-500 hover:bg-cyan-600 rounded-xl px-4 py-2 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -17,7 +17,8 @@
                     <line x1="12" y1="9" x2="12" y2="15" />
                     <line x1="9" y1="12" x2="15" y2="12" />
                 </svg>
-            </button>
+            </a>
+
         </div>
 
         @forelse ($clientes as $cliente)
@@ -27,17 +28,61 @@
                 @if ($cliente->foto)
                 <img src="{{ asset('storage/' . $cliente->foto) }}"
                     alt="Foto de {{ $cliente->nombre }}"
-                    class="w-56 h-56 object-cover rounded-lg shadow-md mb-3 ">
+                    class="w-56 h-56 object-cover rounded-lg shadow-md mb-3"
+                    onerror="this.onerror=null; this.replaceWith(document.getElementById('sinFotoTemplate').content.cloneNode(true));">
                 @else
                 <div class="w-56 h-56 bg-gray-200 flex items-center justify-center rounded-lg shadow mb-3">
                     <span class="text-gray-500">Sin foto</span>
                 </div>
                 @endif
 
+                <!-- Template oculto para cuando la imagen no carga -->
+                <template id="sinFotoTemplate">
+                    <div class="w-56 h-56 bg-gray-200 flex items-center justify-center rounded-lg shadow mb-3">
+                        <span class="text-gray-500">Sin foto</span>
+                    </div>
+                </template>
+
+
                 <h3 class="text-lg font-semibold uppercase text-cyan-600">
                     {{ $cliente->nombre }}
                 </h3>
                 <p class="text-cyan-950"><strong>Empresa:</strong> {{ $cliente->empresa ?? 'N/A' }}</p>
+
+                <!-- Categoría -->
+                <div class="mt-2">
+                    @if ($cliente->categoria == 1)
+                    <span class="px-3 py-1 text-sm font-semibold text-white bg-cyan-600 rounded-full shadow">
+                        Cliente Nuevo
+                    </span>
+                    @elseif ($cliente->categoria == 2)
+                    <span class="px-3 py-1 text-sm font-semibold text-white bg-indigo-600 rounded-full shadow">
+                        Cliente Regular
+                    </span>
+                    @elseif ($cliente->categoria == 3)
+                    <span class="px-3 py-1 text-sm font-semibold text-white bg-purple-600 rounded-full shadow">
+                        Cliente VIP
+                    </span>
+                    @else
+                    <span class="px-3 py-1 text-sm font-semibold text-gray-700 bg-gray-200 rounded-full shadow">
+                        N/A
+                    </span>
+                    @endif
+                </div>
+
+                <!-- Estado -->
+                <div class="mt-2">
+                    @if ($cliente->estado == 1)
+                    <span class="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-full shadow">
+                        Activo
+                    </span>
+                    @else
+                    <span class="px-3 py-1 text-sm font-semibold text-white bg-red-600 rounded-full shadow">
+                        Inactivo
+                    </span>
+                    @endif
+                </div>
+
                 <div class="mt-2">
                     @if ($cliente->verificado)
                     <span class="px-3 py-1 text-sm font-semibold text-white bg-cyan-600 rounded-full shadow">
@@ -89,6 +134,16 @@
                     </svg>
                 </button>
 
+                <a href="{{ route('clientes.map', $cliente->id) }}"
+                    class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13" />
+                        <path d="M9 4v13" />
+                        <path d="M15 7v13" />
+                    </svg>
+                </a>
+
                 <!-- Toggle Verificado -->
                 <button wire:click="toggleVerificado({{ $cliente->id }})"
                     class="{{ $cliente->verificado ? 'bg-white' : 'bg-cyan-600 ' }} rounded-xl p-2 w-12 h-12 flex items-center justify-center">
@@ -105,138 +160,106 @@
                     </svg>
                     @endif
                 </button>
+
+
             </div>
         </div>
-
-
         @empty
         <div class="col-span-full text-center py-4 text-gray-600">
             No hay clientes registrados.
         </div>
         @endforelse
-
-
-
     </div>
-
-
-
-    <!-- Modal de registro y edición -->
     @if ($modal)
-    <div class="modal-first">
-        <div class="modal-center">
-            <div class="modal-hiden">
-                <div class="center-col">
-                    <h3 class="p-text">{{ $accion === 'create' ? 'Registrar Cliente' : 'Editar Cliente' }}</h3>
-                    <div class="over-col">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white text-cyan-950 rounded-lg shadow-lg w-full max-w-4xl p-6 relative overflow-y-auto max-h-[90vh]">
 
-                        <!-- Nombre -->
-                        <h3 class="p-text">Nombre</h3>
-                        <input type="text" wire:model="nombre" class="p-text input-g">
-                        @error('nombre') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+            <h2 class="text-xl font-semibold mb-6 text-center">
+                {{ $accion === 'create' ? 'Registrar Cliente' : 'Editar Cliente' }}
+            </h2>
 
-                        <!-- Empresa -->
-                        <h3 class="p-text">Empresa</h3>
-                        <input type="text" wire:model="empresa" class="p-text input-g">
-                        @error('empresa') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+            <div class="grid grid-cols-12 gap-4">
 
-                        <!-- Razón Social -->
-                        <h3 class="p-text">Razón Social</h3>
-                        <input type="text" wire:model="razonSocial" class="p-text input-g">
-                        @error('razonSocial') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- NIT/CI -->
-                        <h3 class="p-text">NIT/CI</h3>
-                        <input type="text" wire:model="nitCi" class="p-text input-g">
-                        @error('nitCi') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Teléfono -->
-                        <h3 class="p-text">Teléfono</h3>
-                        <input type="text" wire:model="telefono" class="p-text input-g">
-                        @error('telefono') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Correo -->
-                        <h3 class="p-text">Correo</h3>
-                        <input type="email" wire:model="correo" class="p-text input-g">
-                        @error('correo') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <h3 class="p-text">Correo de acceso</h3>
-                        <input type="email" wire:model="email" class="p-text input-g" readonly>
-                        @error('email') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <h3 class="p-text">Contraseña</h3>
-                        <input type="password" wire:model="password" placeholder="Nueva contraseña (opcional)" class="p-text input-g">
-                        @error('password') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Latitud -->
-                        <h3 class="p-text">Coordenadas (Latitud, Longitud)</h3>
-                        <input type="text" wire:model="coordenadas" wire:change="separarCoordenadas"
-                            class="p-text input-g" placeholder="-17.78, -63.17">
-                        @error('coordenadas') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Foto -->
-                        <h3 class="p-text">Foto</h3>
-                        <input type="file" wire:model="foto" class="p-text input-g">
-                        @error('foto') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Vista previa de la imagen -->
-                        @if ($foto)
-                        <div class="mt-2">
-                            @if (is_object($foto))
-                            <!-- Si es archivo subido -->
-                            <img src="{{ $foto->temporaryUrl() }}" alt="Vista previa" class="w-24 h-24 object-cover rounded">
-                            @else
-                            <!-- Si es ruta guardada en BD -->
-                            <img src="{{ asset('storage/' . $foto) }}" alt="Foto cliente" class="w-24 h-24 object-cover rounded">
-                            @endif
-                        </div>
+                <!-- Columna 1: 5/12 -->
+                <div class="col-span-12 md:col-span-5 flex flex-col gap-4">
+                    @if ($foto)
+                    <div class="mt-2">
+                        @if (is_object($foto))
+                        <img src="{{ $foto->temporaryUrl() }}" alt="Vista previa" class="w-24 h-24 object-cover rounded">
+                        @else
+                        <img src="{{ asset('storage/' . $foto) }}" alt="Foto cliente" class="w-24 h-24 object-cover rounded">
                         @endif
-
-
-                        <!-- Estado -->
-                        <h3 class="p-text">Estado</h3>
-                        <select wire:model="estado" class="p-text input-g">
-                            <option value="1">Activo</option>
-                            <option value="0">Inactivo</option>
-                        </select>
-                        @error('estado') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
                     </div>
+                    @endif
 
-                    <!-- Botones -->
-                    <div class="mt-6 flex justify-center w-full space-x-4">
-                        <button type="button" wire:click="guardarCliente"
-                            class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                            <!-- Icono Guardar -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                                class="icon icon-tabler icon-tabler-device-floppy">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                <path d="M14 4l0 4l-6 0l0 -4" />
-                            </svg>
-                        </button>
-                        <button type="button" wire:click="cerrarModal"
-                            class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                            <!-- Icono Cancelar -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                                class="icon icon-tabler icon-tabler-x">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                    <input type="file" wire:model="foto" class="input-minimal">
+                    @error('foto') <span class="error-message">{{ $message }}</span> @enderror
 
+                    <select wire:model="categoria" class="input-minimal">
+                        <option value="1">Cliente Nuevo</option>
+                        <option value="2">Cliente Regular</option>
+                        <option value="3">Cliente VIP</option>
+                    </select>
+                    @error('categoria') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <select wire:model="estado" class="input-minimal">
+                        <option value="1">Activo</option>
+                        <option value="0">Inactivo</option>
+                    </select>
+                    @error('estado') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="text" wire:model="nombre" placeholder="Nombre" class="input-minimal">
+                    @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="text" wire:model="empresa" placeholder="Empresa" class="input-minimal">
+                    @error('empresa') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="text" wire:model="razonSocial" placeholder="Razón Social" class="input-minimal">
+                    @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
+
+                <!-- Columna 2: 4/12 -->
+                <div class="col-span-12 md:col-span-4 flex flex-col gap-4">
+                    <input type="text" wire:model="nitCi" placeholder="NIT/CI" class="input-minimal">
+                    @error('nitCi') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="text" wire:model="telefono" placeholder="Teléfono" class="input-minimal">
+                    @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="email" wire:model="correo" placeholder="Correo Empresa" class="input-minimal">
+                    @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="email" wire:model="email" placeholder="Correo de acceso" class="input-minimal" readonly>
+                    @error('email') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="password" wire:model="password" placeholder="Nueva contraseña (opcional)" class="input-minimal">
+                    @error('password') <span class="error-message">{{ $message }}</span> @enderror
+
+                    <input type="text" wire:model="coordenadas" wire:change="separarCoordenadas" placeholder="Coordenadas (Latitud, Longitud)" class="input-minimal">
+                    @error('coordenadas') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Columna 3: 3/12 -->
+                <div class="col-span-12 md:col-span-3 flex flex-col justify-center items-center h-full">
+                    <div class="flex flex-col items-center md:items-end gap-4 col-span-4">
+                        <button type="button" wire:click="guardarCliente" class="bg-cyan-500 hover:bg-cyan-600 rounded-xl p-2 w-12 h-12 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                            </svg>
+                        </button>
+                        <button type="button" wire:click="cerrarModal" class="bg-gray-300 hover:bg-gray-400 rounded-xl w-12 h-12 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
     @endif
-
-
 
     <!-- Modal de detalle -->
     @if ($detalleModal)

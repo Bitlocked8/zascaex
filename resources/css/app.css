@@ -6,63 +6,17 @@
 
 @layer components {
 
+ .input-minimal {
+    @apply w-full p-3 text-sm text-gray-700 bg-white border-2 border-cyan-400 rounded-md 
+           shadow-sm placeholder-gray-400 focus:outline-none transition-colors duration-200;
+  }
+
+  /* Input con contenido: borde solo indigo, sin ring */
+  .input-minimal:not(:placeholder-shown) {
+    @apply border-indigo-700 focus:border-indigo-700 focus:ring-0;
+  }
+
   .error-message {
-    @apply text-red-600 text-xs text-center;
+    @apply text-red-600 text-xs mt-1;
   }
-
-  .p-text {
-    @apply text-black dark:text-white text-left text-sm
-  }
-
-  .color-bg {
-    @apply bg-white dark:bg-slate-950
-  }
-
-  .color-button {
-    @apply bg-white dark:bg-slate-950
-  }
-
-  .modal-fisrt {
-    @apply relative z-10 flex items-center justify-center min-h-screen
-  }
-
-
-  .modal-center {
-    @apply fixed inset-0 z-10 flex items-center justify-center w-full bg-black bg-opacity-80; /* Aquí se agrega el fondo negro con opacidad */
-}
-
-  .modal-hiden {
-    @apply relative transform overflow-hidden rounded-lg color-bg text-left shadow-xl transition-all w-full max-w-md mx-4 sm:mx-0
-  }
-
-  .title3 {
-    @apply text-cyan-500 dark:text-white
-  }
-
-  .center-col {
-    @apply px-6 py-6 flex flex-col items-center
-  }
-
-  .over-col {
-    @apply mt-4 w-full flex flex-col gap-3 max-h-[80vh] overflow-y-auto mt-4 w-full flex flex-col gap-3 max-h-[80vh] overflow-y-auto
-  }
-
-  .botonmodal button:first-child {
-    @apply rounded-l;
-  }
-
-  .boton-g{
-    @apply text-black bg-white border border-black hover:bg-black hover:text-white focus:ring-4 focus:outline-none focus:ring-gray-600 
-    dark:text-cyan-500 dark:bg-slate-950 dark:border-cyan-500 dark:hover:bg-cyan-500 dark:hover:text-black dark:focus:ring-cyan-800 
-    font-medium rounded-lg text-sm px-2 py-1.5 text-center me-2 mb-1
-  }
-  .input-g {
-    @apply text-black bg-white border border-black focus:outline-none 
-    dark:text-white dark:bg-slate-950 dark:border-white 
-    font-medium rounded-lg text-sm px-2 py-1 me-2 mb-1;
-}
-.input1 {
-  @apply block mt-1 p-1 text-gray-700 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm;
-}
-
 }

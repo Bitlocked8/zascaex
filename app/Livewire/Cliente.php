@@ -15,7 +15,7 @@ class Cliente extends Component
 {
     use WithFileUploads;
     use WithPagination;
-
+    public $categoria = 1;
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
@@ -74,39 +74,38 @@ class Cliente extends Component
             'longitud',
             'foto',
             'estado',
-            'clienteId'
+            'clienteId',
+            'categoria'
         ]);
         $this->accion = $accion;
         $this->estado = 1;
+        $this->categoria = 1;
         $this->modal = true;
         $this->detalleModal = false;
     }
 
     public function editarCliente($id)
-    {
-        $cliente = ModeloCliente::findOrFail($id);
-        $this->clienteId = $cliente->id;
-        $this->nombre = $cliente->nombre;
-        $this->empresa = $cliente->empresa;
-        $this->razonSocial = $cliente->razonSocial;
-        $this->nitCi = $cliente->nitCi;
-        $this->telefono = $cliente->telefono;
-        $this->correo = $cliente->correo;
-        $this->latitud = $cliente->latitud;
-        $this->longitud = $cliente->longitud;
-        $this->foto = $cliente->foto;
-        $this->estado = $cliente->estado;
-        $this->accion = 'edit';
-        $this->modal = true;
-        $this->detalleModal = false;
+{
+    $cliente = ModeloCliente::findOrFail($id);
+    $this->clienteId = $cliente->id;
+    $this->nombre = $cliente->nombre;
+    $this->empresa = $cliente->empresa;
+    $this->razonSocial = $cliente->razonSocial;
+    $this->nitCi = $cliente->nitCi;
+    $this->telefono = $cliente->telefono;
+    $this->correo = $cliente->correo;
+    $this->latitud = $cliente->latitud;
+    $this->longitud = $cliente->longitud;
+    $this->foto = $cliente->foto;
+    $this->estado = $cliente->estado;
+    $this->accion = 'edit';
+    $this->modal = true;
+    $this->detalleModal = false;
+    $this->email = $cliente->user ? $cliente->user->email : '';
+    $this->password = '';
+    $this->categoria = $cliente->categoria;
+}
 
-        // ⚡ Cargar email del usuario asociado
-        // ⚡ Mostrar email en el modal pero solo lectura
-        $this->email = $cliente->user ? $cliente->user->email : '';
-
-        // ⚡ Limpiar password para que el admin pueda poner una nueva si desea
-        $this->password = '';
-    }
 
 
     public function verDetalle($id)
@@ -131,24 +130,20 @@ class Cliente extends Component
                 ? 'nullable|string|max:255'
                 : 'nullable|image|max:2048',
             'estado' => 'required|boolean',
+            'categoria' => 'required|integer|min:1',
+
         ];
 
-        // 📌 Solo validar email y password al crear
         if ($this->accion === 'create') {
             $rules = array_merge($rules, [
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:6',
             ]);
         }
-
         $this->validate($rules);
-
         try {
-            // 📌 EDITAR CLIENTE
             if ($this->accion === 'edit' && $this->clienteId) {
                 $cliente = ModeloCliente::findOrFail($this->clienteId);
-
-                // Actualizar contraseña solo si se ingresó algo
                 if ($this->password) {
                     if ($cliente->user) {
                         $cliente->user->update([
@@ -178,6 +173,7 @@ class Cliente extends Component
                     'longitud' => $this->longitud,
                     'foto' => $rutaFoto,
                     'estado' => $this->estado,
+                    'categoria' => $this->categoria,
                 ]);
 
                 LivewireAlert::title('Cliente actualizado con éxito.')
@@ -244,7 +240,8 @@ class Cliente extends Component
             'foto',
             'estado',
             'clienteId',
-            'clienteSeleccionado'
+            'clienteSeleccionado',
+            'categoria'
         ]);
         $this->resetErrorBag();
     }

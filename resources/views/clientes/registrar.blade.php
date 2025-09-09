@@ -11,13 +11,13 @@
     @vite(['resources/css/app.css'])
 </head>
 
-<body class="color-bg text-gray-900">
+<body class="bg-white text-gray-900">
 
     <div class="p-6">
         <div class="flex items-center justify-between mb-4">
-            <h1 class="text-2xl font-bold">Mapa de Clientes</h1>
+            <h1 class="text-2xl font-bold">Registro de Clientes</h1>
             <a href="{{ route('home') }}"
-                class="text-emerald-500 hover:text-emerald-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
+                class="text-cyan-500 hover:text-cyan-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
                     class="icon icon-tabler icons-tabler-filled icon-tabler-home">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -27,167 +27,149 @@
             </a>
         </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Columna 1: Formulario de Registro -->
+            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
 
 
-       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Mapa -->
-    <div id="mapa" class="w-full h-[400px] lg:h-[600px] rounded shadow-lg"></div>
+                <form id="clienteForm" action="{{ route('clientes.store') }}" method="POST" class="space-y-4" enctype="multipart/form-data">
+                    @csrf
 
-    <!-- Formulario de Registro/Edición de Clientes -->
-    <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
-        <form id="clienteForm" action="{{ route('clientes.store') }}" method="POST" class="space-y-4"
-            enctype="multipart/form-data">
-            @csrf
-            <h3 class="text-lg font-semibold text-gray-900">Registrar Cliente</h3>
+                    <!-- Nombre -->
+                    <div class="mb-4">
+                        <input type="text" id="nombre" name="nombre"
+                            value="{{ old('nombre', $cliente->nombre ?? '') }}"
+                            placeholder="Nombre"
+                            class="input-minimal">
+                        @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
 
-            <!-- Nombre -->
-            <div>
-                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
-                <input type="text" id="nombre" name="nombre" value="{{ old('nombre', $cliente->nombre ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('nombre') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+                    <!-- Empresa -->
+                    <div class="mb-4">
+                        <input type="text" id="empresa" name="empresa"
+                            value="{{ old('empresa', $cliente->empresa ?? '') }}"
+                            placeholder="Empresa"
+                            class="input-minimal">
+                        @error('empresa') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Razón Social -->
+                    <div class="mb-4">
+                        <input type="text" id="razonSocial" name="razonSocial"
+                            value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}"
+                            placeholder="Razón Social"
+                            class="input-minimal">
+                        @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- NIT/CI -->
+                    <div class="mb-4">
+                        <input type="text" id="nitCi" name="nitCi"
+                            value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
+                            placeholder="NIT/CI"
+                            class="input-minimal">
+                        @error('nitCi') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                </form>
             </div>
 
-            <!-- Empresa -->
-            <div>
-                <label for="empresa" class="block text-sm font-medium text-gray-700">Empresa</label>
-                <input type="text" id="empresa" name="empresa"
-                    value="{{ old('empresa', $cliente->empresa ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('empresa') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+            <!-- Columna 2: Datos del Cliente -->
+            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
+
+                <!-- Teléfono -->
+                <div class="mb-4">
+                    <input type="text" id="telefono" name="telefono"
+                        value="{{ old('telefono', $cliente->telefono ?? '') }}"
+                        placeholder="Teléfono"
+                        class="input-minimal">
+                    @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Correo -->
+                <div class="mb-4">
+                    <input type="email" id="correo" name="correo"
+                        value="{{ old('correo', $cliente->correo ?? '') }}"
+                        placeholder="Correo Empresa"
+                        class="input-minimal">
+                    @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Email usuario -->
+                <div class="mb-4">
+                    <input type="email" id="email" name="email"
+                        value="{{ old('email') }}"
+                        placeholder="Email de usuario"
+                        class="input-minimal"
+                        required>
+                    @error('email') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Contraseña -->
+                <div class="mb-4">
+                    <input type="password" id="password" name="password"
+                        placeholder="Contraseña"
+                        class="input-minimal"
+                        required>
+                    @error('password') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Categoría -->
+                <div class="mb-4">
+                    <select id="categoria" name="categoria" class="input-minimal">
+                        <option value="1" {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'selected' : '' }}>Cliente Nuevo</option>
+                        <option value="2" {{ old('categoria', $cliente->categoria ?? 1) == 2 ? 'selected' : '' }}>Cliente Regular</option>
+                        <option value="3" {{ old('categoria', $cliente->categoria ?? 1) == 3 ? 'selected' : '' }}>Cliente VIP</option>
+                    </select>
+                    @error('categoria') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Estado -->
+                <div class="mb-4">
+                    <select id="estado" name="estado" class="input-minimal">
+                        <option value="1" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'selected' : '' }}>Activo</option>
+                        <option value="0" {{ old('estado', $cliente->estado ?? 0) == 0 ? 'selected' : '' }}>Inactivo</option>
+                    </select>
+                    @error('estado') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
             </div>
 
-            <!-- Razón Social -->
-            <div>
-                <label for="razonSocial" class="block text-sm font-medium text-gray-700">Razón Social</label>
-                <input type="text" id="razonSocial" name="razonSocial"
-                    value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('razonSocial') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
+            <!-- Columna 3: Mapa y Coordenadas -->
+            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
 
-            <!-- NIT/CI -->
-            <div>
-                <label for="nitCi" class="block text-sm font-medium text-gray-700">NIT/CI</label>
-                <input type="text" id="nitCi" name="nitCi" value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('nitCi') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
+                <div id="mapa" class="w-full h-[200px] lg:h-[400px] rounded shadow-lg mb-4"></div>
 
-            <!-- Teléfono -->
-            <div>
-                <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                <input type="text" id="telefono" name="telefono"
-                    value="{{ old('telefono', $cliente->telefono ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('telefono') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
+                <!-- Coordenadas -->
+                <div class="mb-4">
+                    <input type="text" id="coordenadas" name="coordenadas"
+                        value="{{ old('coordenadas', ($cliente->latitud ?? '') . ', ' . ($cliente->longitud ?? '')) }}"
+                        placeholder="Coordenadas (Latitud, Longitud)"
+                        class="input-minimal">
+                    @error('coordenadas') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-            <!-- Correo -->
-            <div>
-                <label for="correo" class="block text-sm font-medium text-gray-700">Correo</label>
-                <input type="email" id="correo" name="correo"
-                    value="{{ old('correo', $cliente->correo ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('correo') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
+                <!-- Latitud -->
+                <div class="mb-4">
+                    <input type="text" id="latitud" name="latitud"
+                        value="{{ old('latitud', $cliente->latitud ?? '') }}"
+                        placeholder="Latitud"
+                        class="input-minimal">
+                    @error('latitud') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-            <!-- 📌 Email de usuario (login) -->
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email de usuario</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g"
-                    required>
-                @error('email') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
+                <!-- Longitud -->
+                <div class="mb-4">
+                    <input type="text" id="longitud" name="longitud"
+                        value="{{ old('longitud', $cliente->longitud ?? '') }}"
+                        placeholder="Longitud"
+                        class="input-minimal">
+                    @error('longitud') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-            <!-- 📌 Contraseña -->
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                <input type="password" id="password" name="password"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g"
-                    required>
-                @error('password') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
             </div>
-
-            <!-- Coordenadas Combinadas -->
-            <div>
-                <label for="coordenadas" class="block text-sm font-medium text-gray-700">Coordenadas (Latitud, Longitud)</label>
-                <input type="text" id="coordenadas" name="coordenadas"
-                    value="{{ old('coordenadas', ($cliente->latitud ?? '') . ', ' . ($cliente->longitud ?? '')) }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g"
-                    placeholder="-17.78, -63.17">
-                @error('coordenadas') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            <!-- Latitud -->
-            <div>
-                <label for="latitud" class="block text-sm font-medium text-gray-700">Latitud</label>
-                <input type="text" id="latitud" name="latitud"
-                    value="{{ old('latitud', $cliente->latitud ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g"
-                    placeholder="-17.7833">
-                @error('latitud') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            <!-- Longitud -->
-            <div>
-                <label for="longitud" class="block text-sm font-medium text-gray-700">Longitud</label>
-                <input type="text" id="longitud" name="longitud"
-                    value="{{ old('longitud', $cliente->longitud ?? '') }}"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g"
-                    placeholder="-63.1821">
-                @error('longitud') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            <!-- Foto -->
-            <div>
-                <label for="foto" class="block text-sm font-medium text-gray-700">Foto</label>
-                <input type="file" id="foto" name="foto" accept="image/*"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                @error('foto') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            <!-- Estado -->
-            <div>
-                <label for="estado" class="block text-sm font-medium text-gray-700">Estado</label>
-                <select id="estado" name="estado"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-text input-g">
-                    <option value="1" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'selected' : '' }}>Activo</option>
-                    <option value="0" {{ old('estado', $cliente->estado ?? 0) == 0 ? 'selected' : '' }}>Inactivo</option>
-                </select>
-                @error('estado') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-            </div>
-
-            <!-- Botones -->
-            <div class="mt-6 flex justify-center w-full space-x-4">
-                <button type="submit" id="guardarCliente"
-                    class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                    <!-- Icono Guardar -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                        class="icon icon-tabler icon-tabler-device-floppy">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                        <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                        <path d="M14 4l0 4l-6 0l0 -4" />
-                    </svg>
-                </button>
-                <a href="{{ route('home') }}"
-                    class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                    <!-- Icono Cancelar -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-                        class="icon icon-tabler icon-tabler-x">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M18 6l-12 12" />
-                        <path d="M6 6l12 12" />
-                    </svg>
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+        </div>
 
 
     </div>
@@ -199,23 +181,26 @@
     <script>
         let map;
         let marcadorSeleccionado = null;
-    
-        document.addEventListener('DOMContentLoaded', function () {
+
+        document.addEventListener('DOMContentLoaded', function() {
             console.log('Inicializando mapa en [-17.393993, -66.170568]');
             map = L.map('mapa').setView([-17.393993, -66.170568], 13);
-    
+
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
             }).addTo(map);
-    
+
             // Evento click para obtener coordenadas e insertarlas en el formulario
-            map.on('click', function (e) {
-                const { lat, lng } = e.latlng;
-    
+            map.on('click', function(e) {
+                const {
+                    lat,
+                    lng
+                } = e.latlng;
+
                 if (marcadorSeleccionado) {
                     map.removeLayer(marcadorSeleccionado);
                 }
-    
+
                 marcadorSeleccionado = L.marker([lat, lng])
                     .addTo(map)
                     .bindPopup(`
@@ -230,14 +215,14 @@
                         </div>
                     `)
                     .openPopup();
-    
+
                 // Insertar coordenadas en los campos del formulario
                 document.getElementById('coordenadas').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                 document.getElementById('latitud').value = lat.toFixed(6);
                 document.getElementById('longitud').value = lng.toFixed(6);
             });
         });
-    
+
         function copiarCoordenadas(lat, lng) {
             const texto = `${lat}, ${lng}`;
             navigator.clipboard.writeText(texto).then(() => {

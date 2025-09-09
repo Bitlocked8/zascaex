@@ -23,6 +23,7 @@ class Cliente extends Model
         'estado',
         'verificado',
         'user_id',
+         'categoria',
     ];
 
     /**

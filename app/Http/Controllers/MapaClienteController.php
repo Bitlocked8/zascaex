@@ -11,10 +11,9 @@ class MapaClienteController extends Controller
 {
     public function mostrar()
     {
-        // Utilizamos paginate para paginar los resultados
         $clientes = Cliente::whereNotNull('latitud')
             ->whereNotNull('longitud')
-            ->paginate(5); // Cambié get() por paginate(5)
+            ->paginate(5);
 
         return view('clientes.mapa', compact('clientes'));
     }
@@ -25,7 +24,6 @@ class MapaClienteController extends Controller
 
     public function index()
     {
-        // Si tenés una vista para listar clientes
         $clientes = Cliente::paginate(5);
         return view('clientes.index', compact('clientes'));
     }
@@ -44,6 +42,7 @@ class MapaClienteController extends Controller
             'longitud' => 'nullable|numeric|between:-180,180',
             'foto' => 'nullable|image|max:4096',
             'estado' => 'required|boolean',
+            'categoria' => 'required|integer|in:1,2,3',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
         ];
@@ -51,21 +50,17 @@ class MapaClienteController extends Controller
         $validated = $request->validate($rules);
 
         try {
-            // Guardar foto si existe
             $fotoPath = null;
             if ($request->hasFile('foto')) {
                 $fotoPath = $request->file('foto')->store('clientes', 'public');
             }
-
-            // 1️⃣ Crear el usuario
             $user = User::create([
                 'email' => $validated['email'],
                 'password' => bcrypt($validated['password']),
-                'rol_id' => 5, // rol de cliente
+                'rol_id' => 5,
                 'estado' => 1,
             ]);
 
-            // 2️⃣ Crear el cliente asociado al usuario
             Cliente::create([
                 'nombre' => $validated['nombre'],
                 'empresa' => $validated['empresa'],
@@ -77,7 +72,8 @@ class MapaClienteController extends Controller
                 'longitud' => $validated['longitud'],
                 'foto' => $fotoPath,
                 'estado' => $validated['estado'],
-                'user_id' => $user->id, // ⚡ aquí asignas el user_id
+                'categoria' => $validated['categoria'],
+                'user_id' => $user->id,
             ]);
 
             return Redirect::route('home')->with('success', 'Cliente registrado con éxito.');
