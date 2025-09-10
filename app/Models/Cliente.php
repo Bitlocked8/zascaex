@@ -38,10 +38,8 @@ class Cliente extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function promos()
+    public function itemPromos()
     {
-        return $this->belongsToMany(Promo::class, 'item_promos')
-            ->using(ItemPromo::class)
-            ->withPivot(['usos_realizados', 'uso_maximo', 'estado', 'fecha_asignada', 'fecha_expiracion']);
+        return $this->hasMany(ItemPromo::class);
     }
 }

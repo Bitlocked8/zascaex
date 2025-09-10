@@ -66,20 +66,27 @@ class DatabaseSeeder extends Seeder
             'user_id' => $adminUser->id, // Relación con el usuario admin
         ]);
 
-        // User::factory(10)->create();
+        // Crear clientes y promos
         $clientes = Cliente::factory(10)->create();
         $promos = Promo::factory(5)->create();
 
-        // 6️⃣ Asignar aleatoriamente 1 a 3 promos por cliente usando ItemPromo
+        // Asignar aleatoriamente 1 a 3 promos por cliente usando ItemPromo
         $clientes->each(function ($cliente) use ($promos) {
             $clientePromos = $promos->random(rand(1, 3));
+
             foreach ($clientePromos as $promo) {
                 ItemPromo::factory()->create([
                     'cliente_id' => $cliente->id,
                     'promo_id'   => $promo->id,
+                    'usos_realizados' => 0,
+                    'uso_maximo' => rand(1, 5),
+                    'estado' => 'activo',
+                    'fecha_asignada' => now(),
+                    'fecha_expiracion' => now()->addDays(rand(10, 90)),
                 ]);
             }
         });
+
         // $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
         $empresa = Empresa::factory(1)->create();

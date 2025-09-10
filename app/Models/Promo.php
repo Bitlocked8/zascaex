@@ -25,10 +25,8 @@ class Promo extends Model
         'activo' => 'boolean',
     ];
 
-    public function clientes()
-    {
-        return $this->belongsToMany(Cliente::class, 'item_promos')
-            ->using(ItemPromo::class)
-            ->withPivot(['usos_realizados', 'uso_maximo', 'estado', 'fecha_asignada', 'fecha_expiracion']);
-    }
+    public function itemPromos()
+{
+    return $this->hasMany(ItemPromo::class);
+}
 }

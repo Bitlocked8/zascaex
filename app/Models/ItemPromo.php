@@ -3,10 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
 
-class ItemPromo extends Pivot
+class ItemPromo extends Model
 {
     use HasFactory;
 
@@ -22,8 +21,13 @@ class ItemPromo extends Pivot
         'fecha_expiracion'
     ];
 
-    protected $casts = [
-        'fecha_asignada' => 'date',
-        'fecha_expiracion' => 'date',
-    ];
+      public function promo()
+    {
+        return $this->belongsTo(Promo::class);
+    }
+
+      public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
 }
