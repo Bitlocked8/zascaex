@@ -13,7 +13,6 @@ class Promo extends Model
         'nombre',
         'tipo_descuento',
         'valor_descuento',
-        'cliente_id',
         'fecha_inicio',
         'fecha_fin',
         'activo',
@@ -26,9 +25,10 @@ class Promo extends Model
         'activo' => 'boolean',
     ];
 
-    public function cliente()
+    public function clientes()
     {
-        return $this->belongsTo(Cliente::class);
+        return $this->belongsToMany(Cliente::class, 'item_promos')
+            ->using(ItemPromo::class)
+            ->withPivot(['usos_realizados', 'uso_maximo', 'estado', 'fecha_asignada', 'fecha_expiracion']);
     }
 }
-

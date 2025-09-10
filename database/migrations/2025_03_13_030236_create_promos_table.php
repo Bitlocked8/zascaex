@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('nombre'); // Nombre de la promoción
             $table->enum('tipo_descuento', ['porcentaje', 'monto']); // Tipo de descuento
             $table->decimal('valor_descuento', 10, 2); // Valor del descuento
-            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete(); // null = todos los clientes
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_fin')->nullable();
             $table->boolean('activo')->default(true);

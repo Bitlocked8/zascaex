@@ -28,6 +28,8 @@ use App\Models\Tapa;
 use App\Models\Trabajo;
 use App\Models\User;
 use App\Models\Venta;
+use App\Models\Promo;
+use App\Models\ItemPromo;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -65,9 +67,20 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // User::factory(10)->create();
-        Cliente::factory(10)->create();
+        $clientes = Cliente::factory(10)->create();
+        $promos = Promo::factory(5)->create();
 
-        $this->call(ClienteSeeder::class);
+        // 6️⃣ Asignar aleatoriamente 1 a 3 promos por cliente usando ItemPromo
+        $clientes->each(function ($cliente) use ($promos) {
+            $clientePromos = $promos->random(rand(1, 3));
+            foreach ($clientePromos as $promo) {
+                ItemPromo::factory()->create([
+                    'cliente_id' => $cliente->id,
+                    'promo_id'   => $promo->id,
+                ]);
+            }
+        });
+        // $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
         $empresa = Empresa::factory(1)->create();
         Sucursal::create(['nombre' => 'Cochabamba Central', 'direccion' => 'Av. Heroínas 123, Cochabamba, Bolivia', 'telefono' => '591 4 4251234', 'zona' => 'Centro', 'empresa_id' => 1]);

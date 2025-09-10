@@ -7,15 +7,13 @@ use App\Models\Promo;
 
 class Promos extends Component
 {
-    public $nombre;
-    public $tipo_descuento = 'porcentaje';
-    public $valor_descuento;
-    public $fecha_inicio;
-    public $fecha_fin;
-    public $activo = true;
-
     public $modal = false;
-    public $promoId = null;
+    public $accion = 'create';
+    public $promo_id = null;
+
+    public $search = '';
+
+    public $nombre, $tipo_descuento = 'porcentaje', $valor_descuento, $fecha_inicio, $fecha_fin, $activo = 1;
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
@@ -28,35 +26,55 @@ class Promos extends Component
 
     public function render()
     {
-        $promos = Promo::whereNull('cliente_id')->orderBy('id', 'desc')->get();
+        $promos = Promo::where('nombre', 'like', '%' . $this->search . '%')
+            ->orderBy('id', 'desc')
+            ->get();
+
         return view('livewire.promos', compact('promos'));
     }
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->resetErrorBag();
-        $this->reset(['nombre','tipo_descuento','valor_descuento','fecha_inicio','fecha_fin','activo','promoId']);
+        $this->reset([
+            'promo_id',
+            'nombre',
+            'tipo_descuento',
+            'valor_descuento',
+            'fecha_inicio',
+            'fecha_fin',
+            'activo',
+        ]);
 
-        if($accion === 'edit' && $id){
-            $promo = Promo::findOrFail($id);
-            $this->promoId = $promo->id;
-            $this->nombre = $promo->nombre;
-            $this->tipo_descuento = $promo->tipo_descuento;
-            $this->valor_descuento = $promo->valor_descuento;
-            $this->fecha_inicio = $promo->fecha_inicio?->format('Y-m-d');
-            $this->fecha_fin = $promo->fecha_fin?->format('Y-m-d');
-            $this->activo = $promo->activo;
+        $this->accion = $accion;
+
+        if ($accion === 'edit' && $id) {
+            $this->editar($id);
         }
 
         $this->modal = true;
     }
 
-    public function guardarPromo()
+    public function editar($id)
+    {
+        $promo = Promo::findOrFail($id);
+
+        $this->promo_id = $promo->id;
+        $this->nombre = $promo->nombre;
+        $this->tipo_descuento = $promo->tipo_descuento;
+        $this->valor_descuento = $promo->valor_descuento;
+        $this->fecha_inicio = $promo->fecha_inicio?->format('Y-m-d');
+        $this->fecha_fin = $promo->fecha_fin?->format('Y-m-d');
+        $this->activo = $promo->activo;
+
+        $this->accion = 'edit';
+    }
+
+    public function guardar()
     {
         $this->validate();
 
         Promo::updateOrCreate(
-            ['id' => $this->promoId],
+            ['id' => $this->promo_id],
             [
                 'nombre' => $this->nombre,
                 'tipo_descuento' => $this->tipo_descuento,
@@ -64,22 +82,16 @@ class Promos extends Component
                 'fecha_inicio' => $this->fecha_inicio,
                 'fecha_fin' => $this->fecha_fin,
                 'activo' => $this->activo,
-                'cliente_id' => null,
             ]
         );
 
-        $this->modal = false;
-    }
-
-    public function toggleActivo($id)
-    {
-        $promo = Promo::findOrFail($id);
-        $promo->activo = !$promo->activo;
-        $promo->save();
+        $this->cerrarModal();
     }
 
     public function cerrarModal()
     {
         $this->modal = false;
+        $this->reset(['promo_id', 'nombre', 'tipo_descuento', 'valor_descuento', 'fecha_inicio', 'fecha_fin', 'activo']);
+        $this->resetErrorBag();
     }
 }
