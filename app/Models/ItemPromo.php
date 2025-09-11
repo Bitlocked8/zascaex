@@ -20,6 +20,10 @@ class ItemPromo extends Model
         'fecha_asignada',
         'fecha_expiracion'
     ];
+    protected $casts = [
+    'fecha_asignada' => 'date',
+    'fecha_expiracion' => 'date',
+];
 
       public function promo()
     {

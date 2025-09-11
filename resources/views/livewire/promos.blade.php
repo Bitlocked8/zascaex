@@ -11,20 +11,18 @@
                     <line x1="12" y1="9" x2="12" y2="15" />
                     <line x1="9" y1="12" x2="15" y2="12" />
                 </svg>
+     
             </button>
-
-           
-
+        
         </div>
 
         <!-- Cards de Promos -->
         @forelse ($promos as $promo)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-            <!-- Columna Izquierda: Información -->
+
+            <!-- Información de la Promo -->
             <div class="flex flex-col items-center md:items-start text-center md:text-left col-span-8">
-                <h3 class="text-lg font-semibold uppercase text-cyan-600">
-                    {{ $promo->nombre }}
-                </h3>
+                <h3 class="text-lg font-semibold uppercase text-cyan-600">{{ $promo->nombre }}</h3>
                 <p class="text-cyan-950"><strong>Tipo:</strong> {{ ucfirst($promo->tipo_descuento) }}</p>
                 <p class="text-cyan-950"><strong>Valor:</strong>
                     {{ $promo->tipo_descuento === 'porcentaje' ? $promo->valor_descuento . '%' : 'Bs ' . $promo->valor_descuento }}
@@ -33,8 +31,6 @@
                     {{ $promo->fecha_inicio?->format('d/m/Y') ?? 'N/A' }} -
                     {{ $promo->fecha_fin?->format('d/m/Y') ?? 'N/A' }}
                 </p>
-
-                <!-- Estado -->
                 <div class="mt-2">
                     @if ($promo->activo)
                     <span class="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-full shadow">
@@ -48,12 +44,12 @@
                 </div>
             </div>
 
-            <!-- Columna Derecha: Botones -->
-            <div class="flex flex-col items-center md:items-end gap-4 col-span-4">
-                <!-- Editar -->
+            <!-- Botones: Editar y Asignar Clientes -->
+            <div class="flex flex-col items-center md:items-end gap-2 col-span-4">
                 <button wire:click="abrirModal('edit', {{ $promo->id }})"
-                    class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
+                    class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center shadow hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
                         <path d="M6 4v4" />
@@ -74,15 +70,19 @@
                     </svg>
                 </button>
 
-              
+
             </div>
+
         </div>
         @empty
         <div class="col-span-full text-center py-4 text-gray-600">
             No hay promociones registradas.
         </div>
         @endforelse
+
     </div>
+
+
 
     <!-- Modal Crear/Editar -->
     @if ($modal)
@@ -122,8 +122,6 @@
     @endif
 
 
-   
   
-
 
 </div>

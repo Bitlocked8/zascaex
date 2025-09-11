@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Promo;
+use App\Models\ItemPromo;
 
 class Promos extends Component
 {
@@ -12,9 +13,7 @@ class Promos extends Component
     public $promo_id = null;
 
     public $search = '';
-
     public $nombre, $tipo_descuento = 'porcentaje', $valor_descuento, $fecha_inicio, $fecha_fin, $activo = 1;
-
     protected $rules = [
         'nombre' => 'required|string|max:255',
         'tipo_descuento' => 'required|in:porcentaje,monto',
@@ -53,7 +52,6 @@ class Promos extends Component
 
         $this->modal = true;
     }
-
     public function editar($id)
     {
         $promo = Promo::findOrFail($id);
