@@ -16,6 +16,10 @@ return new class extends Migration
             $table->string('nombre'); // Nombre de la promoción
             $table->enum('tipo_descuento', ['porcentaje', 'monto']); // Tipo de descuento
             $table->decimal('valor_descuento', 10, 2); // Valor del descuento
+            $table->integer('usos_realizados')->default(0); // Total de usos realizados
+            $table->integer('uso_maximo')->nullable();     // Máximo global de usos
+            $table->date('fecha_asignada')->nullable();    // Desde cuándo está activa
+            $table->date('fecha_expiracion')->nullable();  // Fecha de expiración
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_fin')->nullable();
             $table->boolean('activo')->default(true);

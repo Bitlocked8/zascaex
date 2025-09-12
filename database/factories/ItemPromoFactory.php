@@ -25,11 +25,8 @@ class ItemPromoFactory extends Factory
             // Vinculamos con un cliente y una promo existentes o nuevas
             'cliente_id'       => Cliente::factory(),
             'promo_id'         => Promo::factory(),
-            'usos_realizados'  => 0,
-            'uso_maximo'       => $this->faker->numberBetween(1, 10),
-            'estado'           => $this->faker->randomElement(['activo', 'usado', 'expirado']),
-            'fecha_asignada'   => now(),
-            'fecha_expiracion' => now()->addDays($this->faker->numberBetween(7, 30)),
+            'codigo'           => strtoupper($this->faker->bothify('PROMO-####')),
+            'fecha_asignacion' => now(),
         ];
     }
 }

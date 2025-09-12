@@ -3,44 +3,78 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\Cliente;
 use App\Models\ItemPromo;
+use App\Models\Cliente;
+use App\Models\Promo;
+use Illuminate\Support\Str;
 
 class Promociones extends Component
 {
-    public $clientes;             // Lista de clientes con sus promociones
-    public $searchCliente = '';   // Para búsqueda dinámica
-    public $promoSeleccionada;    // Promo actualmente seleccionada para detalle
-    public $modalVisible = false; // Controla si el modal está abierto
+    public $itemPromos;
+
+    // Props para modal
+    public $modal = false;
+    public $clientesSeleccionados = [];
+    public $promosSeleccionadas = [];
+    public $fechaAsignacion;
+    public $codigo;
 
     public function render()
     {
-        // Obtenemos los clientes con sus promociones, filtrando por búsqueda
-        $this->clientes = Cliente::with(['itemPromos.promo'])
-            ->when($this->searchCliente, function($query) {
-                $query->where('nombre', 'like', '%'.$this->searchCliente.'%');
-            })
-            ->get();
+        $this->itemPromos = ItemPromo::with(['cliente', 'promo'])->get();
+        $clientes = Cliente::all();
+        $promos   = Promo::all();
 
         return view('livewire.promociones', [
-            'clientes' => $this->clientes
+            'itemPromos' => $this->itemPromos,
+            'clientes'   => $clientes,
+            'promos'     => $promos,
         ]);
     }
 
-    // Método para abrir detalle de una promo
-    public function verDetalle($itemId)
+    // Abrir modal
+    public function abrirModal()
     {
-        $this->promoSeleccionada = ItemPromo::with(['cliente', 'promo'])->find($itemId);
-
-        if ($this->promoSeleccionada) {
-            $this->modalVisible = true;
-        }
+        $this->reset(['clientesSeleccionados', 'promosSeleccionadas', 'fechaAsignacion', 'codigo']);
+        $this->codigo = strtoupper(Str::random(6)); // Genera código único para el lote
+        $this->fechaAsignacion = now()->format('Y-m-d');
+        $this->modal = true;
     }
 
-    // Método para cerrar el modal
+    // Cerrar modal
     public function cerrarModal()
     {
-        $this->modalVisible = false;
-        $this->promoSeleccionada = null;
+        $this->modal = false;
+    }
+
+    // Guardar lote
+    public function guardarLote()
+    {
+        $this->validate([
+            'clientesSeleccionados' => 'required|array|min:1',
+            'promosSeleccionadas'   => 'required|array|min:1',
+            'fechaAsignacion'       => 'required|date',
+        ]);
+
+        foreach ($this->clientesSeleccionados as $clienteId) {
+            foreach ($this->promosSeleccionadas as $promoId) {
+                // Evitar duplicados para un mismo cliente y promo en el mismo código
+                $exists = ItemPromo::where('cliente_id', $clienteId)
+                    ->where('promo_id', $promoId)
+                    ->where('codigo', $this->codigo)
+                    ->exists();
+
+                if (!$exists) {
+                    ItemPromo::create([
+                        'cliente_id'       => $clienteId,
+                        'promo_id'         => $promoId,
+                        'codigo'           => $this->codigo,
+                        'fecha_asignacion' => $this->fechaAsignacion,
+                    ]);
+                }
+            }
+        }
+
+        $this->cerrarModal();
     }
 }

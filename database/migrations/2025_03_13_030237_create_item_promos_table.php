@@ -15,13 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
             $table->foreignId('promo_id')->constrained('promos')->onDelete('cascade');
-            $table->integer('usos_realizados')->default(0);
-            $table->integer('uso_maximo')->nullable();
-            $table->enum('estado', ['activo', 'usado', 'expirado', 'cancelado'])->default('activo');
-            $table->date('fecha_asignada')->nullable();
-            $table->date('fecha_expiracion')->nullable();
-
-            $table->timestamps();
+            $table->string('codigo')->nullable(); // código único opcional
+            $table->date('fecha_asignacion')->nullable(); // fecha cuando se asignó
+            $table->timestamps(); // para historial de creación/actualización
         });
     }
 

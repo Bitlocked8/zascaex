@@ -65,10 +65,9 @@ class DatabaseSeeder extends Seeder
         Personal::factory()->create([
             'user_id' => $adminUser->id, // Relación con el usuario admin
         ]);
-
         // Crear clientes y promos
         $clientes = Cliente::factory(10)->create();
-        $promos = Promo::factory(5)->create();
+        $promos   = Promo::factory(5)->create();
 
         // Asignar aleatoriamente 1 a 3 promos por cliente usando ItemPromo
         $clientes->each(function ($cliente) use ($promos) {
@@ -76,16 +75,36 @@ class DatabaseSeeder extends Seeder
 
             foreach ($clientePromos as $promo) {
                 ItemPromo::factory()->create([
-                    'cliente_id' => $cliente->id,
-                    'promo_id'   => $promo->id,
-                    'usos_realizados' => 0,
-                    'uso_maximo' => rand(1, 5),
-                    'estado' => 'activo',
-                    'fecha_asignada' => now(),
-                    'fecha_expiracion' => now()->addDays(rand(10, 90)),
+                    'cliente_id'       => $cliente->id,
+                    'promo_id'         => $promo->id,
+                    'codigo'           => strtoupper(uniqid('PROMO-')), // ejemplo de código único
+                    'fecha_asignacion' => now(),
                 ]);
             }
         });
+        $codigo = strtoupper(uniqid('PROMO-')); // Código aleatorio único
+        $clientes = Cliente::all();              // Todos los clientes (o un subset)
+        $promos   = Promo::all();                // Todas las promociones (o un subset)
+
+        foreach ($clientes as $cliente) {
+            foreach ($promos as $promo) {
+
+                // Verificar que el cliente NO tenga ya esta promo
+                $existe = ItemPromo::where('cliente_id', $cliente->id)
+                    ->where('promo_id', $promo->id)
+                    ->exists();
+
+                if (!$existe) {
+                    ItemPromo::create([
+                        'cliente_id'       => $cliente->id,
+                        'promo_id'         => $promo->id,
+                        'codigo'           => $codigo,
+                        'fecha_asignacion' => now(),
+                    ]);
+                }
+            }
+        }
+
 
         // $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();

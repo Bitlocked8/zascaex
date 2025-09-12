@@ -14,23 +14,20 @@ class ItemPromo extends Model
     protected $fillable = [
         'cliente_id',
         'promo_id',
-        'usos_realizados',
-        'uso_maximo',
-        'estado',
-        'fecha_asignada',
-        'fecha_expiracion'
+        'codigo',
+        'fecha_asignacion',
     ];
-    protected $casts = [
-    'fecha_asignada' => 'date',
-    'fecha_expiracion' => 'date',
-];
 
-      public function promo()
+    protected $casts = [
+        'fecha_asignacion' => 'date',
+    ];
+
+    public function promo()
     {
         return $this->belongsTo(Promo::class);
     }
 
-      public function cliente()
+    public function cliente()
     {
         return $this->belongsTo(Cliente::class);
     }

@@ -13,20 +13,26 @@ class Promo extends Model
         'nombre',
         'tipo_descuento',
         'valor_descuento',
+        'usos_realizados',   // agregado
+        'uso_maximo',        // agregado
+        'fecha_asignada',    // agregado
+        'fecha_expiracion',  // agregado
         'fecha_inicio',
         'fecha_fin',
         'activo',
     ];
 
-    // Solo esto hace que las fechas sean objetos Carbon automáticamente
+    // Fechas y booleanos
     protected $casts = [
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
-        'activo' => 'boolean',
+        'fecha_inicio'     => 'date',
+        'fecha_fin'        => 'date',
+        'fecha_asignada'   => 'date',
+        'fecha_expiracion' => 'date',
+        'activo'           => 'boolean',
     ];
 
     public function itemPromos()
-{
-    return $this->hasMany(ItemPromo::class);
-}
+    {
+        return $this->hasMany(ItemPromo::class);
+    }
 }
