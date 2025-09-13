@@ -11,9 +11,9 @@
                     <line x1="12" y1="9" x2="12" y2="15" />
                     <line x1="9" y1="12" x2="15" y2="12" />
                 </svg>
-     
+
             </button>
-        
+
         </div>
 
         <!-- Cards de Promos -->
@@ -82,8 +82,6 @@
 
     </div>
 
-
-
     <!-- Modal Crear/Editar -->
     @if ($modal)
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -93,22 +91,55 @@
             </h2>
 
             <div class="flex flex-col gap-4">
+                <!-- Nombre -->
                 <input type="text" wire:model="nombre" placeholder="Nombre" class="input-minimal">
+
+                <!-- Tipo de descuento -->
                 <select wire:model="tipo_descuento" class="input-minimal">
                     <option value="porcentaje">Porcentaje</option>
-                    <option value="fijo">Fijo</option>
+                    <option value="monto">Monto fijo</option>
                 </select>
+
+                <!-- Valor descuento -->
                 <input type="number" wire:model="valor_descuento" placeholder="Valor Descuento" class="input-minimal">
-                <input type="date" wire:model="fecha_inicio" class="input-minimal">
-                <input type="date" wire:model="fecha_fin" class="input-minimal">
+
+                <!-- Usos -->
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" wire:model="usos_realizados" placeholder="Usos Realizados" class="input-minimal">
+                    <input type="number" wire:model="uso_maximo" placeholder="Uso Máximo" class="input-minimal">
+                </div>
+
+                <!-- Fechas -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-gray-600">Fecha Asignada</label>
+                        <input type="date" wire:model="fecha_asignada" class="input-minimal">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600">Fecha Expiración</label>
+                        <input type="date" wire:model="fecha_expiracion" class="input-minimal">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-gray-600">Fecha Inicio</label>
+                        <input type="date" wire:model="fecha_inicio" class="input-minimal">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-600">Fecha Fin</label>
+                        <input type="date" wire:model="fecha_fin" class="input-minimal">
+                    </div>
+                </div>
+
                 <!-- Checkbox Activo -->
                 <div class="flex items-center gap-2 mt-2">
                     <input type="checkbox" id="activo" wire:model="activo" class="h-5 w-5 text-cyan-600 rounded">
                     <label for="activo" class="text-cyan-950 font-semibold">Activo</label>
                 </div>
-
             </div>
 
+            <!-- Botones -->
             <div class="flex justify-end gap-2 mt-6">
                 <button wire:click="guardar" class="bg-cyan-500 hover:bg-cyan-600 rounded-xl px-4 py-2 text-white">
                     Guardar
@@ -122,6 +153,5 @@
     @endif
 
 
-  
 
 </div>

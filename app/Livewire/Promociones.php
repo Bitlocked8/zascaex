@@ -11,7 +11,10 @@ class Promociones extends Component
 {
     public $itemPromos;
 
-    // Props para modal
+    public $modalConfirmar = false;
+    public $codigoAEliminar = null;
+
+
     public $modal = false;
     public $editando = false;
     public $clientesSeleccionados = [];
@@ -172,43 +175,54 @@ class Promociones extends Component
 
 
     // Eliminar un lote completo
-    public function eliminarLote($codigo)
+    public function confirmarEliminarLote($codigo)
     {
-        ItemPromo::where('codigo', $codigo)->delete();
+        $this->codigoAEliminar = $codigo;
+        $this->modalConfirmar = true;
+    }
+
+    public function eliminarLoteConfirmado()
+    {
+        if ($this->codigoAEliminar) {
+            // Aquí borras todos los itemPromos de ese código
+            ItemPromo::where('codigo', $this->codigoAEliminar)->delete();
+        }
+
+        $this->modalConfirmar = false;
+        $this->codigoAEliminar = null;
+
+        // Refrescar lista
         $this->itemPromos = ItemPromo::with(['cliente', 'promo'])->get();
-        $this->dispatch('refreshComponent');
     }
-
     // Clientes
-public function agregarCliente($clienteId)
-{
-    if(!in_array($clienteId, $this->clientesSeleccionados)) {
-        $this->clientesSeleccionados[] = $clienteId;
+    public function agregarCliente($clienteId)
+    {
+        if (!in_array($clienteId, $this->clientesSeleccionados)) {
+            $this->clientesSeleccionados[] = $clienteId;
+        }
     }
-}
 
-public function quitarCliente($clienteId)
-{
-    $this->clientesSeleccionados = array_filter(
-        $this->clientesSeleccionados,
-        fn($id) => $id != $clienteId
-    );
-}
-
-// Promociones
-public function agregarPromo($promoId)
-{
-    if(!in_array($promoId, $this->promosSeleccionadas)) {
-        $this->promosSeleccionadas[] = $promoId;
+    public function quitarCliente($clienteId)
+    {
+        $this->clientesSeleccionados = array_filter(
+            $this->clientesSeleccionados,
+            fn($id) => $id != $clienteId
+        );
     }
-}
 
-public function quitarPromo($promoId)
-{
-    $this->promosSeleccionadas = array_filter(
-        $this->promosSeleccionadas,
-        fn($id) => $id != $promoId
-    );
-}
+    // Promociones
+    public function agregarPromo($promoId)
+    {
+        if (!in_array($promoId, $this->promosSeleccionadas)) {
+            $this->promosSeleccionadas[] = $promoId;
+        }
+    }
 
+    public function quitarPromo($promoId)
+    {
+        $this->promosSeleccionadas = array_filter(
+            $this->promosSeleccionadas,
+            fn($id) => $id != $promoId
+        );
+    }
 }
