@@ -28,9 +28,11 @@
                     {{ $promo->tipo_descuento === 'porcentaje' ? $promo->valor_descuento . '%' : 'Bs ' . $promo->valor_descuento }}
                 </p>
                 <p class="text-cyan-950"><strong>Vigencia:</strong>
-                    {{ $promo->fecha_inicio?->format('d/m/Y') ?? 'N/A' }} -
-                    {{ $promo->fecha_fin?->format('d/m/Y') ?? 'N/A' }}
+                    {{ $promo->fecha_asignada ? \Carbon\Carbon::parse($promo->fecha_asignada)->format('d/m/Y') : 'N/A' }}
+                    -
+                    {{ $promo->fecha_expiracion ? \Carbon\Carbon::parse($promo->fecha_expiracion)->format('d/m/Y') : 'N/A' }}
                 </p>
+
                 <div class="mt-2">
                     @if ($promo->activo)
                     <span class="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-full shadow">
@@ -105,10 +107,11 @@
 
                 <!-- Usos -->
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" wire:model="usos_realizados" placeholder="Usos Realizados" class="input-minimal">
+                 
                     <input type="number" wire:model="uso_maximo" placeholder="Uso Máximo" class="input-minimal">
                 </div>
 
+                <!-- Fechas -->
                 <!-- Fechas -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -121,16 +124,6 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-sm text-gray-600">Fecha Inicio</label>
-                        <input type="date" wire:model="fecha_inicio" class="input-minimal">
-                    </div>
-                    <div>
-                        <label class="text-sm text-gray-600">Fecha Fin</label>
-                        <input type="date" wire:model="fecha_fin" class="input-minimal">
-                    </div>
-                </div>
 
                 <!-- Checkbox Activo -->
                 <div class="flex items-center gap-2 mt-2">
