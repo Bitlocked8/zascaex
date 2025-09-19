@@ -51,12 +51,12 @@
     </header>
     <nav id="menu" class="w-[95%] max-w-[1700px] text-cyan-600 bg-white px-6 py-4 shadow-lg fixed left-1/2 -translate-x-1/2 top-[65px] hidden transition-all rounded-xl backdrop-blur-md z-20 ">
         <div class="max-h-[80vh] overflow-y-auto ">
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                 <!-- Gestión de Usuarios -->
                 @if(in_array(auth()->user()->rol_id, [1, 2]))
                 <div>
-                    <h3 class="text-cyan-600 font-semibold mb-2">GESTIÓN DE USUARIOS</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">GESTIÓN DE USUARIOS</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3  gap-4">
 
                         <!-- PERSONAL -->
@@ -141,7 +141,7 @@
 
                 @if(in_array(auth()->user()->rol_id, [1, 2]))
                 <div>
-                    <h3 class="text-cyan-600 font-semibold mb-2">GESTIÓN DE COMPRAS</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">GESTIÓN DE COMPRAS</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- COMPRAS -->
@@ -193,7 +193,7 @@
 
                 @if(in_array(auth()->user()->rol_id, [1, 2]))
                 <div>
-                    <h3 class="text-cyan-600 font-semibold mb-2">ALMACÉN</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">ALMACÉN</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- STOCK -->
@@ -308,10 +308,10 @@
                 </div>
                 @endif
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
                 @if(in_array(auth()->user()->rol_id, [1, 2, 4]))
                 <div>
-                    <h3 class="text-cyan-600 font-semibold mb-2"> GESTIÓN DE PRODUCCIÓN</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center"> GESTIÓN DE PRODUCCIÓN</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- ELABORACIÓN -->
@@ -394,7 +394,7 @@
 
                 @if(in_array(auth()->user()->rol_id, [1, 2, 3]))
                 <div class="mb-6">
-                    <h3 class="text-cyan-600 font-semibold mb-2">GESTIÓN DE VENTAS</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">GESTIÓN DE VENTAS</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- CLIENTE (solo roles 1,2) -->
@@ -442,7 +442,7 @@
                 <!-- Gestión de Distribución -->
                 @if(in_array(auth()->user()->rol_id, [1, 2, 3]))
                 <div class="mb-6">
-                    <h3 class="text-cyan-600 font-semibold mb-2">GESTIÓN DE DISTRIBUCIÓN</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">GESTIÓN DE DISTRIBUCIÓN</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- DISTRIBUCION (roles 1,2,3) -->
@@ -529,10 +529,10 @@
                 @endif
 
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
                 @if(in_array(auth()->user()->rol_id, [1, 2, 3, 4]))
                 <div class="mb-6">
-                    <h3 class="text-cyan-600 font-semibold mb-2">SUCURSALES</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">SUCURSALES</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- EMPRESA (roles 1,2,3,4) -->
@@ -608,7 +608,7 @@
 
                 @if(in_array(auth()->user()->rol_id, [1, 2]))
                 <div class="mb-6">
-                    <h3 class="text-cyan-600 font-semibold mb-2">GESTIÓN DE TESORERÍA</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">GESTIÓN DE TESORERÍA</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- INGRESO -->
@@ -668,7 +668,7 @@
 
                 @if(in_array(auth()->user()->rol_id, [1, 2]))
                 <div class="mb-6">
-                    <h3 class="text-cyan-600 font-semibold mb-2">REPORTES</h3>
+                    <h3 class="text-cyan-600 font-semibold mb-2  text-center">REPORTES</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
 
                         <!-- REPORTE VENTA -->
