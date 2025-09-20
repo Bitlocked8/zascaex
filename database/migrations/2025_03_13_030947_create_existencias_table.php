@@ -16,7 +16,8 @@ return new class extends Migration
             $table->morphs('existenciable'); // Relación polimórfica para Tapa, Base, Preforma, Etiqueta
             $table->integer('cantidad')->default(0); // Cantidad en existencia
             $table->integer('cantidadMinima')->default(0); // Cantidad en existencia
-            $table->foreignId('sucursal_id')->constrained('sucursals')->onDelete('cascade'); // Relación con Sucursal
+            $table->foreignId('sucursal_id')->nullable()->constrained('sucursals')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

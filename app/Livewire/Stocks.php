@@ -60,9 +60,18 @@ class Stocks extends Component
     public function cargarExistencias()
     {
         $this->existencias = Existencia::with('existenciable')
-            ->when($this->selectedSucursal, fn($query) => $query->where('sucursal_id', $this->selectedSucursal))
+            ->when(
+                $this->selectedSucursal,
+                fn($query) =>
+                $query->where(function ($q) {
+                    $q->where('sucursal_id', $this->selectedSucursal)
+                        ->orWhereNull('sucursal_id');
+                })
+            )
+            ->orderBy('created_at', 'desc') // <-- más recientes primero
             ->get();
     }
+
 
     public function cargarReposiciones()
     {

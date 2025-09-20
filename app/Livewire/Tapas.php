@@ -23,7 +23,7 @@ class Tapas extends Component
     public $tapaSeleccionada = null; // Modelo Tapa
 
     protected $rules = [
-      'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         'color' => 'required|string|max:255',
         'tipo' => 'required|string|max:255',
         'estado' => 'required|boolean',
@@ -35,7 +35,7 @@ class Tapas extends Component
         $tapas = Tapa::with('existencias')
             ->when($this->search, function ($query) {
                 $query->where('color', 'like', '%' . $this->search . '%')
-                      ->orWhere('tipo', 'like', '%' . $this->search . '%');
+                    ->orWhere('tipo', 'like', '%' . $this->search . '%');
             })
             ->get();
 
@@ -79,15 +79,15 @@ class Tapas extends Component
     {
         $this->validate();
 
+        // Manejar la imagen
         if (is_object($this->imagen)) {
-            // Se subió nueva imagen
             $imagenPath = $this->imagen->store('tapas', 'public');
         } else {
-            // Mantener la existente
             $imagenPath = $this->tapa_id ? Tapa::find($this->tapa_id)->imagen : null;
         }
 
-        Tapa::updateOrCreate(['id' => $this->tapa_id], [
+        // Crear o actualizar la Tapa
+        $tapa = Tapa::updateOrCreate(['id' => $this->tapa_id], [
             'color' => $this->color,
             'tipo' => $this->tipo,
             'descripcion' => $this->descripcion,
@@ -95,8 +95,18 @@ class Tapas extends Component
             'imagen' => $imagenPath,
         ]);
 
+        // Crear existencia automática si es una nueva Tapa
+        if (!$this->tapa_id) {
+            \App\Models\Existencia::create([
+                'existenciable_type' => Tapa::class,
+                'existenciable_id' => $tapa->id,
+                'cantidad' => 0, // siempre 0 al principio
+            ]);
+        }
+
         $this->cerrarModal();
     }
+
 
     public function cerrarModal()
     {
