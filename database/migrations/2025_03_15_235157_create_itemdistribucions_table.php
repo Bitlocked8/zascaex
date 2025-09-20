@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->integer('cantidadNuevo');
             $table->integer('cantidadUsados');
-            $table->foreignId('stock_id')->constrained('stocks')->onDelete('cascade'); // Relación con Asignación
             $table->foreignId('distribucion_id')->constrained('distribucions')->onDelete('cascade'); // Relación con Asignación
             $table->timestamps();
         });

@@ -70,4 +70,9 @@ class Personal extends Model
     {
         return $this->hasMany(Trabajo::class);
     }
+
+     public function reposiciones()
+    {
+        return $this->hasMany(Reposicion::class);
+    }
 }

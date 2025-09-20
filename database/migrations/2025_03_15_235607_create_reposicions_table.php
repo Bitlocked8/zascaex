@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('reposicions', function (Blueprint $table) {
             $table->id();
-            $table->date('fecha');
-            $table->integer('cantidad');
-            // $table->foreignId('base_id')->constrained('bases')->onDelete('cascade'); // Relación con Personal
-            $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade'); // Relación con Personal
-            $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade'); // Relación con Personal
+            $table->date('fecha'); // Fecha de la reposición
+            $table->integer('cantidad'); // Cantidad repuesta
+            $table->decimal('precio_unitario', 10, 2)->nullable(); // Precio por unidad
+            $table->string('imagen')->nullable(); // Imagen opcional
+            $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade'); // Lote/artículo repuesto
+            $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade'); // Quién repuso
+            $table->foreignId('proveedor_id')->nullable()->constrained('proveedors')->nullOnDelete(); // Proveedor opcional
+            $table->text('observaciones')->nullable(); // Detalles opcionales
             $table->timestamps();
         });
     }

@@ -28,10 +28,7 @@ class Sucursal extends Model
     /**
      * Relación 1:N con Stock.
      */
-    public function stocks()
-    {
-        return $this->hasMany(Stock::class);
-    }
+
     public function existencias()
     {
         return $this->hasMany(Existencia::class);

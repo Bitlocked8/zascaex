@@ -3,9 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Existencia;
-use App\Models\Stock; // Importa el modelo relacionado
-use App\Models\Venta; // Importa el modelo relacionado
-
+use App\Models\Venta;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,11 +18,18 @@ class ItemventaFactory extends Factory
      */
     public function definition(): array
     {
+        $existencia = Existencia::where('existenciable_type', 'App\\Models\\Producto')
+            ->inRandomOrder()
+            ->first();
+
         return [
             'cantidad' => $this->faker->numberBetween(1, 10),
             'precio' => $this->faker->randomFloat(2, 5, 50),
-            'existencia_id' => Existencia::where('existenciable_type', 'App\\Models\\Stock')->inRandomOrder()->first()->id, // Solo existencias de Stock
-            'venta_id' => Venta::inRandomOrder()->first()->id,
+            'existencia_id' => $existencia ? $existencia->id : Existencia::factory()->create([
+                'existenciable_type' => 'App\\Models\\Producto',
+                'existenciable_id' => \App\Models\Producto::factory()->create()->id,
+            ])->id,
+            'venta_id' => Venta::inRandomOrder()->first()?->id ?? Venta::factory()->create()->id,
             'estado' => $this->faker->randomElement([1, 2]), // 1: Activo, 2: Inactivo
             'created_at' => now(),
             'updated_at' => now(),

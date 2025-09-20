@@ -9,7 +9,6 @@ use App\Models\Coche;
 use App\Models\Distribucion;
 use App\Models\Empresa;
 use App\Models\Personal;
-use App\Models\Stock;
 use App\Models\Sucursal;
 use App\Models\Cliente;
 use App\Models\Compra;
@@ -1061,7 +1060,6 @@ class DatabaseSeeder extends Seeder
         $tapas = Tapa::get();
         $productos = Producto::get();
         $etiquetas = Etiqueta::get();
-        $stocks = Stock::factory(5)->create();
 
 
 
@@ -1138,16 +1136,7 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
 
-            // Asignar stock a la sucursal
-            foreach ($stocks as $stock) {
-                Existencia::create([
-                    'existenciable_id' => $stock->id,
-                    'existenciable_type' => Stock::class,
-                    'sucursal_id' => $sucursal->id,
-                    'cantidad' => rand(10, 50),
-                ]);
-            }
-
+      
 
 
 

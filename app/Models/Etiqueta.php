@@ -39,9 +39,6 @@ class Etiqueta extends Model
     {
         return $this->morphMany(Existencia::class, 'existenciable');
     }
-    public function stocks()
-    {
-        return $this->hasMany(Stock::class);
-    }
+
     
 }

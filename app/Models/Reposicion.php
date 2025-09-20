@@ -12,16 +12,20 @@ class Reposicion extends Model
     protected $fillable = [
         'fecha',
         'cantidad',
-        'base_id',
+        'precio_unitario',
+        'imagen',
+        'existencia_id',
         'personal_id',
+        'proveedor_id',
+        'observaciones',
     ];
 
     /**
-     * Relación: Una reposición pertenece a una base.
+     * Relación: Una reposición pertenece a una existencia (lote/artículo).
      */
-    public function base()
+    public function existencia()
     {
-        return $this->belongsTo(Base::class);
+        return $this->belongsTo(Existencia::class);
     }
 
     /**
@@ -30,5 +34,13 @@ class Reposicion extends Model
     public function personal()
     {
         return $this->belongsTo(Personal::class);
+    }
+
+    /**
+     * Relación: Una reposición puede tener un proveedor (opcional).
+     */
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class);
     }
 }

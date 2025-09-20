@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Proveedor extends Model
 {
-    //
     use HasFactory;
+
     protected $fillable = [
         'razonSocial',
         'nombreContacto',
@@ -22,4 +22,9 @@ class Proveedor extends Model
         'tiempoEntrega',
         'estado',
     ];
+
+    public function reposiciones()
+    {
+        return $this->hasMany(Reposicion::class);
+    }
 }

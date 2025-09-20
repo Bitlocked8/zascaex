@@ -12,17 +12,14 @@ class Itemdistribucion extends Model
     protected $fillable = [
         'cantidadNuevo',
         'cantidadUsados',
-        'stock_id',
+
         'distribucion_id',
     ];
 
     /**
      * Relación: Un item distribución pertenece a un stock.
      */
-    public function stock()
-    {
-        return $this->belongsTo(Stock::class);
-    }
+ 
 
     /**
      * Relación: Un item distribución pertenece a una distribución.

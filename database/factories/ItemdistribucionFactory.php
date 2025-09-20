@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Distribucion;
-use App\Models\Stock;
+
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,7 +22,6 @@ class ItemdistribucionFactory extends Factory
             //
             'cantidadNuevo' => $this->faker->numberBetween(0, 100), // Cantidad de productos nuevos
             'cantidadUsados' => $this->faker->numberBetween(0, 100), // Cantidad de productos usados
-            'stock_id' => Stock::get()->random()->id, // Relación con stock
             'distribucion_id' => Distribucion::get()->random()->id, // Relación con distribución
         ];
     }

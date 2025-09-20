@@ -39,8 +39,10 @@ class Existencia extends Model
     {
         return $this->belongsTo(Elaboracion::class);
     }
-    public function stock()
+
+     public function reposiciones()
     {
-        return $this->belongsTo(Stock::class);
+        return $this->hasMany(Reposicion::class);
     }
+
 }
