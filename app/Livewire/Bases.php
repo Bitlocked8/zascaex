@@ -2,21 +2,19 @@
 
 namespace App\Livewire;
 
+use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Base;
 use App\Models\Preforma;
-use Livewire\Component;
-use Livewire\WithPagination;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Bases extends Component
 {
-    use WithPagination;
     use WithFileUploads;
+
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
-    public $imagen;
+    public $imagen; // Puede ser UploadedFile o string
     public $descripcion = '';
     public $base_id = null;
     public $capacidad = '';
@@ -27,10 +25,8 @@ class Bases extends Component
     public $baseSeleccionada = null;
     public $todasLasPreformas = [];
 
-    protected $paginationTheme = 'tailwind';
-
     protected $rules = [
-        'imagen' => 'nullable|image|max:1024',
+        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5MB
         'capacidad' => 'required|integer|min:0',
         'estado' => 'required|boolean',
         'descripcion' => 'nullable|string|max:255',
@@ -48,12 +44,14 @@ class Bases extends Component
 
     public function mount()
     {
-        $this->todasLasPreformas = Preforma::where('estado', 1)->orderBy('insumo')->get();
+        $this->todasLasPreformas = Preforma::where('estado', 1)
+            ->orderBy('insumo')
+            ->get();
     }
 
     public function render()
     {
-        $bases = Base::with(['existencias', 'preforma'])
+        $bases = Base::with('preforma')
             ->when($this->search, function ($query) {
                 $searchTerm = '%' . $this->search . '%';
                 $query->where('capacidad', 'like', $searchTerm)
@@ -61,23 +59,30 @@ class Bases extends Component
                         $subQuery->where('insumo', 'like', $searchTerm);
                     });
             })
-            ->paginate(4);
+            ->get();
 
         return view('livewire.bases', compact('bases'));
     }
 
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['capacidad', 'estado', 'imagen', 'descripcion', 'observaciones', 'preforma_id', 'base_id']);
+        $this->reset([
+            'base_id',
+            'capacidad',
+            'estado',
+            'descripcion',
+            'observaciones',
+            'preforma_id',
+            'imagen',
+            'baseSeleccionada',
+        ]);
+
         $this->accion = $accion;
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
+
         $this->modal = true;
     }
 
@@ -87,50 +92,51 @@ class Bases extends Component
         $this->base_id = $base->id;
         $this->capacidad = $base->capacidad;
         $this->estado = $base->estado;
+        $this->descripcion = $base->descripcion;
         $this->observaciones = $base->observaciones;
         $this->preforma_id = $base->preforma_id;
         $this->accion = 'edit';
+        $this->baseSeleccionada = $base;
+        $this->imagen = $base->imagen; // Mantener imagen si no se sube nueva
     }
 
     public function guardar()
     {
         $this->validate();
 
-        try {
-            if ($this->imagen) {
-                $imagenPath = $this->imagen->store('bases', 'public');
-            } else {
-                $imagenPath = $this->base_id ? Base::find($this->base_id)->imagen : null;
-            }
-
-            // Asegúrate de guardar la descripción
-            Base::updateOrCreate(['id' => $this->base_id], [
-                'capacidad' => $this->capacidad,
-                'estado' => $this->estado,
-                'observaciones' => $this->observaciones,
-                'preforma_id' => $this->preforma_id ?: null,
-                'imagen' => $imagenPath,
-                'descripcion' => $this->descripcion, // Añadido aquí
-            ]);
-
-            LivewireAlert::title($this->base_id ? 'Base actualizada con éxito.' : 'Base creada con éxito.')
-                ->success()
-                ->show();
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-                ->error()
-                ->show();
+        if (is_object($this->imagen)) {
+            // Nueva imagen
+            $imagenPath = $this->imagen->store('bases', 'public');
+        } else {
+            // Mantener la existente
+            $imagenPath = $this->base_id ? Base::find($this->base_id)->imagen : null;
         }
+
+        Base::updateOrCreate(['id' => $this->base_id], [
+            'capacidad' => $this->capacidad,
+            'estado' => $this->estado,
+            'observaciones' => $this->observaciones,
+            'preforma_id' => $this->preforma_id ?: null,
+            'imagen' => $imagenPath,
+            'descripcion' => $this->descripcion,
+        ]);
+
+        $this->cerrarModal();
     }
-
-
 
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['capacidad', 'estado', 'observaciones', 'preforma_id', 'base_id']);
+        $this->reset([
+            'base_id',
+            'capacidad',
+            'estado',
+            'descripcion',
+            'observaciones',
+            'preforma_id',
+            'imagen',
+            'baseSeleccionada',
+        ]);
         $this->resetErrorBag();
     }
 

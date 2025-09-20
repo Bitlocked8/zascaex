@@ -2,15 +2,13 @@
 
 namespace App\Livewire;
 
-use Livewire\WithFileUploads;
 use App\Models\Preforma;
 use Livewire\Component;
-use Livewire\WithPagination;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use Livewire\WithFileUploads;
 
 class Preformas extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads;
 
     public $search = '';
     public $modal = false;
@@ -23,18 +21,17 @@ class Preformas extends Component
     public $estado = 1;
     public $observaciones = '';
     public $accion = 'create';
-    public $preformaSeleccionada = [];
-    public $imagen;
-    protected $paginationTheme = 'tailwind';
+    public $preformaSeleccionada = null; // Modelo Preforma
+    public $imagen; // Puede ser UploadedFile o string
 
     protected $rules = [
-        'insumo' => 'required|string',
-        'descripcion' => 'nullable|string',
+        'insumo' => 'required|string|max:255',
+        'descripcion' => 'nullable|string|max:255',
         'capacidad' => 'required|integer',
-        'color' => 'required|string',
+        'color' => 'required|string|max:255',
         'estado' => 'required|boolean',
-        'observaciones' => 'nullable|string',
-        'imagen' => 'nullable|image|max:1024',
+        'observaciones' => 'nullable|string|max:255',
+        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5 MB solo jpg/png
     ];
 
     public function render()
@@ -42,26 +39,22 @@ class Preformas extends Component
         $preformas = Preforma::with('existencias')
             ->when($this->search, function ($query) {
                 $query->where('insumo', 'like', '%' . $this->search . '%')
-                    ->orWhere('descripcion', 'like', '%' . $this->search . '%');
+                      ->orWhere('descripcion', 'like', '%' . $this->search . '%');
             })
-            ->paginate(4);
+            ->get(); // quitamos la paginación
 
         return view('livewire.preformas', compact('preformas'));
     }
 
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['insumo', 'descripcion', 'capacidad', 'color', 'estado', 'observaciones']);
+        $this->reset(['insumo', 'descripcion', 'capacidad', 'color', 'estado', 'observaciones', 'imagen']);
         $this->accion = $accion;
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
+
         $this->modal = true;
     }
 
@@ -76,50 +69,42 @@ class Preformas extends Component
         $this->estado = $preforma->estado;
         $this->observaciones = $preforma->observaciones;
         $this->accion = 'edit';
+        $this->preformaSeleccionada = $preforma; // Para vista previa
+        $this->imagen = $preforma->imagen; // Mantener imagen actual si no se sube nueva
     }
 
     public function guardar()
     {
         $this->validate();
 
-        try {
-            if ($this->imagen) {
-                // Si se sube una nueva imagen, la almacenamos en el directorio 'public/tapas'
-                $imagenPath = $this->imagen->store('tapas', 'public');
-            } else {
-                // Si no hay una nueva imagen, mantenemos la imagen actual (si existe)
-                $imagenPath = $this->preforma_id ? Preforma::find($this->preforma_id)->imagen : null;
-            }
-            Preforma::updateOrCreate(['id' => $this->preforma_id], [
-                'imagen' => $imagenPath,
-                'insumo' => $this->insumo,
-                'descripcion' => $this->descripcion,
-                'capacidad' => $this->capacidad,
-                'color' => $this->color,
-                'estado' => $this->estado,
-                'observaciones' => $this->observaciones,
-            ]);
-
-            LivewireAlert::title($this->preforma_id ? 'Preforma actualizada con éxito.' : 'Preforma creada con éxito.')
-                ->success()
-                ->show();
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-                ->error()
-                ->show();
+        if (is_object($this->imagen)) {
+            // Se subió nueva imagen
+            $imagenPath = $this->imagen->store('preformas', 'public');
+        } else {
+            // Mantener la existente
+            $imagenPath = $this->preforma_id ? Preforma::find($this->preforma_id)->imagen : null;
         }
+
+        Preforma::updateOrCreate(['id' => $this->preforma_id], [
+            'insumo' => $this->insumo,
+            'descripcion' => $this->descripcion,
+            'capacidad' => $this->capacidad,
+            'color' => $this->color,
+            'estado' => $this->estado,
+            'observaciones' => $this->observaciones,
+            'imagen' => $imagenPath,
+        ]);
+
+        $this->cerrarModal();
     }
 
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['insumo', 'descripcion', 'capacidad', 'color', 'estado', 'observaciones', 'imagen', 'preforma_id']);
+        $this->reset(['insumo', 'descripcion', 'capacidad', 'color', 'estado', 'observaciones', 'imagen', 'preforma_id', 'preformaSeleccionada']);
         $this->resetErrorBag();
     }
 
-    // FUNCIONALIDAD PARA MODAL DE DETALLES
     public function modaldetalle($id)
     {
         $this->preformaSeleccionada = Preforma::findOrFail($id);

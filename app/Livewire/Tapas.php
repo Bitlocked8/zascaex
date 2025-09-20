@@ -4,13 +4,12 @@ namespace App\Livewire;
 
 use App\Models\Tapa;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Livewire\WithFileUploads;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Tapas extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads;
+
     public $descripcion = '';
     public $search = '';
     public $modal = false;
@@ -19,36 +18,28 @@ class Tapas extends Component
     public $color = '';
     public $tipo = '';
     public $estado = 1;
-    public $imagen;
+    public $imagen; // Puede ser UploadedFile o string
     public $accion = 'create';
-    public $tapaSeleccionada = [];
-
-    protected $paginationTheme = 'tailwind';
+    public $tapaSeleccionada = null; // Modelo Tapa
 
     protected $rules = [
-        'imagen' => 'nullable|image|max:1024',
+      'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         'color' => 'required|string|max:255',
         'tipo' => 'required|string|max:255',
         'estado' => 'required|boolean',
         'descripcion' => 'nullable|string|max:255',
-
     ];
 
     public function render()
     {
-        $tapas = Tapa::with('existencias') // Cargar las existencias relacionadas
+        $tapas = Tapa::with('existencias')
             ->when($this->search, function ($query) {
                 $query->where('color', 'like', '%' . $this->search . '%')
-                    ->orWhere('tipo', 'like', '%' . $this->search . '%');
+                      ->orWhere('tipo', 'like', '%' . $this->search . '%');
             })
-            ->paginate(4);
+            ->get();
 
         return view('livewire.tapas', compact('tapas'));
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
     }
 
     public function abrirModal($accion = 'create', $id = null)
@@ -61,10 +52,13 @@ class Tapas extends Component
             'estado',
             'imagen',
         ]);
+
         $this->accion = $accion;
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
+
         $this->modal = true;
     }
 
@@ -77,47 +71,45 @@ class Tapas extends Component
         $this->estado = $tapa->estado;
         $this->descripcion = $tapa->descripcion;
         $this->accion = 'edit';
+        $this->tapaSeleccionada = $tapa; // ← importante para mostrar la imagen existente
+        $this->imagen = $tapa->imagen;   // ← asignamos la ruta actual si no se sube nueva
     }
 
     public function guardar()
     {
         $this->validate();
 
-        try {
-
-
-            if ($this->imagen) {
-                $imagenPath = $this->imagen->store('tapas', 'public');
-            } else {
-                // Si no hay una nueva imagen, mantener la imagen actual si existe
-                $imagenPath = $this->tapa_id ? Tapa::find($this->tapa_id)->imagen : null;
-            }
-
-            Tapa::updateOrCreate(['id' => $this->tapa_id], [
-                'color' => $this->color,
-                'tipo' => $this->tipo,
-                'descripcion' => $this->descripcion,
-                'estado' => $this->estado,
-                'imagen' => $imagenPath,
-            ]);
-
-            LivewireAlert::title($this->tapa_id ? 'Tapa actualizada con éxito.' : 'Tapa creada con éxito.')
-                ->success()
-                ->show();
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-                ->error()
-                ->show();
+        if (is_object($this->imagen)) {
+            // Se subió nueva imagen
+            $imagenPath = $this->imagen->store('tapas', 'public');
+        } else {
+            // Mantener la existente
+            $imagenPath = $this->tapa_id ? Tapa::find($this->tapa_id)->imagen : null;
         }
+
+        Tapa::updateOrCreate(['id' => $this->tapa_id], [
+            'color' => $this->color,
+            'tipo' => $this->tipo,
+            'descripcion' => $this->descripcion,
+            'estado' => $this->estado,
+            'imagen' => $imagenPath,
+        ]);
+
+        $this->cerrarModal();
     }
 
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['color', 'tipo', 'descripcion', 'estado', 'imagen', 'tapa_id']);
-
+        $this->reset([
+            'tapa_id',
+            'color',
+            'tipo',
+            'descripcion',
+            'estado',
+            'imagen',
+            'tapaSeleccionada',
+        ]);
         $this->resetErrorBag();
     }
 

@@ -5,19 +5,17 @@ namespace App\Livewire;
 use App\Models\Etiqueta;
 use App\Models\Cliente;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Livewire\WithFileUploads;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Etiquetas extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads;
 
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
     public $etiqueta_id = null;
-    public $imagen;
+    public $imagen; // Puede ser UploadedFile o string
     public $capacidad = '';
     public $unidad = '';
     public $estado = 1;
@@ -25,12 +23,10 @@ class Etiquetas extends Component
     public $clientes;
     public $descripcion = '';
     public $accion = 'create';
-    public $etiquetaSeleccionada = [];
-
-    protected $paginationTheme = 'tailwind';
+    public $etiquetaSeleccionada = null; // Modelo Etiqueta
 
     protected $rules = [
-        'imagen' => 'nullable|image|max:1024',
+        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5 MB, solo jpg/png
         'capacidad' => 'required|string|max:255',
         'unidad' => 'nullable|in:L,ml,g,Kg,unidad',
         'descripcion' => 'nullable|string|max:255',
@@ -47,22 +43,17 @@ class Etiquetas extends Component
     {
         $etiquetas = Etiqueta::with('existencias')
             ->when($this->search, function ($query) {
-                $query->where('imagen', 'like', '%' . $this->search . '%')
-                    ->orWhere('capacidad', 'like', '%' . $this->search . '%');
+                $query->where('capacidad', 'like', '%' . $this->search . '%')
+                      ->orWhere('descripcion', 'like', '%' . $this->search . '%');
             })
-            ->paginate(4);
+            ->get(); // quitamos la paginación
 
         return view('livewire.etiquetas', compact('etiquetas'));
     }
 
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['imagen', 'capacidad', 'unidad', 'estado', 'cliente_id']);
+        $this->reset(['imagen', 'capacidad', 'unidad', 'estado', 'cliente_id', 'descripcion']);
         $this->accion = $accion;
         if ($accion === 'edit' && $id) {
             $this->editar($id);
@@ -77,51 +68,41 @@ class Etiquetas extends Component
         $this->capacidad = $etiqueta->capacidad;
         $this->unidad = $etiqueta->unidad;
         $this->estado = $etiqueta->estado;
-        $this->descripcion = $etiqueta->descripcion;  // Cargar la descripcion
+        $this->descripcion = $etiqueta->descripcion;
         $this->cliente_id = $etiqueta->cliente_id;
         $this->accion = 'edit';
+        $this->etiquetaSeleccionada = $etiqueta; // para vista previa de imagen
+        $this->imagen = $etiqueta->imagen; // mantener la imagen actual si no se sube nueva
     }
-
 
     public function guardar()
     {
         $this->validate();
 
-        try {
-            
-            if ($this->imagen) {
-                $imagenPath = $this->imagen->store('etiquetas', 'public');
-            } else {
-                // Si no hay una nueva imagen, mantener la imagen actual si existe
-                $imagenPath = $this->etiqueta_id ? Etiqueta::find($this->etiqueta_id)->imagen : null;
-            }
-
-            Etiqueta::updateOrCreate(['id' => $this->etiqueta_id], [
-                'imagen' => $imagenPath,
-                'capacidad' => $this->capacidad,
-                'unidad' => $this->unidad,
-                'estado' => $this->estado,
-                'descripcion' => $this->descripcion,  // Guardando la descripción
-                'cliente_id' => $this->cliente_id ?: null,
-            ]);
-
-            LivewireAlert::title($this->etiqueta_id ? 'Etiqueta actualizada con éxito.' : 'Etiqueta creada con éxito.')
-                ->success()
-                ->show();
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-                ->error()
-                ->show();
+        if (is_object($this->imagen)) {
+            // Se subió nueva imagen
+            $imagenPath = $this->imagen->store('etiquetas', 'public');
+        } else {
+            // Mantener la existente
+            $imagenPath = $this->etiqueta_id ? Etiqueta::find($this->etiqueta_id)->imagen : null;
         }
-    }
 
+        Etiqueta::updateOrCreate(['id' => $this->etiqueta_id], [
+            'imagen' => $imagenPath,
+            'capacidad' => $this->capacidad,
+            'unidad' => $this->unidad,
+            'estado' => $this->estado,
+            'descripcion' => $this->descripcion,
+            'cliente_id' => $this->cliente_id ?: null,
+        ]);
+
+        $this->cerrarModal();
+    }
 
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['imagen', 'capacidad', 'unidad', 'estado', 'cliente_id', 'etiqueta_id']);
+        $this->reset(['imagen', 'capacidad', 'unidad', 'estado', 'cliente_id', 'etiqueta_id', 'descripcion', 'etiquetaSeleccionada']);
         $this->resetErrorBag();
     }
 
