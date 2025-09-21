@@ -17,19 +17,22 @@ class Elaboracion extends Model
         'cantidad_entrada',
         'cantidad_salida',
         'fecha_elaboracion',
+        'merma',           // ← agregado
         'observaciones',
     ];
 
-    public function existenciaEntrada(): BelongsTo {
+    public function existenciaEntrada(): BelongsTo
+    {
         return $this->belongsTo(Existencia::class, 'existencia_entrada_id');
     }
 
-    public function existenciaSalida() {
+    public function existenciaSalida(): BelongsTo
+    {
         return $this->belongsTo(Existencia::class, 'existencia_salida_id');
     }
 
-    public function personal() {
+    public function personal(): BelongsTo
+    {
         return $this->belongsTo(Personal::class);
     }
 }
-

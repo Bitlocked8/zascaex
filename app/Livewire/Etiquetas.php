@@ -44,7 +44,7 @@ class Etiquetas extends Component
         $etiquetas = Etiqueta::with('existencias')
             ->when($this->search, function ($query) {
                 $query->where('capacidad', 'like', '%' . $this->search . '%')
-                      ->orWhere('descripcion', 'like', '%' . $this->search . '%');
+                    ->orWhere('descripcion', 'like', '%' . $this->search . '%');
             })
             ->get(); // quitamos la paginación
 
@@ -87,17 +87,30 @@ class Etiquetas extends Component
             $imagenPath = $this->etiqueta_id ? Etiqueta::find($this->etiqueta_id)->imagen : null;
         }
 
-        Etiqueta::updateOrCreate(['id' => $this->etiqueta_id], [
-            'imagen' => $imagenPath,
-            'capacidad' => $this->capacidad,
-            'unidad' => $this->unidad,
-            'estado' => $this->estado,
-            'descripcion' => $this->descripcion,
-            'cliente_id' => $this->cliente_id ?: null,
-        ]);
+        $etiqueta = Etiqueta::updateOrCreate(
+            ['id' => $this->etiqueta_id],
+            [
+                'imagen' => $imagenPath,
+                'capacidad' => $this->capacidad,
+                'unidad' => $this->unidad,
+                'estado' => $this->estado,
+                'descripcion' => $this->descripcion,
+                'cliente_id' => $this->cliente_id ?: null,
+            ]
+        );
+
+        // 👇 Crear existencia si es una nueva Etiqueta
+        if (!$this->etiqueta_id) {
+            \App\Models\Existencia::create([
+                'existenciable_type' => Etiqueta::class,
+                'existenciable_id' => $etiqueta->id,
+                'cantidad' => 0, // stock inicial siempre 0
+            ]);
+        }
 
         $this->cerrarModal();
     }
+
 
     public function cerrarModal()
     {

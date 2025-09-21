@@ -17,7 +17,7 @@ class Stocks extends Component
     // Propiedades para filtrar y mostrar
     public $existencias;
     public $reposiciones;
-    public $sucursales;
+
     public $proveedores;
 
     public $selectedSucursal;
@@ -34,6 +34,11 @@ class Stocks extends Component
     public $fecha;
     public $observaciones;
     public $accion = 'create';
+
+    public $modalConfigGlobal = false;
+    public $configExistencias = []; // Array para guardar los valores de cada existencia temporalmente
+    public $sucursales;
+
 
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
@@ -196,5 +201,37 @@ class Stocks extends Component
             'reposiciones' => $this->reposiciones,
             'personal' => $this->personal,
         ]);
+    }
+
+    public function abrirModalConfigGlobal()
+    {
+        $this->configExistencias = $this->existencias->mapWithKeys(function ($ex) {
+            return [
+                $ex->id => [
+                    'cantidad_minima' => $ex->cantidadMinima,
+                    'sucursal_id' => $ex->sucursal_id
+                ]
+            ];
+        })->toArray();
+
+        $this->modalConfigGlobal = true;
+    }
+
+
+
+    public function guardarConfigGlobal()
+    {
+        foreach ($this->configExistencias as $id => $config) {
+            $existencia = Existencia::find($id);
+            if ($existencia) {
+                $existencia->update([
+                    'cantidadMinima' => $config['cantidad_minima'],
+                    'sucursal_id' => $config['sucursal_id'],
+                ]);
+            }
+        }
+
+        $this->modalConfigGlobal = false;
+        $this->cargarExistencias(); // refresca la lista
     }
 }

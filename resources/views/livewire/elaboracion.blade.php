@@ -1,264 +1,144 @@
-<div class="p-text p-2 mt-10 flex justify-center">
-  <div class="w-full max-w-screen-xl grid grid-cols-1 gap-6">
-    <div>
-      <h6 class="text-xl font-bold mb-4 px-4 p-text">Gestión de Elaboraciones</h6>
+<div class="p-2 mt-20 flex justify-center bg-white">
+  <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <!-- Botón de registro y buscador -->
-      <div class="flex justify-center items-center gap-4 w-full max-w-2xl mx-auto">
-        <button title="Registrar Elaboración" wire:click='abrirModal'
-          class="text-emerald-500 hover:text-emerald-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-plus">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M12 5v14m7-7h-14" />
+    <!-- Buscar + Crear Elaboración -->
+    <div class="flex items-center gap-2 mb-4 col-span-full">
+      <input type="text" wire:model.live="search" placeholder="Buscar por observaciones..."
+        class="flex-1 border rounded px-3 py-2" />
+
+      <button wire:click="abrirModal('create')"
+        class="bg-cyan-500 hover:bg-cyan-600 rounded-xl px-4 py-2 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9" />
+          <line x1="12" y1="9" x2="12" y2="15" />
+          <line x1="9" y1="12" x2="15" y2="12" />
+        </svg>
+      </button>
+    </div>
+
+    @forelse($elaboraciones as $elaboracion)
+    <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
+      <!-- Columna Izquierda: Info Elaboración -->
+      <div class="flex flex-col col-span-8 text-left">
+        <p><strong>Entrada:</strong> {{ $elaboracion->existenciaEntrada->existenciable->nombre ?? 'N/A' }} ({{ $elaboracion->cantidad_entrada }})</p>
+        <p><strong>Salida:</strong> {{ $elaboracion->existenciaSalida->existenciable->nombre ?? 'N/A' }} ({{ $elaboracion->cantidad_salida }})</p>
+        <p><strong>Personal:</strong> {{ $elaboracion->personal->nombre ?? 'N/A' }}</p>
+        <p><strong>Fecha:</strong> {{ $elaboracion->fecha_elaboracion }}</p>
+        <p><strong>Merma:</strong> {{ $elaboracion->merma }}</p>
+        <p><strong>Observaciones:</strong> {{ $elaboracion->observaciones ?? '-' }}</p>
+      </div>
+
+      <div class="flex flex-col items-end gap-4 col-span-4">
+        <!-- Editar Elaboración -->
+        <button wire:click="abrirModal('edit', {{ $elaboracion->id }})"
+          class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center text-cyan-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6 6L7 21l-6-6 6-6z" />
           </svg>
         </button>
-        <input type="text" wire:model.live="search" placeholder="Buscar por fecha o encargado..."
-          class="input-g w-auto sm:w-64" />
-      </div>
 
-      <!-- Tabla -->
-      <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg">
-        <table class="w-full text-sm text-left border border-slate-200 dark:border-cyan-200 rounded-lg border-collapse">
-          <thead class="text-x uppercase color-bg">
-            <tr>
-              <th scope="col" class="px-6 py-3 p-text text-left">Información</th>
-              <th scope="col" class="px-6 py-3 p-text text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse ($elaboraciones as $elaboracion)
-            <tr class="color-bg border border-slate-200">
-              <!-- Información -->
-              <td class="px-6 py-4 p-text text-left">
-                <div class="mb-2">                  
-                  <span><b>Fecha:</b> {{ $elaboracion->fecha_elaboracion }}</span>
-                </div>
-                <div class="mb-2">                  
-                  <span> <b>Encargado:</b> {{ $elaboracion->personal->apellidos }}{{ $elaboracion->personal->nombres }}</span>
-                </div>
-                <div class="mb-2">                  
-                  <span> <b>Entrada:</b> {{ $elaboracion->cantidad_entrada }} [{{ $elaboracion->existenciaEntrada->existenciable->insumo}}]</span>
-                </div>
-                <div class="mb-2">                  
-                  <span> <b>Salida:</b> {{ $elaboracion->cantidad_salida ?? 'Pendiente' }} [{{ $elaboracion->existenciaSalida->existenciable->capacidad}}]</span>
-                </div>
-                @if ($elaboracion->observaciones)
-                <div class="mb-2">                  
-                  <span> <b>Observaciones:</b> {{ $elaboracion->observaciones }}</span>
-                </div>
-                @endif
-              </td>
-              <!-- Acciones -->
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end space-x-2">
-                  <button title="Editar Elaboración" wire:click="editar({{ $elaboracion->id }})"
-                    class="text-blue-500 hover:text-blue-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      class="icon icon-tabler icon-tabler-edit">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                      <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                      <path d="M16 5l3 3" />
-                    </svg>
-                  </button>
-                  <button title="Detalles" wire:click="modaldetalle({{ $elaboracion->id }})"
-                  class="text-indigo-500 hover:text-indigo-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor"
-                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-info-circle">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                      <path d="M12 9h.01" />
-                      <path d="M11 12h1v4h1" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="2" class="text-left py-4 text-gray-600 dark:text-gray-400">
-                No se registraron procesos de elaboración.
-              </td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Paginación -->
-      <div class="mt-4 flex justify-center">
-        {{ $elaboraciones->links() }}
+        <!-- Ver Detalle -->
+        <button wire:click="modaldetalle({{ $elaboracion->id }})"
+          class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center text-cyan-600">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
       </div>
     </div>
+    @empty
+    <div class="col-span-full text-center py-4 text-gray-600">
+      No hay elaboraciones registradas.
+    </div>
+    @endforelse
   </div>
 
-  <!-- Modal Registro/Edición -->
+
   @if($modal)
-  <div class="modal-first">
-    <div class="modal-center">
-      <div class="modal-hiden">
-        <div class="center-col">
-          <h3 class="p-text">{{ $accion === 'create' ? 'Registrar Elaboración' : 'Editar Elaboración' }}</h3>
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white text-cyan-950 rounded-lg shadow-lg w-full max-w-4xl p-6 relative overflow-y-auto max-h-[90vh]">
+      <h2 class="text-xl font-semibold mb-6 text-center">
+        {{ $accion === 'create' ? 'Registrar Elaboración' : 'Editar Elaboración' }}
+      </h2>
 
-          <div class="over-col">
-            <!-- Fecha de Elaboración -->
-            <h3 class="p-text">Fecha de Elaboración</h3>
-            <input type="date" wire:model.defer="fecha_elaboracion" class="p-text input-g">
-            @error('fecha_elaboracion') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+      <div class="grid grid-cols-12 gap-4">
 
-            <!-- Encargado -->
-            <h3 class="p-text">Encargado</h3>
-            <select wire:model.defer="personal_id" class="p-text input-g">
-              <option value="">Seleccione</option>
-              @foreach($personales as $personal)
-              <option value="{{ $personal->id }}">{{ $personal->apellidos }} {{ $personal->nombres }}</option>
-              @endforeach
-            </select>
-            @error('personal_id') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+        <div class="col-span-12 md:col-span-6 flex flex-col gap-4">
 
-            <!-- Sucursal -->
-            <h3 class="p-text">Sucursal</h3>
-            <select wire:model.lazy="sucursal_id" wire:change='preformasSucursal()' class="p-text input-g">
-              <option value="">Seleccione</option>
-              @foreach($sucursales as $sucursal)
-              <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-              @endforeach
-            </select>
-            @error('sucursal_id') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+          <!-- Entrada: preformas -->
+          <select wire:model="existencia_entrada_id" class="input-minimal">
+            <option value="">Seleccionar Preforma</option>
+            @foreach($preformas as $ex)
+            <option value="{{ $ex->id }}">
+              {{ $ex->existenciable->nombre ?? 'Artículo' }} (Stock: {{ $ex->cantidad }})
+            </option>
+            @endforeach
+          </select>
 
-            <!-- Existencia Entrada (Preforma) -->
-            <h3 class="p-text">(Preformas) Existencia Entrada</h3>
-            <select wire:model.lazy="existencia_entrada_id" wire:change='basesPreformas()' class="p-text input-g">
-              <option value="">Seleccione</option>
-              @foreach($existencias_preforma as $existencia)
-              <option value="{{ $existencia->id }}">ID #{{ $existencia->id }} [{{ $existencia->cantidad }}] - {{ $existencia->descripcion ??
-                'Preforma' }}</option>
-              @endforeach
-            </select>
-            @error('existencia_entrada_id') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Existencia Salida (Base) -->
-            <h3 class="p-text">(Bases) Existencia Salida</h3>
-            <select wire:model.lazy="existencia_salida_id" class="p-text input-g">
-              <option value="">Seleccione</option>
-              @foreach($existencias_base as $existencia)
-              <option value="{{ $existencia->id }}">ID #{{ $existencia->id }} [{{ $existencia->cantidad }}]- {{ $existencia->descripcion ?? 'Base' }}
-              </option>
-              @endforeach
-            </select>
-            @error('existencia_salida_id') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+          <!-- Salida: bases -->
+          <select wire:model="existencia_salida_id" class="input-minimal">
+            <option value="">Seleccionar Base</option>
+            @foreach($bases as $ex)
+            <option value="{{ $ex->id }}">
+              {{ $ex->existenciable->nombre ?? 'Artículo' }} (Stock: {{ $ex->cantidad }})
+            </option>
+            @endforeach
+          </select>
 
 
-            <!-- Cantidad Entrada -->
-            <h3 class="p-text">Cantidad Entrada</h3>
-            <input type="number" wire:model.defer="cantidad_entrada" class="p-text input-g">
-            @error('cantidad_entrada') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
 
-            <!-- Cantidad Salida -->
-            <h3 class="p-text">Cantidad Salida (Bases)</h3>
-            <input type="number" wire:model.defer="cantidad_salida" class="p-text input-g">
-            @error('cantidad_salida') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+          <!-- Personal -->
+          <label class="font-semibold text-sm">Personal Responsable</label>
+          <select wire:model="personal_id" class="input-minimal">
+            <option value="">Seleccionar Personal</option>
+            @foreach($personals as $p)
+            <option value="{{ $p->id }}">{{ $p->nombre }}</option>
+            @endforeach
+          </select>
+          @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
 
-            <!-- Observaciones -->
-            <h3 class="p-text">Observaciones</h3>
-            <input wire:model.defer="observaciones" class="p-text input-g"></input>
-            @error('observaciones') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-          </div>
+          <!-- Cantidades -->
+          <label class="font-semibold text-sm">Cantidad Entrada</label>
+          <input type="number" wire:model="cantidad_entrada" placeholder="Cantidad Entrada" class="input-minimal">
+          @error('cantidad_entrada') <span class="error-message">{{ $message }}</span> @enderror
 
-          <!-- Botones -->
-          <div class="mt-6 flex justify-center w-full space-x-4">
-            <button type="button" wire:click="guardar"
-              class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                <path d="M14 4l0 4l-6 0l0 -4" />
-              </svg>
-            </button>
-            <button type="button" wire:click="cerrarModal"
-              class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M18 6l-12 12" />
-                <path d="M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <label class="font-semibold text-sm">Cantidad Salida</label>
+          <input type="number" wire:model="cantidad_salida" placeholder="Cantidad Salida" class="input-minimal">
+          @error('cantidad_salida') <span class="error-message">{{ $message }}</span> @enderror
+
+          <!-- Fecha -->
+          <label class="font-semibold text-sm">Fecha de Elaboración</label>
+          <input type="date" wire:model="fecha_elaboracion" class="input-minimal">
+          @error('fecha_elaboracion') <span class="error-message">{{ $message }}</span> @enderror
+
+          <!-- Merma -->
+          <label class="font-semibold text-sm">Merma</label>
+          <input type="number" wire:model="merma" placeholder="Merma" class="input-minimal">
+          @error('merma') <span class="error-message">{{ $message }}</span> @enderror
+
+          <!-- Observaciones -->
+          <label class="font-semibold text-sm">Observaciones</label>
+          <textarea wire:model="observaciones" placeholder="Observaciones" class="input-minimal"></textarea>
+          @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+
         </div>
+
+        <div class="col-span-12 flex justify-center md:justify-end gap-4 mt-4 md:mt-0">
+          <button type="button" wire:click="guardar" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl px-4 py-2">
+            Guardar
+          </button>
+          <button type="button" wire:click="cerrarModal" class="bg-gray-300 hover:bg-gray-400 rounded-xl px-4 py-2">
+            Cancelar
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
   @endif
 
-  <!-- Modal Detalle -->
-  @if ($modalDetalle)
-  <div class="modal-first">
-    <div class="modal-center">
-      <div class="modal-hiden">
-        <div class="center-col">
-          <h3 class="text-base font-semibold p-text">Detalles de la Elaboración</h3>
 
-          <div class="mt-4">
-            <dl class="grid grid-cols-2 gap-4">
-              <!-- Fecha de Elaboración -->
-              <div>
-                <dt class="text-sm font-medium p-text">Fecha de Elaboración</dt>
-                <dd class="mt-1 text-sm p-text">{{ $elaboracionSeleccionada['fecha_elaboracion'] ?? '-' }}</dd>
-              </div>
-              <!-- Encargado -->
-              <div>
-                <dt class="text-sm font-medium p-text">Encargado</dt>
-                <dd class="mt-1 text-sm p-text">{{ $elaboracionSeleccionada['personal']['nombres'] ?? '-' }}</dd>
-              </div>
-              <!-- Existencia Entrada -->
-              <div>
-                <dt class="text-sm font-medium p-text">Existencia Entrada (Preformas)</dt>
-                <dd class="mt-1 text-sm p-text">
-                  ID #{{ $elaboracionSeleccionada['existencia_entrada']['id'] ?? '-' }} -
-                  {{ $elaboracionSeleccionada['existencia_entrada']['descripcion'] ?? 'Sin descripción' }}
-                </dd>
-              </div>
-              <!-- Cantidad Entrada -->
-              <div>
-                <dt class="text-sm font-medium p-text">Cantidad Entrada</dt>
-                <dd class="mt-1 text-sm p-text">{{ $elaboracionSeleccionada['cantidad_entrada'] ?? '-' }}</dd>
-              </div>
-              <!-- Cantidad Salida -->
-              <div>
-                <dt class="text-sm font-medium p-text">Cantidad Salida (Bases)</dt>
-                <dd class="mt-1 text-sm p-text">{{ $elaboracionSeleccionada['cantidad_salida'] ?? 'Pendiente' }}</dd>
-              </div>
-              <!-- Observaciones -->
-              <div class="col-span-2">
-                <dt class="text-sm font-medium p-text">Observaciones</dt>
-                <dd class="mt-1 text-sm p-text">{{ $elaboracionSeleccionada['observaciones'] ?? 'Ninguna' }}</dd>
-              </div>
-            </dl>
-          </div>
 
-          <!-- Botón cerrar -->
-          <div class="mt-6 flex justify-center">
-            <button type="button" wire:click="cerrarModalDetalle"
-              class="text-red-500 hover:text-red-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M18 6l-12 12" />
-                <path d="M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  @endif
+
 </div>

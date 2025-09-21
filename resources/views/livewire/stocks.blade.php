@@ -15,6 +15,16 @@
                     <line x1="9" y1="12" x2="15" y2="12" />
                 </svg>
             </button>
+
+            <button wire:click="abrirModalConfigGlobal"
+                class="bg-cyan-500 hover:bg-cyan-600 rounded-xl px-4 py-2 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M4 6l16 0" />
+                    <path d="M4 12l16 0" />
+                    <path d="M4 18l12 0" />
+                </svg>
+            </button>
         </div>
 
         @forelse($reposiciones as $repo)
@@ -114,7 +124,7 @@
                 <!-- Columna 1: Campos principales -->
                 <div class="col-span-12 md:col-span-6 flex flex-col gap-4">
 
-                
+
                     <input type="file" wire:model="imagen" class="input-minimal">
                     @error('imagen') <span class="error-message">{{ $message }}</span> @enderror
 
@@ -189,6 +199,42 @@
         </div>
     </div>
     @endif
+
+    @if($modalConfigGlobal)
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-3xl">
+            <h2 class="text-lg font-semibold mb-4">Configurar existencias</h2>
+
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+                @foreach($existencias as $ex)
+                <div class="grid grid-cols-12 gap-2 items-center border-b pb-2">
+                    <div class="col-span-4">{{ $ex->existenciable->descripcion ?? 'Sin descripción' }} (Stock: {{ $ex->cantidad }})</div>
+
+                    <div class="col-span-4">
+                        <input type="number" wire:model="configExistencias.{{ $ex->id }}.cantidad_minima"
+                            class="input-minimal w-full" placeholder="Cantidad mínima">
+                    </div>
+
+                    <div class="col-span-4">
+                        <select wire:model="configExistencias.{{ $ex->id }}.sucursal_id" class="input-minimal w-full">
+                            <option value="">Seleccionar sucursal</option>
+                            @foreach($sucursales as $suc)
+                            <option value="{{ $suc->id }}">{{ $suc->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button wire:click="guardarConfigGlobal" class="bg-cyan-500 text-white px-4 py-2 rounded">Guardar</button>
+                <button wire:click="$set('modalConfigGlobal', false)" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
 
 
 

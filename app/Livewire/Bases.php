@@ -112,7 +112,7 @@ class Bases extends Component
             $imagenPath = $this->base_id ? Base::find($this->base_id)->imagen : null;
         }
 
-        Base::updateOrCreate(['id' => $this->base_id], [
+        $base = Base::updateOrCreate(['id' => $this->base_id], [
             'capacidad' => $this->capacidad,
             'estado' => $this->estado,
             'observaciones' => $this->observaciones,
@@ -121,8 +121,18 @@ class Bases extends Component
             'descripcion' => $this->descripcion,
         ]);
 
+        // 👇 Crear existencia automática si es nueva Base
+        if (!$this->base_id) {
+            \App\Models\Existencia::create([
+                'existenciable_type' => Base::class,
+                'existenciable_id' => $base->id,
+                'cantidad' => 0, // stock inicial en cero
+            ]);
+        }
+
         $this->cerrarModal();
     }
+
 
     public function cerrarModal()
     {

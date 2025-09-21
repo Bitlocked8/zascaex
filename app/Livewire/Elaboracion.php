@@ -5,277 +5,160 @@ namespace App\Livewire;
 use App\Models\Elaboracion as ModelElaboracion;
 use App\Models\Personal;
 use App\Models\Existencia;
-use App\Models\Sucursal;
 use Livewire\Component;
-use Livewire\WithPagination;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use App\Models\Preforma;
+use App\Models\Base;
 
 class Elaboracion extends Component
 {
-    use WithPagination;
-
     public $search = '';
     public $modal = false;
-    public $accion = 'create';
-
-    public $elaboracionId = null;
-    public $fecha_elaboracion;
-    public $personal_id;
-    public $existencia_entrada_id;
-    public $existencia_salida_id;
-    public $cantidad_entrada;
-    public $cantidad_salida;
-    public $observaciones;
     public $modalDetalle = false;
-    public $elaboracionSeleccionada = [];
-    public $personales = [];
-    public $existencias_preforma = [];
-    public $existencias_base = [];
+    public $preformas = [];
+    public $bases = [];
 
-    public $sucursal_id;
-    public $sucursales = []; // Para cargar en el select
+    public $elaboracion_id = null;
+    public $existencia_entrada_id = '';
+    public $existencia_salida_id = '';
+    public $personal_id = '';
+    public $cantidad_entrada = 0;
+    public $cantidad_salida = 0;
+    public $fecha_elaboracion = '';
+    public $merma = 0;
+    public $observaciones = '';
+    public $accion = 'create';
+    public $elaboracionSeleccionada = null;
 
-    protected $paginationTheme = 'tailwind';
+    public $existencias = [];
+    public $personals = [];
 
     protected $rules = [
-        'fecha_elaboracion' => 'required|date',
-        'personal_id' => 'required|exists:personals,id',
         'existencia_entrada_id' => 'required|exists:existencias,id',
+        'existencia_salida_id' => 'nullable|exists:existencias,id',
+        'personal_id' => 'required|exists:personals,id',
         'cantidad_entrada' => 'required|integer|min:1',
         'cantidad_salida' => 'nullable|integer|min:0',
-        'observaciones' => 'nullable|string|max:1000',
+        'fecha_elaboracion' => 'required|date',
+        'merma' => 'nullable|integer|min:0',
+        'observaciones' => 'nullable|string|max:255',
     ];
 
     public function mount()
     {
-        $this->personales = Personal::all();
-        $this->sucursales = Sucursal::all();
-
-        // $this->existencias_preforma = Existencia::where('existenciable_type', 'App\\Models\\Preforma')->get();
-        // $this->existencias_base = Existencia::where('existenciable_type', 'App\\Models\\Base')->get();
-    }
-
-    public function preformasSucursal()
-    {
-        if ($this->sucursal_id) {
-            $this->existencias_preforma = Existencia::where('existenciable_type', 'App\\Models\\Preforma')
-                ->where('sucursal_id', $this->sucursal_id)
-                ->get();
-        } else {
-            $this->existencias_preforma = [];
-        }
-
-        // Limpiar valores anteriores
-        $this->existencia_entrada_id = null;
-        $this->existencia_salida_id = null;
-        $this->existencias_base = [];
-    }
-
-    public function basesPreformas()
-    {
-        // Limpiar existencia_salida seleccionada
-        $this->existencia_salida_id = null;
-
-        // Verificar si se ha seleccionado preforma y sucursal
-        if (!$this->existencia_entrada_id || !$this->sucursal_id) {
-            $this->existencias_base = [];
-            return;
-        }
-
-        $entrada = Existencia::find($this->existencia_entrada_id);
-
-        if (!$entrada) {
-            $this->existencias_base = [];
-            return;
-        }
-
-        // Obtener existencias base de la misma sucursal y asociadas al mismo producto de la preforma
-        $this->existencias_base = Existencia::where('existenciable_type', 'App\\Models\\Base')
-            ->where('sucursal_id', $this->sucursal_id)
-            ->where('existenciable_id', $entrada->existenciable_id)
+        $this->preformas = Existencia::with('existenciable')
+            ->where('existenciable_type', Preforma::class)
             ->get();
+
+        $this->bases = Existencia::with('existenciable')
+            ->where('existenciable_type', Base::class)
+            ->get();
+
+        $this->personals = Personal::all();
     }
-
-
-
 
 
     public function render()
     {
-        $elaboraciones = ModelElaboracion::with(['personal'])
+        $elaboraciones = ModelElaboracion::with(['existenciaEntrada.existenciable', 'existenciaSalida.existenciable', 'personal'])
             ->when($this->search, function ($query) {
-                $query->whereDate('fecha_elaboracion', $this->search)
-                    ->orWhereHas('personal', function ($q) {
-                        $q->where('nombre', 'like', '%' . $this->search . '%');
-                    });
+                $query->where('observaciones', 'like', '%' . $this->search . '%');
             })
-            ->latest()
-            ->paginate(5);
+            ->orderBy('id', 'desc')
+            ->get();
 
         return view('livewire.elaboracion', compact('elaboraciones'));
     }
 
-    public function updatingSearch()
+    public function abrirModal($accion = 'create', $id = null)
     {
-        $this->resetPage();
-    }
+        $this->reset([
+            'existencia_entrada_id',
+            'existencia_salida_id',
+            'personal_id',
+            'cantidad_entrada',
+            'cantidad_salida',
+            'fecha_elaboracion',
+            'merma',
+            'observaciones'
+        ]);
+        $this->accion = $accion;
 
-    public function abrirModal()
-    {
-        $this->resetForm();
-        $this->accion = 'create';
+        if ($accion === 'edit' && $id) {
+            $this->editar($id);
+        }
+
         $this->modal = true;
-    }
-
-    public function cerrarModal()
-    {
-        $this->modal = false;
-        $this->resetForm();
-        $this->resetErrorBag();
     }
 
     public function editar($id)
     {
         $elaboracion = ModelElaboracion::findOrFail($id);
-        $this->elaboracionId = $elaboracion->id;
-        $this->fecha_elaboracion = $elaboracion->fecha_elaboracion;
-        $this->personal_id = $elaboracion->personal_id;
+
+        $this->elaboracion_id = $elaboracion->id;
         $this->existencia_entrada_id = $elaboracion->existencia_entrada_id;
+        $this->existencia_salida_id = $elaboracion->existencia_salida_id;
+        $this->personal_id = $elaboracion->personal_id;
         $this->cantidad_entrada = $elaboracion->cantidad_entrada;
         $this->cantidad_salida = $elaboracion->cantidad_salida;
+        $this->fecha_elaboracion = $elaboracion->fecha_elaboracion;
+        $this->merma = $elaboracion->merma;
         $this->observaciones = $elaboracion->observaciones;
 
+        $this->elaboracionSeleccionada = $elaboracion;
         $this->accion = 'edit';
-        $this->modal = true;
     }
 
-    // public function guardar()
-    // {
-    //     $this->validate();
-
-    //     try {
-    //         if ($this->accion === 'edit' && $this->elaboracionId) {
-    //             ModelElaboracion::findOrFail($this->elaboracionId)->update([
-    //                 'fecha_elaboracion' => $this->fecha_elaboracion,
-    //                 'personal_id' => $this->personal_id,
-    //                 'existencia_entrada_id' => $this->existencia_entrada_id,
-    //                 'cantidad_entrada' => $this->cantidad_entrada,
-    //                 'cantidad_salida' => $this->cantidad_salida,
-    //                 'observaciones' => $this->observaciones,
-    //             ]);
-    //             LivewireAlert::title('Elaboración actualizada con éxito.')->success()->show();
-    //         } else {
-    //             ModelElaboracion::create([
-    //                 'fecha_elaboracion' => $this->fecha_elaboracion,
-    //                 'personal_id' => $this->personal_id,
-    //                 'existencia_entrada_id' => $this->existencia_entrada_id,
-    //                 'cantidad_entrada' => $this->cantidad_entrada,
-    //                 'cantidad_salida' => $this->cantidad_salida,
-    //                 'observaciones' => $this->observaciones,
-    //             ]);
-    //             LivewireAlert::title('Elaboración registrada con éxito.')->success()->show();
-    //         }
-
-    //         $this->cerrarModal();
-    //     } catch (\Exception $e) {
-    //         LivewireAlert::title('Error: ' . $e->getMessage())->error()->show();
-    //     }
-    // }
     public function guardar()
     {
         $this->validate();
-    
-        try {
-            // Buscar existencia de entrada (preforma)
-            $entrada = Existencia::findOrFail($this->existencia_entrada_id);
-    
-            // Validación: cantidad_entrada no puede ser mayor a la existencia actual
-            if ($this->cantidad_entrada > $entrada->cantidad) {
-                $this->addError('cantidad_entrada', 'La cantidad de entrada no puede ser mayor al stock disponible de preformas (' . $entrada->cantidad . ').');
-                return;
-            }
-    
-            // Validación: cantidad_salida no puede ser mayor que la cantidad_entrada
-            if (!is_null($this->cantidad_salida) && $this->cantidad_salida > $this->cantidad_entrada) {
-                $this->addError('cantidad_salida', 'La cantidad de salida no puede ser mayor que la cantidad de entrada.');
-                return;
-            }
-    
-            // Buscar o crear existencia de base asociada
-            $base = Existencia::where('existenciable_type', 'App\\Models\\Base')
-                ->where('sucursal_id', $this->sucursal_id)
-                ->where('existenciable_id', $entrada->existenciable_id)
-                ->first();
-    
-            if (!$base) {
-                $base = Existencia::create([
-                    'existenciable_type' => 'App\\Models\\Base',
-                    'existenciable_id' => $entrada->existenciable_id,
-                    'sucursal_id' => $this->sucursal_id,
-                    'cantidad' => 0,
-                    'descripcion' => 'Generada desde elaboración',
-                ]);
-            }
-    
-            // Guardar ID de salida para relación
-            $this->existencia_salida_id = $base->id;
-    
-            // Guardar o actualizar elaboración
-            if ($this->accion === 'edit' && $this->elaboracionId) {
-                ModelElaboracion::findOrFail($this->elaboracionId)->update([
-                    'fecha_elaboracion' => $this->fecha_elaboracion,
-                    'personal_id' => $this->personal_id,
-                    'existencia_entrada_id' => $this->existencia_entrada_id,
-                    'existencia_salida_id' => $this->existencia_salida_id,
-                    'cantidad_entrada' => $this->cantidad_entrada,
-                    'cantidad_salida' => $this->cantidad_salida,
-                    'observaciones' => $this->observaciones,
-                ]);
-            } else {
-                ModelElaboracion::create([
-                    'fecha_elaboracion' => $this->fecha_elaboracion,
-                    'personal_id' => $this->personal_id,
-                    'existencia_entrada_id' => $this->existencia_entrada_id,
-                    'existencia_salida_id' => $this->existencia_salida_id,
-                    'cantidad_entrada' => $this->cantidad_entrada,
-                    'cantidad_salida' => $this->cantidad_salida,
-                    'observaciones' => $this->observaciones,
-                ]);
-            }
-    
-            // Actualizar existencias
+
+        $elaboracion = ModelElaboracion::updateOrCreate(['id' => $this->elaboracion_id], [
+            'existencia_entrada_id' => $this->existencia_entrada_id,
+            'existencia_salida_id' => $this->existencia_salida_id ?: null,
+            'personal_id' => $this->personal_id,
+            'cantidad_entrada' => $this->cantidad_entrada,
+            'cantidad_salida' => $this->cantidad_salida ?: 0,
+            'fecha_elaboracion' => $this->fecha_elaboracion,
+            'merma' => $this->merma,
+            'observaciones' => $this->observaciones,
+        ]);
+
+        if ($this->accion === 'create') {
+            $entrada = Existencia::find($this->existencia_entrada_id);
             $entrada->cantidad -= $this->cantidad_entrada;
             $entrada->save();
-    
-            if (!is_null($this->cantidad_salida)) {
-                $base->cantidad += $this->cantidad_salida;
-                $base->save();
-            }
-    
-            LivewireAlert::title('Elaboración registrada con éxito.')->success()->show();
-            $this->cerrarModal();
-    
-        } catch (\Exception $e) {
-            LivewireAlert::title('Error: ' . $e->getMessage())->error()->show();
-        }
-    }
-    
 
-    private function resetForm()
+            if ($this->existencia_salida_id) {
+                $salida = Existencia::find($this->existencia_salida_id);
+                $salida->cantidad += $this->cantidad_salida;
+                $salida->save();
+            }
+        }
+
+        $this->cerrarModal();
+    }
+
+    public function cerrarModal()
     {
+        $this->modal = false;
         $this->reset([
-            'elaboracionId',
-            'fecha_elaboracion',
-            'personal_id',
             'existencia_entrada_id',
+            'existencia_salida_id',
+            'personal_id',
             'cantidad_entrada',
             'cantidad_salida',
+            'fecha_elaboracion',
+            'merma',
             'observaciones',
+            'elaboracion_id',
+            'elaboracionSeleccionada'
         ]);
+        $this->resetErrorBag();
     }
+
     public function modaldetalle($id)
     {
-        $this->elaboracionSeleccionada = ModelElaboracion::findOrFail($id);
+        $this->elaboracionSeleccionada = ModelElaboracion::with(['existenciaEntrada.existenciable', 'existenciaSalida.existenciable', 'personal'])->findOrFail($id);
         $this->modalDetalle = true;
     }
 

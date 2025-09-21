@@ -39,7 +39,7 @@ class Preformas extends Component
         $preformas = Preforma::with('existencias')
             ->when($this->search, function ($query) {
                 $query->where('insumo', 'like', '%' . $this->search . '%')
-                      ->orWhere('descripcion', 'like', '%' . $this->search . '%');
+                    ->orWhere('descripcion', 'like', '%' . $this->search . '%');
             })
             ->get(); // quitamos la paginación
 
@@ -85,7 +85,7 @@ class Preformas extends Component
             $imagenPath = $this->preforma_id ? Preforma::find($this->preforma_id)->imagen : null;
         }
 
-        Preforma::updateOrCreate(['id' => $this->preforma_id], [
+        $preforma = Preforma::updateOrCreate(['id' => $this->preforma_id], [
             'insumo' => $this->insumo,
             'descripcion' => $this->descripcion,
             'capacidad' => $this->capacidad,
@@ -95,8 +95,18 @@ class Preformas extends Component
             'imagen' => $imagenPath,
         ]);
 
+        // 👇 Crear existencia automática si es nueva Preforma
+        if (!$this->preforma_id) {
+            \App\Models\Existencia::create([
+                'existenciable_type' => Preforma::class,
+                'existenciable_id' => $preforma->id,
+                'cantidad' => 0, // stock inicial en cero
+            ]);
+        }
+
         $this->cerrarModal();
     }
+
 
     public function cerrarModal()
     {

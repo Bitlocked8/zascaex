@@ -21,9 +21,6 @@ return new class extends Migration
             $table->date('fecha_elaboracion');
             $table->integer('merma')->default(0); // Cantidad de perdidos
             $table->text('observaciones')->nullable();       
-
-            $table->unsignedBigInteger('sucursal_id')->default(1);
-            $table->foreign('sucursal_id')->references('id')->on('sucursals');
             $table->timestamps(); // Campos created_at y updated_at
         });
     }

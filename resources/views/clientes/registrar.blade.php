@@ -30,145 +30,154 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Columna 1: Formulario de Registro -->
-            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
 
 
-                <form id="clienteForm" action="{{ route('clientes.store') }}" method="POST" class="space-y-4" enctype="multipart/form-data">
-                    @csrf
 
-                    <!-- Nombre -->
-                    <div class="mb-4">
-                        <input type="text" id="nombre" name="nombre"
-                            value="{{ old('nombre', $cliente->nombre ?? '') }}"
-                            placeholder="Nombre"
-                            class="input-minimal">
-                        @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+            <form id="clienteForm" action="{{ route('clientes.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+
+                <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
+
+                    <!-- Columna 1 -->
+                    <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
+                        <!-- Nombre -->
+                        <div class="mb-4">
+                            <input type="text" id="nombre" name="nombre"
+                                value="{{ old('nombre', $cliente->nombre ?? '') }}"
+                                placeholder="Nombre"
+                                class="input-minimal">
+                            @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Empresa -->
+                        <div class="mb-4">
+                            <input type="text" id="empresa" name="empresa"
+                                value="{{ old('empresa', $cliente->empresa ?? '') }}"
+                                placeholder="Empresa"
+                                class="input-minimal">
+                            @error('empresa') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Razón Social -->
+                        <div class="mb-4">
+                            <input type="text" id="razonSocial" name="razonSocial"
+                                value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}"
+                                placeholder="Razón Social"
+                                class="input-minimal">
+                            @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- NIT/CI -->
+                        <div class="mb-4">
+                            <input type="text" id="nitCi" name="nitCi"
+                                value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
+                                placeholder="NIT/CI"
+                                class="input-minimal">
+                            @error('nitCi') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
                     </div>
 
-                    <!-- Empresa -->
-                    <div class="mb-4">
-                        <input type="text" id="empresa" name="empresa"
-                            value="{{ old('empresa', $cliente->empresa ?? '') }}"
-                            placeholder="Empresa"
-                            class="input-minimal">
-                        @error('empresa') <span class="error-message">{{ $message }}</span> @enderror
+                    <!-- Columna 2 -->
+                    <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
+                        <!-- Teléfono -->
+                        <div class="mb-4">
+                            <input type="text" id="telefono" name="telefono"
+                                value="{{ old('telefono', $cliente->telefono ?? '') }}"
+                                placeholder="Teléfono"
+                                class="input-minimal">
+                            @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="mb-4">
+                            <input type="email" id="correo" name="correo"
+                                value="{{ old('correo', $cliente->correo ?? '') }}"
+                                placeholder="Correo Empresa"
+                                class="input-minimal">
+                            @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Email usuario -->
+                        <div class="mb-4">
+                            <input type="email" id="email" name="email"
+                                value="{{ old('email') }}"
+                                placeholder="Email de usuario"
+                                class="input-minimal"
+                                required>
+                            @error('email') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="mb-4">
+                            <input type="password" id="password" name="password"
+                                placeholder="Contraseña"
+                                class="input-minimal"
+                                required>
+                            @error('password') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Categoría -->
+                        <div class="mb-4">
+                            <select id="categoria" name="categoria" class="input-minimal">
+                                <option value="1" {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'selected' : '' }}>Cliente Nuevo</option>
+                                <option value="2" {{ old('categoria', $cliente->categoria ?? 1) == 2 ? 'selected' : '' }}>Cliente Regular</option>
+                                <option value="3" {{ old('categoria', $cliente->categoria ?? 1) == 3 ? 'selected' : '' }}>Cliente VIP</option>
+                            </select>
+                            @error('categoria') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="mb-4">
+                            <select id="estado" name="estado" class="input-minimal">
+                                <option value="1" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'selected' : '' }}>Activo</option>
+                                <option value="0" {{ old('estado', $cliente->estado ?? 0) == 0 ? 'selected' : '' }}>Inactivo</option>
+                            </select>
+                            @error('estado') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
                     </div>
 
-                    <!-- Razón Social -->
-                    <div class="mb-4">
-                        <input type="text" id="razonSocial" name="razonSocial"
-                            value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}"
-                            placeholder="Razón Social"
-                            class="input-minimal">
-                        @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
+                    <!-- Columna 3 -->
+                    <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
+                        <div id="mapa" class="w-full h-[200px] lg:h-[400px] rounded shadow-lg mb-4"></div>
+
+                        <!-- Coordenadas -->
+                        <div class="mb-4">
+                            <input type="text" id="coordenadas" name="coordenadas"
+                                value="{{ old('coordenadas', ($cliente->latitud ?? '') . ', ' . ($cliente->longitud ?? '')) }}"
+                                placeholder="Coordenadas (Latitud, Longitud)"
+                                class="input-minimal">
+                            @error('coordenadas') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Latitud -->
+                        <div class="mb-4">
+                            <input type="text" id="latitud" name="latitud"
+                                value="{{ old('latitud', $cliente->latitud ?? '') }}"
+                                placeholder="Latitud"
+                                class="input-minimal">
+                            @error('latitud') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- Longitud -->
+                        <div class="mb-4">
+                            <input type="text" id="longitud" name="longitud"
+                                value="{{ old('longitud', $cliente->longitud ?? '') }}"
+                                placeholder="Longitud"
+                                class="input-minimal">
+                            @error('longitud') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
                     </div>
-
-                    <!-- NIT/CI -->
-                    <div class="mb-4">
-                        <input type="text" id="nitCi" name="nitCi"
-                            value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
-                            placeholder="NIT/CI"
-                            class="input-minimal">
-                        @error('nitCi') <span class="error-message">{{ $message }}</span> @enderror
-                    </div>
-
-                </form>
-            </div>
-
-            <!-- Columna 2: Datos del Cliente -->
-            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
-
-                <!-- Teléfono -->
-                <div class="mb-4">
-                    <input type="text" id="telefono" name="telefono"
-                        value="{{ old('telefono', $cliente->telefono ?? '') }}"
-                        placeholder="Teléfono"
-                        class="input-minimal">
-                    @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- Correo -->
-                <div class="mb-4">
-                    <input type="email" id="correo" name="correo"
-                        value="{{ old('correo', $cliente->correo ?? '') }}"
-                        placeholder="Correo Empresa"
-                        class="input-minimal">
-                    @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+                <!-- Botón Guardar -->
+                <div class="flex justify-end mt-6">
+                    <button type="submit"
+                        class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                        Guardar Cliente
+                    </button>
                 </div>
+            </form>
 
-                <!-- Email usuario -->
-                <div class="mb-4">
-                    <input type="email" id="email" name="email"
-                        value="{{ old('email') }}"
-                        placeholder="Email de usuario"
-                        class="input-minimal"
-                        required>
-                    @error('email') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-                <!-- Contraseña -->
-                <div class="mb-4">
-                    <input type="password" id="password" name="password"
-                        placeholder="Contraseña"
-                        class="input-minimal"
-                        required>
-                    @error('password') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-                <!-- Categoría -->
-                <div class="mb-4">
-                    <select id="categoria" name="categoria" class="input-minimal">
-                        <option value="1" {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'selected' : '' }}>Cliente Nuevo</option>
-                        <option value="2" {{ old('categoria', $cliente->categoria ?? 1) == 2 ? 'selected' : '' }}>Cliente Regular</option>
-                        <option value="3" {{ old('categoria', $cliente->categoria ?? 1) == 3 ? 'selected' : '' }}>Cliente VIP</option>
-                    </select>
-                    @error('categoria') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-                <!-- Estado -->
-                <div class="mb-4">
-                    <select id="estado" name="estado" class="input-minimal">
-                        <option value="1" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'selected' : '' }}>Activo</option>
-                        <option value="0" {{ old('estado', $cliente->estado ?? 0) == 0 ? 'selected' : '' }}>Inactivo</option>
-                    </select>
-                    @error('estado') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-            </div>
-
-            <!-- Columna 3: Mapa y Coordenadas -->
-            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg p-6 bg-white">
-
-                <div id="mapa" class="w-full h-[200px] lg:h-[400px] rounded shadow-lg mb-4"></div>
-
-                <!-- Coordenadas -->
-                <div class="mb-4">
-                    <input type="text" id="coordenadas" name="coordenadas"
-                        value="{{ old('coordenadas', ($cliente->latitud ?? '') . ', ' . ($cliente->longitud ?? '')) }}"
-                        placeholder="Coordenadas (Latitud, Longitud)"
-                        class="input-minimal">
-                    @error('coordenadas') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-                <!-- Latitud -->
-                <div class="mb-4">
-                    <input type="text" id="latitud" name="latitud"
-                        value="{{ old('latitud', $cliente->latitud ?? '') }}"
-                        placeholder="Latitud"
-                        class="input-minimal">
-                    @error('latitud') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-                <!-- Longitud -->
-                <div class="mb-4">
-                    <input type="text" id="longitud" name="longitud"
-                        value="{{ old('longitud', $cliente->longitud ?? '') }}"
-                        placeholder="Longitud"
-                        class="input-minimal">
-                    @error('longitud') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
-
-            </div>
         </div>
 
 
