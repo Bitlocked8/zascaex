@@ -19,6 +19,8 @@ class Elaboracion extends Model
         'fecha_elaboracion',
         'merma',           // ← agregado
         'observaciones',
+        'codigo',  // ← agregado
+        'estado',  // ← agregado
     ];
 
     public function existenciaEntrada(): BelongsTo

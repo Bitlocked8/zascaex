@@ -20,7 +20,9 @@ return new class extends Migration
             $table->integer('cantidad_salida')->nullable(); // Bases generadas
             $table->date('fecha_elaboracion');
             $table->integer('merma')->default(0); // Cantidad de perdidos
-            $table->text('observaciones')->nullable();       
+            $table->text('observaciones')->nullable();
+            $table->string('codigo')->unique(); // Código único del lote
+            $table->string('estado')->default('pendiente'); // pendiente / finalizado
             $table->timestamps(); // Campos created_at y updated_at
         });
     }

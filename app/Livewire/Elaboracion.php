@@ -28,9 +28,12 @@ class Elaboracion extends Component
     public $observaciones = '';
     public $accion = 'create';
     public $elaboracionSeleccionada = null;
-
+    public $sucursalSeleccionada = null;
     public $existencias = [];
     public $personals = [];
+
+    public $codigo = '';   // Código del lote
+    public $estado = 'pendiente'; // Estado del lote
 
     protected $rules = [
         'existencia_entrada_id' => 'required|exists:existencias,id',
@@ -38,7 +41,6 @@ class Elaboracion extends Component
         'personal_id' => 'required|exists:personals,id',
         'cantidad_entrada' => 'required|integer|min:1',
         'cantidad_salida' => 'nullable|integer|min:0',
-        'fecha_elaboracion' => 'required|date',
         'merma' => 'nullable|integer|min:0',
         'observaciones' => 'nullable|string|max:255',
     ];
@@ -56,6 +58,20 @@ class Elaboracion extends Component
         $this->personals = Personal::all();
     }
 
+    public function filtrarPorSucursal($sucursalId)
+    {
+        $this->sucursalSeleccionada = $sucursalId;
+
+        $this->preformas = Existencia::with('existenciable')
+            ->where('existenciable_type', Preforma::class)
+            ->where('sucursal_id', $sucursalId)
+            ->get();
+
+        $this->bases = Existencia::with('existenciable')
+            ->where('existenciable_type', Base::class)
+            ->where('sucursal_id', $sucursalId)
+            ->get();
+    }
 
     public function render()
     {
@@ -77,18 +93,30 @@ class Elaboracion extends Component
             'personal_id',
             'cantidad_entrada',
             'cantidad_salida',
-            'fecha_elaboracion',
             'merma',
-            'observaciones'
+            'observaciones',
+            'codigo',
+            'estado',
+            'fecha_elaboracion',
         ]);
+
         $this->accion = $accion;
 
         if ($accion === 'edit' && $id) {
             $this->editar($id);
+        } else {
+            // fecha automática
+            $this->fecha_elaboracion = date('Y-m-d');
+
+            // generar código automático al abrir el modal
+            $ultimoId = ModelElaboracion::max('id') ?? 0;
+            $this->codigo = 'L-' . date('Ymd') . '-' . ($ultimoId + 1);
+            $this->estado = 'pendiente';
         }
 
         $this->modal = true;
     }
+
 
     public function editar($id)
     {
@@ -103,6 +131,8 @@ class Elaboracion extends Component
         $this->fecha_elaboracion = $elaboracion->fecha_elaboracion;
         $this->merma = $elaboracion->merma;
         $this->observaciones = $elaboracion->observaciones;
+        $this->codigo = $elaboracion->codigo;
+        $this->estado = $elaboracion->estado;
 
         $this->elaboracionSeleccionada = $elaboracion;
         $this->accion = 'edit';
@@ -112,31 +142,98 @@ class Elaboracion extends Component
     {
         $this->validate();
 
-        $elaboracion = ModelElaboracion::updateOrCreate(['id' => $this->elaboracion_id], [
-            'existencia_entrada_id' => $this->existencia_entrada_id,
-            'existencia_salida_id' => $this->existencia_salida_id ?: null,
-            'personal_id' => $this->personal_id,
-            'cantidad_entrada' => $this->cantidad_entrada,
-            'cantidad_salida' => $this->cantidad_salida ?: 0,
-            'fecha_elaboracion' => $this->fecha_elaboracion,
-            'merma' => $this->merma,
-            'observaciones' => $this->observaciones,
-        ]);
+        $entrada = Existencia::find($this->existencia_entrada_id);
+
+        // Validar stock disponible
+        if ($this->accion === 'create' && $this->cantidad_entrada > $entrada->cantidad) {
+            $this->addError('cantidad_entrada', 'No puedes usar más de lo disponible en stock (' . $entrada->cantidad . ').');
+            return;
+        }
+
+        // Validar que la salida no supere la entrada
+        if ($this->cantidad_salida > $this->cantidad_entrada) {
+            $this->addError('cantidad_salida', 'La cantidad de salida no puede ser mayor que la entrada.');
+            return;
+        }
+
+        // Calcular merma automáticamente
+        $this->merma = $this->cantidad_entrada - $this->cantidad_salida;
 
         if ($this->accion === 'create') {
-            $entrada = Existencia::find($this->existencia_entrada_id);
-            $entrada->cantidad -= $this->cantidad_entrada;
-            $entrada->save();
+            // Código y estado automático
+            $ultimoId = ModelElaboracion::max('id') ?? 0;
+            $this->codigo = 'L-' . date('Ymd') . '-' . ($ultimoId + 1);
+            $this->estado = 'pendiente';
+            $this->fecha_elaboracion = date('Y-m-d');
 
+            $elaboracion = ModelElaboracion::create([
+                'codigo' => $this->codigo,
+                'estado' => $this->estado,
+                'existencia_entrada_id' => $this->existencia_entrada_id,
+                'existencia_salida_id' => $this->existencia_salida_id ?: null,
+                'personal_id' => $this->personal_id,
+                'cantidad_entrada' => $this->cantidad_entrada,
+                'cantidad_salida' => $this->cantidad_salida ?: 0,
+                'fecha_elaboracion' => $this->fecha_elaboracion,
+                'merma' => $this->merma,
+                'observaciones' => $this->observaciones,
+            ]);
+
+            // Actualizar stock de entrada
+            $entrada->decrement('cantidad', $this->cantidad_entrada);
+
+            // Actualizar stock de salida si hay cantidad y existe salida
+            if ($this->existencia_salida_id && $this->cantidad_salida > 0) {
+                $salida = Existencia::find($this->existencia_salida_id);
+                $salida->increment('cantidad', $this->cantidad_salida);
+            }
+        } else {
+            // Editar: calcular diferencia de entrada
+            $diferenciaEntrada = $this->cantidad_entrada - $this->elaboracionSeleccionada->cantidad_entrada;
+
+            if ($diferenciaEntrada > 0 && $diferenciaEntrada > $entrada->cantidad) {
+                $this->addError('cantidad_entrada', 'No puedes usar más de lo disponible en stock (' . $entrada->cantidad . ').');
+                return;
+            }
+
+            // Ajustar stock de entrada
+            if ($diferenciaEntrada > 0) {
+                $entrada->decrement('cantidad', $diferenciaEntrada);
+            } elseif ($diferenciaEntrada < 0) {
+                $entrada->increment('cantidad', abs($diferenciaEntrada));
+            }
+
+            // Ajustar stock de salida
             if ($this->existencia_salida_id) {
                 $salida = Existencia::find($this->existencia_salida_id);
-                $salida->cantidad += $this->cantidad_salida;
-                $salida->save();
+                $diferenciaSalida = $this->cantidad_salida - $this->elaboracionSeleccionada->cantidad_salida;
+
+                if ($diferenciaSalida > 0) {
+                    $salida->increment('cantidad', $diferenciaSalida);
+                } elseif ($diferenciaSalida < 0) {
+                    $salida->decrement('cantidad', abs($diferenciaSalida));
+                }
             }
+
+            // Actualizar la elaboracion
+            $this->elaboracionSeleccionada->update([
+                'existencia_entrada_id' => $this->existencia_entrada_id,
+                'existencia_salida_id' => $this->existencia_salida_id ?: null,
+                'personal_id' => $this->personal_id,
+                'cantidad_entrada' => $this->cantidad_entrada,
+                'cantidad_salida' => $this->cantidad_salida ?: 0,
+                'fecha_elaboracion' => $this->fecha_elaboracion,
+                'merma' => $this->merma,
+                'observaciones' => $this->observaciones,
+                'estado' => $this->estado,
+            ]);
         }
 
         $this->cerrarModal();
     }
+
+
+
 
     public function cerrarModal()
     {
@@ -150,6 +247,8 @@ class Elaboracion extends Component
             'fecha_elaboracion',
             'merma',
             'observaciones',
+            'codigo',
+            'estado',
             'elaboracion_id',
             'elaboracionSeleccionada'
         ]);
@@ -158,7 +257,11 @@ class Elaboracion extends Component
 
     public function modaldetalle($id)
     {
-        $this->elaboracionSeleccionada = ModelElaboracion::with(['existenciaEntrada.existenciable', 'existenciaSalida.existenciable', 'personal'])->findOrFail($id);
+        $this->elaboracionSeleccionada = ModelElaboracion::with([
+            'existenciaEntrada.existenciable',
+            'existenciaSalida.existenciable',
+            'personal'
+        ])->findOrFail($id);
         $this->modalDetalle = true;
     }
 
