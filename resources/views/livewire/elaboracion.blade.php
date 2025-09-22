@@ -1,7 +1,5 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-    <!-- Buscar + Crear Elaboración -->
     <div class="flex items-center gap-2 mb-4 col-span-full">
       <input type="text" wire:model.live="search" placeholder="Buscar por observaciones..."
         class="flex-1 border rounded px-3 py-2" />
@@ -19,18 +17,15 @@
 
     @forelse($elaboraciones as $elaboracion)
     <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-      <!-- Columna Izquierda: Info Elaboración -->
-      <div class="flex flex-col col-span-8 text-left">
-        <p><strong>Entrada:</strong> {{ $elaboracion->existenciaEntrada->existenciable->descripcion ?? 'N/A' }} ({{ $elaboracion->cantidad_entrada }})</p>
-        <p><strong>Salida:</strong> {{ $elaboracion->existenciaSalida->existenciable->descripcion ?? 'N/A' }} ({{ $elaboracion->cantidad_salida }})</p>
-        <p><strong>Personal:</strong> {{ $elaboracion->personal->nombres ?? 'N/A' }}</p>
+      <div class="flex flex-col col-span-8 text-left space-y-1">
+        <p><strong>Código:</strong> {{ $elaboracion->codigo }}</p>
         <p><strong>Fecha:</strong> {{ $elaboracion->fecha_elaboracion }}</p>
-        <p><strong>Merma:</strong> {{ $elaboracion->merma }}</p>
-        <p><strong>Observaciones:</strong> {{ $elaboracion->observaciones ?? '-' }}</p>
+        <p><strong>Personal:</strong> {{ $elaboracion->personal->nombres ?? 'N/A' }}</p>
+        <p><strong>Sucursal:</strong> {{ $elaboracion->existenciaEntrada->sucursal->nombre ?? 'N/A' }}</p>
+        <p><strong>Estado:</strong> {{ ucfirst($elaboracion->estado) }}</p>
       </div>
 
       <div class="flex flex-col items-end gap-4 col-span-4">
-        <!-- Editar Elaboración -->
         <button wire:click="abrirModal('edit', {{ $elaboracion->id }})"
           class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
@@ -54,7 +49,6 @@
           </svg>
         </button>
 
-        <!-- Ver Detalle -->
         <button wire:click="modaldetalle({{ $elaboracion->id }})"
           class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-cyan-600" fill="none"
@@ -81,86 +75,119 @@
       <h2 class="text-xl font-semibold mb-6 text-center">
         {{ $accion === 'create' ? 'Registrar Elaboración' : 'Editar Elaboración' }}
       </h2>
-
-      <!-- Grid 2 columnas en desktop, 1 en móvil -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <!-- Columna izquierda -->
         <div class="flex flex-col gap-4">
-          <input type="text" wire:model="codigo" class="input-minimal bg-gray-100" readonly>
-          <input type="date" wire:model="fecha_elaboracion" class="input-minimal" readonly>
-          @error('fecha_elaboracion') <span class="error-message">{{ $message }}</span> @enderror
-
-          <!-- Botones sucursal -->
+          <div class="flex flex-col gap-2">
+            <p class="font-semibold text-sm">
+              Código: <span class="font-normal">{{ $codigo }}</span>
+            </p>
+            <p class="font-semibold text-sm">
+              Fecha de Elaboración: <span class="font-normal">{{ $fecha_elaboracion }}</span>
+            </p>
+          </div>
           <div class="flex flex-wrap gap-2 mb-2">
+            @if($accion === 'edit' && $sucursalSeleccionada)
+            {{-- Solo mostrar la sucursal seleccionada (bloqueada) --}}
+            @php
+            $sucursal = \App\Models\Sucursal::find($sucursalSeleccionada);
+            @endphp
+            <button class="px-3 py-1 rounded-full text-sm bg-cyan-600 text-white flex items-center gap-2" disabled>
+              <span>&#10003;</span> {{-- ✓ como check --}}
+              {{ $sucursal->nombre }}
+            </button>
+            @else
+            {{-- Mostrar todas las sucursales cuando creamos --}}
             @foreach(\App\Models\Sucursal::all() as $sucursal)
             <button
               wire:click="filtrarPorSucursal({{ $sucursal->id }})"
-              class="px-3 py-1 rounded text-sm
-            @if($sucursalSeleccionada == $sucursal->id) bg-cyan-600 text-white @else bg-white @endif">
+              class="px-3 py-1 rounded-full text-sm flex items-center gap-2
+                    {{ $sucursalSeleccionada == $sucursal->id ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-700' }}">
+              @if($sucursalSeleccionada == $sucursal->id)
+              <span>&#10003;</span>
+              @endif
               {{ $sucursal->nombre }}
             </button>
             @endforeach
+            @endif
           </div>
 
-          <!-- Preforma + Cantidad Entrada -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="font-semibold text-sm">Preforma (Entrada)</label>
-              <select wire:model="existencia_entrada_id" class="input-minimal">
-                <option value="">Seleccionar Preforma</option>
+              <label class="font-semibold text-sm mb-2 block">Preforma (Entrada)</label>
+
+              <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[170px]">
+                @if($accion === 'edit' && $existencia_entrada_id)
+                @php
+                $entrada = $preformas->firstWhere('id', $existencia_entrada_id);
+                @endphp
+                <button class="w-full px-3 py-2 rounded-md border text-sm text-left bg-cyan-600 text-white" disabled>
+                  {{ $entrada->existenciable->descripcion ?? 'Artículo' }} (Stock: {{ $entrada->cantidad }})
+                </button>
+                @else
                 @foreach($preformas as $ex)
-                <option value="{{ $ex->id }}">
+                <button
+                  type="button"
+                  wire:click="$set('existencia_entrada_id', {{ $ex->id }})"
+                  class="w-full px-3 py-2 rounded-md border text-sm text-left transition
+            {{ $existencia_entrada_id == $ex->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                   {{ $ex->existenciable->descripcion ?? 'Artículo' }} (Stock: {{ $ex->cantidad }})
-                </option>
+                </button>
                 @endforeach
-              </select>
+                @endif
+              </div>
+
+              @error('existencia_entrada_id')
+              <span class="text-red-500 text-sm">{{ $message }}</span>
+              @enderror
             </div>
+            <div>
+              <label class="font-semibold text-sm mb-2 block">Base (Salida)</label>
+
+              <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[170px]">
+                @if($accion === 'edit' && $existencia_salida_id)
+                @php
+                $salida = $bases->firstWhere('id', $existencia_salida_id);
+                @endphp
+                <button class="w-full px-3 py-2 rounded-md border text-sm text-left bg-cyan-600 text-white" disabled>
+                  {{ $salida->existenciable->descripcion ?? 'Artículo' }} (Stock: {{ $salida->cantidad }})
+                </button>
+                @else
+                @foreach($bases as $ex)
+                <button
+                  type="button"
+                  wire:click="$set('existencia_salida_id', {{ $ex->id }})"
+                  class="w-full px-3 py-2 rounded-md border text-sm text-left transition
+            {{ $existencia_salida_id == $ex->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                  {{ $ex->existenciable->descripcion ?? 'Artículo' }} (Stock: {{ $ex->cantidad }})
+                </button>
+                @endforeach
+                @endif
+              </div>
+
+              @error('existencia_salida_id')
+              <span class="text-red-500 text-sm">{{ $message }}</span>
+              @enderror
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="font-semibold text-sm">Cantidad Entrada</label>
               <input type="number" wire:model="cantidad_entrada" placeholder="Cantidad Entrada" class="input-minimal">
               @error('cantidad_entrada') <span class="error-message">{{ $message }}</span> @enderror
-            </div>
-          </div>
-
-          <!-- Base + Cantidad Salida -->
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="font-semibold text-sm">Base (Salida)</label>
-              <select wire:model="existencia_salida_id" class="input-minimal">
-                <option value="">Seleccionar Base</option>
-                @foreach($bases as $ex)
-                <option value="{{ $ex->id }}">
-                  {{ $ex->existenciable->descripcion ?? 'Artículo' }} (Stock: {{ $ex->cantidad }})
-                </option>
-                @endforeach
-              </select>
             </div>
             <div>
               <label class="font-semibold text-sm">Cantidad Salida</label>
               <input type="number" wire:model="cantidad_salida" placeholder="Cantidad Salida" class="input-minimal">
               @error('cantidad_salida') <span class="error-message">{{ $message }}</span> @enderror
             </div>
+
+            <p class="font-semibold text-sm">
+              Merma: <span class="font-normal">{{ $merma }}</span>
+            </p>
           </div>
-
-
-          <!-- Personal -->
-          <label class="font-semibold text-sm">Personal Responsable</label>
-          <select wire:model="personal_id" class="input-minimal">
-            <option value="">Seleccionar Personal</option>
-            @foreach($personals as $p)
-            <option value="{{ $p->id }}">{{ $p->nombres }}</option>
-            @endforeach
-          </select>
-          @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
         </div>
 
-        <!-- Columna derecha -->
         <div class="flex flex-col gap-4">
-          <!-- Código de lote -->
-
-
-          <!-- Estado como botones -->
           <label class="font-semibold text-sm">Estado</label>
           <div class="flex gap-2">
             @foreach(['pendiente','procesado','completado'] as $st)
@@ -168,27 +195,38 @@
               type="button"
               wire:click="$set('estado','{{ $st }}')"
               class="px-3 py-1 rounded text-sm
-              @if($estado == $st) bg-cyan-600 text-white @else bg-white border @endif">
+              ($estado == $st) bg-cyan-600 text-white">
               {{ ucfirst($st) }}
             </button>
             @endforeach
           </div>
 
+          <div>
+            <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
 
+            <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[170px]">
+              @foreach($personals as $p)
+              <button
+                type="button"
+                wire:click="$set('personal_id', {{ $p->id }})"
+                class="w-full px-3 py-2 rounded-md border text-sm text-left transition
+          {{ $personal_id == $p->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                {{ $p->nombres }}
+              </button>
+              @endforeach
+            </div>
 
-          <!-- Merma -->
-          <label class="font-semibold text-sm">Merma</label>
-          <input type="number" wire:model="merma" placeholder="Merma" class="input-minimal">
-          @error('merma') <span class="error-message">{{ $message }}</span> @enderror
+            @error('personal_id')
+            <span class="text-red-500 text-sm">{{ $message }}</span>
+            @enderror
 
-          <!-- Observaciones -->
-          <label class="font-semibold text-sm">Observaciones</label>
-          <textarea wire:model="observaciones" placeholder="Observaciones" class="input-minimal"></textarea>
-          @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+            <label class="font-semibold text-sm">Observaciones</label>
+            <textarea wire:model="observaciones" placeholder="Observaciones" class="input-minimal"></textarea>
+            @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+
         </div>
       </div>
-
-      <!-- Botones abajo -->
       <div class="flex justify-center md:justify-end gap-4 mt-6">
         <button type="button" wire:click="guardar" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl px-4 py-2">
           Guardar
@@ -200,9 +238,5 @@
     </div>
   </div>
   @endif
-
-
-
-
 
 </div>

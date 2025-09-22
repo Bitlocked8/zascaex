@@ -208,11 +208,18 @@
             <div class="space-y-4 max-h-[60vh] overflow-y-auto">
                 @foreach($existencias as $ex)
                 <div class="grid grid-cols-12 gap-2 items-center border-b pb-2">
-                    <div class="col-span-4">{{ $ex->existenciable->descripcion ?? 'Sin descripción' }} (Stock: {{ $ex->cantidad }})</div>
+                    <div class="col-span-4">
+                        {{ $ex->existenciable->descripcion ?? 'Sin descripción' }}: {{ $ex->cantidad }}
+                    </div>
+
+
+
 
                     <div class="col-span-4">
-                        <input type="number" wire:model="configExistencias.{{ $ex->id }}.cantidad_minima"
-                            class="input-minimal w-full" placeholder="Cantidad mínima">
+                        <input type="number"
+                            wire:model="configExistencias.{{ $ex->id }}.cantidad_minima"
+                            class="input-minimal w-full"
+                            placeholder="Cantidad mínima">
                     </div>
 
                     <div class="col-span-4">
@@ -234,6 +241,7 @@
         </div>
     </div>
     @endif
+
 
 
 

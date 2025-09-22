@@ -62,20 +62,20 @@ class Stocks extends Component
         $this->cargarReposiciones();
     }
 
-    public function cargarExistencias()
-    {
-        $this->existencias = Existencia::with('existenciable')
-            ->when(
-                $this->selectedSucursal,
-                fn($query) =>
-                $query->where(function ($q) {
-                    $q->where('sucursal_id', $this->selectedSucursal)
-                        ->orWhereNull('sucursal_id');
-                })
-            )
-            ->orderBy('created_at', 'desc') // <-- más recientes primero
-            ->get();
-    }
+  public function cargarExistencias()
+{
+    $this->existencias = Existencia::with('existenciable')
+        ->orderBy('id', 'asc')
+        ->get()
+        ->map(function ($ex) {
+            // Solo mostrar la cantidad disponible de la existencia
+            $ex->stock_real = $ex->cantidad;
+            return $ex;
+        });
+}
+
+
+
 
 
     public function cargarReposiciones()
