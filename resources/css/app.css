@@ -6,17 +6,57 @@
 
 @layer components {
 
- .input-minimal {
-    @apply w-full p-3 text-sm text-gray-700 bg-white border-2 border-cyan-400 rounded-md 
-           shadow-sm placeholder-gray-400 focus:outline-none transition-colors duration-200;
+  .input-minimal {
+    @apply w-full px-3 py-2 text-sm text-gray-800 bg-gray-50 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 transition-all duration-200 ease-in-out focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200;
   }
 
-  /* Input con contenido: borde solo indigo, sin ring */
+  /* Cuando el input ya tiene contenido */
   .input-minimal:not(:placeholder-shown) {
-    @apply border-indigo-700 focus:border-indigo-700 focus:ring-0;
+    @apply border-cyan-600 bg-white;
+  }
+
+  /* Variante de error */
+  .input-error {
+    @apply border-red-500 focus:border-red-600 focus:ring-red-200;
   }
 
   .error-message {
     @apply text-red-600 text-xs mt-1;
+  }
+
+
+  @layer components {
+    .modal-overlay {
+      @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4;
+    }
+
+    .modal-box {
+      @apply bg-white text-cyan-950 rounded-lg shadow-lg w-full max-w-md md:max-w-2xl p-6 relative max-h-[90vh] flex flex-col;
+    }
+
+    .modal-content {
+      @apply overflow-y-auto flex-1 pr-2 pb-20;
+    }
+
+    .modal-footer {
+      @apply absolute bottom-0 left-0 w-full bg-white flex justify-center md:justify-center gap-4 p-4 border-t shadow-md z-10;
+    }
+
+    .badge-info {
+      @apply px-3 py-1 bg-white font-semibold text-cyan-800 rounded-full text-sm;
+    }
+
+    .label-info {
+      @apply font-semibold w-32;
+    }
+
+    .btn-circle {
+      @apply rounded-xl p-2 w-12 h-12 flex items-center justify-center shadow-md;
+    }
+
+    .btn-cyan {
+      @apply bg-cyan-600 hover:bg-cyan-700 text-white;
+    }
+
   }
 }

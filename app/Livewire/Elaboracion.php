@@ -77,7 +77,10 @@ class Elaboracion extends Component
     {
         $elaboraciones = ModelElaboracion::with(['existenciaEntrada.existenciable', 'existenciaSalida.existenciable', 'personal'])
             ->when($this->search, function ($query) {
-                $query->where('observaciones', 'like', '%' . $this->search . '%');
+                $query->where(function ($q) {
+                    $q->where('observaciones', 'like', '%' . $this->search . '%')
+                        ->orWhere('codigo', 'like', '%' . $this->search . '%');
+                });
             })
             ->orderBy('id', 'desc')
             ->get();
@@ -219,10 +222,6 @@ class Elaboracion extends Component
 
         $this->cerrarModal();
     }
-
-
-
-
     public function cerrarModal()
     {
         $this->modal = false;
@@ -258,4 +257,6 @@ class Elaboracion extends Component
         $this->modalDetalle = false;
         $this->elaboracionSeleccionada = null;
     }
+
+    
 }
