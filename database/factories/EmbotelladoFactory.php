@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Base; // Importa el modelo relacionado
+use App\Models\Base;
 use App\Models\Existencia;
-use App\Models\Personal; // Importa el modelo relacionado
+use App\Models\Personal;
 use App\Models\Producto;
 use App\Models\Tapa;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,15 +22,17 @@ class EmbotelladoFactory extends Factory
     public function definition(): array
     {
         return [
-            'existencia_base_id' => Existencia::whereHasMorph('existenciable', [Base::class])->get()->random()->id, // Bases como entrada
-            'existencia_tapa_id' => Existencia::whereHasMorph('existenciable', [Tapa::class])->get()->random()->id, // Tapas como entrada
-            'existencia_producto_id' => Existencia::whereHasMorph('existenciable', [Producto::class])->get()->random()->id, // Producto generado
+            'existencia_base_id' => Existencia::whereHasMorph('existenciable', [Base::class])->get()->random()->id,
+            'existencia_tapa_id' => Existencia::whereHasMorph('existenciable', [Tapa::class])->get()->random()->id,
+            'existencia_producto_id' => Existencia::whereHasMorph('existenciable', [Producto::class])->get()->random()->id,
             'personal_id' => Personal::get()->random()->id,
             'cantidad_base_usada' => $this->faker->numberBetween(10, 50),
             'cantidad_tapa_usada' => $this->faker->numberBetween(10, 50),
             'cantidad_generada' => $this->faker->numberBetween(10, 50),
             'fecha_embotellado' => $this->faker->date,
             'observaciones' => $this->faker->optional()->sentence,
+            'codigo' => 'E-' . $this->faker->unique()->numberBetween(1000, 9999), // código de lote
+            'estado' => $this->faker->randomElement(['pendiente', 'terminado']),
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -125,7 +125,7 @@
                   type="button"
                   wire:click="$set('existencia_entrada_id', {{ $ex->id }})"
                   class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-            {{ $existencia_entrada_id == $ex->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                    {{ $existencia_entrada_id == $ex->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                   {{ $ex->existenciable->descripcion ?? 'Artículo' }} (Stock: {{ $ex->cantidad }})
                 </button>
                 @endforeach

@@ -21,8 +21,11 @@ class Embotellado extends Model
         'observaciones',
         'mermaTapa',
         'mermaBase',
+        'codigo',   // nuevo
+        'estado',   // nuevo
     ];
 
+    // Relaciones con existencias
     public function existenciaBase() {
         return $this->belongsTo(Existencia::class, 'existencia_base_id');
     }
@@ -35,8 +38,8 @@ class Embotellado extends Model
         return $this->belongsTo(Existencia::class, 'existencia_producto_id');
     }
 
+    // Relación con personal
     public function personal() {
         return $this->belongsTo(Personal::class);
     }
 }
-
