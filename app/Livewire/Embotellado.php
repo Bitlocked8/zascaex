@@ -12,7 +12,7 @@ use App\Models\Producto;
 
 class Embotellado extends Component
 {
-    public $search = '';
+    public $search = '';    
     public $modal = false;
     public $accion = 'create';
     public $embotellado_id = null;

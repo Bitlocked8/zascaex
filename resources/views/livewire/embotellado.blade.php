@@ -167,6 +167,8 @@
           </div>
 
 
+
+
           <div class="grid grid-cols-2 gap-2">
 
             <!-- Personal Responsable -->
@@ -201,7 +203,7 @@
 
           </div>
 
-          <!-- Cantidad Generada y Observaciones -->
+
           <div class="grid grid-cols-2 gap-2 mt-2">
             <div>
               <label class="font-semibold text-sm">Cantidad Generada</label>
@@ -222,13 +224,68 @@
 
 
           </div>
-          <div>
+
+          <!-- Merma -->
+          <div class="grid grid-cols-2 gap-2 mt-2">
             <div>
-              <label class="font-semibold text-sm">Observaciones</label>
-              <textarea wire:model="observaciones" placeholder="Observaciones" class="input-minimal"></textarea>
-              @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+              <label class="font-semibold text-sm">Merma Base</label>
+              <input type="number" class="input-minimal" wire:model="mermaBase">
+              @error('mermaBase') <span class="error-message">{{ $message }}</span> @enderror
+            </div>
+            <div>
+              <label class="font-semibold text-sm">Merma Tapa</label>
+              <input type="number" class="input-minimal" wire:model="mermaTapa">
+              @error('mermaTapa') <span class="error-message">{{ $message }}</span> @enderror
             </div>
           </div>
+
+          <!-- Residuo -->
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <div>
+              <label class="font-semibold text-sm">Residuo Base</label>
+              <input type="number" class="input-minimal" wire:model="residuo_base">
+              @error('residuo_base') <span class="error-message">{{ $message }}</span> @enderror
+            </div>
+            <div>
+              <label class="font-semibold text-sm">Residuo Tapa</label>
+              <input type="number" class="input-minimal" wire:model="residuo_tapa">
+              @error('residuo_tapa') <span class="error-message">{{ $message }}</span> @enderror
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+
+            <div>
+              <label class="font-semibold text-sm block mb-1">Estado Residuo Base</label>
+              <div class="flex flex-wrap gap-2">
+                @foreach([0 => 'Espera Lote', 1 => 'Asignado'] as $key => $label)
+                <button
+                  type="button"
+                  wire:click="$set('estado_residuo_base', {{ $key }})"
+                  class="badge-info {{ $estado_residuo_base == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-700' }}">
+                  @if($estado_residuo_base == $key)<span>&#10003;</span>@endif
+                  {{ $label }}
+                </button>
+                @endforeach
+              </div>
+            </div>
+
+            <div>
+              <label class="font-semibold text-sm block mb-1">Estado Residuo Tapa</label>
+              <div class="flex flex-wrap gap-2">
+                @foreach([0 => 'Espera Lote', 1 => 'Asignado'] as $key => $label)
+                <button
+                  type="button"
+                  wire:click="$set('estado_residuo_tapa', {{ $key }})"
+                  class="badge-info {{ $estado_residuo_tapa == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-700' }}">
+                  @if($estado_residuo_tapa == $key)<span>&#10003;</span>@endif
+                  {{ $label }}
+                </button>
+                @endforeach
+              </div>
+            </div>
+
+          </div>
+
 
 
           <!-- Estado -->
@@ -241,6 +298,13 @@
               {{ $label }}
             </button>
             @endforeach
+          </div>
+          <div>
+            <div>
+              <label class="font-semibold text-sm">Observaciones</label>
+              <textarea wire:model="observaciones" placeholder="Observaciones" class="input-minimal"></textarea>
+              @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+            </div>
           </div>
 
         </div>
