@@ -17,12 +17,17 @@ class Embotellado extends Model
         'cantidad_base_usada',
         'cantidad_tapa_usada',
         'cantidad_generada',
-        'fecha_embotellado',
-        'observaciones',
         'mermaTapa',
         'mermaBase',
-        'codigo',   // nuevo
-        'estado',   // nuevo
+        'residuo_base',
+        'residuo_tapa',
+        'estado_residuo_base',  // 0 = espera lote, 1 = asignado
+        'estado_residuo_tapa',  // 0 = espera lote, 1 = asignado
+        'fecha_embotellado',
+        'fecha_embotellado_final',
+        'observaciones',
+        'codigo',
+        'estado',
     ];
 
     // Relaciones con existencias

@@ -40,15 +40,30 @@ class EmbotelladoFactory extends Factory
             ->inRandomOrder()
             ->first();
 
+        $cantidadBaseUsada = $this->faker->numberBetween(10, 50);
+        $cantidadTapaUsada = $this->faker->numberBetween(10, 50);
+
+        // Simular merma
+        $mermaBase = $this->faker->numberBetween(0, 5);
+        $mermaTapa = $this->faker->numberBetween(0, 5);
+
+        $residuoBase = $cantidadBaseUsada - $mermaBase;
+        $residuoTapa = $cantidadTapaUsada - $mermaTapa;
+
         return [
             'existencia_base_id' => $base?->id,
             'existencia_tapa_id' => $tapa?->id,
             'existencia_producto_id' => $producto?->id,
             'personal_id' => Personal::inRandomOrder()->first()->id,
-            'cantidad_base_usada' => $this->faker->numberBetween(10, 50),
-            'cantidad_tapa_usada' => $this->faker->numberBetween(10, 50),
+            'cantidad_base_usada' => $cantidadBaseUsada,
+            'cantidad_tapa_usada' => $cantidadTapaUsada,
             'cantidad_generada' => $this->faker->numberBetween(10, 50),
+            'mermaBase' => $mermaBase,
+            'mermaTapa' => $mermaTapa,
+            'residuo_base' => $residuoBase,
+            'residuo_tapa' => $residuoTapa,
             'fecha_embotellado' => $this->faker->date,
+            'fecha_embotellado_final' => $this->faker->date,
             'observaciones' => $this->faker->optional()->sentence,
             'codigo' => 'E-' . $this->faker->unique()->numberBetween(1000, 9999),
             'estado' => $this->faker->randomElement(['pendiente', 'terminado']),
