@@ -167,6 +167,7 @@ class Embotellado extends Component
     {
         $this->validate();
 
+        // Obtener existencias seleccionadas
         $base = Existencia::find($this->existencia_base_id);
         $tapa = Existencia::find($this->existencia_tapa_id);
         $producto = $this->existencia_producto_id ? Existencia::find($this->existencia_producto_id) : null;
@@ -176,14 +177,14 @@ class Embotellado extends Component
             return;
         }
 
-        // 🚨 Validación de sucursal
+        // Validación de sucursal
         if ($base->sucursal_id !== $tapa->sucursal_id || ($producto && $producto->sucursal_id !== $base->sucursal_id)) {
             $this->addError('sucursal_id', 'Base, tapa y producto deben pertenecer a la misma sucursal.');
             return;
         }
 
         if ($this->accion === 'create') {
-            // ✅ Crear nuevo embotellado
+            // Validar cantidades disponibles
             if ($this->cantidad_base_usada > $base->cantidad) {
                 $this->addError('cantidad_base_usada', 'No puedes usar más base que la disponible.');
                 return;
@@ -193,6 +194,7 @@ class Embotellado extends Component
                 return;
             }
 
+            // Crear nuevo embotellado
             $embotellado = ModelEmbotellado::create([
                 'codigo' => $this->codigo,
                 'estado' => $this->estado,
@@ -209,32 +211,36 @@ class Embotellado extends Component
                 'observaciones' => $this->observaciones
             ]);
 
-            // 🔹 Actualizar existencias
+            // Actualizar existencias
             $base->decrement('cantidad', $this->cantidad_base_usada);
             $tapa->decrement('cantidad', $this->cantidad_tapa_usada);
             if ($producto && $this->cantidad_generada > 0) {
                 $producto->increment('cantidad', $this->cantidad_generada);
             }
         } else {
-            // ✅ Editar embotellado existente
+            // Editar embotellado existente
             $embotellado = ModelEmbotellado::findOrFail($this->embotellado_id);
 
-            // 🔹 Restaurar stock anterior
+            // Restaurar stock del embotellado anterior
             $oldBase = Existencia::find($embotellado->existencia_base_id);
             $oldTapa = Existencia::find($embotellado->existencia_tapa_id);
             $oldProducto = $embotellado->existencia_producto_id ? Existencia::find($embotellado->existencia_producto_id) : null;
 
-            if ($oldBase) {
-                $oldBase->increment('cantidad', $embotellado->cantidad_base_usada);
+            $oldBase && $oldBase->increment('cantidad', $embotellado->cantidad_base_usada);
+            $oldTapa && $oldTapa->increment('cantidad', $embotellado->cantidad_tapa_usada);
+            $oldProducto && $embotellado->cantidad_generada > 0 && $oldProducto->decrement('cantidad', $embotellado->cantidad_generada);
+
+            // Validar cantidades disponibles para la nueva selección
+            if ($this->cantidad_base_usada > $base->cantidad) {
+                $this->addError('cantidad_base_usada', 'No puedes usar más base que la disponible.');
+                return;
             }
-            if ($oldTapa) {
-                $oldTapa->increment('cantidad', $embotellado->cantidad_tapa_usada);
-            }
-            if ($oldProducto && $embotellado->cantidad_generada > 0) {
-                $oldProducto->decrement('cantidad', $embotellado->cantidad_generada);
+            if ($this->cantidad_tapa_usada > $tapa->cantidad) {
+                $this->addError('cantidad_tapa_usada', 'No puedes usar más tapas que las disponibles.');
+                return;
             }
 
-            // 🔹 Actualizar con nuevos datos
+            // Actualizar embotellado
             $embotellado->update([
                 'codigo' => $this->codigo,
                 'estado' => $this->estado,
@@ -251,16 +257,16 @@ class Embotellado extends Component
                 'observaciones' => $this->observaciones
             ]);
 
-            // 🔹 Aplicar nuevo consumo
+            // Aplicar nuevo consumo
             $base->decrement('cantidad', $this->cantidad_base_usada);
             $tapa->decrement('cantidad', $this->cantidad_tapa_usada);
-            if ($producto && $this->cantidad_generada > 0) {
-                $producto->increment('cantidad', $this->cantidad_generada);
-            }
+            $newProducto = $this->existencia_producto_id ? Existencia::find($this->existencia_producto_id) : null;
+            $newProducto && $this->cantidad_generada > 0 && $newProducto->increment('cantidad', $this->cantidad_generada);
         }
 
         $this->cerrarModal();
     }
+
 
 
     public function cerrarModal()
