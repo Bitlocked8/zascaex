@@ -18,8 +18,6 @@ return new class extends Migration
             $table->integer('capacidad'); // Capacidad de la base
             $table->boolean('estado')->default(1); // Estado (1: activo, 0: inactivo)
             $table->text('observaciones')->nullable(); // Observaciones (opcional)
-
-            $table->foreignId('preforma_id')->constrained('preformas')->nullable()->onDelete('cascade');
             $table->timestamps(); // created_at y updated_at
         });
     }

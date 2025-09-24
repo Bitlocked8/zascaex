@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PreformaFactory extends Factory
 {
+    protected $model = \App\Models\Preforma::class;
+
     /**
      * Define the model's default state.
      *
@@ -17,11 +19,8 @@ class PreformaFactory extends Factory
     public function definition(): array
     {
         return [
-            'insumo' => $this->faker->word,
+            'imagen' => $this->faker->optional()->imageUrl(200, 200),
             'descripcion' => $this->faker->optional()->sentence,
-            'capacidad' => $this->faker->numberBetween(500, 2000),
-            'gramaje' => $this->faker->numberBetween(500, 2000),
-            'color' => $this->faker->safeColorName,
             'estado' => $this->faker->boolean,
             'observaciones' => $this->faker->optional()->sentence,
             'created_at' => now(),

@@ -17,6 +17,8 @@ class TapaFactory extends Factory
     public function definition(): array
     {
         return [
+            'imagen' => $this->faker->optional()->imageUrl(200, 200),
+            'descripcion' => $this->faker->optional()->sentence,
             'color' => $this->faker->safeColorName,
             'tipo' => $this->faker->randomElement(['rosca', 'botellon']),
             'estado' => $this->faker->boolean(80),

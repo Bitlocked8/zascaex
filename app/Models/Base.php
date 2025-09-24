@@ -11,25 +11,20 @@ class Base extends Model
 
     protected $fillable = [
         'imagen',
-        'unidad',
         'capacidad',
         'descripcion',
         'estado',
         'observaciones',
-        'preforma_id',
+        // 'preforma_id', // eliminar porque ya no existe
     ];
 
     /**
-     * Relación 1:1 con Elaboracion.
+     * Relación polimórfica con Existencia.
      */
-    
     public function existencias()
     {
         return $this->morphMany(Existencia::class, 'existenciable');
     }
-    public function preforma()
-    {
-        return $this->belongsTo(Preforma::class, 'preforma_id');
-    }
-}
 
+  
+}

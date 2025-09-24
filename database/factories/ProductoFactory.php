@@ -19,19 +19,15 @@ class ProductoFactory extends Factory
      */
     public function definition(): array
     {
-        return [
+      return [
             'nombre' => $this->faker->word,
             'tipoContenido' => $this->faker->numberBetween(1, 5),
             'tipoProducto' => $this->faker->boolean,
             'capacidad' => $this->faker->numberBetween(500, 2000),
-            'unidad' => 'ml',
             'precioReferencia' => $this->faker->randomFloat(2, 1, 100),
-            'precioReferencia2' => $this->faker->optional()->randomFloat(2, 1, 100),
-            'precioReferencia3' => $this->faker->optional()->randomFloat(2, 1, 100),
-            'observaciones' => $this->faker->optional()->sentence,
+            'descripcion' => $this->faker->optional()->sentence,
             'estado' => $this->faker->boolean,
-            'base_id' => Base::inRandomOrder()->first()?->id,
-            'tapa_id' => Tapa::inRandomOrder()->first()?->id,
+            'imagen' => $this->faker->optional()->imageUrl(200, 200),
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -10,21 +10,15 @@ class Producto extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+   protected $fillable = [
         'nombre',
         'imagen',
         'tipoContenido',
         'tipoProducto',
         'capacidad',
-        'unidad',
         'precioReferencia',
-        'precioReferencia2',
-        'precioReferencia3',
-        'observaciones',
+        'descripcion',
         'estado',
-        'paquete',
-        'base_id',
-        'tapa_id',
     ];
 
     /**
@@ -42,8 +36,5 @@ class Producto extends Model
     {
         return $this->morphMany(Existencia::class, 'existenciable');
     }
-    public function base()
-    {
-        return $this->belongsTo(Base::class, 'base_id');
-    }
+   
 }

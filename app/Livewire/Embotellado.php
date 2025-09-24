@@ -89,7 +89,7 @@ class Embotellado extends Component
             'personal'
         ])->when($this->search, function ($query) {
             $query->where('observaciones', 'like', "%{$this->search}%")
-                  ->orWhere('codigo', 'like', "%{$this->search}%");
+                ->orWhere('codigo', 'like', "%{$this->search}%");
         })->orderBy('id', 'desc')->get();
 
         return view('livewire.embotellado', compact('embotellados'));
@@ -153,10 +153,13 @@ class Embotellado extends Component
         $this->estado = $embotellado->estado;
         $this->embotelladoSeleccionado = $embotellado;
 
-        // 🔹 Protege contra null al asignar sucursal
-        $this->sucursalSeleccionada = $embotellado->existenciaBase->sucursal_id ?? null;
+        // 🔹 Asegura sucursal desde cualquiera de los tres
+        $this->sucursalSeleccionada =
+            $embotellado->existenciaBase->sucursal_id
+            ?? $embotellado->existenciaTapa->sucursal_id
+            ?? $embotellado->existenciaProducto->sucursal_id
+            ?? null;
 
-        // 🔹 Recarga las existencias según la sucursal seleccionada
         $this->cargarExistencias($this->sucursalSeleccionada);
     }
 
@@ -166,13 +169,21 @@ class Embotellado extends Component
 
         $base = Existencia::find($this->existencia_base_id);
         $tapa = Existencia::find($this->existencia_tapa_id);
+        $producto = $this->existencia_producto_id ? Existencia::find($this->existencia_producto_id) : null;
 
         if (!$base || !$tapa) {
             $this->addError('existencias', 'La base o la tapa seleccionada no existe.');
             return;
         }
 
+        // 🚨 Validación de sucursal
+        if ($base->sucursal_id !== $tapa->sucursal_id || ($producto && $producto->sucursal_id !== $base->sucursal_id)) {
+            $this->addError('sucursal_id', 'Base, tapa y producto deben pertenecer a la misma sucursal.');
+            return;
+        }
+
         if ($this->accion === 'create') {
+            // ✅ Crear nuevo embotellado
             if ($this->cantidad_base_usada > $base->cantidad) {
                 $this->addError('cantidad_base_usada', 'No puedes usar más base que la disponible.');
                 return;
@@ -181,9 +192,6 @@ class Embotellado extends Component
                 $this->addError('cantidad_tapa_usada', 'No puedes usar más tapas que las disponibles.');
                 return;
             }
-
-            $this->mermaBase = $this->cantidad_base_usada - $this->cantidad_generada;
-            $this->mermaTapa = $this->cantidad_tapa_usada - $this->cantidad_generada;
 
             $embotellado = ModelEmbotellado::create([
                 'codigo' => $this->codigo,
@@ -201,19 +209,59 @@ class Embotellado extends Component
                 'observaciones' => $this->observaciones
             ]);
 
+            // 🔹 Actualizar existencias
             $base->decrement('cantidad', $this->cantidad_base_usada);
             $tapa->decrement('cantidad', $this->cantidad_tapa_usada);
-
-            if ($this->existencia_producto_id && $this->cantidad_generada > 0) {
-                $producto = Existencia::find($this->existencia_producto_id);
-                $producto?->increment('cantidad', $this->cantidad_generada);
+            if ($producto && $this->cantidad_generada > 0) {
+                $producto->increment('cantidad', $this->cantidad_generada);
             }
         } else {
-            // 🔹 Lógica para edición: actualizar cantidades y stock, similar a Elaboracion
+            // ✅ Editar embotellado existente
+            $embotellado = ModelEmbotellado::findOrFail($this->embotellado_id);
+
+            // 🔹 Restaurar stock anterior
+            $oldBase = Existencia::find($embotellado->existencia_base_id);
+            $oldTapa = Existencia::find($embotellado->existencia_tapa_id);
+            $oldProducto = $embotellado->existencia_producto_id ? Existencia::find($embotellado->existencia_producto_id) : null;
+
+            if ($oldBase) {
+                $oldBase->increment('cantidad', $embotellado->cantidad_base_usada);
+            }
+            if ($oldTapa) {
+                $oldTapa->increment('cantidad', $embotellado->cantidad_tapa_usada);
+            }
+            if ($oldProducto && $embotellado->cantidad_generada > 0) {
+                $oldProducto->decrement('cantidad', $embotellado->cantidad_generada);
+            }
+
+            // 🔹 Actualizar con nuevos datos
+            $embotellado->update([
+                'codigo' => $this->codigo,
+                'estado' => $this->estado,
+                'existencia_base_id' => $this->existencia_base_id,
+                'existencia_tapa_id' => $this->existencia_tapa_id,
+                'existencia_producto_id' => $this->existencia_producto_id ?: null,
+                'personal_id' => $this->personal_id,
+                'cantidad_base_usada' => $this->cantidad_base_usada,
+                'cantidad_tapa_usada' => $this->cantidad_tapa_usada,
+                'cantidad_generada' => $this->cantidad_generada,
+                'mermaBase' => $this->mermaBase,
+                'mermaTapa' => $this->mermaTapa,
+                'fecha_embotellado' => $this->fecha_embotellado,
+                'observaciones' => $this->observaciones
+            ]);
+
+            // 🔹 Aplicar nuevo consumo
+            $base->decrement('cantidad', $this->cantidad_base_usada);
+            $tapa->decrement('cantidad', $this->cantidad_tapa_usada);
+            if ($producto && $this->cantidad_generada > 0) {
+                $producto->increment('cantidad', $this->cantidad_generada);
+            }
         }
 
         $this->cerrarModal();
     }
+
 
     public function cerrarModal()
     {

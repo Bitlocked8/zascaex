@@ -12,11 +12,7 @@ class Preforma extends Model
 
     protected $fillable = [
         'imagen',
-        'insumo',
-        'detalle',
         'descripcion',
-        'capacidad',
-        'color',
         'estado',
         'observaciones',
     ];
@@ -36,6 +32,10 @@ class Preforma extends Model
     {
         return $this->hasMany(ItemCompra::class);
     }
+
+    /**
+     * Relación polimórfica con Existencia.
+     */
     public function existencias(): MorphMany
     {
         return $this->morphMany(Existencia::class, 'existenciable');
