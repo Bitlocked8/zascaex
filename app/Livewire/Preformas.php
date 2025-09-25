@@ -2,9 +2,12 @@
 
 namespace App\Livewire;
 
-use App\Models\Preforma;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\Preforma;
+use App\Models\Existencia;
+
+
 
 class Preformas extends Component
 {
@@ -14,41 +17,30 @@ class Preformas extends Component
     public $modal = false;
     public $modalDetalle = false;
     public $preforma_id = null;
-    public $insumo = '';
     public $descripcion = '';
-    public $capacidad = '';
-    public $color = '';
     public $estado = 1;
     public $observaciones = '';
+    public $imagen; 
+    public $imagenExistente;
     public $accion = 'create';
-    public $preformaSeleccionada = null; // Modelo Preforma
-    public $imagen; // Puede ser UploadedFile o string
+    public $preformaSeleccionada = null;
 
-    protected $rules = [
-        'insumo' => 'required|string|max:255',
-        'descripcion' => 'nullable|string|max:255',
-        'capacidad' => 'required|integer',
-        'color' => 'required|string|max:255',
-        'estado' => 'required|boolean',
-        'observaciones' => 'nullable|string|max:255',
-        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5 MB solo jpg/png
+    protected $messages = [
+        'estado.required' => 'El estado es obligatorio.',
     ];
 
     public function render()
     {
-        $preformas = Preforma::with('existencias')
-            ->when($this->search, function ($query) {
-                $query->where('insumo', 'like', '%' . $this->search . '%')
-                    ->orWhere('descripcion', 'like', '%' . $this->search . '%');
-            })
-            ->get(); // quitamos la paginación
+        $preformas = Preforma::query()
+            ->when($this->search, fn($q) => $q->where('descripcion', 'like', "%{$this->search}%"))
+            ->get();
 
         return view('livewire.preformas', compact('preformas'));
     }
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['insumo', 'descripcion', 'capacidad', 'color', 'estado', 'observaciones', 'imagen']);
+        $this->reset(['descripcion', 'estado', 'observaciones', 'imagen', 'imagenExistente', 'preforma_id', 'preformaSeleccionada']);
         $this->accion = $accion;
 
         if ($accion === 'edit' && $id) {
@@ -62,56 +54,55 @@ class Preformas extends Component
     {
         $preforma = Preforma::findOrFail($id);
         $this->preforma_id = $preforma->id;
-        $this->insumo = $preforma->insumo;
         $this->descripcion = $preforma->descripcion;
-        $this->capacidad = $preforma->capacidad;
-        $this->color = $preforma->color;
         $this->estado = $preforma->estado;
         $this->observaciones = $preforma->observaciones;
+        $this->imagen = null; 
+        $this->imagenExistente = $preforma->imagen; 
         $this->accion = 'edit';
-        $this->preformaSeleccionada = $preforma; // Para vista previa
-        $this->imagen = $preforma->imagen; // Mantener imagen actual si no se sube nueva
+        $this->preformaSeleccionada = $preforma;
     }
 
     public function guardar()
     {
-        $this->validate();
-
-        if (is_object($this->imagen)) {
-            // Se subió nueva imagen
-            $imagenPath = $this->imagen->store('preformas', 'public');
-        } else {
-            // Mantener la existente
-            $imagenPath = $this->preforma_id ? Preforma::find($this->preforma_id)->imagen : null;
-        }
-
-        $preforma = Preforma::updateOrCreate(['id' => $this->preforma_id], [
-            'insumo' => $this->insumo,
-            'descripcion' => $this->descripcion,
-            'capacidad' => $this->capacidad,
-            'color' => $this->color,
-            'estado' => $this->estado,
-            'observaciones' => $this->observaciones,
-            'imagen' => $imagenPath,
+        $this->validate([
+            'descripcion' => 'nullable|string|max:255',
+            'estado' => 'required|boolean',
+            'observaciones' => 'nullable|string|max:255',
         ]);
 
-        // 👇 Crear existencia automática si es nueva Preforma
+        if ($this->imagen && is_object($this->imagen)) {
+            $this->validate([
+                'imagen' => 'image|max:5120',
+            ]);
+            $imagenPath = $this->imagen->store('preformas', 'public');
+        } else {
+            $imagenPath = $this->imagenExistente ?? null;
+        }
+        $preforma = Preforma::updateOrCreate(
+            ['id' => $this->preforma_id],
+            [
+                'descripcion' => $this->descripcion,
+                'estado' => $this->estado,
+                'observaciones' => $this->observaciones,
+                'imagen' => $imagenPath,
+            ]
+        );
         if (!$this->preforma_id) {
-            \App\Models\Existencia::create([
+            Existencia::create([
                 'existenciable_type' => Preforma::class,
                 'existenciable_id' => $preforma->id,
-                'cantidad' => 0, // stock inicial en cero
+                'cantidad' => 0,
             ]);
         }
 
         $this->cerrarModal();
     }
 
-
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['insumo', 'descripcion', 'capacidad', 'color', 'estado', 'observaciones', 'imagen', 'preforma_id', 'preformaSeleccionada']);
+        $this->reset(['descripcion', 'estado', 'observaciones', 'imagen', 'imagenExistente', 'preforma_id', 'preformaSeleccionada']);
         $this->resetErrorBag();
     }
 

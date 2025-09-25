@@ -1,60 +1,38 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Buscar + Crear Etiqueta -->
         <div class="flex items-center gap-2 mb-4 col-span-full">
-            <input type="text" wire:model.live="search" placeholder="Buscar por capacidad o descripción..."
-                class="flex-1 border rounded px-3 py-2" />
-
-            <button wire:click="abrirModal('create')"
-                class="bg-cyan-500 hover:bg-cyan-600 rounded-xl px-4 py-2 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9" />
-                    <line x1="12" y1="9" x2="12" y2="15" />
-                    <line x1="9" y1="12" x2="15" y2="12" />
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Buscar por capacidad o descripción..."
+                class="input-minimal w-full" />
+            <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
             </button>
         </div>
 
         @forelse($etiquetas as $etiqueta)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-            <!-- Columna Izquierda: Foto + Info -->
-            <div class="flex flex-col items-center md:items-start text-center md:text-left col-span-8">
-                @if($etiqueta->imagen)
-                <img src="{{ asset('storage/' . $etiqueta->imagen) }}" alt="Etiqueta {{ $etiqueta->capacidad }}"
-                    class="w-56 h-56 object-cover rounded-lg shadow-md mb-3">
-                @else
-                <div class="w-56 h-56 bg-gray-200 flex items-center justify-center rounded-lg shadow mb-3">
-                    <span class="text-gray-500">Sin imagen</span>
-                </div>
-                @endif
-
-                <h3 class="text-lg font-semibold uppercase text-cyan-600">
-                    {{ $etiqueta->capacidad }}
-                </h3>
-                <p class="text-cyan-950"><strong>Unidad:</strong> {{ $etiqueta->unidad ?? 'N/A' }}</p>
-
-                <div class="mt-2">
+            <div class="flex flex-col col-span-9 text-left space-y-1">
+                <p><strong>Capacidad:</strong> {{ $etiqueta->capacidad }} {{ $etiqueta->unidad ?? '' }}</p>
+                <p><strong>Descripción:</strong> {{ $etiqueta->descripcion ?? 'N/A' }}</p>
+                <p><strong>Estado:</strong>
                     @if($etiqueta->estado)
-                    <span class="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-full shadow">
-                        Activa
-                    </span>
+                    <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
                     @else
-                    <span class="px-3 py-1 text-sm font-semibold text-white bg-red-600 rounded-full shadow">
-                        Inactiva
-                    </span>
+                    <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
                     @endif
-                </div>
+                </p>
             </div>
 
-            <div class="flex flex-col items-center md:items-end gap-4 col-span-4">
-                <!-- Editar Etiqueta -->
-                <button wire:click="abrirModal('edit', {{ $etiqueta->id }})"
-                    class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <div class="flex flex-col items-end gap-4 col-span-3">
+                <button wire:click="abrirModal('edit', {{ $etiqueta->id }})" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
                         <path d="M6 4v4" />
                         <path d="M6 12v8" />
@@ -73,12 +51,9 @@
                         <path d="M20.733 20l1.3 .75" />
                     </svg>
                 </button>
-
-                <!-- Ver Detalle -->
-                <button wire:click="modaldetalle({{ $etiqueta->id }})"
-                    class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-cyan-600" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
+                <button wire:click="modaldetalle({{ $etiqueta->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
@@ -94,27 +69,34 @@
         @endforelse
     </div>
 
-    <!-- Modal Crear/Editar Etiqueta -->
+    <!-- Modal Crear/Editar -->
     @if($modal)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white text-cyan-950 rounded-lg shadow-lg w-full max-w-4xl p-6 relative overflow-y-auto max-h-[90vh]">
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content flex flex-col gap-4">
 
-            <h2 class="text-xl font-semibold mb-6 text-center">
-                {{ $accion === 'create' ? 'Registrar Etiqueta' : 'Editar Etiqueta' }}
-            </h2>
-
-            <div class="grid grid-cols-12 gap-4">
-
-                <!-- Columna 1: Campos -->
-                <div class="col-span-12 md:col-span-6 flex flex-col gap-4">
+                <div>
+                    <label class="font-semibold text-sm mb-2 block">Imagen</label>
                     <input type="file" wire:model="imagen" class="input-minimal">
+                    @if($imagen || $imagenExistente)
+                    <div class="mt-2 flex justify-center">
+                        <img src="{{ $imagen ? $imagen->temporaryUrl() : asset('storage/'.$imagenExistente) }}"
+                            class="w-50 h-50 object-cover rounded" alt="Imagen Etiqueta">
+                    </div>
+                    @endif
                     @error('imagen') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-                    <input type="text" wire:model="capacidad" placeholder="Capacidad" class="input-minimal">
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Capacidad</label>
+                    <input wire:model="capacidad" class="input-minimal" placeholder="Capacidad">
                     @error('capacidad') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-                    <select wire:model="unidad" class="input-minimal">
-                        <option value="">Seleccione unidad</option>
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Unidad</label>
+                    <select wire:model="unidad" class="input-minimal w-full">
+                        <option value="">Seleccionar unidad</option>
                         <option value="L">L</option>
                         <option value="ml">ml</option>
                         <option value="g">g</option>
@@ -122,18 +104,18 @@
                         <option value="unidad">Unidad</option>
                     </select>
                     @error('unidad') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-                    <input type="text" wire:model="descripcion" placeholder="Descripción" class="input-minimal">
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Descripción</label>
+                    <input wire:model="descripcion" class="input-minimal" placeholder="Descripción">
                     @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
 
-                    <select wire:model="estado" class="input-minimal">
-                        <option value="1">Activo</option>
-                        <option value="0">Inactivo</option>
-                    </select>
-                    @error('estado') <span class="error-message">{{ $message }}</span> @enderror
-
-                    <select wire:model="cliente_id" class="input-minimal">
-                        <option value="">Seleccione Cliente</option>
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Cliente (Opcional)</label>
+                    <select wire:model="cliente_id" class="input-minimal w-full">
+                        <option value="">Seleccionar cliente</option>
                         @foreach($clientes as $cliente)
                         <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
                         @endforeach
@@ -141,113 +123,83 @@
                     @error('cliente_id') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- Columna 2: Vista previa de imagen -->
-                <div class="col-span-12 md:col-span-6 flex items-center justify-center">
-                    @if(is_object($imagen))
-                    <img src="{{ $imagen->temporaryUrl() }}" alt="Vista previa" class="w-56 h-56 object-cover rounded-lg shadow">
-                    @elseif($etiquetaSeleccionada && $etiquetaSeleccionada->imagen)
-                    <img src="{{ asset('storage/' . $etiquetaSeleccionada->imagen) }}" alt="Imagen Etiqueta" class="w-56 h-56 object-cover rounded-lg shadow">
-                    @else
-                    <div class="w-56 h-56 bg-gray-200 flex items-center justify-center rounded-lg shadow">
-                        <span class="text-gray-500">Sin imagen</span>
-                    </div>
-                    @endif
-                </div>
-
-                <!-- Botones acción -->
-                <div class="col-span-12 flex justify-center md:justify-end gap-4 mt-4 md:mt-0">
-                    <button type="button" wire:click="guardar"
-                        class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0v.001z" />
-                            <path d="M9 13h6" />
-                            <path d="M12 10v6" />
-                        </svg>
+                <div class="flex flex-wrap justify-center gap-2 mt-2">
+                    @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
+                    <button type="button" wire:click="$set('estado', {{ $key }})"
+                        class="px-4 py-2 rounded-full text-sm flex items-center justify-center
+                  {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                        {{ $label }}
                     </button>
-                    <button type="button" wire:click="cerrarModal"
-                        class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M10 10l4 4m0 -4l-4 4" />
-                            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                        </svg>
-                    </button>
+                    @endforeach
                 </div>
+            </div>
 
+            <div class="modal-footer">
+                <button type="button" wire:click="guardar" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                        <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M14 4l0 4l-6 0l0 -4" />
+                    </svg></button>
+                <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
+                        <path d="M10 10l4 4m0 -4l-4 4" />
+                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                    </svg></button>
             </div>
         </div>
     </div>
     @endif
 
-    <!-- Modal de detalle para Etiqueta -->
-    @if ($modalDetalle)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white text-cyan-950 rounded-lg shadow-lg w-full max-w-3xl p-6 relative overflow-y-auto max-h-[90vh]">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <dt class="text-sm font-semibold">Capacidad</dt>
-                    <dd class="mt-1 text-sm">{{ $etiquetaSeleccionada->capacidad ?? 'No disponible' }}</dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm font-semibold">Unidad</dt>
-                    <dd class="mt-1 text-sm">{{ $etiquetaSeleccionada->unidad ?? 'N/A' }}</dd>
-                </div>
-
-                <div class="col-span-1 md:col-span-2">
-                    <dt class="text-sm font-semibold">Descripción</dt>
-                    <dd class="mt-1 text-sm">{{ $etiquetaSeleccionada->descripcion ?? 'N/A' }}</dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm font-semibold">Estado</dt>
-                    <dd class="mt-1">
-                        @if ($etiquetaSeleccionada->estado)
-                        <span class="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-full shadow">
-                            Activa
-                        </span>
-                        @else
-                        <span class="px-3 py-1 text-sm font-semibold text-white bg-red-600 rounded-full shadow">
-                            Inactiva
-                        </span>
-                        @endif
-                    </dd>
-                </div>
-
-                <div>
-                    <dt class="text-sm font-semibold">Cliente</dt>
-                    <dd class="mt-1 text-sm">
-                        {{ $etiquetaSeleccionada->cliente ? $etiquetaSeleccionada->cliente->nombre : 'No asignado' }}
-                    </dd>
-                </div>
-
-
-                <div class="flex justify-center col-span-1 md:col-span-2 mt-4">
-                    @if ($etiquetaSeleccionada->imagen)
-                    <img src="{{ asset('storage/' . $etiquetaSeleccionada->imagen) }}" alt="Imagen Etiqueta"
-                        class="w-56 h-56 object-cover rounded-lg shadow">
+    <!-- Modal Detalle -->
+    @if($modalDetalle)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content flex flex-col gap-6">
+                <div class="flex justify-center items-center">
+                    @if($etiquetaSeleccionada->imagen)
+                    <img src="{{ asset('storage/'.$etiquetaSeleccionada->imagen) }}"
+                        class="w-50 h-50 object-cover rounded" alt="Imagen Etiqueta">
                     @else
-                    <div class="w-56 h-56 bg-gray-200 flex items-center justify-center rounded-lg shadow">
-                        <span class="text-gray-500">Sin imagen</span>
-                    </div>
+                    <span class="badge-info">Sin imagen</span>
                     @endif
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Estado:</span>
+                            <span class="badge-info">{{ $etiquetaSeleccionada->estado ? 'Activo' : 'Inactivo' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <span class="label-info">Capacidad:</span>
+                            <span class="badge-info">{{ $etiquetaSeleccionada->capacidad }} {{ $etiquetaSeleccionada->unidad ?? '' }}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <span class="label-info">Descripción:</span>
+                            <span class="badge-info">{{ $etiquetaSeleccionada->descripcion ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <span class="label-info">Cliente:</span>
+                            <span class="badge-info">{{ $etiquetaSeleccionada->cliente->nombre ?? '-' }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="col-span-12 flex justify-center md:justify-end gap-4 mt-4 md:mt-0">
-                <button type="button" wire:click="cerrarModalDetalle"
-                    class="bg-white rounded-xl p-2 w-12 h-12 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-600">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+               <div class="modal-footer">
+                <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M10 10l4 4m0 -4l-4 4" />
                         <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                    </svg>
-                </button>
+                    </svg></button>
             </div>
         </div>
     </div>

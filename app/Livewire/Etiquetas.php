@@ -2,10 +2,11 @@
 
 namespace App\Livewire;
 
-use App\Models\Etiqueta;
-use App\Models\Cliente;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\Etiqueta;
+use App\Models\Cliente;
+use App\Models\Existencia;
 
 class Etiquetas extends Component
 {
@@ -15,7 +16,8 @@ class Etiquetas extends Component
     public $modal = false;
     public $modalDetalle = false;
     public $etiqueta_id = null;
-    public $imagen; // Puede ser UploadedFile o string
+    public $imagen;
+    public $imagenExistente;
     public $capacidad = '';
     public $unidad = '';
     public $estado = 1;
@@ -23,15 +25,19 @@ class Etiquetas extends Component
     public $clientes;
     public $descripcion = '';
     public $accion = 'create';
-    public $etiquetaSeleccionada = null; // Modelo Etiqueta
+    public $etiquetaSeleccionada = null;
 
     protected $rules = [
-        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120', // 5 MB, solo jpg/png
         'capacidad' => 'required|string|max:255',
         'unidad' => 'nullable|in:L,ml,g,Kg,unidad',
         'descripcion' => 'nullable|string|max:255',
         'estado' => 'required|boolean',
         'cliente_id' => 'nullable|exists:clientes,id',
+    ];
+
+    protected $messages = [
+        'capacidad.required' => 'La capacidad es obligatoria.',
+        'estado.required' => 'El estado es obligatorio.',
     ];
 
     public function mount()
@@ -46,18 +52,24 @@ class Etiquetas extends Component
                 $query->where('capacidad', 'like', '%' . $this->search . '%')
                     ->orWhere('descripcion', 'like', '%' . $this->search . '%');
             })
-            ->get(); // quitamos la paginación
+            ->get();
 
         return view('livewire.etiquetas', compact('etiquetas'));
     }
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['imagen', 'capacidad', 'unidad', 'estado', 'cliente_id', 'descripcion']);
+        $this->reset([
+            'imagen', 'imagenExistente', 'capacidad', 'unidad', 'estado',
+            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada'
+        ]);
+
         $this->accion = $accion;
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
+
         $this->modal = true;
     }
 
@@ -70,21 +82,23 @@ class Etiquetas extends Component
         $this->estado = $etiqueta->estado;
         $this->descripcion = $etiqueta->descripcion;
         $this->cliente_id = $etiqueta->cliente_id;
+        $this->imagen = null; // Se usará solo si se sube nueva imagen
+        $this->imagenExistente = $etiqueta->imagen; // Para mostrar en el modal
         $this->accion = 'edit';
-        $this->etiquetaSeleccionada = $etiqueta; // para vista previa de imagen
-        $this->imagen = $etiqueta->imagen; // mantener la imagen actual si no se sube nueva
+        $this->etiquetaSeleccionada = $etiqueta;
     }
 
     public function guardar()
     {
         $this->validate();
 
-        if (is_object($this->imagen)) {
-            // Se subió nueva imagen
+        if ($this->imagen && is_object($this->imagen)) {
+            $this->validate([
+                'imagen' => 'image|max:5120', // 5 MB
+            ]);
             $imagenPath = $this->imagen->store('etiquetas', 'public');
         } else {
-            // Mantener la existente
-            $imagenPath = $this->etiqueta_id ? Etiqueta::find($this->etiqueta_id)->imagen : null;
+            $imagenPath = $this->imagenExistente ?? null;
         }
 
         $etiqueta = Etiqueta::updateOrCreate(
@@ -99,23 +113,25 @@ class Etiquetas extends Component
             ]
         );
 
-        // 👇 Crear existencia si es una nueva Etiqueta
+        // Crear existencia solo si es nueva etiqueta
         if (!$this->etiqueta_id) {
-            \App\Models\Existencia::create([
+            Existencia::create([
                 'existenciable_type' => Etiqueta::class,
                 'existenciable_id' => $etiqueta->id,
-                'cantidad' => 0, // stock inicial siempre 0
+                'cantidad' => 0,
             ]);
         }
 
         $this->cerrarModal();
     }
 
-
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['imagen', 'capacidad', 'unidad', 'estado', 'cliente_id', 'etiqueta_id', 'descripcion', 'etiquetaSeleccionada']);
+        $this->reset([
+            'imagen', 'imagenExistente', 'capacidad', 'unidad', 'estado',
+            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada'
+        ]);
         $this->resetErrorBag();
     }
 
