@@ -25,8 +25,7 @@
         <p><strong>Código:</strong> {{ $embotellado->codigo }}</p>
         <p><strong>Fecha:</strong> {{ $embotellado->fecha_embotellado }}</p>
         <p><strong>Personal:</strong> {{ $embotellado->personal->nombres ?? 'N/A' }}</p>
-        <p><strong>Base usada:</strong> {{ $embotellado->existenciaBase->existenciable->descripcion ?? 'N/A' }} ({{ $embotellado->cantidad_base_usada }})</p>
-        <p><strong>Tapa usada:</strong> {{ $embotellado->existenciaTapa->existenciable->descripcion ?? 'N/A' }} ({{ $embotellado->cantidad_tapa_usada }})</p>
+       
         <p><strong>Producto generado:</strong> {{ $embotellado->existenciaProducto->existenciable->descripcion ?? 'N/A' }} ({{ $embotellado->cantidad_generada ?? 0 }})</p>
         <p><strong>Estado:</strong> {{ ucfirst($embotellado->estado) }}</p>
       </div>
@@ -91,6 +90,12 @@
             <p class="font-semibold text-sm">
               Fecha de Embotellado: <span class="font-normal">{{ $fecha_embotellado }}</span>
             </p>
+
+            @if($fecha_embotellado_final)
+            <p class="font-semibold text-sm">
+              Fecha Final: <span class="font-normal">{{ $fecha_embotellado_final }}</span>
+            </p>
+            @endif
           </div>
 
           <div class="flex flex-wrap justify-center gap-2 mb-2">
@@ -166,9 +171,6 @@
             </div>
           </div>
 
-
-
-
           <div class="grid grid-cols-2 gap-2">
 
             <!-- Personal Responsable -->
@@ -221,11 +223,7 @@
               </button>
               @endforeach
             </div>
-
-
           </div>
-
-          <!-- Merma -->
           <div class="grid grid-cols-2 gap-2 mt-2">
             <div>
               <label class="font-semibold text-sm">Merma Base</label>

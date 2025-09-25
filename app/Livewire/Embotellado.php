@@ -12,7 +12,7 @@ use App\Models\Producto;
 
 class Embotellado extends Component
 {
-    public $search = '';    
+    public $search = '';
     public $modal = false;
     public $accion = 'create';
     public $embotellado_id = null;
@@ -39,7 +39,7 @@ class Embotellado extends Component
     public $modalDetalle = false;
     public $embotelladoSeleccionado = null;
     public $sucursalSeleccionada = null;
-
+    public $cantidad_generada_original;
     public $bases = [];
     public $tapas = [];
     public $productos = [];
@@ -66,7 +66,14 @@ class Embotellado extends Component
         $this->tapas = Existencia::with('existenciable')->where('existenciable_type', Tapa::class)->get();
         $this->productos = Existencia::with('existenciable')->where('existenciable_type', Producto::class)->get();
         $this->personals = Personal::all();
-        
+    }
+    public function updatedEstado($value)
+    {
+        if ($value === 'terminado') {
+            $this->fecha_embotellado_final = now();
+        } else {
+            $this->fecha_embotellado_final = null; // limpia si se vuelve a pendiente
+        }
     }
 
     public function filtrarPorSucursal($sucursalId)
@@ -165,6 +172,7 @@ class Embotellado extends Component
 
         $sucursalId = $embotellado->existenciaBase->sucursal_id; // asume que todos están en la misma
         $this->filtrarPorSucursal($sucursalId);
+        $this->cambiarSucursalProductos($sucursalId);
     }
 
     public function guardar()
@@ -200,6 +208,18 @@ class Embotellado extends Component
         if ($this->accion === 'create') {
             Existencia::find($this->existencia_base_id)->decrement('cantidad', $this->cantidad_base_usada);
             Existencia::find($this->existencia_tapa_id)->decrement('cantidad', $this->cantidad_tapa_usada);
+        }
+
+        if ($this->accion === 'edit' && $this->existencia_producto_id) {
+            $existencia = Existencia::find($this->existencia_producto_id);
+
+            if ($existencia) {
+                // Cantidad que debe tener = stock anterior - viejo + nuevo
+                $nuevaCantidad = ($existencia->cantidad - $this->cantidad_generada_original) + $this->cantidad_generada;
+                $existencia->update(['cantidad' => $nuevaCantidad]);
+
+                $this->cantidad_generada_original = $this->cantidad_generada;
+            }
         }
 
         $this->cerrarModal();
