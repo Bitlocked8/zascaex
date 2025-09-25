@@ -72,7 +72,7 @@ class Embotellado extends Component
         if ($value === 'terminado') {
             $this->fecha_embotellado_final = now();
         } else {
-            $this->fecha_embotellado_final = null; // limpia si se vuelve a pendiente
+            $this->fecha_embotellado_final = null;
         }
     }
 
@@ -106,8 +106,6 @@ class Embotellado extends Component
 
         return view('livewire.embotellado', compact('embotellados'));
     }
-
-    // Abrir modal crear o editar
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
@@ -129,6 +127,8 @@ class Embotellado extends Component
             'fecha_embotellado_final',
             'observaciones',
             'codigo',
+            'sucursalSeleccionada',
+            'sucursal_producto_id',
             'estado'
         ]);
 
@@ -149,7 +149,6 @@ class Embotellado extends Component
     public function editar($id)
     {
         $embotellado = ModelEmbotellado::findOrFail($id);
-
         $this->embotellado_id = $embotellado->id;
         $this->existencia_base_id = $embotellado->existencia_base_id;
         $this->existencia_tapa_id = $embotellado->existencia_tapa_id;
@@ -169,8 +168,7 @@ class Embotellado extends Component
         $this->observaciones = $embotellado->observaciones;
         $this->codigo = $embotellado->codigo;
         $this->estado = $embotellado->estado;
-
-        $sucursalId = $embotellado->existenciaBase->sucursal_id; // asume que todos están en la misma
+        $sucursalId = $embotellado->existenciaBase->sucursal_id;
         $this->filtrarPorSucursal($sucursalId);
         $this->cambiarSucursalProductos($sucursalId);
     }
@@ -179,7 +177,37 @@ class Embotellado extends Component
     {
         $this->validate();
 
-        // Guardar o actualizar el embotellado
+        $existenciaBase = Existencia::find($this->existencia_base_id);
+        $existenciaTapa = Existencia::find($this->existencia_tapa_id);
+
+        if ($this->accion === 'edit' && $this->embotellado_id) {
+            $embotelladoOriginal = ModelEmbotellado::find($this->embotellado_id);
+
+            // Diferencia en Base
+            $diferenciaBase = $this->cantidad_base_usada - $embotelladoOriginal->cantidad_base_usada;
+            if ($diferenciaBase > 0 && $existenciaBase && $existenciaBase->cantidad < $diferenciaBase) {
+                $this->addError('cantidad_base_usada', 'No hay suficiente stock de Base (disponible: ' . $existenciaBase->cantidad . ')');
+                return;
+            }
+
+            // Diferencia en Tapa
+            $diferenciaTapa = $this->cantidad_tapa_usada - $embotelladoOriginal->cantidad_tapa_usada;
+            if ($diferenciaTapa > 0 && $existenciaTapa && $existenciaTapa->cantidad < $diferenciaTapa) {
+                $this->addError('cantidad_tapa_usada', 'No hay suficiente stock de Tapa (disponible: ' . $existenciaTapa->cantidad . ')');
+                return;
+            }
+        } else {
+            // Caso create (nuevo embotellado)
+            if ($existenciaBase && $existenciaBase->cantidad < $this->cantidad_base_usada) {
+                $this->addError('cantidad_base_usada', 'No hay suficiente stock de Base (disponible: ' . $existenciaBase->cantidad . ')');
+                return;
+            }
+            if ($existenciaTapa && $existenciaTapa->cantidad < $this->cantidad_tapa_usada) {
+                $this->addError('cantidad_tapa_usada', 'No hay suficiente stock de Tapa (disponible: ' . $existenciaTapa->cantidad . ')');
+                return;
+            }
+        }
+
         ModelEmbotellado::updateOrCreate(
             ['id' => $this->embotellado_id],
             [
@@ -203,39 +231,29 @@ class Embotellado extends Component
                 'estado' => $this->estado,
             ]
         );
-
-        // Reducir stock de Base y Tapa
         if ($this->accion === 'create') {
             Existencia::find($this->existencia_base_id)->decrement('cantidad', $this->cantidad_base_usada);
             Existencia::find($this->existencia_tapa_id)->decrement('cantidad', $this->cantidad_tapa_usada);
         }
-
         if ($this->accion === 'edit' && $this->existencia_producto_id) {
             $existencia = Existencia::find($this->existencia_producto_id);
-
             if ($existencia) {
-                // Cantidad que debe tener = stock anterior - viejo + nuevo
                 $nuevaCantidad = ($existencia->cantidad - $this->cantidad_generada_original) + $this->cantidad_generada;
                 $existencia->update(['cantidad' => $nuevaCantidad]);
-
                 $this->cantidad_generada_original = $this->cantidad_generada;
             }
         }
-
         $this->cerrarModal();
     }
 
     public function cambiarSucursalProductos($sucursalId)
     {
         $this->sucursal_producto_id = $sucursalId;
-
         $this->productos = Existencia::with('existenciable')
             ->where('existenciable_type', Producto::class)
             ->where('sucursal_id', $sucursalId)
             ->get();
     }
-
-
     public function cerrarModal()
     {
         $this->modal = false;
