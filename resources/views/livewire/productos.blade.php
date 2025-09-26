@@ -1,430 +1,205 @@
-<div class="p-text p-2 mt-10 flex justify-center">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 gap-6">
-        <div>
-            <h6 class="text-xl font-bold mb-4 px-4 p-text">Gestión de Productos</h6>
+<div class="p-2 mt-20 flex justify-center bg-white">
+    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Buscador y botón crear -->
+        <div class="flex items-center gap-2 mb-4 col-span-full">
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Buscar por nombre o descripción..."
+                class="input-minimal w-full" />
+            <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+                </svg>
+            </button>
+        </div>
 
-            <!-- Botón de registro y buscador -->
-            <div class="flex justify-center items-center gap-4 w-full max-w-2xl mx-auto">
-                <button title="Registrar Producto" wire:click='abrirModal("create")'
-                    class="text-emerald-500 hover:text-emerald-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="icon icon-tabler icons-tabler-outline icon-tabler-plus">
+        <!-- Listado -->
+        @forelse($productos as $producto)
+        <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
+            <div class="flex flex-col col-span-9 text-left space-y-1">
+                <p><strong>Nombre:</strong> {{ $producto->nombre ?? 'N/A' }}</p>
+                <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }} ml</p>
+                <p><strong>Precio Ref.:</strong> {{ $producto->precioReferencia ?? 'N/A' }} Bs</p>
+                <p><strong>Estado:</strong>
+                    @if($producto->estado)
+                    <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
+                    @else
+                    <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
+                    @endif
+                </p>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex flex-col items-end gap-4 col-span-3">
+                <button wire:click="abrirModal('edit', {{ $producto->id }})" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M12 5v14m7-7h-14" />
+                        <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M6 4v4" />
+                        <path d="M6 12v8" />
+                        <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
+                        <path d="M12 4v10" />
+                        <path d="M12 18v2" />
+                        <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M18 4v1" />
+                        <path d="M18 9v2.5" />
+                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M19.001 15.5v1.5" />
+                        <path d="M19.001 21v1.5" />
+                        <path d="M22.032 17.25l-1.299 .75" />
+                        <path d="M17.27 20l-1.3 .75" />
+                        <path d="M15.97 17.25l1.3 .75" />
+                        <path d="M20.733 20l1.3 .75" />
                     </svg>
                 </button>
-
-                <input type="text" wire:model.live="search" placeholder="Buscar producto..."
-                    class="input-g w-auto sm:w-64" />
-            </div>
-
-            <!-- Tabla -->
-            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg">
-                <table
-                    class="w-full text-sm text-left border border-slate-200 dark:border-cyan-200 rounded-lg border-collapse">
-                    <thead class="text-xs md:text-sm uppercase color-bg">
-                        <tr class="bg-gray-100 dark:bg-gray-800">
-                            <th scope="col" class="px-4 py-3 p-text text-left">DETALLES DEL PRODUCTO</th>
-                            <th scope="col" class="px-4 py-3 p-text text-left">SUCURSAL Y STOCK</th>
-                            <th scope="col" class="px-4 py-3 p-text text-right">ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($productos as $producto)
-                        <tr class="color-bg border border-slate-200">
-                            <!-- Columna 1: Imagen + Info producto -->
-                            <td class="px-4 py-4 p-text text-left align-top">
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-                                    <img src="{{ asset('storage/' . $producto->imagen) }}" alt="producto"
-                                        class="h-20 w-20 sm:h-24 sm:w-24 object-cover rounded mb-2 sm:mb-0">
-                                    <div class="text-sm space-y-1">
-
-                                        <div><strong>Nombre:</strong> {{ $producto->nombre }}</div>
-                                        <div><strong>Tipo Producto:</strong> {{ $producto->tipoProducto?'Con retorno':'Sin retorno' }}</div>
-                                        <div><strong>Capacidad:</strong> {{ $producto->capacidad }} ml</div>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <!-- Columna 2: Sucursal + stock -->
-                            <td class="px-4 py-4 text-left align-top text-sm">
-                                <strong class="block mb-1">Sucursal:</strong>
-                                @forelse ($producto->existencias as $existencia)
-                                <span class="block">
-                                    <span class="@if ($existencia->cantidad > ($existencia->cantidadMinima * 2)) text-green-500
-                                                @elseif ($existencia->cantidad >= $existencia->cantidadMinima && $existencia->cantidad <= ($existencia->cantidadMinima * 2)) text-yellow-500
-                                                @else text-red-500 @endif">
-                                        {{ number_format($existencia->cantidad) . '/' . $existencia->cantidadMinima }}:
-                                    </span>
-                                    {{ Str::limit($existencia->sucursal->nombre ?? 'Sucursal Desconocida', 18, '...') }}
-                                </span>
-                                @empty
-                                <span class="text-xs text-gray-500">Sin stock registrado</span>
-                                @endforelse
-
-                                <strong class="p-text block mt-2">
-                                    {{ number_format($producto->existencias->sum('cantidad')) }}: Total productos
-                                </strong>
-                            </td>
-
-                            
-
-                            <!-- Columna 3: Acciones -->
-                            <td class="px-4 py-4 text-right align-middle">
-                                <div class="flex justify-end space-x-2">
-                                    <!-- Editar -->
-                                    <button title="Editar Producto" wire:click="abrirModal('edit', {{ $producto->id }})"
-                                        class="text-blue-500 hover:text-blue-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="icon icon-tabler icon-tabler-edit">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                            <path
-                                                d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                            <path d="M16 5l3 3" />
-                                        </svg>
-                                    </button>
-
-                                    <!-- Detalles -->
-                                    <button title="Ver detalles" wire:click="modaldetalle({{ $producto->id }})"
-                                        class="text-indigo-500 hover:text-indigo-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round"
-                                            class="icon icon-tabler icon-tabler-info-circle">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                                            <path d="M12 9h.01" />
-                                            <path d="M11 12h1v4h1" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="3" class="text-center py-4 text-gray-600 dark:text-gray-400 text-sm">
-                                No hay productos registrados.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-
-            <div class="mt-4 flex justify-center">
-                {{ $productos->links() }}
+                <button wire:click="modaldetalle({{ $producto->id }})" class="btn-circle btn-cyan"
+                    title="Ver Detalle">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+                    </svg>
+                </button>
             </div>
         </div>
+        @empty
+        <div class="col-span-full text-center py-4 text-gray-600">
+            No hay productos registrados.
+        </div>
+        @endforelse
     </div>
 
-
-    @if ($modal)
-    <div class="modal-first">
-        <div class="modal-center">
-            <div class="modal-hiden">
-                <div class="center-col">
-                    <h3 class="p-text">{{ $accion === 'create' ? 'Registrar Producto' : 'Editar Producto' }}</h3>
-
-                    <div class="over-col">
-                        <!-- Imagen -->
-
-                        <label class="block text-sm">Imagen</label>
-                        <input type="file" wire:model="imagen" accept="image/*" class="w-full border p-2 rounded" />
-                        @error('imagen') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-
-
-                        <!-- Nombre -->
-                        <h3 class="p-text">Nombre</h3>
-                        <input type="text" wire:model="nombre" class="p-text input-g" />
-                        @error('nombre') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Capacidad -->
-                        <h3 class="p-text">Capacidad</h3>
-                        <input type="text" wire:model="capacidad" class="p-text input-g" />
-                        @error('capacidad') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Unidad -->
-                        <h3 class="p-text">Unidad</h3>
-                        <select wire:model="unidad" class="p-text input-g">
-                            <option value="">Seleccione una unidad</option>
-                            <option value="L">L</option>
-                            <option value="ml">ml</option>
-                            <option value="g">g</option>
-                            <option value="Kg">Kg</option>
-                            <option value="unidad">unidad</option>
-                        </select>
-                        @error('unidad') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <h3 class="p-text">Tipo de Contenido</h3>
-                        <select id="tipoContenido" wire:model="tipoContenido" class="p-text input-g">
-
-                            <option value="1">Líquido</option>
-                            <option value="2">Líquido con gas</option>
-                            <option value="3">Solido</option>
-                        </select>
-                        @error('tipoContenido')
-                        <span class="text-red-600 text-xs">{{ $message }}</span>
-                        @enderror
-
-                        <!-- Tipo de Producto -->
-                        <h3 class="p-text">Tipo de Producto</h3>
-
-                        <div class="flex space-x-6 justify-center">
-                            <!-- Botón de radio para "Con retorno" -->
-                            <label class="flex items-center space-x-2">
-                                <input type="radio" wire:model="tipoProducto" value="1"
-                                    class="form-radio hidden peer" />
-                                <span
-                                    class="p-text inline-block py-2 px-4 rounded-lg cursor-pointer border border-gray-300 hover:bg-indigo-100 peer-checked:bg-cyan-950 peer-checked:text-white">
-                                    Con retorno
-                                </span>
-                            </label>
-
-                            <!-- Botón de radio para "Sin retorno" -->
-                            <label class="flex items-center space-x-2">
-                                <input type="radio" wire:model="tipoProducto" value="0"
-                                    class="form-radio hidden peer" />
-                                <span
-                                    class="p-text inline-block py-2 px-4 rounded-lg cursor-pointer border border-gray-300 hover:bg-indigo-100 peer-checked:bg-cyan-950 peer-checked:text-white">
-                                    Sin retorno
-                                </span>
-                            </label>
+    @if($modal)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="font-semibold text-sm mb-2 block">Imagen</label>
+                        <input type="file" wire:model="imagen" class="input-minimal">
+                        @if($imagen || $imagenExistente)
+                        <div class="mt-2 flex justify-center">
+                            <img src="{{ $imagen ? $imagen->temporaryUrl() : asset('storage/'.$imagenExistente) }}"
+                                class="w-50 h-50 object-cover rounded"
+                                alt="Imagen Producto">
                         </div>
-
-                        @error('tipoProducto')
-                        <span class="text-red-600 text-xs">{{ $message }}</span>
-                        @enderror
-
-
-                        <!-- Precio de Referencia 1 -->
-                        <h3 class="p-text">Precio de Referencia 1</h3>
-                        <input type="number" wire:model="precioReferencia" class="p-text input-g" />
-                        @error('precioReferencia') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Precio de Referencia 2 -->
-                        <h3 class="p-text">Precio de Referencia 2</h3>
-                        <input type="number" wire:model="precioReferencia2" class="p-text input-g" />
-                        @error('precioReferencia2') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Precio de Referencia 3 -->
-                        <h3 class="p-text">Precio de Referencia 3</h3>
-                        <input type="number" wire:model="precioReferencia3" class="p-text input-g" />
-                        @error('precioReferencia3') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Observaciones -->
-                        <h3 class="p-text">Observaciones</h3>
-                        <input wire:model="observaciones" class="p-text input-g"></input>
-                        @error('observaciones') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Estado -->
-                        <h3 class="p-text">Estado</h3>
-
-                        <div class="flex space-x-6 justify-center">
-                            <!-- Botón para "Activo" -->
-                            <label class="flex items-center space-x-2">
-                                <input type="radio" wire:model="estado" value="1" class="form-radio hidden peer" />
-                                <span
-                                    class="p-text inline-block py-2 px-4 rounded-lg cursor-pointer border border-gray-300 hover:bg-indigo-100 peer-checked:bg-cyan-950 peer-checked:text-white">
-                                    Activo
-                                </span>
-                            </label>
-
-                            <!-- Botón para "Inactivo" -->
-                            <label class="flex items-center space-x-2">
-                                <input type="radio" wire:model="estado" value="0" class="form-radio hidden peer" />
-                                <span
-                                    class="p-text inline-block py-2 px-4 rounded-lg cursor-pointer border border-gray-300 hover:bg-indigo-100 peer-checked:bg-cyan-950 peer-checked:text-white">
-                                    Inactivo
-                                </span>
-                            </label>
-                        </div>
-                        @error('estado') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <h3 class="p-text">Base</h3>
-                        <select wire:model="base_id" class="p-text input-g">
-                            @foreach($bases as $base)
-                            <option value="{{ $base->id }}">
-                                {{ $base->capacidad }}{{ $base->unidad }} - {{ $base->preforma->insumo ?? 'Sin preforma'
-                                }}
-                            </option>
-                            @endforeach
-                        </select>
-
-                        @error('base_id')
-                        <span class="text-red-600 text-xs">{{ $message }}</span>
-                        @enderror
-
-
+                        @endif
+                        @error('imagen') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Botones -->
-                    <div class="mt-6 flex justify-center w-full space-x-4">
-                        <button type="button" wire:click="guardar"
-                            class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                <path d="M14 4l0 4l-6 0l0 -4" />
-                            </svg>
-                        </button>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Nombre</label>
+                        <input wire:model="nombre" class="input-minimal" placeholder="Nombre del producto" />
+                        @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
 
-                        <button type="button" wire:click="cerrarModal"
-                            class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Tipo de Contenido</label>
+                        <input wire:model="tipoContenido" class="input-minimal" placeholder="Ej. Agua, Gaseosa..." />
+                        @error('tipoContenido') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-2 mb-2">
+                        @foreach([0 => 'Sin Retorno', 1 => 'Con Retorno'] as $key => $label)
+                        <button
+                            type="button"
+                            wire:click="$set('tipoProducto', {{ $key }})"
+                            class="px-4 py-2 rounded-full text-sm
+            {{ $tipoProducto == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                            {{ $label }}
                         </button>
+                        @endforeach
+                    </div>
+
+
+
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Capacidad (ml)</label>
+                        <input type="number" wire:model="capacidad" class="input-minimal" placeholder="Ej. 500" />
+                        @error('capacidad') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Precio de Referencia (Bs)</label>
+                        <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" placeholder="Ej. 10.50" />
+                        @error('precioReferencia') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Descripción</label>
+                        <textarea wire:model="descripcion" class="input-minimal" placeholder="Descripción del producto"></textarea>
+                        @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-2 mt-2">
+                        @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
+                        <button type="button" wire:click="$set('estado', {{ $key }})"
+                            class="px-4 py-2 rounded-full text-sm flex items-center justify-center
+              {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                            {{ $label }}
+                        </button>
+                        @endforeach
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" wire:click="guardar" class="btn-circle btn-cyan">💾</button>
+                <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">❌</button>
             </div>
         </div>
     </div>
     @endif
 
-
-    @if ($modalDetalle)
-    <div class="modal-first">
-        <div class="modal-center">
-            <div class="modal-hiden">
-                <div class="center-col">
-                    <h3 class="text-base font-semibold p-text" id="modal-title">Detalles del Producto</h3>
-                    <div class="mt-4">
-                        <dl class="grid grid-cols-2 gap-4">
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Base Asociada</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $productoSeleccionado?->base?->capacidad }}{{
-                                    $productoSeleccionado?->base?->unidad }}
-                                    -
-                                    {{ $productoSeleccionado?->base?->preforma?->insumo ?? 'Sin preforma' }}
-                                </dd>
-                            </div>
-                            <!-- Nombre -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Nombre</dt>
-                                <dd class="mt-1 text-sm p-text">{{ $productoSeleccionado->nombre ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Tipo de Contenido -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Tipo de Contenido</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $productoSeleccionado->tipoContenido === 0 ? 'Líquido' :
-                                    ($productoSeleccionado->tipoContenido === 1 ? 'Sólido' :
-                                    ($productoSeleccionado->tipoContenido === 2 ? 'Polvo' :
-                                    ($productoSeleccionado->tipoContenido === 3 ? 'Pastillas' :
-                                    ($productoSeleccionado->tipoContenido === 4 ? 'Gel' :
-                                    ($productoSeleccionado->tipoContenido === 5 ? 'Aerosol' : 'No especificado'))))) }}
-                                </dd>
-                            </div>
-
-                            <!-- Tipo de Producto -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Tipo de Retorno</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    @if (($productoSeleccionado['tipoProducto'] ?? false) == 1)
-                                    <span
-                                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-600 text-white">
-                                        Con retorno
-                                    </span>
-                                    @else
-                                    <span
-                                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">
-                                        Sin retorno
-                                    </span>
-                                    @endif
-                                </dd>
-                            </div>
-
-
-
-                            <!-- Capacidad -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Capacidad</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $productoSeleccionado->capacidad ?? 'No especificada' }}
-                                </dd>
-                            </div>
-
-                            <!-- Unidad -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Unidad</dt>
-                                <dd class="mt-1 text-sm p-text">{{ $productoSeleccionado->unidad ?? 'No especificada' }}
-                                </dd>
-                            </div>
-
-                            <!-- Precio Referencia 1 -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Precio de Referencia</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $productoSeleccionado->precioReferencia ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Precio Referencia 2 -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Precio de Referencia 2</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $productoSeleccionado->precioReferencia2 ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Precio Referencia 3 -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Precio de Referencia 3</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $productoSeleccionado->precioReferencia3 ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Estado -->
-                            <div>
-                                <dt class="text-sm font-semibold p-text">Estado</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    @if (($productoSeleccionado['estado'] ?? false) == 1)
-                                    <span
-                                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-600 text-white">Activo</span>
-                                    @else
-                                    <span
-                                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">Inactivo</span>
-                                    @endif
-                                </dd>
-                            </div>
-                        </dl>
+    @if($modalDetalle && $productoSeleccionado)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content flex flex-col gap-6">
+                <div class="flex justify-center items-center">
+                    @if($productoSeleccionado->imagen)
+                    <img src="{{ asset('storage/'.$productoSeleccionado->imagen) }}"
+                        class="w-50 h-50 object-cover rounded"
+                        alt="Imagen Producto">
+                    @else
+                    <span class="badge-info">Sin imagen</span>
+                    @endif
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Estado:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->estado ? 'Activo' : 'Inactivo' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Tipo Contenido:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->tipoContenido ?? '-' }}</span>
+                        </div>
                     </div>
-
-                    <div class="mt-6 flex justify-center w-full">
-                        <button type="button" wire:click="cerrarModalDetalle"
-                            class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
-                        </button>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <span class="label-info">Capacidad:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->capacidad }} ml</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <span class="label-info">Precio Referencia:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->precioReferencia }} Bs</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                            <span class="label-info">Descripción:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->descripcion ?? '-' }}</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">❌</button>
             </div>
         </div>
     </div>
     @endif
-
-
-
 </div>

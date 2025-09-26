@@ -2,40 +2,44 @@
 
 namespace App\Livewire;
 
-use App\Models\Tapa;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\Tapa;
+use App\Models\Existencia;
 
 class Tapas extends Component
 {
     use WithFileUploads;
 
-    public $descripcion = '';
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
     public $tapa_id = null;
+
+    public $imagen;
+    public $imagenExistente;
+    public $descripcion = '';
     public $color = '';
     public $tipo = '';
     public $estado = 1;
-    public $imagen; // Puede ser UploadedFile o string
-    public $accion = 'create';
-    public $tapaSeleccionada = null; // Modelo Tapa
 
-    protected $rules = [
-        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-        'color' => 'required|string|max:255',
-        'tipo' => 'required|string|max:255',
-        'estado' => 'required|boolean',
-        'descripcion' => 'nullable|string|max:255',
+    public $accion = 'create';
+    public $tapaSeleccionada = null;
+
+    protected $messages = [
+        'color.required' => 'El color es obligatorio.',
+        'tipo.required' => 'El tipo es obligatorio.',
+        'estado.required' => 'El estado es obligatorio.',
     ];
 
     public function render()
     {
-        $tapas = Tapa::with('existencias')
+        $tapas = Tapa::query()
             ->when($this->search, function ($query) {
-                $query->where('color', 'like', '%' . $this->search . '%')
-                    ->orWhere('tipo', 'like', '%' . $this->search . '%');
+                $searchTerm = '%' . $this->search . '%';
+                $query->where('color', 'like', $searchTerm)
+                      ->orWhere('tipo', 'like', $searchTerm)
+                      ->orWhere('descripcion', 'like', $searchTerm);
             })
             ->get();
 
@@ -45,12 +49,8 @@ class Tapas extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'tapa_id',
-            'color',
-            'tipo',
-            'descripcion',
-            'estado',
-            'imagen',
+            'tapa_id', 'color', 'tipo', 'descripcion',
+            'estado', 'imagen', 'imagenExistente', 'tapaSeleccionada'
         ]);
 
         $this->accion = $accion;
@@ -70,55 +70,58 @@ class Tapas extends Component
         $this->tipo = $tapa->tipo;
         $this->estado = $tapa->estado;
         $this->descripcion = $tapa->descripcion;
+        $this->imagen = null; // solo si suben nueva
+        $this->imagenExistente = $tapa->imagen;
+        $this->tapaSeleccionada = $tapa;
         $this->accion = 'edit';
-        $this->tapaSeleccionada = $tapa; // ← importante para mostrar la imagen existente
-        $this->imagen = $tapa->imagen;   // ← asignamos la ruta actual si no se sube nueva
     }
 
     public function guardar()
     {
-        $this->validate();
-
-        // Manejar la imagen
-        if (is_object($this->imagen)) {
-            $imagenPath = $this->imagen->store('tapas', 'public');
-        } else {
-            $imagenPath = $this->tapa_id ? Tapa::find($this->tapa_id)->imagen : null;
-        }
-
-        // Crear o actualizar la Tapa
-        $tapa = Tapa::updateOrCreate(['id' => $this->tapa_id], [
-            'color' => $this->color,
-            'tipo' => $this->tipo,
-            'descripcion' => $this->descripcion,
-            'estado' => $this->estado,
-            'imagen' => $imagenPath,
+        $this->validate([
+            'color' => 'required|string|max:100',
+            'tipo' => 'required|string|max:100',
+            'estado' => 'required|boolean',
+            'descripcion' => 'nullable|string|max:255',
         ]);
 
-        // Crear existencia automática si es una nueva Tapa
+        if ($this->imagen && is_object($this->imagen)) {
+            $this->validate([
+                'imagen' => 'image|max:5120', // 5MB
+            ]);
+            $imagenPath = $this->imagen->store('tapas', 'public');
+        } else {
+            $imagenPath = $this->imagenExistente ?? null;
+        }
+
+        $tapa = Tapa::updateOrCreate(
+            ['id' => $this->tapa_id],
+            [
+                'color' => $this->color,
+                'tipo' => $this->tipo,
+                'estado' => $this->estado,
+                'descripcion' => $this->descripcion,
+                'imagen' => $imagenPath,
+            ]
+        );
+
         if (!$this->tapa_id) {
-            \App\Models\Existencia::create([
+            Existencia::create([
                 'existenciable_type' => Tapa::class,
                 'existenciable_id' => $tapa->id,
-                'cantidad' => 0, // siempre 0 al principio
+                'cantidad' => 0,
             ]);
         }
 
         $this->cerrarModal();
     }
 
-
     public function cerrarModal()
     {
         $this->modal = false;
         $this->reset([
-            'tapa_id',
-            'color',
-            'tipo',
-            'descripcion',
-            'estado',
-            'imagen',
-            'tapaSeleccionada',
+            'tapa_id', 'color', 'tipo', 'descripcion',
+            'estado', 'imagen', 'imagenExistente', 'tapaSeleccionada'
         ]);
         $this->resetErrorBag();
     }

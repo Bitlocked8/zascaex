@@ -2,99 +2,73 @@
 
 namespace App\Livewire;
 
-use App\Models\Base;
-use App\Models\Producto;
 use Livewire\Component;
-use Livewire\WithPagination;
 use Livewire\WithFileUploads;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use App\Models\Producto;
+use App\Models\Existencia;
 
 class Productos extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads;
 
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
     public $producto_id = null;
-    public $nombre = '';
+
     public $imagen;
+    public $imagenExistente;
+    public $nombre = '';
     public $tipoContenido = '';
-    public $tipoProducto = 0; // Establecer el valor por defecto como 0
-
+    public $tipoProducto = 0; // 0 = sin retorno, 1 = con retorno
     public $capacidad = '';
-    public $unidad = 'ml';
     public $precioReferencia = '';
-    public $precioReferencia2 = '';
-    public $precioReferencia3 = '';
-    public $observaciones = '';
+    public $descripcion = '';
     public $estado = 1;
-    public $base_id = null; // Nuevo campo base_id
-    public $accion = 'create';
-    public $productoSeleccionado = [];
-    public $bases = [];
-    protected $paginationTheme = 'tailwind';
 
-    protected $rules = [
-        'imagen' => 'nullable|image|max:1024',
-        'nombre' => 'required|string|max:255',
-        'tipoContenido' => 'required|integer|between:0,255',
-        'tipoProducto' => 'nullable|boolean',
-        'capacidad' => 'required|integer|min:0',
-        'unidad' => 'required|string|max:10',
-        'precioReferencia' => 'required|numeric|min:0',
-        'precioReferencia2' => 'nullable|numeric|min:0',
-        'precioReferencia3' => 'nullable|numeric|min:0',
-        'observaciones' => 'nullable|string',
-        'estado' => 'required|boolean',
-        'base_id' => 'required|integer', // Validación para base_id
+    public $accion = 'create';
+    public $productoSeleccionado = null;
+
+    protected $messages = [
+        'nombre.required' => 'El nombre es obligatorio.',
+        'tipoContenido.required' => 'El tipo de contenido es obligatorio.',
+        'tipoProducto.required' => 'El tipo de producto es obligatorio.',
+        'capacidad.required' => 'La capacidad es obligatoria.',
+        'capacidad.integer' => 'La capacidad debe ser un número entero.',
+        'capacidad.min' => 'La capacidad no puede ser negativa.',
+        'precioReferencia.required' => 'El precio de referencia es obligatorio.',
+        'precioReferencia.numeric' => 'El precio de referencia debe ser un número.',
+        'estado.required' => 'El estado es obligatorio.',
     ];
-    public function mount()
-    {
-        $this->bases = \App\Models\Base::with('preforma')->where('estado', 1)->get();
-    }
 
     public function render()
     {
-        $this->bases = \App\Models\Base::with('preforma')->where('estado', 1)->get();
-
-        $productos = Producto::with('existencias')
+        $productos = Producto::query()
             ->when($this->search, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->search . '%')
-                    ->orWhere('tipoContenido', 'like', '%' . $this->search . '%');
+                $searchTerm = '%' . $this->search . '%';
+                $query->where('nombre', 'like', $searchTerm)
+                      ->orWhere('descripcion', 'like', $searchTerm)
+                      ->orWhere('capacidad', 'like', $searchTerm);
             })
-            ->orderByDesc('id')
-            ->paginate(4);
+            ->get();
 
         return view('livewire.productos', compact('productos'));
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
     }
 
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'producto_id',
-            'nombre',
-            'imagen',
-            'tipoContenido',
-            'tipoProducto',
-            'capacidad',
-            'unidad',
-            'precioReferencia',
-            'precioReferencia2',
-            'precioReferencia3',
-            'observaciones',
-            'estado',
-            'base_id', // Asegúrate de resetear base_id aquí también
+            'producto_id', 'nombre', 'tipoContenido', 'tipoProducto',
+            'capacidad', 'precioReferencia', 'descripcion',
+            'estado', 'imagen', 'imagenExistente', 'productoSeleccionado'
         ]);
+
         $this->accion = $accion;
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
+
         $this->modal = true;
     }
 
@@ -106,82 +80,77 @@ class Productos extends Component
         $this->tipoContenido = $producto->tipoContenido;
         $this->tipoProducto = $producto->tipoProducto;
         $this->capacidad = $producto->capacidad;
-        $this->unidad = $producto->unidad;
         $this->precioReferencia = $producto->precioReferencia;
-        $this->precioReferencia2 = $producto->precioReferencia2;
-        $this->precioReferencia3 = $producto->precioReferencia3;
-        $this->observaciones = $producto->observaciones;
+        $this->descripcion = $producto->descripcion;
         $this->estado = $producto->estado;
-        $this->base_id = $producto->base_id; // Asegúrate de cargar base_id también
+
+        $this->imagen = null; // solo si suben nueva
+        $this->imagenExistente = $producto->imagen;
+
+        $this->productoSeleccionado = $producto;
         $this->accion = 'edit';
     }
 
     public function guardar()
     {
-        $this->validate();
+        $this->validate([
+            'nombre' => 'required|string|max:255',
+            'tipoContenido' => 'required|integer',
+            'tipoProducto' => 'required|boolean',
+            'capacidad' => 'required|integer|min:0',
+            'precioReferencia' => 'required|numeric|min:0',
+            'descripcion' => 'nullable|string|max:500',
+            'estado' => 'required|boolean',
+        ]);
 
-        try {
-            $precioReferencia2 = $this->precioReferencia2 ?: null; // Si está vacío, asignar null
-            $precioReferencia3 = $this->precioReferencia3 ?: null;
+        if ($this->imagen && is_object($this->imagen)) {
+            $this->validate([
+                'imagen' => 'image|max:5120', // 5MB
+            ]);
+            $imagenPath = $this->imagen->store('productos', 'public');
+        } else {
+            $imagenPath = $this->imagenExistente ?? null;
+        }
 
-            if ($this->imagen) {
-                $imagenPath = $this->imagen->store('productos', 'public');
-            } else {
-                // Si no hay una nueva imagen, mantener la imagen actual si existe
-                $imagenPath = $this->producto_id ? Producto::find($this->producto_id)->imagen : null;
-            }
-
-            Producto::updateOrCreate(['id' => $this->producto_id], [
+        $producto = Producto::updateOrCreate(
+            ['id' => $this->producto_id],
+            [
                 'nombre' => $this->nombre,
                 'tipoContenido' => $this->tipoContenido,
                 'tipoProducto' => $this->tipoProducto,
                 'capacidad' => $this->capacidad,
-                'unidad' => $this->unidad,
                 'precioReferencia' => $this->precioReferencia,
-                'precioReferencia2' => $precioReferencia2, // Asignar null si está vacío
-                'precioReferencia3' => $precioReferencia3, // Asignar null si está vacío
-                'observaciones' => $this->observaciones,
+                'descripcion' => $this->descripcion,
                 'estado' => $this->estado,
-                'base_id' => $this->base_id, // Incluir base_id en el guardado
                 'imagen' => $imagenPath,
+            ]
+        );
+
+        if (!$this->producto_id) {
+            Existencia::create([
+                'existenciable_type' => Producto::class,
+                'existenciable_id' => $producto->id,
+                'cantidad' => 0,
             ]);
-
-            LivewireAlert::title($this->producto_id ? 'Producto actualizado con éxito.' : 'Producto creado con éxito.')
-                ->success()
-                ->show();
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-                ->error()
-                ->show();
         }
+
+        $this->cerrarModal();
     }
 
     public function cerrarModal()
     {
         $this->modal = false;
         $this->reset([
-            'producto_id',
-            'nombre',
-            'imagen',
-            'tipoContenido',
-            'tipoProducto',
-            'capacidad',
-            'unidad',
-            'precioReferencia',
-            'precioReferencia2',
-            'precioReferencia3',
-            'observaciones',
-            'estado',
-            'base_id', // Resetear base_id al cerrar el modal
+            'producto_id', 'nombre', 'tipoContenido', 'tipoProducto',
+            'capacidad', 'precioReferencia', 'descripcion',
+            'estado', 'imagen', 'imagenExistente', 'productoSeleccionado'
         ]);
         $this->resetErrorBag();
     }
 
     public function modaldetalle($id)
     {
-        $this->productoSeleccionado = Producto::with('base')->findOrFail($id);
+        $this->productoSeleccionado = Producto::findOrFail($id);
         $this->modalDetalle = true;
     }
 
