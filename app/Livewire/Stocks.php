@@ -19,7 +19,6 @@ class Stocks extends Component
     public $proveedores;
     public $personal;
     public $sucursales;
-    public $selectedSucursal;
     public $modalDetalle = false;
     public $existenciaSeleccionada;
     public $modal = false;
@@ -33,7 +32,6 @@ class Stocks extends Component
     public $fecha;
     public $observaciones;
     public $accion = 'create';
-    public $sucursalSeleccionada;
     public $modalConfigGlobal = false;
     public $configExistencias = [];
 
@@ -51,31 +49,10 @@ class Stocks extends Component
     public function mount()
     {
         $this->sucursales = Sucursal::all();
-        $this->proveedores = Proveedor::all();
+        $this->proveedores = Proveedor::where('estado', 1)->get(); // <-- filtrando por estado = 1
         $this->personal = Personal::all();
-        $this->selectedSucursal = $this->sucursales->first()->id ?? null;
-        $this->sucursalSeleccionada = $this->sucursales->first()->id ?? null;
-        $this->filtrarPorSucursal($this->sucursalSeleccionada);
         $this->cargarExistencias();
         $this->cargarReposiciones();
-    }
-
-    public function filtrarPorSucursal($sucursalId)
-    {
-        $this->sucursalSeleccionada = $sucursalId;
-
-        $this->existencias = Existencia::with('existenciable')
-            ->where('sucursal_id', $sucursalId)
-            ->where(function ($q) {
-                $q->where('existenciable_type', '!=', \App\Models\Producto::class);
-            })
-            ->orderBy('id')
-            ->get();
-
-        $this->reposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
-            ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
-            ->orderBy('fecha', 'desc')
-            ->get();
     }
 
 
@@ -87,13 +64,15 @@ class Stocks extends Component
             ->get();
     }
 
-
     public function cargarReposiciones()
-    {
-        $this->reposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
-            ->orderBy('fecha', 'desc')
-            ->get();
-    }
+{
+    $query = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
+        ->whereHas('proveedor', fn($q) => $q->where('estado', 1))
+        ->orderBy('fecha', 'desc');
+
+    $this->reposiciones = $query->get();
+}
+
 
     public function abrirModal($accion = 'create', $id = null)
     {
@@ -192,7 +171,7 @@ class Stocks extends Component
     public function abrirModalConfigGlobal()
     {
         $this->configExistencias = $this->existencias
-            ->sortByDesc('updated_at') // o 'created_at' si quieres por fecha de creación
+            ->sortByDesc('updated_at')
             ->mapWithKeys(fn($ex) => [
                 $ex->id => [
                     'cantidad_minima' => $ex->cantidadMinima,
@@ -203,7 +182,6 @@ class Stocks extends Component
         $this->modalConfigGlobal = true;
     }
 
-
     public function guardarConfigGlobal()
     {
         foreach ($this->configExistencias as $id => $config) {
@@ -211,7 +189,7 @@ class Stocks extends Component
             if ($existencia) {
                 $existencia->update([
                     'cantidadMinima' => $config['cantidad_minima'] ?? 0,
-                    'sucursal_id' => $config['sucursal_id'] ?: null, // <- Aquí forzamos null si está vacío
+                    'sucursal_id' => $config['sucursal_id'] ?: null,
                 ]);
             }
         }
@@ -220,12 +198,12 @@ class Stocks extends Component
         $this->cargarExistencias();
     }
 
-
     public function modaldetalle($id)
     {
         $this->existenciaSeleccionada = Existencia::with('existenciable', 'sucursal')->findOrFail($id);
         $this->modalDetalle = true;
     }
+
     public function render()
     {
         return view('livewire.stocks', [

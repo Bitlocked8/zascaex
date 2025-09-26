@@ -5,9 +5,10 @@
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input
                 type="text"
-                wire:model.live="search"
+                wire:model.debounce.500ms="search"
                 placeholder="Buscar por capacidad, descripción u observación..."
                 class="input-minimal w-full" />
+
             <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -91,38 +92,22 @@
                         Fecha ingreso : <span class="font-normal">{{ $fecha }}</span>
                     </p>
                 </div>
-                <div>
-                    @if($accion === 'edit')
-                    <p class="font-semibold text-sm">
-                        Sucursal: <span class="font-normal">
-                            {{ $sucursales->firstWhere('id', $sucursalSeleccionada)->nombre ?? 'N/A' }}
-                        </span>
-                    </p>
-                    @else
-                    <div class="flex flex-wrap justify-center gap-2 mb-2">
-                        @foreach($sucursales as $sucursal)
-                        <button type="button"
-                            wire:click="filtrarPorSucursal({{ $sucursal->id }})"
-                            class="badge-info {{ $sucursalSeleccionada == $sucursal->id ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-700' }}">
-                            @if($sucursalSeleccionada == $sucursal->id)<span>&#10003;</span>@endif
-                            {{ $sucursal->nombre }}
-                        </button>
-                        @endforeach
-                    </div>
-                    @endif
-                </div>
+
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <div>
-                        <label class="font-semibold text-sm mb-2 block">Producto/Existencia</label>
+                        <label class="font-semibold text-sm mb-2 block">Producto</label>
                         @if($accion === 'edit')
                         @php
                         $ex = $existencias->firstWhere('id', $existencia_id);
                         $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
                         @endphp
-                        <p class="px-3 py-2 border rounded bg-gray-100 text-sm flex items-center justify-between">
+                        <p class="flex items-center gap-2 ">
                             <span>{{ $tipo }}: {{ $ex->existenciable->descripcion ?? 'Existencia #' . $existencia_id }}</span>
-                            <span class="bg-cyan-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                            <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                 Disponible: {{ $ex->cantidad ?? 0 }}
+                            </span>
+                            <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
                             </span>
                         </p>
                         @else
@@ -131,17 +116,25 @@
                             @php
                             $tipo = class_basename($existencia->existenciable_type);
                             @endphp
-                            <button type="button"
+                            <button
+                                type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                    {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                <span>{{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}</span>
-                                <span class="bg-cyan-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                    Disponible: {{ $existencia->cantidad }}
+                                     {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+
+                                <span>
+                                    {{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}
+                                </span>
+                                <span class="flex items-center gap-2">
+                                    <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        Disponible: {{ $existencia->cantidad }} </span>
+                                    <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }} </span>
                                 </span>
                             </button>
                             @endforeach
                         </div>
+
                         @endif
                         @error('existencia_id') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
@@ -166,23 +159,41 @@
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Proveedor (Opcional)</label>
                         <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+
+                            <!-- Opción sin proveedor -->
                             <button type="button"
                                 wire:click="$set('proveedor_id', null)"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                            {{ $proveedor_id === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                   {{ $proveedor_id === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                 Sin proveedor
                             </button>
+
+                            <!-- Lista de proveedores -->
                             @foreach($proveedores as $proveedor)
                             <button type="button"
                                 wire:click="$set('proveedor_id', {{ $proveedor->id }})"
-                                class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                            {{ $proveedor_id == $proveedor->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                {{ $proveedor->razonSocial ?? 'Proveedor #' . $proveedor->id }}
+                                class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
+                                  {{ $proveedor_id == $proveedor->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+
+                                <span>
+                                    {{ $proveedor->razonSocial ?? 'Sin provedor' . $proveedor->id }}
+                                </span>
+
+                                <span class="flex items-center gap-2 uppercase">
+                                    <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        {{ $proveedor->servicio ?? 'Sin servicio' }}
+                                    </span>
+                                    <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        {{ $proveedor->tipo ?? 'Sin dirección' }}
+                                    </span>
+
+                                </span>
                             </button>
                             @endforeach
                         </div>
                     </div>
                 </div>
+
 
                 <!-- Cantidad y Precio -->
                 <div class="grid grid-cols-2 gap-2 mt-2">
