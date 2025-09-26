@@ -69,7 +69,6 @@
         @endforelse
     </div>
 
-    <!-- Modal Crear/Editar -->
     @if($modal)
     <div class="modal-overlay">
         <div class="modal-box">
@@ -155,7 +154,6 @@
     </div>
     @endif
 
-    <!-- Modal Detalle -->
     @if($modalDetalle)
     <div class="modal-overlay">
         <div class="modal-box">

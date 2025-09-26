@@ -66,9 +66,11 @@ class Stocks extends Component
 
         $this->existencias = Existencia::with('existenciable')
             ->where('sucursal_id', $sucursalId)
+            ->where(function ($q) {
+                $q->where('existenciable_type', '!=', \App\Models\Producto::class);
+            })
             ->orderBy('id')
-            ->get()
-            ->map(fn($ex) => $ex->stock_real = $ex->cantidad ? $ex : $ex);
+            ->get();
 
         $this->reposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
             ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
@@ -76,13 +78,15 @@ class Stocks extends Component
             ->get();
     }
 
+
     public function cargarExistencias()
     {
         $this->existencias = Existencia::with('existenciable')
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
             ->orderBy('id')
-            ->get()
-            ->map(fn($ex) => $ex->stock_real = $ex->cantidad ? $ex : $ex);
+            ->get();
     }
+
 
     public function cargarReposiciones()
     {
@@ -200,14 +204,16 @@ class Stocks extends Component
             $existencia = Existencia::find($id);
             if ($existencia) {
                 $existencia->update([
-                    'cantidadMinima' => $config['cantidad_minima'],
-                    'sucursal_id' => $config['sucursal_id'],
+                    'cantidadMinima' => $config['cantidad_minima'] ?? 0,
+                    'sucursal_id' => $config['sucursal_id'] ?: null, // <- Aquí forzamos null si está vacío
                 ]);
             }
         }
+
         $this->modalConfigGlobal = false;
         $this->cargarExistencias();
     }
+
 
     public function modaldetalle($id)
     {
