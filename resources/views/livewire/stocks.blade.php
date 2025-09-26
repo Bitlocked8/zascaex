@@ -246,7 +246,7 @@
     @if($modalConfigGlobal)
     <div class="modal-overlay">
         <div class="modal-box">
-            <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+            <div class="modal-content">
                 @foreach($existencias as $ex)
                 <div class="grid grid-cols-12 gap-4 items-start border-b pb-4">
 
@@ -279,7 +279,7 @@
                                 <button type="button"
                                     wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)"
                                     class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-            {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                      {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                     Sin sucursal
                                 </button>
 
@@ -287,7 +287,7 @@
                                 <button type="button"
                                     wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
                                     class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-            {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                       {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                     {{ $suc->nombre }}
                                 </button>
                                 @endforeach

@@ -191,12 +191,18 @@ class Stocks extends Component
 
     public function abrirModalConfigGlobal()
     {
-        $this->configExistencias = $this->existencias->mapWithKeys(fn($ex) => [
-            $ex->id => ['cantidad_minima' => $ex->cantidadMinima, 'sucursal_id' => $ex->sucursal_id]
-        ])->toArray();
+        $this->configExistencias = $this->existencias
+            ->sortByDesc('updated_at') // o 'created_at' si quieres por fecha de creación
+            ->mapWithKeys(fn($ex) => [
+                $ex->id => [
+                    'cantidad_minima' => $ex->cantidadMinima,
+                    'sucursal_id' => $ex->sucursal_id
+                ]
+            ])->toArray();
 
         $this->modalConfigGlobal = true;
     }
+
 
     public function guardarConfigGlobal()
     {

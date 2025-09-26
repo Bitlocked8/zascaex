@@ -21,7 +21,8 @@
         @forelse($productos as $producto)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
             <div class="flex flex-col col-span-9 text-left space-y-1">
-                <p><strong>Nombre:</strong> {{ $producto->nombre ?? 'N/A' }}</p>
+                <p><strong>Nombre:</strong> {{ $producto->descripcion ?? 'Sin nombre' }}</p>
+                <p><strong>Apodo:</strong> {{ $producto->nombre ?? 'N/A' }}</p>
                 <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }} ml</p>
                 <p><strong>Precio Ref.:</strong> {{ $producto->precioReferencia ?? 'N/A' }} Bs</p>
                 <p><strong>Estado:</strong>
@@ -95,6 +96,12 @@
 
                     <div>
                         <label class="font-semibold text-sm mb-1 block">Nombre</label>
+                        <input wire:model="descripcion" class="input-minimal" placeholder="Descripción del producto"></input>
+                        @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Apodo producto</label>
                         <input wire:model="nombre" class="input-minimal" placeholder="Nombre del producto" />
                         @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
@@ -111,7 +118,7 @@
                             type="button"
                             wire:click="$set('tipoProducto', {{ $key }})"
                             class="px-4 py-2 rounded-full text-sm
-            {{ $tipoProducto == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                            {{ $tipoProducto == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
                             {{ $label }}
                         </button>
                         @endforeach
@@ -131,17 +138,13 @@
                         @error('precioReferencia') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
 
-                    <div>
-                        <label class="font-semibold text-sm mb-1 block">Descripción</label>
-                        <textarea wire:model="descripcion" class="input-minimal" placeholder="Descripción del producto"></textarea>
-                        @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
-                    </div>
+
 
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
                         @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
                         <button type="button" wire:click="$set('estado', {{ $key }})"
                             class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-              {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                               {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
                             {{ $label }}
                         </button>
                         @endforeach
@@ -159,7 +162,7 @@
     @if($modalDetalle && $productoSeleccionado)
     <div class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-content flex flex-col gap-6">
+            <div class="modal-content flex flex-col gap-4">
                 <div class="flex justify-center items-center">
                     @if($productoSeleccionado->imagen)
                     <img src="{{ asset('storage/'.$productoSeleccionado->imagen) }}"
