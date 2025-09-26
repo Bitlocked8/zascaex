@@ -10,14 +10,13 @@ class Reposicion extends Model
     use HasFactory;
 
     protected $fillable = [
+        'codigo',
         'fecha',
         'cantidad',
-        'precio_unitario',
-        'imagen',
         'existencia_id',
         'personal_id',
         'proveedor_id',
-        'observaciones',
+        'observaciones'
     ];
 
     /**
@@ -42,5 +41,10 @@ class Reposicion extends Model
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class);
+    }
+
+    public function comprobantes()
+    {
+        return $this->hasMany(ComprobantePago::class);
     }
 }

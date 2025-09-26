@@ -32,9 +32,9 @@
 
             <!-- Información Reposición -->
             <div class="flex flex-col col-span-9 space-y-1 text-left">
+                <p><strong>Código:</strong> {{ $repo->codigo ?? 'N/A' }}</p>
                 <p><strong>Nombre:</strong> {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}</p>
                 <p><strong>Cantidad:</strong> {{ $repo->cantidad }}</p>
-                <p><strong>Precio Pagado:</strong> {{ $repo->precio_unitario ?? 'N/A' }} Bs</p>
                 <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
                 <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
 
@@ -89,6 +89,9 @@
 
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <p class="font-semibold text-sm">
+                        Código: <span class="font-normal">{{ $codigo }}</span>
+                    </p>
+                    <p class="font-semibold text-sm">
                         Fecha ingreso : <span class="font-normal">{{ $fecha }}</span>
                     </p>
                 </div>
@@ -138,23 +141,22 @@
                         @endif
                         @error('existencia_id') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
-                    <div>
-                        <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
-                        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
-                            @foreach($personal as $persona)
-                            <button type="button"
-                                wire:click="$set('personal_id', {{ $persona->id }})"
-                                class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                            {{ $personal_id == $persona->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                {{ $persona->nombres ?? 'Personal #' . $persona->id }}
-                            </button>
-                            @endforeach
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <div>
+                            <label class="font-semibold text-sm">Cantidad</label>
+                            <input type="number" wire:model="cantidad" class="input-minimal" min="1">
+                            @error('cantidad') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
-                        @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
+                        <div>
+                            <label class="font-semibold text-sm">Observaciones</label>
+                            <input wire:model="observaciones" class="input-minimal"></input>
+                            @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+
                     </div>
+
                 </div>
 
-                <!-- Proveedor -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Proveedor (Opcional)</label>
@@ -194,39 +196,45 @@
                     </div>
                 </div>
 
-
-                <!-- Cantidad y Precio -->
-                <div class="grid grid-cols-2 gap-2 mt-2">
-                    <div>
-                        <label class="font-semibold text-sm">Cantidad</label>
-                        <input type="number" wire:model="cantidad" class="input-minimal" min="1">
-                        @error('cantidad') <span class="error-message">{{ $message }}</span> @enderror
-                    </div>
-                    <div>
-                        <label class="font-semibold text-sm">Precio pagado lote</label>
-                        <input type="number" wire:model="precio_unitario" class="input-minimal" step="0.01" min="0">
-                        @error('precio_unitario') <span class="error-message">{{ $message }}</span> @enderror
-                    </div>
-                </div>
-
-                <!-- Imagen -->
                 <div>
-                    <label class="font-semibold text-sm mb-2 block">Comprobante de pago</label>
-                    <input type="file" wire:model="imagen" class="input-minimal">
-                    @if($imagen)
-                    <div class="mt-2 flex justify-center">
-                        <img src="{{ is_string($imagen) ? asset('storage/'.$imagen) : $imagen->temporaryUrl() }}"
-                            class="w-50 h-50 object-cover rounded"
-                            alt="Imagen de reposición">
+                    <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
+                    <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+
+                        <!-- Opción sin personal -->
+                        <button type="button"
+                            wire:click="$set('personal_id', null)"
+                            class="w-full px-3 py-2 rounded-md border text-sm text-left transition
+                                    {{ $personal_id === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                            Sin personal
+                        </button>
+
+                        <!-- Lista de personal con sucursal -->
+                        @foreach($personal as $persona)
+                        @php
+                        // Obtener último trabajo activo del personal
+                        $trabajoActivo = $persona->trabajos->where('estado', 1)->sortByDesc('fechaInicio')->first();
+                        $sucursal = $trabajoActivo?->sucursal?->nombre ?? 'Sin sucursal';
+                        @endphp
+                        <button type="button"
+                            wire:click="$set('personal_id', {{ $persona->id }})"
+                            class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
+                                 {{ $personal_id == $persona->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+
+                            <span>{{ $persona->nombres ?? 'Personal #' . $persona->id }}</span>
+
+                            <span class="flex items-center gap-2 uppercase">
+                                <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                    {{ $sucursal }}
+                                </span>
+                            </span>
+
+                        </button>
+                        @endforeach
+
                     </div>
-                    @endif
-                    @error('imagen') <span class="error-message">{{ $message }}</span> @enderror
+                    @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
-                <div>
-                    <label class="font-semibold text-sm">Observaciones</label>
-                    <textarea wire:model="observaciones" class="input-minimal" placeholder="Observaciones" rows="3"></textarea>
-                    @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
-                </div>
+
                 <div class="modal-footer">
                     <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -339,17 +347,6 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-6">
-                <!-- Imagen -->
-                <div class="flex justify-center items-center">
-                    @if($existenciaSeleccionada->existenciable->imagen)
-                    <img src="{{ asset('storage/'.$existenciaSeleccionada->existenciable->imagen) }}"
-                        class="w-50 h-50 object-cover rounded" alt="Imagen Stock">
-                    @else
-                    <span class="badge-info">Sin imagen</span>
-                    @endif
-                </div>
-
-                <!-- Información -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row sm:items-start gap-2">
@@ -375,8 +372,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Footer -->
             <div class="modal-footer">
                 <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -391,9 +386,4 @@
         </div>
     </div>
     @endif
-
-
-
-
-
 </div>

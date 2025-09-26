@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('reposicions', function (Blueprint $table) {
             $table->id();
             $table->date('fecha'); // Fecha de la reposición
+            $table->string('codigo')->unique();
             $table->integer('cantidad'); // Cantidad repuesta
-            $table->decimal('precio_unitario', 10, 2)->nullable(); // Precio por unidad
-            $table->string('imagen')->nullable(); // Imagen opcional
             $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade'); // Lote/artículo repuesto
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade'); // Quién repuso
             $table->foreignId('proveedor_id')->nullable()->constrained('proveedors')->nullOnDelete(); // Proveedor opcional

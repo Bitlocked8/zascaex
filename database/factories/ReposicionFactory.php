@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Existencia;
+
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reposicion>
@@ -17,11 +19,13 @@ class ReposicionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
-            'fecha' => $this->faker->date(), // Fecha aleatoria
-            'cantidad' => $this->faker->numberBetween(1, 500), // Cantidad aleatoria entre 1 y 500
-            'base_id' => \App\Models\Base::get()->random()->id, // Genera una base relacionada
-            'personal_id' => \App\Models\Personal::get()->random()->id, // Genera un personal relacionado
+            'codigo' => 'R-' . now()->format('Ymd') . '-' . str_pad($this->faker->numberBetween(1, 999), 3, '0', STR_PAD_LEFT),
+            'fecha' => $this->faker->date(),
+            'cantidad' => $this->faker->numberBetween(1, 500),
+            'existencia_id' => Existencia::inRandomOrder()->first()->id,
+            'personal_id' => \App\Models\Personal::inRandomOrder()->first()->id,
+            'proveedor_id' => \App\Models\Proveedor::inRandomOrder()->first()->id,
+            'observaciones' => $this->faker->optional()->sentence(),
         ];
     }
 }

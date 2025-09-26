@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use App\Models\Existencia;
 use App\Models\Reposicion;
 use App\Models\Sucursal;
@@ -12,68 +11,31 @@ use App\Models\Personal;
 
 class Stocks extends Component
 {
-    use WithFileUploads;
-
-    public $existencias;
-    public $reposiciones;
-    public $proveedores;
-    public $personal;
-    public $sucursales;
-    public $modalDetalle = false;
-    public $existenciaSeleccionada;
+    public $ultimaReposicion = null;
     public $modal = false;
+    public $modalDetalle = false;
+    public $modalConfigGlobal = false;
+    public $codigo;
     public $reposicion_id = null;
     public $existencia_id;
     public $personal_id;
     public $proveedor_id;
     public $cantidad;
-    public $precio_unitario;
-    public $imagen;
     public $fecha;
     public $observaciones;
-    public $accion = 'create';
-    public $modalConfigGlobal = false;
+    public $existencias = [];
     public $configExistencias = [];
+    public $accion = 'create';
+    public $existenciaSeleccionada = null;
 
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
         'personal_id' => 'required|exists:personals,id',
         'proveedor_id' => 'nullable|exists:proveedors,id',
         'cantidad' => 'required|integer|min:1',
-        'precio_unitario' => 'nullable|numeric|min:0',
-        'imagen' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         'fecha' => 'required|date',
         'observaciones' => 'nullable|string|max:500',
     ];
-
-    public function mount()
-    {
-        $this->sucursales = Sucursal::all();
-        $this->proveedores = Proveedor::where('estado', 1)->get(); // <-- filtrando por estado = 1
-        $this->personal = Personal::all();
-        $this->cargarExistencias();
-        $this->cargarReposiciones();
-    }
-
-
-    public function cargarExistencias()
-    {
-        $this->existencias = Existencia::with('existenciable')
-            ->where('existenciable_type', '!=', \App\Models\Producto::class)
-            ->orderBy('id')
-            ->get();
-    }
-
-    public function cargarReposiciones()
-{
-    $query = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
-        ->whereHas('proveedor', fn($q) => $q->where('estado', 1))
-        ->orderBy('fecha', 'desc');
-
-    $this->reposiciones = $query->get();
-}
-
-
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
@@ -82,16 +44,26 @@ class Stocks extends Component
             'personal_id',
             'proveedor_id',
             'cantidad',
-            'precio_unitario',
-            'imagen',
             'fecha',
-            'observaciones'
+            'observaciones',
+            'codigo'
         ]);
 
         $this->accion = $accion;
         $this->fecha = now()->format('Y-m-d');
 
-        if ($accion === 'edit' && $id) $this->editar($id);
+         $this->existencias = Existencia::with('existenciable', 'sucursal')
+        ->where('existenciable_type', '!=', \App\Models\Producto::class)
+        ->orderBy('id')
+        ->get();
+
+        if ($accion === 'create') {
+            $this->codigo = 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+        }
+
+        if ($accion === 'edit' && $id) {
+            $this->editar($id);
+        }
 
         $this->modal = true;
     }
@@ -99,31 +71,19 @@ class Stocks extends Component
     public function editar($id)
     {
         $reposicion = Reposicion::findOrFail($id);
+
         $this->reposicion_id = $reposicion->id;
         $this->existencia_id = $reposicion->existencia_id;
         $this->personal_id = $reposicion->personal_id;
         $this->proveedor_id = $reposicion->proveedor_id;
         $this->cantidad = $reposicion->cantidad;
-        $this->precio_unitario = $reposicion->precio_unitario;
-        $this->imagen = null;
         $this->fecha = $reposicion->fecha;
         $this->observaciones = $reposicion->observaciones;
+        $this->codigo = $reposicion->codigo; 
     }
 
     public function guardar()
     {
-        $rules = $this->rules;
-        if (!is_object($this->imagen)) $rules['imagen'] = 'nullable';
-        $this->validate($rules);
-
-        if ($this->imagen && is_object($this->imagen)) {
-            $imagenPath = $this->imagen->store('reposiciones', 'public');
-        } else {
-            $imagenPath = $this->reposicion_id
-                ? Reposicion::find($this->reposicion_id)->imagen
-                : null;
-        }
-
         $cantidadAnterior = $this->reposicion_id
             ? Reposicion::find($this->reposicion_id)->cantidad
             : 0;
@@ -131,12 +91,11 @@ class Stocks extends Component
         $reposicion = Reposicion::updateOrCreate(
             ['id' => $this->reposicion_id],
             [
+                'codigo' => $this->codigo,
                 'existencia_id' => $this->existencia_id,
                 'personal_id' => $this->personal_id,
                 'proveedor_id' => $this->proveedor_id,
                 'cantidad' => $this->cantidad,
-                'precio_unitario' => $this->precio_unitario,
-                'imagen' => $imagenPath,
                 'fecha' => $this->fecha,
                 'observaciones' => $this->observaciones,
             ]
@@ -147,8 +106,6 @@ class Stocks extends Component
         $existencia->save();
 
         $this->cerrarModal();
-        $this->cargarReposiciones();
-        $this->cargarExistencias();
     }
 
     public function cerrarModal()
@@ -160,23 +117,41 @@ class Stocks extends Component
             'personal_id',
             'proveedor_id',
             'cantidad',
-            'precio_unitario',
-            'imagen',
             'fecha',
             'observaciones'
         ]);
         $this->resetErrorBag();
     }
 
+    // Modal detalle
+    public function modaldetalle($id)
+    {
+        $this->existenciaSeleccionada = Existencia::with(['existenciable', 'sucursal', 'reposiciones'])->findOrFail($id);
+        $this->ultimaReposicion = $this->existenciaSeleccionada->reposiciones->first();
+        $this->modalDetalle = true;
+    }
+
+    public function cerrarModalDetalle()
+    {
+        $this->modalDetalle = false;
+        $this->existenciaSeleccionada = null;
+        $this->ultimaReposicion = null;
+    }
+
     public function abrirModalConfigGlobal()
     {
-        $this->configExistencias = $this->existencias
+        $existencias = Existencia::with('existenciable')
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
+            ->orderBy('id')
+            ->get();
+        $this->existencias = $existencias;
+        $this->configExistencias = $existencias
             ->sortByDesc('updated_at')
             ->mapWithKeys(fn($ex) => [
                 $ex->id => [
                     'cantidad_minima' => $ex->cantidadMinima,
-                    'sucursal_id' => $ex->sucursal_id
-                ]
+                    'sucursal_id' => $ex->sucursal_id,
+                ],
             ])->toArray();
 
         $this->modalConfigGlobal = true;
@@ -186,6 +161,7 @@ class Stocks extends Component
     {
         foreach ($this->configExistencias as $id => $config) {
             $existencia = Existencia::find($id);
+
             if ($existencia) {
                 $existencia->update([
                     'cantidadMinima' => $config['cantidad_minima'] ?? 0,
@@ -193,25 +169,31 @@ class Stocks extends Component
                 ]);
             }
         }
+        $this->existencias = Existencia::with('existenciable')
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
+            ->orderBy('id')
+            ->get();
 
         $this->modalConfigGlobal = false;
-        $this->cargarExistencias();
     }
 
-    public function modaldetalle($id)
-    {
-        $this->existenciaSeleccionada = Existencia::with('existenciable', 'sucursal')->findOrFail($id);
-        $this->modalDetalle = true;
-    }
 
     public function render()
     {
         return view('livewire.stocks', [
-            'existencias' => $this->existencias,
-            'reposiciones' => $this->reposiciones,
-            'personal' => $this->personal,
-            'proveedores' => $this->proveedores,
-            'sucursales' => $this->sucursales,
+            'existencias' => Existencia::with('existenciable')
+                ->where('existenciable_type', '!=', \App\Models\Producto::class)
+                ->orderBy('id')
+                ->get(),
+            'reposiciones' => Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
+                ->whereHas('proveedor', fn($q) => $q->where('estado', 1))
+                ->orderBy('fecha', 'desc')
+                ->get(),
+            'personal' => Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
+                ->with(['trabajos' => fn($q) => $q->where('estado', 1)->latest('fechaInicio')->with('sucursal')])
+                ->get(),
+            'proveedores' => Proveedor::where('estado', 1)->get(),
+            'sucursales' => Sucursal::all(),
         ]);
     }
 }
