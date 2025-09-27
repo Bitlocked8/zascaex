@@ -11,6 +11,7 @@ use App\Models\Personal;
 
 class Stocks extends Component
 {
+    public $searchCodigo = '';
     public $ultimaReposicion = null;
     public $modal = false;
     public $modalDetalle = false;
@@ -52,10 +53,10 @@ class Stocks extends Component
         $this->accion = $accion;
         $this->fecha = now()->format('Y-m-d');
 
-         $this->existencias = Existencia::with('existenciable', 'sucursal')
-        ->where('existenciable_type', '!=', \App\Models\Producto::class)
-        ->orderBy('id')
-        ->get();
+        $this->existencias = Existencia::with('existenciable', 'sucursal')
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
+            ->orderBy('id')
+            ->get();
 
         if ($accion === 'create') {
             $this->codigo = 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
@@ -79,7 +80,7 @@ class Stocks extends Component
         $this->cantidad = $reposicion->cantidad;
         $this->fecha = $reposicion->fecha;
         $this->observaciones = $reposicion->observaciones;
-        $this->codigo = $reposicion->codigo; 
+        $this->codigo = $reposicion->codigo;
     }
 
     public function guardar()
@@ -186,6 +187,9 @@ class Stocks extends Component
                 ->orderBy('id')
                 ->get(),
             'reposiciones' => Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
+                ->when($this->searchCodigo, function ($query) {
+                    $query->where('codigo', 'like', '%' . $this->searchCodigo . '%');
+                })
                 ->whereHas('proveedor', fn($q) => $q->where('estado', 1))
                 ->orderBy('fecha', 'desc')
                 ->get(),

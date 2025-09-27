@@ -5,8 +5,8 @@
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input
                 type="text"
-                wire:model.debounce.500ms="search"
-                placeholder="Buscar por capacidad, descripción u observación..."
+                   wire:model.live="searchCodigo" 
+                placeholder="Buscar por codigo..."
                 class="input-minimal w-full" />
 
             <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
