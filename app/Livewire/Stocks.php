@@ -9,9 +9,10 @@ use App\Models\Sucursal;
 use App\Models\Proveedor;
 use App\Models\Personal;
 use Carbon\Carbon;
-
+use Livewire\WithFileUploads;
 class Stocks extends Component
 {
+        use WithFileUploads;
     public $searchCodigo = '';
     public $ultimaReposicion = null;
     public $modal = false;
@@ -224,25 +225,33 @@ class Stocks extends Component
         unset($this->pagos[$index]);
         $this->pagos = array_values($this->pagos);
     }
-    public function guardarPagos()
-    {
-        foreach ($this->pagos as $pago) {
-            \App\Models\ComprobantePago::updateOrCreate(
-                ['id' => $pago['id'] ?? 0], // Si existe, se actualiza; si no, se crea
-                [
-                    'reposicion_id' => $this->reposicionParaPago,
-                    'codigo' => $pago['codigo'],
-                    'monto' => $pago['monto'],
-                    'fecha' => $pago['fecha'] ?? now()->format('Y-m-d'),
-                    'observaciones' => $pago['observaciones'] ?? null,
-                    'imagen' => $pago['imagen'] ?? null,
-                ]
-            );
+   public function guardarPagos()
+{
+    foreach ($this->pagos as $index => $pago) {
+        $imagenPath = $pago['imagen'];
+
+        // Si es un archivo subido (instancia de UploadedFile)
+        if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
+            $imagenPath = $pago['imagen']->store('pagos', 'public');
         }
 
-        $this->reset(['pagos']);
-        $this->modalPagos = false;
+        \App\Models\ComprobantePago::updateOrCreate(
+            ['id' => $pago['id'] ?? 0],
+            [
+                'reposicion_id' => $this->reposicionParaPago,
+                'codigo' => $pago['codigo'],
+                'monto' => $pago['monto'],
+                'fecha' => $pago['fecha'] ?? now()->format('Y-m-d'),
+                'observaciones' => $pago['observaciones'] ?? null,
+                'imagen' => $imagenPath,
+            ]
+        );
     }
+
+    $this->reset(['pagos']);
+    $this->modalPagos = false;
+}
+
     public function render()
     {
         return view('livewire.stocks', [

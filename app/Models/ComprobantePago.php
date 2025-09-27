@@ -14,6 +14,7 @@ class ComprobantePago extends Model
         'codigo',
         'monto',
         'fecha',
+        'imagen',
         'observaciones',
     ];
 

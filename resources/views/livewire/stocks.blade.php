@@ -1,7 +1,5 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Buscar + Crear Reposición -->
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input
                 type="text"
@@ -24,23 +22,17 @@
                     <path d="M4 18l12 0" />
                 </svg>
             </button>
-
         </div>
 
         @forelse($reposiciones as $repo)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-
-            <!-- Información Reposición -->
             <div class="flex flex-col col-span-9 space-y-1 text-left">
                 <p><strong>Código:</strong> {{ $repo->codigo ?? 'N/A' }}</p>
                 <p><strong>Nombre:</strong> {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}</p>
                 <p><strong>Cantidad:</strong> {{ $repo->cantidad }}</p>
                 <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
                 <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
-
             </div>
-
-            <!-- Botones de acción -->
             <div class="flex flex-col items-end gap-4 col-span-3">
                 <button wire:click="abrirModal('edit', {{ $repo->id }})" class="btn-circle btn-cyan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
@@ -279,8 +271,6 @@
             <div class="modal-content">
                 @foreach($existencias as $ex)
                 <div class="grid grid-cols-12 gap-4 items-start border-b pb-4">
-
-                    <!-- Columna 1: Tipo, Descripción, Disponible -->
                     <div class="col-span-6 flex flex-col gap-1">
                         <span class="uppercase text-cyan-600 font-semibold">
                             {{ class_basename($ex->existenciable_type) }}
@@ -375,7 +365,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                             <div class="sm:col-span-2">
+                            <div class="sm:col-span-2">
                                 <label class="font-semibold text-sm">Monto</label>
                                 <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
                             </div>
@@ -388,13 +378,41 @@
                             <div class="sm:col-span-2">
                                 <label class="font-semibold text-sm">Imagen</label>
                                 <input type="file" wire:model="pagos.{{ $index }}.imagen" class="input-minimal">
+
+                                @php
+                                $imagenUrl = null;
+                                if (isset($pagos[$index]['imagen'])) {
+                                $imagenUrl = is_string($pagos[$index]['imagen'])
+                                ? Storage::url($pagos[$index]['imagen'])
+                                : $pagos[$index]['imagen']->temporaryUrl();
+                                }
+                                @endphp
+
+                                @if($imagenUrl)
+                                <div class="mt-2 flex flex-col items-center space-y-2">
+                                    <img src="{{ $imagenUrl }}"
+                                        alt="Imagen"
+                                        class="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg object-cover rounded-lg shadow cursor-pointer"
+                                        wire:click="$set('imagenPreviewModal', '{{ $imagenUrl }}'); $set('modalImagenAbierta', true)">
+                                    @if(is_string($pagos[$index]['imagen']))
+                                    <a href="{{ $imagenUrl }}" download
+                                        class="btn-circle btn-cyan">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" >
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                            <path d="M7 11l5 5l5 -5" />
+                                            <path d="M12 4l0 12" />
+                                        </svg>
+                                    </a>
+                                    @endif
+                                </div>
+                                @endif
                             </div>
+
                         </div>
                     </div>
                     @endforeach
                 </div>
-
-                <!-- Botones -->
                 <div class="modal-footer">
                     <button type="button" wire:click="agregarPago" class="btn-circle btn-cyan">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -425,10 +443,6 @@
         </div>
     </div>
     @endif
-
-
-
-
     @if($modalDetalle)
     <div class="modal-overlay">
         <div class="modal-box">
