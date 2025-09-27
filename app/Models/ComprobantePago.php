@@ -13,7 +13,7 @@ class ComprobantePago extends Model
         'reposicion_id',
         'codigo',
         'monto',
-        'fecha_pago',
+        'fecha',
         'observaciones',
     ];
 

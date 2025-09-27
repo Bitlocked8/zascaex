@@ -8,6 +8,7 @@ use App\Models\Reposicion;
 use App\Models\Sucursal;
 use App\Models\Proveedor;
 use App\Models\Personal;
+use Carbon\Carbon;
 
 class Stocks extends Component
 {
@@ -28,6 +29,10 @@ class Stocks extends Component
     public $configExistencias = [];
     public $accion = 'create';
     public $existenciaSeleccionada = null;
+
+    public $modalPagos = false;
+    public $reposicionParaPago = null; // ID de la reposición seleccionada
+    public $pagos = [];
 
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
@@ -178,7 +183,66 @@ class Stocks extends Component
         $this->modalConfigGlobal = false;
     }
 
+    public function abrirModalPagos($reposicion_id)
+    {
+        $this->reposicionParaPago = $reposicion_id;
+        $this->pagos = \App\Models\ComprobantePago::where('reposicion_id', $reposicion_id)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'codigo' => $p->codigo ?? 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                  'fecha' => $p->fecha ? \Carbon\Carbon::parse($p->fecha)->format('Y-m-d') : now()->format('Y-m-d'),
 
+                    'monto' => $p->monto,
+                    'observaciones' => $p->observaciones,
+                    'imagen' => $p->imagen,
+                ];
+            })
+            ->toArray();
+        $this->modalPagos = true;
+    }
+
+    public function agregarPago()
+    {
+        $this->pagos[] = [
+            'id' => null,
+            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(count($this->pagos) + 1, 3, '0', STR_PAD_LEFT),
+            'fecha' => now()->format('Y-m-d'),
+            'monto' => null,
+            'observaciones' => null,
+            'imagen' => null,
+        ];
+    }
+
+    public function eliminarPago($index)
+    {
+        $pago = $this->pagos[$index] ?? null;
+        if ($pago && isset($pago['id']) && $pago['id']) {
+            \App\Models\ComprobantePago::find($pago['id'])?->delete();
+        }
+        unset($this->pagos[$index]);
+        $this->pagos = array_values($this->pagos);
+    }
+    public function guardarPagos()
+    {
+        foreach ($this->pagos as $pago) {
+            \App\Models\ComprobantePago::updateOrCreate(
+                ['id' => $pago['id'] ?? 0], // Si existe, se actualiza; si no, se crea
+                [
+                    'reposicion_id' => $this->reposicionParaPago,
+                    'codigo' => $pago['codigo'],
+                    'monto' => $pago['monto'],
+                    'fecha' => $pago['fecha'] ?? now()->format('Y-m-d'),
+                    'observaciones' => $pago['observaciones'] ?? null,
+                    'imagen' => $pago['imagen'] ?? null,
+                ]
+            );
+        }
+
+        $this->reset(['pagos']);
+        $this->modalPagos = false;
+    }
     public function render()
     {
         return view('livewire.stocks', [
