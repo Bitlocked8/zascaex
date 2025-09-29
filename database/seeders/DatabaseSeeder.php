@@ -469,48 +469,37 @@ class DatabaseSeeder extends Seeder
                     'cantidad' => rand(10, 50),
                 ]);
             }
-
-
-
-
-
-            // Asignacion de usuarios a la sucursal
-
             $adminUser = User::create([
                 'email' => $sucursal->email, // Administrador
                 'password' => bcrypt(12345678), // Administrador
                 'rol_id' => 2, // Administrador
             ]);
-
-            // Crear personal vinculado al usuario Administrador
             $adminPersonal = Personal::factory()->create([
                 'user_id' => $adminUser->id,
             ]);
 
-            // Registrar la relación Trabajo para el Administrador
             Trabajo::factory()->create([
                 'sucursal_id' => $sucursal->id,
                 'personal_id' => $adminPersonal->id,
+                'labor_id' => null,
                 'fechaFinal' => null, // Siempre nulo
                 'estado' => 1, // Activo
             ]);
 
-            // Crear 3 usuarios Distribuidores
             $distribuidores = User::factory(3)->create([
                 'rol_id' => 3, // Distribuidor
                 'password' => bcrypt(12345678), // 
             ]);
 
             $distribuidores->each(function ($user) use ($sucursal) {
-                // Crear personal vinculado al usuario
                 $personal = Personal::factory()->create([
                     'user_id' => $user->id,
                 ]);
 
-                // Registrar Trabajo para cada Distribuidor
                 Trabajo::factory()->create([
                     'sucursal_id' => $sucursal->id,
                     'personal_id' => $personal->id,
+                    'labor_id' => null,
                     'fechaFinal' => null, // Siempre nulo
                     'estado' => 1, // Activo
                 ]);
@@ -528,10 +517,10 @@ class DatabaseSeeder extends Seeder
                     'user_id' => $user->id,
                 ]);
 
-                // Registrar Trabajo para cada Personal de Planta
                 Trabajo::factory()->create([
                     'sucursal_id' => $sucursal->id,
                     'personal_id' => $personal->id,
+                    'labor_id' => null,
                     'fechaFinal' => null, // Siempre nulo
                     'estado' => 1, // Activo
                 ]);
@@ -575,6 +564,5 @@ class DatabaseSeeder extends Seeder
         Elaboracion::factory(10)->create();
         Embotellado::factory(10)->create();
         Etiquetado::factory(10)->create();
-   
     }
 }

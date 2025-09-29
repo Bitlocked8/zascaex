@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use App\Models\Trabajable;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Elaboracion extends Model
 {
     use HasFactory;
@@ -17,10 +18,10 @@ class Elaboracion extends Model
         'cantidad_entrada',
         'cantidad_salida',
         'fecha_elaboracion',
-        'merma',           // ← agregado
+        'merma',          
         'observaciones',
-        'codigo',  // ← agregado
-        'estado',  // ← agregado
+        'codigo', 
+        'estado', 
     ];
 
     public function existenciaEntrada(): BelongsTo
@@ -36,5 +37,10 @@ class Elaboracion extends Model
     public function personal(): BelongsTo
     {
         return $this->belongsTo(Personal::class);
+    }
+
+    public function trabajables(): MorphMany
+    {
+        return $this->morphMany(Trabajable::class, 'trabajable');
     }
 }

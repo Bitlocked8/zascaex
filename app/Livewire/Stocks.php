@@ -10,9 +10,10 @@ use App\Models\Proveedor;
 use App\Models\Personal;
 use Carbon\Carbon;
 use Livewire\WithFileUploads;
+
 class Stocks extends Component
 {
-        use WithFileUploads;
+    use WithFileUploads;
     public $searchCodigo = '';
     public $ultimaReposicion = null;
     public $modal = false;
@@ -193,7 +194,7 @@ class Stocks extends Component
                 return [
                     'id' => $p->id,
                     'codigo' => $p->codigo ?? 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-                  'fecha' => $p->fecha ? \Carbon\Carbon::parse($p->fecha)->format('Y-m-d') : now()->format('Y-m-d'),
+                    'fecha' => $p->fecha ? \Carbon\Carbon::parse($p->fecha)->format('Y-m-d') : now()->format('Y-m-d'),
 
                     'monto' => $p->monto,
                     'observaciones' => $p->observaciones,
@@ -225,32 +226,32 @@ class Stocks extends Component
         unset($this->pagos[$index]);
         $this->pagos = array_values($this->pagos);
     }
-   public function guardarPagos()
-{
-    foreach ($this->pagos as $index => $pago) {
-        $imagenPath = $pago['imagen'];
+    public function guardarPagos()
+    {
+        foreach ($this->pagos as $index => $pago) {
+            $imagenPath = $pago['imagen'];
 
-        // Si es un archivo subido (instancia de UploadedFile)
-        if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
-            $imagenPath = $pago['imagen']->store('pagos', 'public');
+            // Si es un archivo subido (instancia de UploadedFile)
+            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
+                $imagenPath = $pago['imagen']->store('pagos', 'public');
+            }
+
+            \App\Models\ComprobantePago::updateOrCreate(
+                ['id' => $pago['id'] ?? 0],
+                [
+                    'reposicion_id' => $this->reposicionParaPago,
+                    'codigo' => $pago['codigo'],
+                    'monto' => $pago['monto'],
+                    'fecha' => $pago['fecha'] ?? now()->format('Y-m-d'),
+                    'observaciones' => $pago['observaciones'] ?? null,
+                    'imagen' => $imagenPath,
+                ]
+            );
         }
 
-        \App\Models\ComprobantePago::updateOrCreate(
-            ['id' => $pago['id'] ?? 0],
-            [
-                'reposicion_id' => $this->reposicionParaPago,
-                'codigo' => $pago['codigo'],
-                'monto' => $pago['monto'],
-                'fecha' => $pago['fecha'] ?? now()->format('Y-m-d'),
-                'observaciones' => $pago['observaciones'] ?? null,
-                'imagen' => $imagenPath,
-            ]
-        );
+        $this->reset(['pagos']);
+        $this->modalPagos = false;
     }
-
-    $this->reset(['pagos']);
-    $this->modalPagos = false;
-}
 
     public function render()
     {
@@ -263,7 +264,10 @@ class Stocks extends Component
                 ->when($this->searchCodigo, function ($query) {
                     $query->where('codigo', 'like', '%' . $this->searchCodigo . '%');
                 })
-                ->whereHas('proveedor', fn($q) => $q->where('estado', 1))
+                ->where(function ($q) {
+                    $q->whereHas('proveedor', fn($q2) => $q2->where('estado', 1))
+                        ->orWhereNull('proveedor_id'); // reposiciones sin proveedor
+                })
                 ->orderBy('fecha', 'desc')
                 ->get(),
             'personal' => Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))

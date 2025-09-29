@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trabajos', function (Blueprint $table) {
+        Schema::create('asignados', function (Blueprint $table) {
             $table->id();
-            $table->date('fechaInicio');
-            $table->date('fechaFinal')->nullable();
-            $table->boolean('estado')->default(1);
-            $table->foreignId('sucursal_id')->constrained('sucursals')->onDelete('cascade');
+            $table->string('codigo')->unique();
+            $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade');
-            $table->foreignId('labor_id')->nullable()->constrained('labors')->onDelete('set null');
+            $table->integer('cantidad');
+            $table->date('fecha');
+            $table->string('motivo')->nullable();
+            $table->text('observaciones')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trabajos');
+        Schema::dropIfExists('asignados');
     }
 };

@@ -195,20 +195,34 @@
                 <div>
                     <h3 class="text-cyan-600 font-semibold mb-2  text-center">ALMACÉN</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
-
-                        <!-- STOCK -->
                         <button
                             type="button"
                             wire:click="$set('seleccion', 'Stocks')"
                             class="flex flex-col items-center justify-center p-2 rounded-xl
                                  transition-colors
                                  ($seleccion == 'Stocks')  bg-white text-cyan-600 ">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"
-                                fill="currentColor" class="mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M20.894 15.553a1 1 0 0 1 -.447 1.341l-8 4a1 1 0 0 1 -.894 0l-8 -4a1 1 0 0 1 .894 -1.788l7.553 3.774l7.554 -3.775a1 1 0 0 1 1.341 .447m0 -4a1 1 0 0 1 -.447 1.341l-8 4a1 1 0 0 1 -.894 0l-8 -4a1 1 0 0 1 .894 -1.788l7.552 3.775l7.554 -3.775a1 1 0 0 1 1.341 .447m-8.887 -8.552q .056 0 .111 .007l.111 .02l.086 .024l.012 .006l.012 .002l.029 .014l.05 .019l.016 .009l.012 .005l8 4a1 1 0 0 1 0 1.788l-8 4a1 1 0 0 1 -.894 0l-8 -4a1 1 0 0 1 0 -1.788l8 -4l.011 -.005l.018 -.01l.078 -.032l.011 -.002l.013 -.006l.086 -.024l.11 -.02l.056 -.005z" />
+                                <path d="M10 8v-2a2 2 0 0 1 2 -2h7a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-2" />
+                                <path d="M15 12h-12l3 -3" />
+                                <path d="M6 15l-3 -3" />
                             </svg>
-                            <span class="text-sm font-semibold text-center truncate  w-full">Stock</span>
+                            <span class="text-sm font-semibold text-center truncate  w-full">Reposicion Material</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            wire:click="$set('seleccion', 'Asignaciones')"
+                            class="flex flex-col items-center justify-center p-2 rounded-xl
+                                 transition-colors
+                                 ($seleccion == 'Asignaciones')  bg-white text-cyan-600 ">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+                                <path d="M9 12h12l-3 -3" />
+                                <path d="M18 15l3 -3" />
+                            </svg>
+                            <span class="text-sm font-semibold text-center truncate  w-full">Asignacion Material</span>
                         </button>
 
                         <!-- TAPAS -->
@@ -842,6 +856,10 @@
             @if ($seleccion == 'Promociones')
             @livewire('promociones')
             @endif
+            @if ($seleccion == 'Asignaciones')
+            @livewire('asignaciones')
+            @endif
+
 
 
 

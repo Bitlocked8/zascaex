@@ -15,21 +15,25 @@ class Trabajo extends Model
         'estado',
         'sucursal_id',
         'personal_id',
+        'labor_id',
     ];
 
-    /**
-     * Relación: Un trabajo pertenece a una sucursal.
-     */
     public function sucursal()
     {
         return $this->belongsTo(Sucursal::class);
     }
 
-    /**
-     * Relación: Un trabajo pertenece a un personal.
-     */
     public function personal()
     {
         return $this->belongsTo(Personal::class);
+    }
+
+    public function labor()
+    {
+        return $this->belongsTo(Labor::class);
+    }
+    public function trabajables()
+    {
+        return $this->hasMany(Trabajable::class);
     }
 }
