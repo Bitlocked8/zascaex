@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('trabajables', function (Blueprint $table) {
             $table->id();
             $table->foreignId('trabajo_id')->constrained('trabajos')->onDelete('cascade');
-            $table->morphs('trabajable');
+            $table->nullableMorphs('trabajable');
+
             $table->timestamps();
         });
     }

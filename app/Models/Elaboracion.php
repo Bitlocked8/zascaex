@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Trabajable;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Elaboracion extends Model
 {
     use HasFactory;
@@ -39,7 +38,7 @@ class Elaboracion extends Model
         return $this->belongsTo(Personal::class);
     }
 
-    public function trabajables(): MorphMany
+      public function trabajables()
     {
         return $this->morphMany(Trabajable::class, 'trabajable');
     }

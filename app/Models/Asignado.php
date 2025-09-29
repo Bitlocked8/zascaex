@@ -31,4 +31,9 @@ class Asignado extends Model
     {
         return $this->belongsTo(Personal::class);
     }
+
+     public function trabajables()
+    {
+        return $this->morphMany(Trabajable::class, 'trabajable');
+    }
 }
