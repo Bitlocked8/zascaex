@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Models\Trabajo;
 use App\Models\Sucursal;
 use App\Models\Personal;
-use App\Models\Trabajable;
 use Livewire\Component;
 
 class Trabajador extends Component
@@ -20,15 +19,6 @@ class Trabajador extends Component
     public $labor_id = null;
     public $labores = [];
     public $modalLabores = false;
-
-    public $modalTrabajable = false;
-    public $trabajoSeleccionadoId = null;
-    public $trabajable_type = null;
-    public $trabajablesAsignar = [];
-    public $trabajableTipos = [
-        'App\Models\Elaboracion' => 'Elaboración',
-        'App\Models\Asignado' => 'Asignación de Material',
-    ];
 
     public function render()
     {
@@ -164,69 +154,5 @@ class Trabajador extends Component
     {
         $this->modalDetalle = false;
         $this->trabajoSeleccionado = null;
-    }
-
-    public function abrirModalTrabajable($trabajoId)
-    {
-        $this->trabajoSeleccionadoId = $trabajoId;
-        $this->trabajable_type = null;
-
-        // Cargar trabajables existentes
-        $this->trabajablesAsignar = \App\Models\Trabajable::where('trabajo_id', $trabajoId)
-            ->pluck('trabajable_type')
-            ->toArray();
-
-        $this->modalTrabajable = true;
-    }
-
-
-    public function agregarTrabajableSeleccionado()
-    {
-        if (!$this->trabajable_type) return;
-
-        if (!in_array($this->trabajable_type, $this->trabajablesAsignar)) {
-            $this->trabajablesAsignar[] = $this->trabajable_type;
-        }
-
-        $this->trabajable_type = null;
-    }
-
-
-    public function eliminarTrabajableSeleccionado($index)
-    {
-        if (!isset($this->trabajablesAsignar[$index])) return;
-
-        $tipo = $this->trabajablesAsignar[$index];
-
-        // Elimina de la base de datos para este trabajo
-        \App\Models\Trabajable::where('trabajo_id', $this->trabajoSeleccionadoId)
-            ->where('trabajable_type', $tipo)
-            ->delete();
-
-        // Elimina de la variable en memoria
-        unset($this->trabajablesAsignar[$index]);
-        $this->trabajablesAsignar = array_values($this->trabajablesAsignar);
-    }
-
-    public function guardarTrabajablesSeleccionados()
-    {
-        foreach ($this->trabajablesAsignar as $tipo) {
-            // Evita duplicados para el mismo trabajo
-            if (!Trabajable::where('trabajo_id', $this->trabajoSeleccionadoId)
-                ->where('trabajable_type', $tipo)
-                ->exists()) {
-                Trabajable::create([
-                    'trabajo_id' => $this->trabajoSeleccionadoId,
-                    'trabajable_type' => $tipo,
-                    'trabajable_id' => null, // aún no hay modelo concreto
-                ]);
-            }
-        }
-
-        $this->modalTrabajable = false;
-        $this->trabajablesAsignar = [];
-        $this->trabajable_type = null;
-
-        session()->flash('message', 'Trabajables guardados con éxito.');
     }
 }

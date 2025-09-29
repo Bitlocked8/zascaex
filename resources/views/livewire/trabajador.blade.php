@@ -71,12 +71,7 @@
           </svg>
         </button>
 
-        <button wire:click="abrirModalTrabajable({{ $trabajo->id }})" class="btn-circle btn-green" title="Asignar Trabajable">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <path d="M12 5v14m-7-7h14" /> <!-- icono de + simple, puedes cambiarlo -->
-          </svg>
-        </button>
+        
       </div>
     </div>
 
@@ -314,43 +309,7 @@
   </div>
   @endif
 
-  @if($modalTrabajable)
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-      <h2 class="text-xl font-semibold mb-4">Asignar Trabajable</h2>
 
-      <label class="block mb-2 font-semibold">Tipo de Trabajable</label>
-      <select wire:model="trabajable_type" class="w-full border p-2 rounded mb-4">
-        <option value="">Seleccione tipo</option>
-        @foreach($trabajableTipos as $class => $label)
-        @if(!in_array($class, $trabajablesAsignar))
-        <option value="{{ $class }}">{{ $label }}</option>
-        @endif
-        @endforeach
-      </select>
-
-      <button wire:click="agregarTrabajableSeleccionado()" class="bg-green-500 text-white px-4 py-2 rounded mb-4">
-        + Añadir
-      </button>
-
-      <ul class="mb-4">
-        @foreach($trabajablesAsignar as $index => $tipo)
-        <li class="flex justify-between items-center p-2 border rounded mb-1">
-          {{ $trabajableTipos[$tipo] ?? $tipo }}
-          <button wire:click="eliminarTrabajableSeleccionado({{ $index }})" class="text-red-500">x</button>
-        </li>
-        @endforeach
-      </ul>
-
-
-      <!-- Botones -->
-      <div class="flex justify-end gap-2">
-        <button wire:click="guardarTrabajablesSeleccionados()" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
-        <button wire:click="$set('modalTrabajable', false)" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
-      </div>
-    </div>
-  </div>
-  @endif
 
 
 </div>

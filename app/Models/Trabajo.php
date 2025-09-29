@@ -32,8 +32,5 @@ class Trabajo extends Model
     {
         return $this->belongsTo(Labor::class);
     }
-    public function trabajables()
-    {
-        return $this->hasMany(Trabajable::class);
-    }
+   
 }

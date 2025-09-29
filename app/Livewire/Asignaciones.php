@@ -22,7 +22,6 @@ class Asignaciones extends Component
     public $motivo;
     public $observaciones;
     public $existencias = [];
-    public $personales = [];
 
     // manejo de modal de errores
     public $modalError = false;
@@ -33,26 +32,57 @@ class Asignaciones extends Component
         $this->reset([
             'asignacion_id',
             'existencia_id',
-            'personal_id',
             'cantidad',
             'fecha',
             'observaciones',
             'motivo',
-            'codigo'
+            'codigo',
         ]);
+
         $this->accion = $accion;
         $this->fecha = now()->format('Y-m-d');
 
-        $this->existencias = Existencia::with('existenciable', 'sucursal')
-            ->where('cantidad', '>', 0)
-            ->get();
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
 
-        $this->personales = Personal::all();
+        if (!in_array($rol, [1, 2])) {
+            abort(403, 'No tienes permisos para acceder a esta sección.');
+        }
 
+        $personal = $usuario->personal;
+        if (!$personal) {
+            $this->mensajeError = "No estás asignado a ningún personal válido.";
+            $this->modalError = true;
+            return;
+        }
+
+        // Determinar sucursal según rol
+        $sucursal_id = null;
+        if ($rol === 2) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            if (!$sucursal_id) {
+                $this->mensajeError = "No estás asignado a ninguna sucursal.";
+                $this->modalError = true;
+                return;
+            }
+        }
+
+        // Cargar existencias según rol
+        $query = Existencia::with('existenciable', 'sucursal')->where('cantidad', '>', 0);
+        if ($rol === 2) {
+            $query->where('sucursal_id', $sucursal_id);
+        }
+        $this->existencias = $query->get();
+
+        // Definir personal_id por defecto
+        $this->personal_id = $rol === 2 ? $personal->id : null;
+
+        // Generar código para nueva asignación
         if ($accion === 'create') {
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
 
+        // Editar si es necesario
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
@@ -75,7 +105,19 @@ class Asignaciones extends Component
 
     public function guardarAsignacion()
     {
-   
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+
+        // Rol 2 fuerza personal_id a sí mismo
+        if ($rol === 2) {
+            $this->personal_id = $usuario->personal->id;
+        }
+
+        // Rol 1 (admin) si no selecciona personal, se asigna a sí mismo
+        if ($rol === 1 && !$this->personal_id) {
+            $this->personal_id = $usuario->personal->id;
+        }
+
         $validator = Validator::make([
             'existencia_id' => $this->existencia_id,
             'personal_id' => $this->personal_id,
@@ -163,11 +205,11 @@ class Asignaciones extends Component
             'cantidad',
             'fecha',
             'motivo',
-            'observaciones'
+            'observaciones',
         ]);
+
         session()->flash('message', 'Asignación guardada correctamente!');
     }
-
 
     public function cerrarModal()
     {
@@ -180,18 +222,27 @@ class Asignaciones extends Component
             'cantidad',
             'fecha',
             'motivo',
-            'observaciones'
+            'observaciones',
         ]);
     }
 
     public function render()
     {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+
+        $query = Asignado::with('existencia.existenciable', 'personal');
+
+        // Rol 2 solo ve asignaciones de su sucursal
+        if ($rol === 2) {
+            $sucursal_id = $usuario->personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $query->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
+        }
+
         return view('livewire.asignaciones', [
-            'asignaciones' => Asignado::with('existencia.existenciable', 'personal')
+            'asignaciones' => $query
                 ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
-                ->latest()->get(),
-            'personal' => Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
-                ->with(['trabajos' => fn($q) => $q->where('estado', 1)->latest('fechaInicio')->with('sucursal')])
+                ->latest()
                 ->get(),
         ]);
     }

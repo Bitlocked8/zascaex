@@ -97,7 +97,20 @@
                     <p class="font-semibold text-sm">
                         Fecha: <span class="font-normal">{{ $fecha }}</span>
                     </p>
+               
+                    @php
+                    $trabajoActivo = auth()->user()->personal->trabajos->where('estado', 1)->sortByDesc('fechaInicio')->first();
+                    $sucursal = $trabajoActivo?->sucursal?->nombre ?? 'Sin sucursal';
+                    $nombrePersonal = auth()->user()->personal->nombres ?? 'Sin nombre';
+                    @endphp
+                    <p class="font-semibold text-sm">
+                        Personal: <span class="font-normal">{{ $nombrePersonal }}</span>
+                    </p>
+                    <p class="font-semibold text-sm">
+                        Sucursal: <span class="font-normal">{{ $sucursal }}</span>
+                    </p>
                 </div>
+
 
                 <!-- Producto/Existencia -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
@@ -126,7 +139,7 @@
                             <button type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                                    {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                 <span>{{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}</span>
                                 <span class="flex items-center gap-2">
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
@@ -161,26 +174,7 @@
                     </div>
                 </div>
 
-                <!-- Personal Responsable -->
-                <div class="grid grid-cols-1 gap-2 mt-2">
-                    <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
-                    <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
-                        @foreach($personales as $persona)
-                        @php
-                        $trabajoActivo = $persona->trabajos->where('estado', 1)->sortByDesc('fechaInicio')->first();
-                        $sucursal = $trabajoActivo?->sucursal?->nombre ?? 'Sin sucursal';
-                        @endphp
-                        <button type="button"
-                            wire:click="$set('personal_id', {{ $persona->id }})"
-                            class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                            {{ $personal_id == $persona->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                            <span>{{ $persona->nombres ?? 'Personal #' . $persona->id }}</span>
-                            <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">{{ $sucursal }}</span>
-                        </button>
-                        @endforeach
-                    </div>
-                </div>
-
+              
                 <!-- Footer -->
                 <div class="modal-footer mt-4 flex justify-end gap-2">
                     <button type="button" wire:click="guardarAsignacion" class="btn-circle btn-cyan" title="Guardar">
@@ -195,6 +189,7 @@
         </div>
     </div>
     @endif
+
 
     @if($modalError)
     <div wire:click.self="$set('modalError', false)"
