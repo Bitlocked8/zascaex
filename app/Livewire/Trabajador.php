@@ -17,7 +17,9 @@ class Trabajador extends Component
     public $trabajoSeleccionado = null;
     public $accion = 'create';
     public $labor_id = null;
-
+    public $labores = [];
+    public $modalLabores = false; 
+    
     public function render()
     {
         $trabajos = Trabajo::with(['sucursal', 'personal'])
@@ -37,10 +39,13 @@ class Trabajador extends Component
 
         if ($accion === 'edit' && $id) {
             $this->editar($id);
+        } elseif ($accion === 'create') {
+            $this->fechaInicio = now();
         }
 
         $this->modal = true;
     }
+
 
     public function editar($id)
     {
@@ -57,14 +62,18 @@ class Trabajador extends Component
 
     public function guardar()
     {
+        // Validación normal
         $this->validate([
-            'fechaInicio' => 'required|date',
-            'fechaFinal' => 'nullable|date|after_or_equal:fechaInicio',
             'estado' => 'required|boolean',
             'sucursal_id' => 'required|exists:sucursals,id',
             'personal_id' => 'required|exists:personals,id',
-            'labor_id' => 'nulleable|exists:labors,id',
+            'labor_id' => 'nullable|exists:labors,id', // corregí 'nulleable' -> 'nullable'
         ]);
+
+        // Si es creación, asigna fechaInicio automáticamente
+        if (!$this->trabajo_id) {
+            $this->fechaInicio = now(); // fecha actual
+        }
 
         $fechaFinal = $this->fechaFinal ?: null;
 
@@ -84,6 +93,65 @@ class Trabajador extends Component
 
         $this->cerrarModal();
     }
+
+    // Abrir modal de labores dentro del componente Trabajador
+    public function abrirModalLabores()
+    {
+        // Opcional: cargar labores existentes
+        $this->labores = \App\Models\Labor::all()->map(function ($l) {
+            return [
+                'id' => $l->id,
+                'nombre' => $l->nombre,
+                'descripcion' => $l->descripcion,
+                'estado' => $l->estado,
+            ];
+        })->toArray();
+
+        $this->modalLabores = true; // necesitarías crear esta propiedad booleana
+    }
+
+    // Agregar fila de labor nueva
+    public function agregarLabor()
+    {
+        $this->labores[] = [
+            'id' => null,
+            'nombre' => '',
+            'descripcion' => '',
+            'estado' => 1,
+        ];
+    }
+
+    // Eliminar fila de labor
+    public function eliminarLabor($index)
+    {
+        $labor = $this->labores[$index] ?? null;
+        if ($labor && isset($labor['id']) && $labor['id']) {
+            \App\Models\Labor::find($labor['id'])?->delete();
+        }
+
+        unset($this->labores[$index]);
+        $this->labores = array_values($this->labores);
+    }
+
+    // Guardar todas las labores
+    public function guardarLabores()
+    {
+        foreach ($this->labores as $labor) {
+            \App\Models\Labor::updateOrCreate(
+                ['id' => $labor['id'] ?? 0],
+                [
+                    'nombre' => $labor['nombre'],
+                    'descripcion' => $labor['descripcion'],
+                    'estado' => $labor['estado'],
+                ]
+            );
+        }
+
+        $this->modalLabores = false;
+        $this->labores = [];
+    }
+
+
 
     public function cerrarModal()
     {
