@@ -62,6 +62,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
                     </svg>
                 </button>
+                <button wire:click="eliminarAsignacion({{ $asignado->id }})"
+                    class="btn-circle btn-red"
+                    title="Eliminar"
+                    onclick="confirm('¿Estás seguro de eliminar esta asignación?') || event.stopImmediatePropagation()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19 7L5 7M10 11v6M14 11v6M5 7l1-4h12l1 4" />
+                    </svg>
+                </button>
+
             </div>
         </div>
         @empty
@@ -97,7 +108,7 @@
                     <p class="font-semibold text-sm">
                         Fecha: <span class="font-normal">{{ $fecha }}</span>
                     </p>
-               
+
                     @php
                     $trabajoActivo = auth()->user()->personal->trabajos->where('estado', 1)->sortByDesc('fechaInicio')->first();
                     $sucursal = $trabajoActivo?->sucursal?->nombre ?? 'Sin sucursal';
@@ -109,11 +120,7 @@
                     <p class="font-semibold text-sm">
                         Sucursal: <span class="font-normal">{{ $sucursal }}</span>
                     </p>
-                </div>
 
-
-                <!-- Producto/Existencia -->
-                <div class="grid grid-cols-1 gap-2 mt-2">
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Producto</label>
                         @if($accion === 'edit')
@@ -154,14 +161,21 @@
                         </div>
                         @endif
                     </div>
+
+                    <div>
+                        <label class="font-semibold text-sm">Cantidad</label>
+                        @if($accion === 'edit')
+                        <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">{{ $cantidad }}</span>
+                        @else
+                        <input type="number" wire:model="cantidad" class="input-minimal" min="1">
+                        @endif
+                    </div>
                 </div>
 
                 <!-- Cantidad, Motivo y Observaciones -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
-                    <div>
-                        <label class="font-semibold text-sm">Cantidad</label>
-                        <input type="number" wire:model="cantidad" class="input-minimal" min="1">
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+
+
 
                     <div>
                         <label class="font-semibold text-sm">Motivo</label>
@@ -174,7 +188,7 @@
                     </div>
                 </div>
 
-              
+
                 <!-- Footer -->
                 <div class="modal-footer mt-4 flex justify-end gap-2">
                     <button type="button" wire:click="guardarAsignacion" class="btn-circle btn-cyan" title="Guardar">

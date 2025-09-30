@@ -6,7 +6,7 @@ use Livewire\Component;
 use App\Models\Asignado;
 use App\Models\Existencia;
 use App\Models\Reposicion;
-use App\Models\Personal;
+
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
@@ -24,8 +24,6 @@ class Asignaciones extends Component
     public $motivo;
     public $observaciones;
     public $existencias = [];
-
-    // manejo de modal de errores
     public $modalError = false;
     public $mensajeError = '';
 
@@ -142,8 +140,6 @@ class Asignaciones extends Component
 
         $existencia = Existencia::findOrFail($this->existencia_id);
         $cantidadSolicitada = $this->cantidad;
-
-        // Validar stock total
         $totalDisponible = Reposicion::where('existencia_id', $this->existencia_id)->sum('cantidad');
         if ($cantidadSolicitada > $totalDisponible) {
             $this->mensajeError = "La cantidad solicitada supera el stock total disponible ({$totalDisponible}).";
@@ -165,8 +161,6 @@ class Asignaciones extends Component
             ]);
 
             $lotes = Reposicion::where('existencia_id', $this->existencia_id)->get();
-
-            // Intentar FIFO si algún lote antiguo puede cubrir completamente
             $loteFifo = $lotes->sortBy('fecha')->first(fn($l) => $l->cantidad >= $restante);
 
             if ($loteFifo) {
@@ -175,7 +169,6 @@ class Asignaciones extends Component
                 $loteFifo->save();
                 $restante = 0;
             } else {
-                // Híbrido LIFO: tomar primero el lote más grande más reciente
                 $lotesHibrido = $lotes->sortByDesc('cantidad');
 
                 foreach ($lotesHibrido as $lote) {
@@ -192,8 +185,6 @@ class Asignaciones extends Component
                     $restante -= $usar;
                 }
             }
-
-            // Actualizar stock total de existencia
             $existencia->cantidad -= $cantidadSolicitada;
             $existencia->save();
         });
@@ -247,5 +238,24 @@ class Asignaciones extends Component
                 ->latest()
                 ->get(),
         ]);
+    }
+    public function eliminarAsignacion($id)
+    {
+        $asignado = Asignado::with('reposiciones')->findOrFail($id);
+        $existencia = Existencia::findOrFail($asignado->existencia_id);
+
+        DB::transaction(function () use ($asignado, $existencia) {
+            foreach ($asignado->reposiciones as $lote) {
+                $cantidadAsignada = $lote->pivot->cantidad;
+                $lote->cantidad += $cantidadAsignada;
+                $lote->save();
+            }
+            $existencia->cantidad += $asignado->cantidad;
+            $existencia->save();
+            $asignado->reposiciones()->detach();
+            $asignado->delete();
+        });
+
+        session()->flash('message', 'Asignación eliminada y lotes restaurados correctamente!');
     }
 }
