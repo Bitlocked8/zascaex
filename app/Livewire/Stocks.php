@@ -79,7 +79,6 @@ class Stocks extends Component
         // Filtrar existencias según rol
         $queryExistencias = Existencia::with('existenciable', 'sucursal')
             ->where('existenciable_type', '!=', \App\Models\Producto::class)
-            ->where('cantidad', '>', 0)
             ->orderBy('id');
 
         if ($rol === 2) {

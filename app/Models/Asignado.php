@@ -32,5 +32,11 @@ class Asignado extends Model
         return $this->belongsTo(Personal::class);
     }
 
-   
+    public function reposiciones()
+    {
+        return $this->belongsToMany(Reposicion::class, 'asignado_reposicions')
+            ->withPivot('cantidad') // guarda cuántas unidades se usaron de ese lote
+            ->withTimestamps();
+    }
+    
 }

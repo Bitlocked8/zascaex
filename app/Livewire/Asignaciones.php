@@ -5,8 +5,10 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Asignado;
 use App\Models\Existencia;
+use App\Models\Reposicion;
 use App\Models\Personal;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class Asignaciones extends Component
 {
@@ -56,7 +58,6 @@ class Asignaciones extends Component
             return;
         }
 
-        // Determinar sucursal según rol
         $sucursal_id = null;
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -67,28 +68,29 @@ class Asignaciones extends Component
             }
         }
 
-        // Cargar existencias según rol
-        $query = Existencia::with('existenciable', 'sucursal')->where('cantidad', '>', 0);
+        $query = Existencia::with('existenciable', 'sucursal')
+            ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0));
+
         if ($rol === 2) {
-            $query->where('sucursal_id', $sucursal_id);
+            $query->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)
+                ->where('sucursal_id', $sucursal_id));
         }
+
         $this->existencias = $query->get();
 
-        // Definir personal_id por defecto
         $this->personal_id = $rol === 2 ? $personal->id : null;
 
-        // Generar código para nueva asignación
         if ($accion === 'create') {
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
 
-        // Editar si es necesario
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
 
         $this->modal = true;
     }
+
 
     public function editar($id)
     {
@@ -108,12 +110,10 @@ class Asignaciones extends Component
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
 
-        // Rol 2 fuerza personal_id a sí mismo
         if ($rol === 2) {
             $this->personal_id = $usuario->personal->id;
         }
 
-        // Rol 1 (admin) si no selecciona personal, se asigna a sí mismo
         if ($rol === 1 && !$this->personal_id) {
             $this->personal_id = $usuario->personal->id;
         }
@@ -132,18 +132,6 @@ class Asignaciones extends Component
             'fecha' => 'required|date',
             'motivo' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string|max:500',
-        ], [
-            'existencia_id.required' => 'Debe seleccionar un producto.',
-            'existencia_id.exists' => 'El producto seleccionado no existe.',
-            'personal_id.required' => 'Debe seleccionar un personal.',
-            'personal_id.exists' => 'El personal seleccionado no existe.',
-            'cantidad.required' => 'Debe ingresar una cantidad.',
-            'cantidad.integer' => 'La cantidad debe ser un número entero.',
-            'cantidad.min' => 'La cantidad mínima es 1.',
-            'fecha.required' => 'Debe ingresar la fecha.',
-            'fecha.date' => 'La fecha no es válida.',
-            'motivo.max' => 'El motivo no puede exceder 255 caracteres.',
-            'observaciones.max' => 'Las observaciones no pueden exceder 500 caracteres.',
         ]);
 
         if ($validator->fails()) {
@@ -153,48 +141,62 @@ class Asignaciones extends Component
         }
 
         $existencia = Existencia::findOrFail($this->existencia_id);
+        $cantidadSolicitada = $this->cantidad;
 
-        if ($this->accion === 'create') {
-            if ($this->cantidad > $existencia->cantidad) {
-                $this->mensajeError = "La cantidad solicitada supera el stock disponible ({$existencia->cantidad}).";
-                $this->modalError = true;
-                return;
-            }
+        // Validar stock total
+        $totalDisponible = Reposicion::where('existencia_id', $this->existencia_id)->sum('cantidad');
+        if ($cantidadSolicitada > $totalDisponible) {
+            $this->mensajeError = "La cantidad solicitada supera el stock total disponible ({$totalDisponible}).";
+            $this->modalError = true;
+            return;
+        }
 
-            Asignado::create([
+        DB::transaction(function () use ($existencia, $cantidadSolicitada) {
+            $restante = $cantidadSolicitada;
+
+            $asignado = Asignado::create([
                 'codigo' => $this->codigo,
                 'existencia_id' => $this->existencia_id,
                 'personal_id' => $this->personal_id,
-                'cantidad' => $this->cantidad,
+                'cantidad' => $cantidadSolicitada,
                 'fecha' => $this->fecha,
                 'motivo' => $this->motivo,
                 'observaciones' => $this->observaciones,
             ]);
 
-            $existencia->cantidad -= $this->cantidad;
-            $existencia->save();
-        } elseif ($this->accion === 'edit' && $this->asignacion_id) {
-            $asignado = Asignado::findOrFail($this->asignacion_id);
-            $diferencia = $this->cantidad - $asignado->cantidad;
+            $lotes = Reposicion::where('existencia_id', $this->existencia_id)->get();
 
-            if ($diferencia > 0 && $diferencia > $existencia->cantidad) {
-                $this->mensajeError = "No puedes aumentar la asignación, stock insuficiente ({$existencia->cantidad}).";
-                $this->modalError = true;
-                return;
+            // Intentar FIFO si algún lote antiguo puede cubrir completamente
+            $loteFifo = $lotes->sortBy('fecha')->first(fn($l) => $l->cantidad >= $restante);
+
+            if ($loteFifo) {
+                $asignado->reposiciones()->attach($loteFifo->id, ['cantidad' => $restante]);
+                $loteFifo->cantidad -= $restante;
+                $loteFifo->save();
+                $restante = 0;
+            } else {
+                // Híbrido LIFO: tomar primero el lote más grande más reciente
+                $lotesHibrido = $lotes->sortByDesc('cantidad');
+
+                foreach ($lotesHibrido as $lote) {
+                    if ($restante <= 0) break;
+                    if ($lote->cantidad <= 0) continue;
+
+                    $usar = min($restante, $lote->cantidad);
+
+                    $asignado->reposiciones()->attach($lote->id, ['cantidad' => $usar]);
+
+                    $lote->cantidad -= $usar;
+                    $lote->save();
+
+                    $restante -= $usar;
+                }
             }
 
-            $existencia->cantidad -= $diferencia;
+            // Actualizar stock total de existencia
+            $existencia->cantidad -= $cantidadSolicitada;
             $existencia->save();
-
-            $asignado->update([
-                'existencia_id' => $this->existencia_id,
-                'personal_id' => $this->personal_id,
-                'cantidad' => $this->cantidad,
-                'fecha' => $this->fecha,
-                'motivo' => $this->motivo,
-                'observaciones' => $this->observaciones,
-            ]);
-        }
+        });
 
         $this->modal = false;
         $this->reset([
@@ -210,6 +212,7 @@ class Asignaciones extends Component
 
         session()->flash('message', 'Asignación guardada correctamente!');
     }
+
 
     public function cerrarModal()
     {
@@ -233,7 +236,6 @@ class Asignaciones extends Component
 
         $query = Asignado::with('existencia.existenciable', 'personal');
 
-        // Rol 2 solo ve asignaciones de su sucursal
         if ($rol === 2) {
             $sucursal_id = $usuario->personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $query->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));

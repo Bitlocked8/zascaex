@@ -387,16 +387,6 @@ class DatabaseSeeder extends Seeder
         }
 
         Producto::factory()->count(5)->create();
-
-
-        $preformas = Preforma::get();
-        $bases = Base::get();
-        $tapas = Tapa::get();
-        $productos = Producto::get();
-        $etiquetas = Etiqueta::get();
-
-
-
         Coche::factory(5)->create()->each(function ($coche) {
             // Crear una asignación para el coche
             $asignacion = Asignacion::create([
@@ -418,62 +408,16 @@ class DatabaseSeeder extends Seeder
             ]);
         });
 
-        // Asignar existencias a cada sucursal
+
+
         foreach ($sucursales as $sucursal) {
-            // Asignar preformas a la sucursal
-            foreach ($preformas as $preforma) {
-                Existencia::create([
-                    'existenciable_id' => $preforma->id,
-                    'existenciable_type' => Preforma::class,
-                    'sucursal_id' => $sucursal->id,
-                    'cantidad' => rand(10, 50),
-                ]);
-            }
-
-            // Asignar bases a la sucursal
-            foreach ($bases as $base) {
-                Existencia::create([
-                    'existenciable_id' => $base->id,
-                    'existenciable_type' => Base::class,
-                    'sucursal_id' => $sucursal->id,
-                    'cantidad' => rand(10, 50),
-                ]);
-            }
-
-            // Asignar tapas a la sucursal
-            foreach ($tapas as $tapa) {
-                Existencia::create([
-                    'existenciable_id' => $tapa->id,
-                    'existenciable_type' => Tapa::class,
-                    'sucursal_id' => $sucursal->id,
-                    'cantidad' => rand(10, 50),
-                ]);
-            }
-
-            // Asignar productos a la sucursal
-            foreach ($productos as $producto) {
-                Existencia::create([
-                    'existenciable_id' => $producto->id,
-                    'existenciable_type' => Producto::class,
-                    'sucursal_id' => $sucursal->id,
-                    'cantidad' => rand(10, 50),
-                ]);
-            }
-
-            // Asignar etiquetas a la sucursal
-            foreach ($etiquetas as $etiqueta) {
-                Existencia::create([
-                    'existenciable_id' => $etiqueta->id,
-                    'existenciable_type' => Etiqueta::class,
-                    'sucursal_id' => $sucursal->id,
-                    'cantidad' => rand(10, 50),
-                ]);
-            }
+            // Crear administrador de la sucursal
             $adminUser = User::create([
-                'email' => $sucursal->email, // Administrador
-                'password' => bcrypt(12345678), // Administrador
+                'email' => $sucursal->email,
+                'password' => bcrypt(12345678),
                 'rol_id' => 2, // Administrador
             ]);
+
             $adminPersonal = Personal::factory()->create([
                 'user_id' => $adminUser->id,
             ]);
@@ -482,87 +426,46 @@ class DatabaseSeeder extends Seeder
                 'sucursal_id' => $sucursal->id,
                 'personal_id' => $adminPersonal->id,
                 'labor_id' => null,
-                'fechaFinal' => null, // Siempre nulo
-                'estado' => 1, // Activo
+                'fechaFinal' => null,
+                'estado' => 1,
             ]);
 
+            // Crear 3 distribuidores
             $distribuidores = User::factory(3)->create([
-                'rol_id' => 3, // Distribuidor
-                'password' => bcrypt(12345678), // 
+                'rol_id' => 3,
+                'password' => bcrypt(12345678),
             ]);
 
             $distribuidores->each(function ($user) use ($sucursal) {
-                $personal = Personal::factory()->create([
-                    'user_id' => $user->id,
-                ]);
+                $personal = Personal::factory()->create(['user_id' => $user->id]);
 
                 Trabajo::factory()->create([
                     'sucursal_id' => $sucursal->id,
                     'personal_id' => $personal->id,
                     'labor_id' => null,
-                    'fechaFinal' => null, // Siempre nulo
-                    'estado' => 1, // Activo
+                    'fechaFinal' => null,
+                    'estado' => 1,
                 ]);
             });
 
             // Crear 2 usuarios Planta
             $plantas = User::factory(2)->create([
-                'rol_id' => 4, // Planta
-                'password' => bcrypt(12345678), // 
+                'rol_id' => 4,
+                'password' => bcrypt(12345678),
             ]);
 
             $plantas->each(function ($user) use ($sucursal) {
-                // Crear personal vinculado al usuario
-                $personal = Personal::factory()->create([
-                    'user_id' => $user->id,
-                ]);
+                $personal = Personal::factory()->create(['user_id' => $user->id]);
 
                 Trabajo::factory()->create([
                     'sucursal_id' => $sucursal->id,
                     'personal_id' => $personal->id,
                     'labor_id' => null,
-                    'fechaFinal' => null, // Siempre nulo
-                    'estado' => 1, // Activo
+                    'fechaFinal' => null,
+                    'estado' => 1,
                 ]);
             });
         }
-
-
-        //Generar 10 ventas
-        Venta::factory(10)->create([
-            'personalEntrega_id' => null,
-            'personal_id' => Personal::get()->random()->id
-        ])->each(function ($venta) {
-            // Generar entre 1 y 4 items por venta
-            $items = Itemventa::factory(rand(1, 4))->create([
-                'venta_id' => $venta->id,
-                'existencia_id' => Existencia::inRandomOrder()->first()->id, // Asociar con una existencia aleatoria
-            ]);
-
-            // Calcular el total de los items
-            $totalVenta = $items->sum(fn($item) => $item->cantidad * $item->precio);
-
-            // Si estadoPago es 1 o 2 (completo o vendido), el pago es igual al total
-            if ($venta->estadoPago == 1 || $venta->estadoPago == 2) {
-                Pagoventa::factory()->create([
-                    'venta_id' => $venta->id,
-                    'monto' => $totalVenta,
-                    'fechaPago' => now(),
-                    // 'estado' => 1, // Pago completado
-                ]);
-            }
-            // Si estadoPago es 0 (parcial), el pago es menor al total
-            else {
-                Pagoventa::factory()->create([
-                    'venta_id' => $venta->id,
-                    'monto' => $totalVenta * rand(50, 90) / 100, // Paga entre 50% y 90% del total
-                    'fechaPago' => now(),
-                    // 'estado' => 0, // Pago parcial
-                ]);
-            }
-        });
-        Elaboracion::factory(10)->create();
-        Embotellado::factory(10)->create();
-        Etiquetado::factory(10)->create();
+       
     }
 }

@@ -47,4 +47,11 @@ class Reposicion extends Model
     {
         return $this->hasMany(ComprobantePago::class);
     }
+
+    public function asignados()
+    {
+        return $this->belongsToMany(Asignado::class, 'asignado_reposicions')
+            ->withPivot('cantidad')
+            ->withTimestamps();
+    }
 }
