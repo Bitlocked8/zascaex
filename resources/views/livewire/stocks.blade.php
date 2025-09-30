@@ -29,6 +29,7 @@
             <div class="flex flex-col col-span-9 space-y-1 text-left">
                 <p><strong>Código:</strong> {{ $repo->codigo ?? 'N/A' }}</p>
                 <p><strong>Nombre:</strong> {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}</p>
+                <p><strong>Cantidad inicial:</strong> {{ $repo->cantidad_inicial }}</p>
                 <p><strong>Cantidad:</strong> {{ $repo->cantidad }}</p>
                 <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
                 <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
@@ -76,6 +77,18 @@
                         <path d="M11 15h2" />
                     </svg>
                 </button>
+                <button
+                    wire:click="eliminarReposicion({{ $repo->id }})"
+
+                    onclick="confirm('¿Estás seguro de eliminar esta reposición?') || event.stopImmediatePropagation()" class="btn-circle btn-cyan"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 7l16 0" />
+                        <path d="M10 11l0 6" />
+                        <path d="M14 11l0 6" />
+                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                    </svg></button>
+
             </div>
         </div>
         @empty
@@ -96,8 +109,9 @@
                         Código: <span class="font-normal">{{ $codigo }}</span>
                     </p>
                     <p class="font-semibold text-sm">
-                        Fecha: <span class="font-normal">{{ $fecha }}</span>
+                        Fecha: <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
                     </p>
+
 
                     @php
                     $trabajoActivo = auth()->user()->personal->trabajos
@@ -161,12 +175,17 @@
                     </div>
 
                     <!-- Cantidad y Observaciones -->
-                    <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm">Cantidad</label>
+
+                            @if($accion === 'edit')
+                            <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">{{ $cantidad }}</span>
+                            @else
                             <input type="number" wire:model="cantidad" class="input-minimal" min="1">
-                            @error('cantidad') <span class="error-message">{{ $message }}</span> @enderror
+                            @endif
                         </div>
+
                         <div>
                             <label class="font-semibold text-sm">Observaciones</label>
                             <input wire:model="observaciones" class="input-minimal">
@@ -223,6 +242,9 @@
                             <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
                         </svg>
                     </button>
+
+
+
                 </div>
 
             </div>

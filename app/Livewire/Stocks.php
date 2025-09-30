@@ -10,7 +10,7 @@ use App\Models\Proveedor;
 use App\Models\Personal;
 use Carbon\Carbon;
 use Livewire\WithFileUploads;
-
+use Illuminate\Support\Facades\DB;
 class Stocks extends Component
 {
     use WithFileUploads;
@@ -61,7 +61,6 @@ class Stocks extends Component
         ]);
 
         $this->accion = $accion;
-        $this->fecha = now()->format('Y-m-d');
 
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
@@ -73,24 +72,21 @@ class Stocks extends Component
             return;
         }
 
-        // Autoasignar personal_id tanto para rol 1 como 2
         $this->personal_id = $personal->id;
 
-        // Filtrar existencias según rol
         $queryExistencias = Existencia::with('existenciable', 'sucursal')
             ->where('existenciable_type', '!=', \App\Models\Producto::class)
             ->orderBy('id');
 
         if ($rol === 2) {
-            // Rol 2 solo puede ver existencias de su sucursal
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryExistencias->where('sucursal_id', $sucursal_id);
         }
 
         $this->existencias = $queryExistencias->get();
 
-        // Código automático solo para create
         if ($accion === 'create') {
+            $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
 
@@ -100,6 +96,7 @@ class Stocks extends Component
 
         $this->modal = true;
     }
+
 
 
     public function editar($id)
@@ -122,25 +119,28 @@ class Stocks extends Component
 
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
-
-        // Autoasignar personal_id tanto para rol 1 como 2
         $this->personal_id = $usuario->personal->id;
 
         $cantidadAnterior = $this->reposicion_id
             ? Reposicion::find($this->reposicion_id)->cantidad
             : 0;
 
+        $data = [
+            'codigo' => $this->codigo,
+            'existencia_id' => $this->existencia_id,
+            'personal_id' => $this->personal_id,
+            'proveedor_id' => $this->proveedor_id,
+            'cantidad' => $this->cantidad,
+            'fecha'        => \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s'),
+            'observaciones' => $this->observaciones,
+        ];
+        if (!$this->reposicion_id) {
+            $data['cantidad_inicial'] = $this->cantidad;
+        }
+
         $reposicion = Reposicion::updateOrCreate(
             ['id' => $this->reposicion_id],
-            [
-                'codigo' => $this->codigo,
-                'existencia_id' => $this->existencia_id,
-                'personal_id' => $this->personal_id,
-                'proveedor_id' => $this->proveedor_id,
-                'cantidad' => $this->cantidad,
-                'fecha' => $this->fecha,
-                'observaciones' => $this->observaciones,
-            ]
+            $data
         );
 
         $existencia = Existencia::find($this->existencia_id);
@@ -150,6 +150,7 @@ class Stocks extends Component
         $this->cerrarModal();
         session()->flash('message', 'Reposición guardada correctamente!');
     }
+
 
     public function cerrarModal()
     {
@@ -224,8 +225,6 @@ class Stocks extends Component
 
         $this->modalConfigGlobal = false;
     }
-
-    // Pagos
     public function abrirModalPagos($reposicion_id)
     {
         $this->reposicionParaPago = $reposicion_id;
@@ -269,11 +268,9 @@ class Stocks extends Component
     {
         foreach ($this->pagos as $index => $pago) {
             $imagenPath = $pago['imagen'];
-
             if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
                 $imagenPath = $pago['imagen']->store('pagos', 'public');
             }
-
             \App\Models\ComprobantePago::updateOrCreate(
                 ['id' => $pago['id'] ?? 0],
                 [
@@ -286,7 +283,6 @@ class Stocks extends Component
                 ]
             );
         }
-
         $this->reset(['pagos']);
         $this->modalPagos = false;
     }
@@ -296,8 +292,6 @@ class Stocks extends Component
         $usuario  = auth()->user();
         $rol      = $usuario->rol_id;
         $personal = $usuario->personal;
-
-        // Filtrar existencias
         $queryExistencias = Existencia::with('existenciable')
             ->where('existenciable_type', '!=', \App\Models\Producto::class)
             ->where('cantidad', '>', 0)
@@ -310,10 +304,7 @@ class Stocks extends Component
 
             $queryExistencias->where('sucursal_id', $sucursal_id);
         }
-
         $existencias = $queryExistencias->get();
-
-        // Filtrar reposiciones
         $queryReposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
             ->when(
                 $this->searchCodigo,
@@ -326,13 +317,10 @@ class Stocks extends Component
                 ->value('sucursal_id');
 
             $queryReposiciones
-                ->where('personal_id', $personal->id) // solo las que creó él
-                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id)); // y de su sucursal
+                ->where('personal_id', $personal->id)
+                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
-
         $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')->get();
-
-        // Listado de personal
         $personalList = Personal::whereHas(
             'trabajos',
             fn($q) => $q->where('estado', 1)
@@ -349,5 +337,55 @@ class Stocks extends Component
             'proveedores'  => Proveedor::where('estado', 1)->get(),
             'sucursales'   => Sucursal::all(),
         ]);
+    }
+
+    public function eliminarReposicion($id)
+    {
+        $reposicion = Reposicion::with('existencia', 'asignados')->find($id);
+
+        if (!$reposicion) {
+            $this->mensajeError = "La reposición no existe.";
+            $this->modalError = true;
+            return;
+        }
+
+        $existencia = $reposicion->existencia;
+
+        DB::transaction(function () use ($reposicion, $existencia) {
+            $loteId = $reposicion->id;
+
+            // Recorremos todas las asignaciones asociadas a este lote
+            foreach ($reposicion->asignados as $asignado) {
+                $cantidadDelLote = $asignado->reposiciones()
+                    ->where('reposicion_id', $loteId)
+                    ->first()?->pivot->cantidad ?? 0;
+
+                if ($cantidadDelLote > 0) {
+                    // Restamos del total de la asignación
+                    $asignado->cantidad -= $cantidadDelLote;
+
+                    // Eliminamos la relación con el lote
+                    $asignado->reposiciones()->detach($loteId);
+
+                    if ($asignado->cantidad <= 0) {
+                        $asignado->delete(); // eliminamos la asignación si quedó en 0
+                    } else {
+                        $asignado->save(); // actualizamos la cantidad restante
+                    }
+                }
+            }
+
+            // Ajustamos el stock total de la existencia
+            if ($existencia) {
+                $existencia->cantidad -= $reposicion->cantidad;
+                if ($existencia->cantidad < 0) $existencia->cantidad = 0;
+                $existencia->save();
+            }
+
+            // Finalmente eliminamos la reposición
+            $reposicion->delete();
+        });
+
+        session()->flash('message', 'Reposición eliminada correctamente y asignaciones actualizadas.');
     }
 }

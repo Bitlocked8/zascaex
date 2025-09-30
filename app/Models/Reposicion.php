@@ -14,6 +14,7 @@ class Reposicion extends Model
         'fecha',
         'cantidad',
         'existencia_id',
+        'cantidad_inicial',
         'personal_id',
         'proveedor_id',
         'observaciones'

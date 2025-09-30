@@ -1,12 +1,10 @@
 <?php
 
 namespace App\Livewire;
-
 use Livewire\Component;
 use App\Models\Asignado;
 use App\Models\Existencia;
 use App\Models\Reposicion;
-
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
