@@ -3,62 +3,25 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\Reposicion;
 use App\Models\Asignado;
+use App\Models\Reposicion;
 
 class Reportestock extends Component
 {
-    public $search = '';
-    public $fechaInicio = '';
-    public $fechaFinal = '';
-    public $sucursalId = '';
-    public $mostrarReporte = false;
-
-    public function mount()
-    {
-        $this->fechaInicio = now()->startOfYear()->format('Y-m-d');
-        $this->fechaFinal = now()->endOfYear()->format('Y-m-d');
-    }
-
-    public function limpiarFiltros()
-    {
-        $this->search = '';
-        $this->fechaInicio = now()->startOfYear()->format('Y-m-d');
-        $this->fechaFinal = now()->endOfYear()->format('Y-m-d');
-    }
+    public $asignados;
+    public $reposicions;
 
     public function render()
     {
-        // Reposiciones
-        $reposiciones = Reposicion::with([
-            'existencia.existenciable',
-            'personal',
-            'proveedor',
-            'comprobantes'
-        ])
-            ->when($this->fechaInicio && $this->fechaFinal, function ($query) {
-                $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFinal]);
-            })
-            ->when($this->search, function ($query) {
-                $query->where('codigo', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('fecha', 'desc')
-            ->get();
+        // Trae todos los registros de la tabla 'asignados'
+        $this->asignados = Asignado::all();
 
-        // Asignados
-        $asignados = Asignado::with(['existencia.existenciable', 'personal'])
-            ->when($this->fechaInicio && $this->fechaFinal, function ($query) {
-                $query->whereBetween('fecha', [$this->fechaInicio, $this->fechaFinal]);
-            })
-            ->when($this->search, function ($query) {
-                $query->where('codigo', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('fecha', 'desc')
-            ->get();
+        // Trae todos los registros de la tabla 'reposicions'
+        $this->reposicions = Reposicion::all();
 
         return view('livewire.reportestock', [
-            'reposiciones' => $reposiciones,
-            'asignados'    => $asignados,
+            'asignados' => $this->asignados,
+            'reposicions' => $this->reposicions,
         ]);
     }
 }

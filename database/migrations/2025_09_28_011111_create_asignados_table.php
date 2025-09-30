@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade');
             $table->integer('cantidad');
-            $table->date('fecha');
+            $table->integer('cantidad_original');
+            $table->dateTime('fecha');
             $table->string('motivo')->nullable();
             $table->text('observaciones')->nullable();
             $table->timestamps();

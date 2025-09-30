@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire;
+
 use Livewire\Component;
 use App\Models\Asignado;
 use App\Models\Existencia;
@@ -18,6 +19,7 @@ class Asignaciones extends Component
     public $existencia_id;
     public $personal_id;
     public $cantidad;
+    public $cantidad_original; // nueva
     public $fecha;
     public $motivo;
     public $observaciones;
@@ -25,12 +27,14 @@ class Asignaciones extends Component
     public $modalError = false;
     public $mensajeError = '';
 
+
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
             'asignacion_id',
             'existencia_id',
             'cantidad',
+            'cantidad_original', // nueva
             'fecha',
             'observaciones',
             'motivo',
@@ -38,7 +42,7 @@ class Asignaciones extends Component
         ]);
 
         $this->accion = $accion;
-        $this->fecha = now()->format('Y-m-d');
+        $this->fecha = now()->format('Y-m-d H:i:s'); // fecha con hora
 
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
@@ -73,7 +77,6 @@ class Asignaciones extends Component
         }
 
         $this->existencias = $query->get();
-
         $this->personal_id = $rol === 2 ? $personal->id : null;
 
         if ($accion === 'create') {
@@ -87,7 +90,6 @@ class Asignaciones extends Component
         $this->modal = true;
     }
 
-
     public function editar($id)
     {
         $asignado = Asignado::findOrFail($id);
@@ -96,6 +98,7 @@ class Asignaciones extends Component
         $this->existencia_id = $asignado->existencia_id;
         $this->personal_id = $asignado->personal_id;
         $this->cantidad = $asignado->cantidad;
+        $this->cantidad_original = $asignado->cantidad; // nueva
         $this->fecha = $asignado->fecha;
         $this->motivo = $asignado->motivo;
         $this->observaciones = $asignado->observaciones;
@@ -106,13 +109,8 @@ class Asignaciones extends Component
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
 
-        if ($rol === 2) {
-            $this->personal_id = $usuario->personal->id;
-        }
-
-        if ($rol === 1 && !$this->personal_id) {
-            $this->personal_id = $usuario->personal->id;
-        }
+        if ($rol === 2) $this->personal_id = $usuario->personal->id;
+        if ($rol === 1 && !$this->personal_id) $this->personal_id = $usuario->personal->id;
 
         $validator = Validator::make([
             'existencia_id' => $this->existencia_id,
@@ -153,6 +151,7 @@ class Asignaciones extends Component
                 'existencia_id' => $this->existencia_id,
                 'personal_id' => $this->personal_id,
                 'cantidad' => $cantidadSolicitada,
+                'cantidad_original' => $cantidadSolicitada, // nueva
                 'fecha' => $this->fecha,
                 'motivo' => $this->motivo,
                 'observaciones' => $this->observaciones,
@@ -167,22 +166,18 @@ class Asignaciones extends Component
                 $loteFifo->save();
                 $restante = 0;
             } else {
-                $lotesHibrido = $lotes->sortByDesc('cantidad');
-
-                foreach ($lotesHibrido as $lote) {
+                foreach ($lotes->sortByDesc('cantidad') as $lote) {
                     if ($restante <= 0) break;
                     if ($lote->cantidad <= 0) continue;
 
                     $usar = min($restante, $lote->cantidad);
-
                     $asignado->reposiciones()->attach($lote->id, ['cantidad' => $usar]);
-
                     $lote->cantidad -= $usar;
                     $lote->save();
-
                     $restante -= $usar;
                 }
             }
+
             $existencia->cantidad -= $cantidadSolicitada;
             $existencia->save();
         });
@@ -194,6 +189,7 @@ class Asignaciones extends Component
             'existencia_id',
             'personal_id',
             'cantidad',
+            'cantidad_original', // nueva
             'fecha',
             'motivo',
             'observaciones',
@@ -202,41 +198,6 @@ class Asignaciones extends Component
         session()->flash('message', 'Asignación guardada correctamente!');
     }
 
-
-    public function cerrarModal()
-    {
-        $this->modal = false;
-        $this->reset([
-            'asignacion_id',
-            'codigo',
-            'existencia_id',
-            'personal_id',
-            'cantidad',
-            'fecha',
-            'motivo',
-            'observaciones',
-        ]);
-    }
-
-    public function render()
-    {
-        $usuario = auth()->user();
-        $rol = $usuario->rol_id;
-
-        $query = Asignado::with('existencia.existenciable', 'personal');
-
-        if ($rol === 2) {
-            $sucursal_id = $usuario->personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $query->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
-        }
-
-        return view('livewire.asignaciones', [
-            'asignaciones' => $query
-                ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
-                ->latest()
-                ->get(),
-        ]);
-    }
     public function eliminarAsignacion($id)
     {
         $asignado = Asignado::with('reposiciones')->findOrFail($id);
@@ -255,5 +216,42 @@ class Asignaciones extends Component
         });
 
         session()->flash('message', 'Asignación eliminada y lotes restaurados correctamente!');
+    }
+   
+
+    public function cerrarModal()
+    {
+        $this->modal = false;
+        $this->reset([
+            'asignacion_id',
+            'codigo',
+            'existencia_id',
+            'personal_id',
+            'cantidad',
+            'cantidad_original',
+            'fecha',
+            'motivo',
+            'observaciones',
+        ]);
+    }
+
+    public function render()
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+
+        $query = Asignado::with('existencia.existenciable', 'personal');
+
+        if ($rol === 2) {
+            $sucursal_id = $usuario->personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $query->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
+        }
+
+        $asignaciones = $query
+            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
+            ->latest()
+            ->get();   
+
+        return view('livewire.asignaciones', compact('asignaciones'));
     }
 }

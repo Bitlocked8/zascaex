@@ -22,11 +22,15 @@
             <div class="flex flex-col col-span-9 space-y-1 text-left">
                 <p><strong>Código:</strong> {{ $asignado->codigo ?? 'N/A' }}</p>
                 <p><strong>Item:</strong> {{ $asignado->existencia->existenciable->descripcion ?? 'N/A' }}</p>
+                <p><strong>Cantidad original:</strong> {{ $asignado->cantidad_original ?? $asignado->cantidad }}</p>
                 <p><strong>Cantidad:</strong> {{ $asignado->cantidad }}</p>
-                <p><strong>Asignado a:</strong> {{ $asignado->personal->nombre ?? 'N/A' }}</p>
                 <p><strong>Fecha:</strong> {{ $asignado->fecha }}</p>
-                <p><strong>Motivo:</strong> {{ $asignado->motivo ?? 'N/A' }}</p>
                 <p><strong>Observaciones:</strong> {{ $asignado->observaciones ?? 'N/A' }}</p>
+                @if(isset($asignado->cantidad_original) && $asignado->cantidad_original != $asignado->cantidad)
+                <p class="text-sm text-orange-600">
+                    ⚠ Se eliminó un lote, la cantidad actual es menor que la original, se recomienda eliminar y crear uno nuevo.
+                </p>
+                @endif
             </div>
 
             <div class="flex flex-col items-end gap-4 col-span-3">
@@ -63,14 +67,14 @@
                     </svg>
                 </button>
                 <button wire:click="eliminarAsignacion({{ $asignado->id }})"
-                    class="btn-circle btn-red"
-                    title="Eliminar"
-                    onclick="confirm('¿Estás seguro de eliminar esta asignación?') || event.stopImmediatePropagation()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M19 7L5 7M10 11v6M14 11v6M5 7l1-4h12l1 4" />
-                    </svg>
+                    onclick="confirm('¿Estás seguro de eliminar esta asignación?') || event.stopImmediatePropagation()" class="btn-circle btn-cyan"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 7l16 0" />
+                        <path d="M10 11l0 6" />
+                        <path d="M14 11l0 6" />
+                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                    </svg></button>
                 </button>
 
             </div>
@@ -171,12 +175,7 @@
                         @endif
                     </div>
                 </div>
-
-                <!-- Cantidad, Motivo y Observaciones -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-
-
-
                     <div>
                         <label class="font-semibold text-sm">Motivo</label>
                         <input type="text" wire:model="motivo" class="input-minimal">
@@ -188,14 +187,21 @@
                     </div>
                 </div>
 
-
-                <!-- Footer -->
-                <div class="modal-footer mt-4 flex justify-end gap-2">
+                <div class="modal-footer">
                     <button type="button" wire:click="guardarAsignacion" class="btn-circle btn-cyan" title="Guardar">
-                        Guardar
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                            <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                            <path d="M14 4l0 4l-6 0l0 -4" />
+                        </svg>
                     </button>
-                    <button type="button" wire:click="cerrarModal" class="btn-circle btn-gray" title="Cerrar">
-                        Cerrar
+                    <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path d="M10 10l4 4m0 -4l-4 4" />
+                            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                        </svg>
                     </button>
                 </div>
 

@@ -15,6 +15,7 @@ class Asignado extends Model
         'existencia_id',
         'personal_id',
         'cantidad',
+        'cantidad_original',
         'fecha',
         'motivo',
         'observaciones'
@@ -38,5 +39,4 @@ class Asignado extends Model
             ->withPivot('cantidad') // guarda cuántas unidades se usaron de ese lote
             ->withTimestamps();
     }
-    
 }
