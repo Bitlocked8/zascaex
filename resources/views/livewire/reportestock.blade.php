@@ -27,84 +27,107 @@
                 <table class="min-w-full border border-gray-200 text-center">
 
                     @php
-                    function formatoColorDecimal($numero, $decimales = 2) {
-                    $numeroFormateado = number_format($numero, $decimales, '.', '');
-                    $partes = explode('.', $numeroFormateado);
-                    $entero = $partes[0];
-                    $decimal = $partes[1] ?? '';
-
-                    if ($decimal == '' || $decimal == str_repeat('0', $decimales)) {
-                    return '<span class="text-right block text-green-600 font-semibold">'.$entero.'</span>';
-                    } else {
-                    return '<span class="text-right block">'.$entero.'<span class="text-red-500">,'.$decimal.'</span></span>';
-                    }
-                    }
+                    $acumuladoCantidad = 0;
+                    $acumuladoMonto = 0;
                     @endphp
 
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-2 py-1 border-b">Fecha</th>
-                            <th class="px-2 py-1 border-b">Entrada</th>
-                            <th class="px-2 py-1 border-b">Entrada/Salida</th>
-                            <th class="px-2 py-1 border-b text-right">Cantidad Entrada</th>
-                            <th class="px-2 py-1 border-b text-right">Pago Entrada</th>
-                            <th class="px-2 py-1 border-b text-right">Cantidad Salida</th>
-                            <th class="px-2 py-1 border-b text-right">Pago Salida</th>
-                            <th class="px-2 py-1 border-b text-right">Cantidad Total</th>
-                            <th class="px-2 py-1 border-b text-right">Saldo Total</th>
-                        </tr>
-                    </thead>
+                    @foreach($reposicions as $r)
+                    @php
+                    $cantidadAsignada = $r->asignados->sum(function($a) use ($r) {
+                    $rel = $a->reposiciones->find($r->id);
+                    return $rel ? $rel->pivot->cantidad : 0;
+                    });
+                    $disponible = $r->cantidad_inicial - $cantidadAsignada;
+                    $montoTotal = $r->comprobantes->sum('monto');
+                    $precioUnitario = $r->cantidad_inicial ? $montoTotal / $r->cantidad_inicial : 0;
+                    $valorDisponible = $disponible * $precioUnitario;
+
+                    $acumuladoCantidad += $r->cantidad_inicial; // sumas entrada
+                    $acumuladoMonto += $montoTotal;
+                    @endphp
+
+                    <tr class="hover:bg-gray-100">
+                        <td>{{ $r->fecha }}</td>
+                        <td>{{ $r->codigo }}</td>
+                        <td>Entrada</td>
+                        <td class="text-right">{{ $r->cantidad_inicial }}</td>
+                        <td class="text-right">{{ $montoTotal }}</td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right">{{ $acumuladoCantidad }}</td>
+                        <td class="text-right">{{ $acumuladoMonto }}</td>
+                    </tr>
+                    @endforeach
+
+                    @foreach($asignados as $a)
+                    @php
+                    $cantidadSalida = $a->cantidad;
+                    $montoSalida = 0;
+                    foreach($a->reposiciones as $r) {
+                    $cantidadAsignada = $r->pivot->cantidad;
+                    $montoTotal = $r->comprobantes->sum('monto');
+                    $cantidadLote = $r->cantidad_inicial ?: 1;
+                    $montoSalida += $cantidadAsignada * $montoTotal / $cantidadLote;
+                    }
+
+                    $acumuladoCantidad -= $cantidadSalida;
+                    $acumuladoMonto -= $montoSalida;
+                    @endphp
+
+                    <tr class="hover:bg-gray-100">
+                        <td>{{ $a->fecha }}</td>
+                        <td>{{ $a->codigo }}</td>
+                        <td>Salida</td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right">{{ $cantidadSalida }}</td>
+                        <td class="text-right">{{ $montoSalida }}</td>
+                        <td class="text-right">{{ $acumuladoCantidad }}</td>
+                        <td class="text-right">{{ $acumuladoMonto }}</td>
+                    </tr>
+                    @endforeach
 
                     @php
-                    $cantidadTotal = 0;
-                    $saldoTotal = 0;
-                    @endphp
+$acumuladoDisponibleCantidad = $acumuladoCantidad; // después de salidas
+$acumuladoDisponibleMonto = $acumuladoMonto;      // después de salidas
+@endphp
 
-                    <tbody>
-                        @foreach($reposicions as $r)
-                        @php
-                        $cantidadTotal += $r->cantidad_inicial;
-                        $saldoTotal += $r->comprobantes->sum('monto');
-                        @endphp
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-2 py-1 border-b">{{ $r->fecha }}</td>
-                            <td class="px-2 py-1 border-b">{{ $r->codigo }}</td>
-                            <td class="px-2 py-1 border-b">Entrada</td>
-                            <td class="px-2 py-1 border-b text-right">{!! formatoColorDecimal($r->cantidad_inicial, 0) !!}</td>
-                            <td class="px-2 py-1 border-b text-right">{!! formatoColorDecimal($r->comprobantes->sum('monto'), 2) !!}</td>
-                            <td class="px-2 py-1 border-b"></td>
-                            <td class="px-2 py-1 border-b"></td>
-                            <td class="px-2 py-1 border-b text-right">{!! formatoColorDecimal($cantidadTotal, 0) !!}</td>
-                            <td class="px-2 py-1 border-b text-right">{!! formatoColorDecimal($saldoTotal, 2) !!}</td>
-                        </tr>
-                        @endforeach
+@foreach($reposicions as $r)
+    @php
+    $cantidadAsignada = $r->asignados->sum(function($a) use ($r) {
+        $rel = $a->reposiciones->find($r->id);
+        return $rel ? $rel->pivot->cantidad : 0;
+    });
+    $disponibleCantidad = $r->cantidad_inicial - $cantidadAsignada;
+    
+    $montoTotal = $r->comprobantes->sum('monto');
+    $precioUnitario = $r->cantidad_inicial ? $montoTotal / $r->cantidad_inicial : 0;
+    $disponibleMonto = $disponibleCantidad * $precioUnitario;
 
-                        @foreach($asignados as $a)
-                        @php
-                        $cantidadSalida = $a->cantidad;
-                        $montoSalida = 0;
-                        foreach($a->reposiciones as $r) {
-                        $cantidadAsignada = $r->pivot->cantidad;
-                        $montoTotal = $r->comprobantes->sum('monto');
-                        $cantidadLote = $r->cantidad_inicial ?: 1;
-                        $montoSalida += $cantidadAsignada * $montoTotal / $cantidadLote;
-                        }
-                        $cantidadTotal -= $cantidadSalida;
-                        $saldoTotal -= $montoSalida;
-                        @endphp
+    if ($disponibleCantidad > 0) {
+        $acumuladoDisponibleCantidad -= $disponibleCantidad;
+        $acumuladoDisponibleMonto -= $disponibleMonto;
+    }
+    @endphp
 
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-2 py-1 border-b">{{ $a->fecha }}</td>
-                            <td class="px-2 py-1 border-b">{{ $a->codigo }}</td>
-                            <td class="px-2 py-1 border-b">Salida</td>
-                            <td class="px-2 py-1 border-b"></td>
-                            <td class="px-2 py-1 border-b"></td>
-                            <td class="px-2 py-1 border-b">{!! formatoColorDecimal($cantidadSalida) !!}</td>
-                            <td class="px-2 py-1 border-b">{!! formatoColorDecimal($montoSalida) !!}</td>
-                            <td class="px-2 py-1 border-b">{!! formatoColorDecimal($cantidadTotal) !!}</td>
-                            <td class="px-2 py-1 border-b">{!! formatoColorDecimal($saldoTotal) !!}</td>
-                        </tr>
-                        @endforeach
+    @if($disponibleCantidad > 0)
+        <tr class="hover:bg-gray-100 bg-yellow-50">
+            <td>{{ $r->fecha }}</td>
+            <td>{{ $r->codigo }}</td>
+            <td>Disponible</td>
+            <td></td>
+            <td></td>
+            <td class="text-right">{{ $disponibleCantidad }}</td>
+            <td class="text-right">{{ number_format($disponibleMonto, 2) }}</td>
+            <td class="text-right">{{ $acumuladoDisponibleCantidad }}</td>
+            <td class="text-right">{{ number_format($acumuladoDisponibleMonto, 2) }}</td>
+        </tr>
+    @endif
+@endforeach
+
+
+
+
                     </tbody>
 
                 </table>
