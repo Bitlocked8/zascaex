@@ -24,7 +24,8 @@
                 <p><strong>Item:</strong> {{ $asignado->existencia->existenciable->descripcion ?? 'N/A' }}</p>
                 <p><strong>Cantidad original:</strong> {{ $asignado->cantidad_original ?? $asignado->cantidad }}</p>
                 <p><strong>Cantidad:</strong> {{ $asignado->cantidad }}</p>
-                <p><strong>Fecha:</strong> {{ $asignado->fecha }}</p>
+                <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
+
                 <p><strong>Observaciones:</strong> {{ $asignado->observaciones ?? 'N/A' }}</p>
                 @if(isset($asignado->cantidad_original) && $asignado->cantidad_original != $asignado->cantidad)
                 <p class="text-sm text-orange-600">
@@ -110,8 +111,12 @@
                         Código: <span class="font-normal">{{ $codigo }}</span>
                     </p>
                     <p class="font-semibold text-sm">
-                        Fecha: <span class="font-normal">{{ $fecha }}</span>
+                        Fecha:
+                        <span class="font-normal">
+                            {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}
+                        </span>
                     </p>
+
 
                     @php
                     $trabajoActivo = auth()->user()->personal->trabajos->where('estado', 1)->sortByDesc('fechaInicio')->first();

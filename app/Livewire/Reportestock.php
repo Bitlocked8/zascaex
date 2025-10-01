@@ -10,18 +10,25 @@ class Reportestock extends Component
 {
     public $asignados;
     public $reposicions;
+    public $tablaActiva = 'asignados'; // 'asignados' o 'reposicions'
+
+    public function mount()
+    {
+        $this->asignados = Asignado::all();
+        $this->reposicions = Reposicion::all();
+    }
+
+    public function mostrarTabla($tabla)
+    {
+        $this->tablaActiva = $tabla;
+    }
 
     public function render()
     {
-        // Trae todos los registros de la tabla 'asignados'
-        $this->asignados = Asignado::all();
-
-        // Trae todos los registros de la tabla 'reposicions'
-        $this->reposicions = Reposicion::all();
-
         return view('livewire.reportestock', [
             'asignados' => $this->asignados,
             'reposicions' => $this->reposicions,
+            'tablaActiva' => $this->tablaActiva,
         ]);
     }
 }
