@@ -10,7 +10,7 @@ class Reportestock extends Component
 {
     public $asignados;
     public $reposicions;
-    public $tablaActiva = 'asignados';
+    public $tablaActiva = null;
     public function mount()
     {
         $this->asignados = Asignado::with('reposiciones')->get();
@@ -27,5 +27,10 @@ class Reportestock extends Component
             'reposicions' => $this->reposicions,
             'tablaActiva' => $this->tablaActiva,
         ]);
+    }
+
+    public function deseleccionarTabla()
+    {
+        $this->tablaActiva = null;
     }
 }

@@ -13,9 +13,73 @@
             class="px-4 py-2 rounded-lg font-semibold {{ $tablaActiva == 'asignado_reposicions' ? 'bg-cyan-600 text-white' : 'bg-white border' }}">
             Asignado - Reposiciones
         </button>
-       
-
+        <button wire:click="deseleccionarTabla"
+            class="px-4 py-2 rounded-lg font-semibold {{ is_null($tablaActiva) ? 'bg-cyan-600 text-white' : 'bg-white border' }}">
+            Ninguna
+        </button>
     </div>
+    <div class="mt-6 bg-white shadow rounded p-4  mx-auto">
+        <h2 class="font-semibold mb-2 text-center">Reposiciones y Asignaciones</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full border border-gray-200 text-center">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-2 py-1 border-b">Fecha</th>
+                        <th class="px-2 py-1 border-b">Entrada</th>
+                        <th class="px-2 py-1 border-b">Entrada/Salida</th>
+                        <th class="px-2 py-1 border-b">Cantidad Entrada</th>
+                        <th class="px-2 py-1 border-b">Pago Entrada</th>
+                        <th class="px-2 py-1 border-b">Cantidad salida</th>
+                        <th class="px-2 py-1 border-b">Pago salida</th>
+                        <th class="px-2 py-1 border-b">Cantidad Total</th>
+                        <th class="px-2 py-1 border-b">Saldo Total</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($reposicions as $r)
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-2 py-1 border-b">{{ $r->fecha }}</td>
+                        <td class="px-2 py-1 border-b">{{ $r->codigo }}</td>
+                        <td class="px-2 py-1 border-b">Entranda</td>
+                        <td class="px-2 py-1 border-b">{{ $r->cantidad_inicial }}</td>
+                        <td class="px-2 py-1 border-b">{{ $r->comprobantes->sum('monto') }}</td>
+                        <td class="px-2 py-1 border-b">-</td>
+                        <td class="px-2 py-1 border-b">-</td>
+                        <td class="px-2 py-1 border-b">-</td>
+                        <td class="px-2 py-1 border-b">-</td>
+                    </tr>
+                    @endforeach
+                    @foreach($asignados as $a)
+                    @foreach($a->reposiciones as $r)
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-2 py-1 border-b">{{ $a->fecha }}</td>
+                        <td class="px-2 py-1 border-b">{{ $a->codigo }}</td>
+                        <td class="px-2 py-1 border-b">Salida</td>
+                        <td class="px-2 py-1 border-b">-</td>
+                        <td class="px-2 py-1 border-b">-</td>
+                        <td class="px-2 py-1 border-b">{{ $r->pivot->cantidad }}</td>
+                        <td class="px-4 py-2 border-b text-center">
+                            {{ number_format(
+                             $r->cantidad_inicial && $r->comprobantes->sum('monto') > 0 
+                              ? ($r->pivot->cantidad * $r->comprobantes->sum('monto')) / $r->cantidad_inicial 
+                               : 0, 
+                                2
+                             ) }}
+                        </td>
+                        <td class="px-2 py-1 border-b">-</td>
+
+                    </tr>
+                    @endforeach
+                    @endforeach
+
+
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 
     <div class="w-full max-w-screen-xl mx-auto">
 
@@ -146,7 +210,7 @@
             </div>
         </div>
 
-     
+
 
 
         @endif
