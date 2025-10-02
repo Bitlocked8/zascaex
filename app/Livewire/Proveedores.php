@@ -3,14 +3,10 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Proveedor as ModeloProveedor;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Proveedores extends Component
 {
-    use WithPagination;
-
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
@@ -28,8 +24,6 @@ class Proveedores extends Component
     public $tiempoEntrega = '';
     public $estado = 1;
     public $proveedorSeleccionado = null;
-
-    protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'razonSocial' => 'required|string|max:255',
@@ -51,14 +45,9 @@ class Proveedores extends Component
             $query->where('razonSocial', 'like', '%' . $this->search . '%')
                   ->orWhere('nombreContacto', 'like', '%' . $this->search . '%')
                   ->orWhere('correo', 'like', '%' . $this->search . '%');
-        })->paginate(5);
+        })->get(); // Eliminamos paginate
 
         return view('livewire.proveedores', compact('proveedores'));
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
     }
 
     public function abrirModal($accion)
@@ -98,10 +87,9 @@ class Proveedores extends Component
     }
 
     public function guardarProveedor()
-{
-    $this->validate();
+    {
+        $this->validate();
 
-    try {
         if ($this->accion === 'edit' && $this->proveedorId) {
             $proveedor = ModeloProveedor::findOrFail($this->proveedorId);
             $proveedor->update([
@@ -117,9 +105,6 @@ class Proveedores extends Component
                 'tiempoEntrega' => $this->tiempoEntrega,
                 'estado' => $this->estado,
             ]);
-            LivewireAlert::title('Proveedor actualizado con éxito.')
-                ->success()
-                ->show();
         } else {
             ModeloProveedor::create([
                 'razonSocial' => $this->razonSocial,
@@ -134,18 +119,10 @@ class Proveedores extends Component
                 'tiempoEntrega' => $this->tiempoEntrega,
                 'estado' => $this->estado,
             ]);
-            LivewireAlert::title('Proveedor registrado con éxito.')
-                ->success()
-                ->show();
         }
 
         $this->cerrarModal();
-    } catch (\Exception $e) {
-        LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-            ->error()
-            ->show();
     }
-}
 
     public function cerrarModal()
     {

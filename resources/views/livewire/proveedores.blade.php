@@ -1,305 +1,218 @@
-<div class="p-text p-2 mt-10 flex justify-center">
-  <div class="w-full max-w-screen-xl grid grid-cols-1 gap-6">
-    <div>
-      <h6 class="text-xl font-bold mb-4 px-4 p-text">Gestión de Proveedores</h6>
+<div class="p-2 mt-20 flex justify-center bg-white">
+  <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Barra de búsqueda y botón para crear proveedor -->
+    <div class="flex items-center gap-2 mb-4 col-span-full">
+      <input
+        type="text"
+        wire:model.live="search"
+        placeholder="Buscar por razón social, contacto o correo..."
+        class="input-minimal w-full" />
+      <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+          <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+        </svg>
+      </button>
+    </div>
 
-      <!-- Botón de registro y buscador -->
-      <div class="flex justify-center items-center gap-4 w-full max-w-2xl mx-auto">
-        <button title="Registrar Proveedor" wire:click='abrirModal("create")'
-          class="text-emerald-500 hover:text-emerald-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="icon icon-tabler icon-tabler-plus">
+    @forelse($proveedores as $proveedor)
+    <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
+      <!-- Información del proveedor -->
+      <div class="flex flex-col col-span-9 text-left space-y-1">
+        <p><strong>Razón Social:</strong> {{ $proveedor->razonSocial }}</p>
+        <p><strong>Contacto:</strong> {{ $proveedor->nombreContacto ?? 'N/A' }}</p>
+        <p><strong>Teléfono:</strong> {{ $proveedor->telefono ?? 'N/A' }}</p>
+        <p><strong>Correo:</strong> {{ $proveedor->correo ?? 'N/A' }}</p>
+        <p><strong>Tipo:</strong> {{ ucfirst($proveedor->tipo) }}</p>
+        <p><strong>Servicio:</strong> {{ ucfirst($proveedor->servicio) }}</p>
+        <p><strong>Estado:</strong>
+          @if($proveedor->estado)
+          <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
+          @else
+          <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
+          @endif
+        </p>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex flex-col items-end gap-4 col-span-3">
+        <button wire:click="editarProveedor({{ $proveedor->id }})" class="btn-circle btn-cyan" title="Editar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M12 5v14m-7 -7h14" />
+            <path d="M4 20h4l10-10-4-4-10 10v4" />
           </svg>
         </button>
-
-        <input type="text" wire:model.live="search" placeholder="Buscar proveedor..." class="input-g w-auto sm:w-64" />
-      </div>
-
-      <!-- Tabla -->
-      <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg">
-        <table class="w-full text-sm text-left border border-slate-200 dark:border-cyan-200 rounded-lg border-collapse">
-          <thead class="text-x uppercase color-bg">
-            <tr>
-              <th scope="col" class="px-6 py-3 p-text text-left">Información</th>
-              <th scope="col" class="px-6 py-3 p-text text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse ($proveedores as $proveedor)
-            <tr class="color-bg border border-slate-200">
-              <td class="px-6 py-4 p-text text-left">
-                <div class="mb-2">
-                  <span class="font-semibold block">Razón Social:</span>
-                  <span>{{ $proveedor->razonSocial }}</span>
-                </div>
-                <div class="mb-2">
-                  <span class="font-semibold block">Contacto:</span>
-                  <span>{{ $proveedor->nombreContacto ?? 'No definido' }}</span>
-                </div>
-                <div class="mb-2">
-                  <span class="font-semibold block">Correo:</span>
-                  <span>{{ $proveedor->correo }}</span>
-                </div>
-                <div class="mb-2">
-                  <span class="font-semibold block">Tipo / Servicio:</span>
-                  <span>{{ ucfirst($proveedor->tipo) }} / {{ ucfirst($proveedor->servicio) }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end space-x-2">
-                  <button title="Editar" wire:click="editarProveedor({{ $proveedor->id }})"
-                    class="text-blue-500 hover:text-blue-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      class="icon icon-tabler icon-tabler-edit">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                      <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                      <path d="M16 5l3 3" />
-                    </svg>
-                  </button>
-
-                  <button title="Ver Detalle" wire:click="verDetalle({{ $proveedor->id }})"
-                    class="text-indigo-500 hover:text-indigo-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor"
-                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-info-circle">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                      <path d="M12 9h.01" />
-                      <path d="M11 12h1v4h1" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="2" class="text-left py-4 text-gray-600 dark:text-gray-400">
-                No hay proveedores registrados.
-              </td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-4 flex justify-center">
-        {{ $proveedores->links() }}
+        <button wire:click="verDetalle({{ $proveedor->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
       </div>
     </div>
+    @empty
+    <div class="col-span-full text-center py-4 text-gray-600">
+      No hay proveedores registrados.
+    </div>
+    @endforelse
   </div>
 
+  <!-- Modal Crear / Editar Proveedor -->
+  @if($modal)
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-content">
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Razón Social</label>
+            <input wire:model="razonSocial" class="input-minimal" placeholder="Ej. Proveedor S.A." />
+            @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
 
-  @if ($modal)
-  <div class="modal-first">
-    <div class="modal-center">
-      <div class="modal-hiden">
-        <div class="center-col">
-          <h3 class="p-text">{{ $accion === 'create' ? 'Registrar Proveedor' : 'Editar Proveedor' }}</h3>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Contacto</label>
+            <input wire:model="nombreContacto" class="input-minimal" placeholder="Ej. Juan Pérez" />
+            @error('nombreContacto') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
 
-          <div class="over-col">
-            <!-- Razón Social -->
-            <h3 class="p-text">Razón Social</h3>
-            <input type="text" wire:model.defer="razonSocial" class="p-text input-g">
-            @error('razonSocial') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Dirección</label>
+            <input wire:model="direccion" class="input-minimal" placeholder="Ej. Av. Siempre Viva 123" />
+            @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
 
-            <!-- Nombre del Contacto -->
-            <h3 class="p-text">Nombre del Contacto</h3>
-            <input type="text" wire:model.defer="nombreContacto" class="p-text input-g">
-            @error('nombreContacto') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Teléfono</label>
+            <input type="text" wire:model="telefono" class="input-minimal" placeholder="Ej. 70012345" />
+            @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
 
-            <!-- Dirección -->
-            <h3 class="p-text">Dirección</h3>
-            <input type="text" wire:model.defer="direccion" class="p-text input-g">
-            @error('direccion') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Correo</label>
+            <input type="email" wire:model="correo" class="input-minimal" placeholder="Ej. correo@proveedor.com" />
+            @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
 
-            <!-- Teléfono -->
-            <h3 class="p-text">Teléfono</h3>
-            <input type="text" wire:model.defer="telefono" class="p-text input-g">
-            @error('telefono') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Correo -->
-            <h3 class="p-text">Correo</h3>
-            <input type="email" wire:model.defer="correo" class="p-text input-g">
-            @error('correo') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Tipo -->
-            <h3 class="p-text">Tipo</h3>
-            <select wire:model.defer="tipo" class="p-text input-g">
-              <option value="">Seleccione tipo</option>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Tipo</label>
+            <select wire:model="tipo" class="input-minimal">
+              <option value="">-- Seleccionar Tipo --</option>
               <option value="tapas">Tapas</option>
               <option value="preformas">Preformas</option>
               <option value="etiquetas">Etiquetas</option>
             </select>
-            @error('tipo') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+            @error('tipo') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
 
-            <!-- Servicio -->
-            <h3 class="p-text">Servicio</h3>
-            <select wire:model.defer="servicio" class="p-text input-g">
-              <option value="">Seleccione servicio</option>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Servicio</label>
+            <select wire:model="servicio" class="input-minimal">
+              <option value="">-- Seleccionar Servicio --</option>
               <option value="soplado">Soplado</option>
               <option value="transporte">Transporte</option>
             </select>
-            @error('servicio') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Descripción -->
-            <h3 class="p-text">Descripción</h3>
-            <input wire:model.defer="descripcion" class="p-text input-g "></input>
-            @error('descripcion') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Precio -->
-            <h3 class="p-text">Precio</h3>
-            <input type="number" wire:model.defer="precio" class="p-text input-g" step="0.01" min="0">
-            @error('precio') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Tiempo de Entrega -->
-            <h3 class="p-text">Tiempo de Entrega</h3>
-            <input type="text" wire:model.defer="tiempoEntrega" class="p-text input-g">
-            @error('tiempoEntrega') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Estado -->
-            <h3 class="p-text">Estado</h3>
-            <select wire:model.defer="estado" class="p-text input-g">
-              <option value="1">Activo</option>
-              <option value="0">Inactivo</option>
-            </select>
-            @error('estado') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+            @error('servicio') <span class="error-message">{{ $message }}</span> @enderror
           </div>
 
-          <!-- Botones -->
-          <div class="mt-6 flex justify-center w-full space-x-4">
-            <button type="button" wire:click="guardarProveedor"
-              class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                <path d="M14 4l0 4l-6 0l0 -4" />
-              </svg>
-            </button>
-
-            <button type="button" wire:click="cerrarModal"
-              class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M18 6l-12 12" />
-                <path d="M6 6l12 12" />
-              </svg>
-            </button>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Descripción</label>
+            <input wire:model="descripcion" class="input-minimal" placeholder="Descripción del proveedor" />
+            @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
           </div>
 
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Precio</label>
+            <input type="number" wire:model="precio" class="input-minimal" placeholder="Ej. 100.50" />
+            @error('precio') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Tiempo de Entrega</label>
+            <input wire:model="tiempoEntrega" class="input-minimal" placeholder="Ej. 3 días hábiles" />
+            @error('tiempoEntrega') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+
+          <div class="flex flex-wrap justify-center gap-2 mt-2">
+            @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
+            <button type="button" wire:click="$set('estado', {{ $key }})"
+              class="px-4 py-2 rounded-full text-sm flex items-center justify-center
+                        {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+              {{ $label }}
+            </button>
+            @endforeach
+          </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" wire:click="guardarProveedor" class="btn-circle btn-cyan" title="Guardar">
+          Guardar
+        </button>
+        <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>
   @endif
-  @if ($detalleModal)
-  <div class="modal-first">
-    <div class="modal-center">
-      <div class="modal-hiden">
-        <div class="center-col">
-          <h3 class="text-base font-semibold p-text" id="modal-title">Detalles del Proveedor</h3>
 
-          <div class="mt-4">
-            <dl class="grid grid-cols-2 gap-4">
+  <!-- Modal Ver Detalle Proveedor -->
+  @if($detalleModal && $proveedorSeleccionado)
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-content flex flex-col gap-4">
 
-              <!-- Razón Social -->
-              <div>
-                <dt class="text-sm font-medium p-text">Razón Social</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->razonSocial ?? 'No especificada' }}</dd>
-              </div>
-
-              <!-- Nombre del Contacto -->
-              <div>
-                <dt class="text-sm font-medium p-text">Nombre del Contacto</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->nombreContacto ?? 'No especificado' }}</dd>
-              </div>
-
-              <!-- Dirección -->
-              <div>
-                <dt class="text-sm font-medium p-text">Dirección</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->direccion ?? 'No especificada' }}</dd>
-              </div>
-
-              <!-- Teléfono -->
-              <div>
-                <dt class="text-sm font-medium p-text">Teléfono</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->telefono ?? 'No especificado' }}</dd>
-              </div>
-
-              <!-- Correo -->
-              <div>
-                <dt class="text-sm font-medium p-text">Correo</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->correo ?? 'No especificado' }}</dd>
-              </div>
-
-              <!-- Tipo -->
-              <div>
-                <dt class="text-sm font-medium p-text">Tipo</dt>
-                <dd class="mt-1 text-sm p-text">{{ ucfirst($proveedorSeleccionado->tipo ?? 'No especificado') }}</dd>
-              </div>
-
-              <!-- Servicio -->
-              <div>
-                <dt class="text-sm font-medium p-text">Servicio</dt>
-                <dd class="mt-1 text-sm p-text">{{ ucfirst($proveedorSeleccionado->servicio ?? 'No especificado') }}
-                </dd>
-              </div>
-
-              <!-- Descripción -->
-              <div class="col-span-2">
-                <dt class="text-sm font-medium p-text">Descripción</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->descripcion ?? 'No especificada' }}</dd>
-              </div>
-
-              <!-- Precio -->
-              <div>
-                <dt class="text-sm font-medium p-text">Precio</dt>
-                <dd class="mt-1 text-sm p-text">Bs
-                  {{ number_format($proveedorSeleccionado->precio, 2, ',', '.') ?? '0.00' }}
-                </dd>
-              </div>
-
-              <!-- Tiempo de Entrega -->
-              <div>
-                <dt class="text-sm font-medium p-text">Tiempo de Entrega</dt>
-                <dd class="mt-1 text-sm p-text">{{ $proveedorSeleccionado->tiempoEntrega ?? 'No especificado' }}</dd>
-              </div>
-
-              <!-- Estado -->
-              <div class="col-span-2">
-                <dt class="text-sm font-medium p-text">Estado</dt>
-                <dd class="mt-1 text-sm p-text">
-                  <span class="{{ $proveedorSeleccionado->estado ? 'text-green-600' : 'text-red-600' }}">
-                    {{ $proveedorSeleccionado->estado ? 'Activo' : 'Inactivo' }}
-                  </span>
-                </dd>
-              </div>
-
-            </dl>
-          </div>
-
-          <!-- Botón cerrar -->
-          <div class="mt-6 flex justify-center">
-            <button type="button" wire:click="cerrarModal"
-              class="text-red-500 hover:text-red-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M18 6l-12 12" />
-                <path d="M6 6l12 12" />
-              </svg>
-            </button>
+        <div class="flex justify-center items-center">
+          <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
+            {{ strtoupper(substr($proveedorSeleccionado->razonSocial,0,1)) }}
           </div>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Razón Social:</span>
+              <span class="badge-info">{{ $proveedorSeleccionado->razonSocial }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Contacto:</span>
+              <span class="badge-info">{{ $proveedorSeleccionado->nombreContacto }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Dirección:</span>
+              <span class="badge-info">{{ $proveedorSeleccionado->direccion }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Teléfono:</span>
+              <span class="badge-info">{{ $proveedorSeleccionado->telefono }}</span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Correo:</span>
+              <span class="badge-info">{{ $proveedorSeleccionado->correo }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Tipo:</span>
+              <span class="badge-info">{{ ucfirst($proveedorSeleccionado->tipo) }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Servicio:</span>
+              <span class="badge-info">{{ ucfirst($proveedorSeleccionado->servicio) }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Estado:</span>
+              <span class="badge-info">
+                {{ $proveedorSeleccionado->estado ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button wire:click="$set('detalleModal', false)" class="btn-circle btn-cyan" title="Cerrar">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>

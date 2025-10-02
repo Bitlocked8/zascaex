@@ -3,15 +3,11 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Sucursal as ModelSucursal;
 use App\Models\Empresa;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Sucursal extends Component
 {
-    use WithPagination;
-
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
@@ -25,8 +21,6 @@ class Sucursal extends Component
     public $empresa_id = '';
 
     public $sucursalSeleccionada = null;
-
-    protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
@@ -43,16 +37,12 @@ class Sucursal extends Component
                 $query->where('nombre', 'like', '%' . $this->search . '%')
                       ->orWhere('direccion', 'like', '%' . $this->search . '%');
             })
-            ->paginate(5);
+            ->orderBy('id', 'desc')
+            ->get();
 
         $empresas = Empresa::all();
 
         return view('livewire.sucursal', compact('sucursales', 'empresas'));
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
     }
 
     public function abrirModal($accion)
@@ -88,32 +78,26 @@ class Sucursal extends Component
     {
         $this->validate();
 
-        try {
-            if ($this->accion === 'edit' && $this->sucursalId) {
-                $sucursal = ModelSucursal::findOrFail($this->sucursalId);
-                $sucursal->update([
-                    'nombre' => $this->nombre,
-                    'direccion' => $this->direccion,
-                    'telefono' => $this->telefono,
-                    'zona' => $this->zona,
-                    'empresa_id' => $this->empresa_id,
-                ]);
-                LivewireAlert::title('Sucursal actualizada con éxito.')->success()->show();
-            } else {
-                ModelSucursal::create([
-                    'nombre' => $this->nombre,
-                    'direccion' => $this->direccion,
-                    'telefono' => $this->telefono,
-                    'zona' => $this->zona,
-                    'empresa_id' => $this->empresa_id,
-                ]);
-                LivewireAlert::title('Sucursal registrada con éxito.')->success()->show();
-            }
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())->error()->show();
+        if ($this->accion === 'edit' && $this->sucursalId) {
+            $sucursal = ModelSucursal::findOrFail($this->sucursalId);
+            $sucursal->update([
+                'nombre' => $this->nombre,
+                'direccion' => $this->direccion,
+                'telefono' => $this->telefono,
+                'zona' => $this->zona,
+                'empresa_id' => $this->empresa_id,
+            ]);
+        } else {
+            ModelSucursal::create([
+                'nombre' => $this->nombre,
+                'direccion' => $this->direccion,
+                'telefono' => $this->telefono,
+                'zona' => $this->zona,
+                'empresa_id' => $this->empresa_id,
+            ]);
         }
+
+        $this->cerrarModal();
     }
 
     public function cerrarModal()

@@ -1,293 +1,222 @@
-<div class="p-text p-2 mt-10 flex justify-center">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 gap-6">
-        <div>
-            <h6 class="text-xl font-bold mb-4 px-4 p-text">Gestión de Personal</h6>
+<div class="p-2 mt-20 flex justify-center bg-white">
+    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="flex items-center gap-2 mb-4 col-span-full">
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Buscar por nombre, apellido o celular..."
+                class="input-minimal w-full" />
+            <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+                </svg>
+            </button>
+        </div>
 
-            <!-- Botón de registro y buscador -->
-            <div class="flex justify-center items-center gap-4 w-full max-w-2xl mx-auto">
-                <button title="Registrar Personal" wire:click="abrirModal"
-                    class="text-emerald-500 hover:text-emerald-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="icon icon-tabler icon-tabler-plus">
+        @forelse($personales as $personal)
+        <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
+            <div class="flex flex-col col-span-9 text-left space-y-1">
+                <p><strong>Nombre:</strong> {{ $personal->nombres }} {{ $personal->apellidos }}</p>
+                <p><strong>Celular:</strong> {{ $personal->celular ?? 'N/A' }}</p>
+                <p><strong>Email:</strong> {{ $personal->user->email ?? 'N/A' }}</p>
+                <p><strong>Rol:</strong> {{ $personal->user->rol->nombre ?? 'N/A' }}</p>
+                <p><strong>Estado:</strong>
+                    @if($personal->estado)
+                    <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
+                    @else
+                    <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
+                    @endif
+                </p>
+            </div>
+
+            <div class="flex flex-col items-end gap-4 col-span-3">
+                <button wire:click="abrirModal('edit', {{ $personal->id }})" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M12 5v14m-7 -7h14" />
+                        <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M6 4v4" />
+                        <path d="M6 12v8" />
+                        <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
+                        <path d="M12 4v10" />
+                        <path d="M12 18v2" />
+                        <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M18 4v1" />
+                        <path d="M18 9v2.5" />
+                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M19.001 15.5v1.5" />
+                        <path d="M19.001 21v1.5" />
+                        <path d="M22.032 17.25l-1.299 .75" />
+                        <path d="M17.27 20l-1.3 .75" />
+                        <path d="M15.97 17.25l1.3 .75" />
+                        <path d="M20.733 20l1.3 .75" />
                     </svg>
                 </button>
-
-                <input type="text" wire:model.live="search" placeholder="Buscar personal..."
-                    class="input-g w-auto sm:w-64" />
-            </div>
-
-            <!-- Tabla -->
-            <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg">
-                <table
-                    class="w-full text-sm text-left border border-slate-200 dark:border-cyan-200 rounded-lg border-collapse">
-                    <thead class="text-x uppercase color-bg">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 p-text text-left">Información</th>
-                            <th scope="col" class="px-6 py-3 p-text text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($personales as $personal)
-                        <tr class="color-bg border border-slate-200">
-                            <td class="px-6 py-4 p-text text-left">
-                                <div class="mb-2">
-                                    <span class="font-semibold block">Nombre:</span>
-                                    <span>{{ $personal->nombres }} {{ $personal->apellidos }}</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="font-semibold block">Celular:</span>
-                                    <span>{{ $personal->celular }}</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="font-semibold block">Email:</span>
-                                    <span>{{ $personal->user->email ?? 'Sin usuario' }}</span>
-                                </div>
-                                <div class="mb-2">
-                                    <span class="font-semibold block">Estado:</span>
-                                    <span class="{{ $personal->estado ? 'bg-green-900 text-white' : 'bg-red-900 text-white' }}
-                                            px-3 py-1 rounded-full text-sm font-medium cursor-default inline-block">
-                                        {{ $personal->estado ? 'Activo' : 'Inactivo' }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex justify-end space-x-2">
-                                    <button title="Editar" wire:click="editar({{ $personal->id }})"
-                                        class="text-blue-500 hover:text-blue-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            class="icon icon-tabler icon-tabler-edit" width="24" height="24"
-                                            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                            <path
-                                                d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                            <path d="M16 5l3 3" />
-                                        </svg>
-                                    </button>
-                                    <button title="Ver Detalle" wire:click="verDetalle({{ $personal->id }})"
-                                        class="text-indigo-500 hover:text-indigo-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-info-circle">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                                            <path d="M12 9h.01" />
-                                            <path d="M11 12h1v4h1" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="2" class="text-left py-4 text-gray-600 dark:text-gray-400">
-                                No hay personales registrados.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4 flex justify-center">
-                {{ $personales->links() }}
+                <button wire:click="verDetalle({{ $personal->id }})" class="btn-circle btn-cyan"
+                    title="Ver Detalle">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+                    </svg>
+                </button>
             </div>
         </div>
+        @empty
+        <div class="col-span-full text-center py-4 text-gray-600">
+            No hay personal registrado.
+        </div>
+        @endforelse
     </div>
 
-    @if ($modal)
-    <div class="modal-first">
-        <div class="modal-center">
-            <div class="modal-hiden">
-                <div class="center-col">
-                    <h3 class="p-text">{{ $accion === 'create' ? 'Registrar Personal' : 'Editar Personal' }}</h3>
-                    <div class="over-col">
-                        <!-- Nombres -->
-                        <h3 class="p-text">Nombres</h3>
-                        <input type="text" wire:model.defer="nombres" class="p-text input-g">
-                        @error('nombres') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Apellidos -->
-                        <h3 class="p-text">Apellidos</h3>
-                        <input type="text" wire:model.defer="apellidos" class="p-text input-g">
-                        @error('apellidos') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Dirección -->
-                        <h3 class="p-text">Dirección</h3>
-                        <input type="text" wire:model.defer="direccion" class="p-text input-g">
-                        @error('direccion') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Celular -->
-                        <h3 class="p-text">Celular</h3>
-                        <input type="text" wire:model.defer="celular" class="p-text input-g">
-                        @error('celular') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-           
-                        <!-- Email -->
-                        <h3 class="p-text">Email</h3>
-                        <input type="email" wire:model.defer="email" class="p-text input-g" @if($accion==='edit' ) disabled @endif>
-                        @error('email') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Password -->
-                        <h3 class="p-text">Contraseña</h3>
-                        <input type="password" wire:model.defer="password" class="p-text input-g" @if($accion==='edit' ) disabled @endif>
-                        @error('password') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-                        <!-- Rol -->
-                        <h3 class="p-text">Rol</h3>
-                        <select wire:model.defer="rol_id" class="p-text input-g text-sm sm:text-base">
-                            <option value="">Seleccione un rol</option>
-                            @foreach ($roles as $rol)
+    @if($modal)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Nombres</label>
+                        <input wire:model="nombres" class="input-minimal" placeholder="Ej. Juan" />
+                        @error('nombres') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Apellidos</label>
+                        <input wire:model="apellidos" class="input-minimal" placeholder="Ej. Pérez" />
+                        @error('apellidos') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Dirección</label>
+                        <input wire:model="direccion" class="input-minimal" placeholder="Ej. Av. Siempre Viva 123" />
+                        @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Celular</label>
+                        <input type="text" wire:model="celular" class="input-minimal" placeholder="Ej. 70012345" />
+                        @error('celular') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Correo</label>
+                        <input type="email" wire:model="email" class="input-minimal" placeholder="Ej. correo@ejemplo.com" />
+                        @error('email') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Contraseña</label>
+                        <input type="password" wire:model="password" class="input-minimal" placeholder="********" />
+                        @error('password') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Rol</label>
+                        <select wire:model="rol_id" class="input-minimal">
+                            <option value="">-- Seleccionar Rol --</option>
+                            @foreach($roles as $rol)
                             <option value="{{ $rol->id }}">{{ $rol->nombre }}</option>
                             @endforeach
                         </select>
-                        @error('rol_id') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
+                        @error('rol_id') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-2 mt-2">
+                        @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
+                        <button type="button" wire:click="$set('estado', {{ $key }})"
+                            class="px-4 py-2 rounded-full text-sm flex items-center justify-center
+                               {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                            {{ $label }}
+                        </button>
+                        @endforeach
+                    </div>
 
-                        <!-- Estado -->
-                        <h3 class="p-text">Estado</h3>
-                        <div class="flex space-x-6 justify-center">
-                            <!-- Botón para "Activo" -->
-                            <label class="flex items-center space-x-2">
-                                <input type="radio" wire:model="estado" value="1" class="form-radio hidden peer" />
-                                <span class="p-text inline-block py-2 px-4 rounded-lg cursor-pointer border border-gray-300 hover:bg-indigo-100 peer-checked:bg-cyan-950 peer-checked:text-white">
-                                    Activo
-                                </span>
-                            </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" wire:click="guardarPersonal" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                        <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M14 4l0 4l-6 0l0 -4" />
+                    </svg>
+                </button>
+                <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
+                        <path d="M10 10l4 4m0 -4l-4 4" />
+                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 
-                            <!-- Botón para "Inactivo" -->
-                            <label class="flex items-center space-x-2">
-                                <input type="radio" wire:model="estado" value="0" class="form-radio hidden peer" />
-                                <span class="p-text inline-block py-2 px-4 rounded-lg cursor-pointer border border-gray-300 hover:bg-indigo-100 peer-checked:bg-cyan-950 peer-checked:text-white">
-                                    Inactivo
-                                </span>
-                            </label>
+    @if($detalleModal && $personalSeleccionado)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content flex flex-col gap-4">
+
+                <div class="flex justify-center items-center">
+                    <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
+                        {{ strtoupper(substr($personalSeleccionado->nombres,0,1)) }}
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Nombres:</span>
+                            <span class="badge-info">{{ $personalSeleccionado->nombres }}</span>
                         </div>
-                        @error('estado')
-                        <span class="text-red-600 text-xs">{{ $message }}</span>
-                        @enderror
-                    </div>
 
-                    <!-- Botones -->
-                    <div class="mt-6 flex justify-center w-full space-x-4">
-                        <button type="button" wire:click="guardarPersonal"
-                            class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                <path d="M14 4l0 4l-6 0l0 -4" />
-                            </svg>
-                        </button>
-                        <button type="button" wire:click="cerrarModal"
-                            class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
-                        </button>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Apellidos:</span>
+                            <span class="badge-info">{{ $personalSeleccionado->apellidos }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Dirección:</span>
+                            <span class="badge-info">{{ $personalSeleccionado->direccion ?? '-' }}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Celular:</span>
+                            <span class="badge-info">{{ $personalSeleccionado->celular }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Correo:</span>
+                            <span class="badge-info">{{ $personalSeleccionado->user->email ?? '-' }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Rol:</span>
+                            <span class="badge-info">{{ $personalSeleccionado->user->rol->nombre ?? '-' }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Estado:</span>
+                            <span class="badge-info">
+                                {{ $personalSeleccionado->estado ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button wire:click="$set('detalleModal', false)" class="btn-circle btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
+                        <path d="M10 10l4 4m0 -4l-4 4" />
+                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
     @endif
 
-    @if ($detalleModal)
-    <div class="modal-first">
-        <div class="modal-center">
-            <div class="modal-hiden">
-                <div class="center-col">
-                    <h3 class="text-base font-semibold p-text" id="modal-title">Detalles del Personal</h3>
-                    <div class="mt-4">
-                        <dl class="grid grid-cols-2 gap-4">
-                            <!-- Nombres -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Nombres</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $personalSeleccionado->nombres ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Apellidos -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Apellidos</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $personalSeleccionado->apellidos ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Dirección -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Dirección</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $personalSeleccionado->direccion ?? 'No especificada' }}
-                                </dd>
-                            </div>
-
-                            <!-- Celular -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Celular</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $personalSeleccionado->celular ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Email</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $personalSeleccionado->user->email ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Rol -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Rol</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    {{ $personalSeleccionado->user->rol->nombre ?? 'No especificado' }}
-                                </dd>
-                            </div>
-
-                            <!-- Estado -->
-                            <div>
-                                <dt class="text-sm font-medium p-text">Estado</dt>
-                                <dd class="mt-1 text-sm p-text">
-                                    @if (($personalSeleccionado['estado'] ?? false) == 1)
-                                    <span
-                                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-600 text-white">Activo</span>
-                                    @else
-                                    <span
-                                        class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">Inactivo</span>
-                                    @endif
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
-
-                    <div>
-                        <button type="button" wire:click="cerrarModal"
-                            class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 </div>

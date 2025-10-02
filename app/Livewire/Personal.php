@@ -3,39 +3,31 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Personal as ModelPersonal;
 use App\Models\User;
 use App\Models\Rol;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB; // Added DB facade import
+use Illuminate\Support\Facades\DB;
 
 class Personal extends Component
 {
-    use WithPagination;
-
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
     public $accion = 'create';
     public $personalId = null;
 
-    // Personal fields
     public $nombres = '';
     public $apellidos = '';
     public $direccion = '';
     public $celular = '';
     public $estado = true;
 
-    // User fields
     public $email = '';
     public $password = '';
     public $rol_id = '';
 
     public $personalSeleccionado = null;
-
-    protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'nombres' => 'required|string|max:255',
@@ -50,7 +42,6 @@ class Personal extends Component
 
     public function mount()
     {
-        // Initialize rules for edit to allow existing email and optional password
         $this->rules['email'] = 'required|email|max:255|unique:users,email,' . $this->personalId . ',personal_id';
         $this->rules['password'] = 'nullable|string|min:8';
     }
@@ -64,17 +55,12 @@ class Personal extends Component
                     ->orWhere('celular', 'like', '%' . $this->search . '%');
             })
             ->orderBy('id', 'desc')
-            ->with('user') // Eager load user relationship
-            ->paginate(perPage: 4);
+            ->with('user')
+            ->get();
 
-        $roles = Rol::all(); // Fetch roles for dropdown
+        $roles = Rol::all();
 
         return view('livewire.personal', compact('personales', 'roles'));
-    }
-
-    public function updatingSearch()
-    {
-        $this->resetPage();
     }
 
     public function abrirModal($accion = 'create', $id = null)
@@ -98,7 +84,7 @@ class Personal extends Component
         $this->estado = $personal->estado;
         $this->email = $personal->user->email ?? '';
         $this->rol_id = $personal->user->rol_id ?? '';
-        $this->password = ''; // Password is not loaded for security
+        $this->password = '';
         $this->accion = 'edit';
         $this->modal = true;
         $this->detalleModal = false;
@@ -114,17 +100,15 @@ class Personal extends Component
     public function guardarPersonal()
     {
         if ($this->accion === 'edit') {
-            // Validar solo campos personales, sin validar email ni password
             $this->validate([
                 'nombres' => 'required|string|max:255',
                 'apellidos' => 'required|string|max:255',
                 'direccion' => 'nullable|string|max:255',
                 'celular' => 'required|string|max:15',
                 'estado' => 'required|boolean',
-                'rol_id' => 'required|exists:rols,id', // Si quieres validar rol_id siempre
+                'rol_id' => 'required|exists:rols,id',
             ]);
         } else {
-            // Validar todo al crear, incluido email único y password obligatorio
             $this->validate([
                 'nombres' => 'required|string|max:255',
                 'apellidos' => 'required|string|max:255',
@@ -155,11 +139,8 @@ class Personal extends Component
                     $user->update([
                         'rol_id' => $this->rol_id,
                         'estado' => $this->estado,
-                        // no cambiar email ni password
                     ]);
                 }
-
-                LivewireAlert::title('Personal actualizado con éxito.')->success()->show();
             } else {
                 $personal = ModelPersonal::create([
                     'nombres' => $this->nombres,
@@ -177,18 +158,14 @@ class Personal extends Component
                 ]);
 
                 $personal->update(['user_id' => $user->id]);
-
-                LivewireAlert::title('Personal y usuario registrados con éxito.')->success()->show();
             }
 
             DB::commit();
             $this->cerrarModal();
         } catch (\Exception $e) {
             DB::rollBack();
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())->error()->show();
         }
     }
-
 
     public function cerrarModal()
     {
@@ -198,3 +175,4 @@ class Personal extends Component
         $this->resetErrorBag();
     }
 }
+

@@ -1,213 +1,180 @@
-<div class="p-text p-2 mt-10 flex justify-center">
-  <div class="w-full max-w-screen-xl grid grid-cols-1 gap-6">
-    <div>
-      <h6 class="text-xl font-bold mb-4 px-4 p-text">Gestión de Sucursales</h6>
+<div class="p-2 mt-20 flex justify-center bg-white">
+  <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="flex items-center gap-2 mb-4 col-span-full">
+      <input
+        type="text"
+        wire:model.live="search"
+        placeholder="Buscar por nombre o dirección..."
+        class="input-minimal w-full" />
+      <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+          viewBox="0 0 24 24" fill="currentColor">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+          <path
+            d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+        </svg>
+      </button>
+    </div>
 
-      <!-- Botón de registro y buscador -->
-      <div class="flex justify-center items-center gap-4 w-full max-w-2xl mx-auto">
-        <button title="Registrar Sucursal" wire:click='abrirModal("create")'
-          class="text-emerald-500 hover:text-emerald-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="icon icon-tabler icon-tabler-plus">
+    @forelse($sucursales as $sucursal)
+    <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
+      <div class="flex flex-col col-span-9 text-left space-y-1">
+        <p><strong>Nombre:</strong> {{ $sucursal->nombre }}</p>
+        <p><strong>Dirección:</strong> {{ $sucursal->direccion }}</p>
+        <p><strong>Teléfono:</strong> {{ $sucursal->telefono ?? 'N/A' }}</p>
+        <p><strong>Zona:</strong> {{ $sucursal->zona ?? 'N/A' }}</p>
+        <p><strong>Empresa:</strong> {{ $sucursal->empresa->nombre ?? 'N/A' }}</p>
+      </div>
+
+      <div class="flex flex-col items-end gap-4 col-span-3">
+        <button wire:click="editarSucursal({{ $sucursal->id }})" class="btn-circle btn-cyan" title="Editar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M12 5v14m-7 -7h14" />
+            <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -3 -3l-10.5 10.5v4" />
+            <path d="M13.5 6.5l4 4" />
           </svg>
         </button>
 
-        <input type="text" wire:model.live="search" placeholder="Buscar sucursal..." class="input-g w-auto sm:w-64" />
-      </div>
-
-
-
-      <!-- Tabla -->
-      <div class="relative mt-3 w-full overflow-x-auto shadow-md sm:rounded-lg">
-        <table
-          class="w-full text-sm text-left border border-slate-200 dark:border-cyan-200  rounded-lg border-collapse">
-          <thead class="text-x uppercase color-bg">
-            <tr>
-              <th scope="col" class="px-6 py-3 p-text text-left">Información</th>
-              <th scope="col" class="px-6 py-3 p-text text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @forelse ($sucursales as $sucursal)
-            <tr class="color-bg border border-slate-200">
-              <td class="px-6 py-4 p-text text-left">
-                <div class="mb-2">
-                  <span class="font-semibold block">Nombre de la sucursal:</span>
-                  <span>{{ $sucursal->nombre }}</span>
-                </div>
-                <div>
-                  <span class="font-semibold block">Empresa:</span>
-                  <span>{{ $sucursal->empresa->nombre ?? 'Empresa no registrada' }}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <div class="flex justify-end space-x-2">
-                  <button title="Editar" wire:click="editarSucursal({{ $sucursal->id }})"
-                    class="text-blue-500 hover:text-blue-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                      class="icon icon-tabler icons-tabler-outline icon-tabler-edit">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                      <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                      <path d="M16 5l3 3" />
-                    </svg>
-                  </button>
-                  <button title="Ver Detalle" wire:click="verDetalle({{ $sucursal->id }})"
-                    class="text-indigo-500 hover:text-indigo-600 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor"
-                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icon-tabler-info-circle">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                      <path d="M12 9h.01" />
-                      <path d="M11 12h1v4h1" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="2" class="text-left py-4 text-gray-600 dark:text-gray-400">
-                No hay sucursales registradas.
-              </td>
-            </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-      <div class="mt-4 flex justify-center">
-        {{ $sucursales->links() }}
+        <button wire:click="verDetalle({{ $sucursal->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+          </svg>
+        </button>
       </div>
     </div>
+    @empty
+    <div class="col-span-full text-center py-4 text-gray-600">
+      No hay sucursales registradas.
+    </div>
+    @endforelse
   </div>
-
-  @if ($modal)
-  <div class="modal-first">
-    <div class="modal-center">
-      <div class="modal-hiden">
-        <div class="center-col">
-          <h3 class="p-text">{{ $accion === 'create' ? 'Registrar Sucursal' : 'Editar Sucursal' }}</h3>
-          <div class="over-col">
-            <!-- Nombre -->
-            <h3 class="p-text">Nombre</h3>
-            <input type="text" wire:model.defer="nombre" class="p-text input-g">
-            @error('nombre') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Dirección -->
-            <h3 class="p-text">Dirección</h3>
-            <input type="text" wire:model.defer="direccion" class="p-text input-g">
-            @error('direccion') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Teléfono -->
-            <h3 class="p-text">Teléfono</h3>
-            <input type="text" wire:model.defer="telefono" class="p-text input-g">
-            @error('telefono') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Zona -->
-            <h3 class="p-text">Zona</h3>
-            <input type="text" wire:model.defer="zona" class="p-text input-g">
-            @error('zona') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-
-            <!-- Empresa -->
-            <h3 class="p-text">Empresa</h3>
-            <select wire:model.defer="empresa_id" class="p-text text-sm sm:text-base input-g">
-              <option value="" class=" text-sm sm:text-base">Seleccione una empresa</option>
-              @foreach ($empresas as $empresa)
-              <option value="{{ $empresa->id }}" class="text-sm sm:text-base">{{ $empresa->nombre }}</option>
+  @if($modal)
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-content">
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Nombre</label>
+            <input wire:model="nombre" class="input-minimal" placeholder="Ej. Sucursal Central" />
+            @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Dirección</label>
+            <input wire:model="direccion" class="input-minimal" placeholder="Ej. Av. Principal #123" />
+            @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Teléfono</label>
+            <input type="text" wire:model="telefono" class="input-minimal" placeholder="Ej. 44556677" />
+            @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Zona</label>
+            <input type="text" wire:model="zona" class="input-minimal" placeholder="Ej. Norte" />
+            @error('zona') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Empresa</label>
+            <select wire:model="empresa_id" class="input-minimal">
+              <option value="">-- Seleccionar Empresa --</option>
+              @foreach($empresas as $empresa)
+              <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
               @endforeach
             </select>
-            @error('empresa_id') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
-          </div>
-
-          <!-- Botones -->
-          <div class="mt-6 flex justify-center w-full space-x-4">
-            <button type="button" wire:click="guardarSucursal"
-              class="text-indigo-500 hover:text-indigo-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full"><svg
-                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                <path d="M14 4l0 4l-6 0l0 -4" />
-              </svg></button>
-            <button type="button" wire:click="cerrarModal"
-              class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full"><svg
-                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M18 6l-12 12" />
-                <path d="M6 6l12 12" />
-              </svg></button>
+            @error('empresa_id') <span class="error-message">{{ $message }}</span> @enderror
           </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" wire:click="guardarSucursal" class="btn-circle btn-cyan" title="Guardar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+            <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+            <path d="M14 4l0 4l-6 0l0 -4" />
+          </svg>
+        </button>
+        <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" />
+            <path d="M10 10l4 4m0 -4l-4 4" />
+            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+          </svg>
+        </button>
       </div>
     </div>
   </div>
   @endif
 
-  @if ($detalleModal)
-  <div class="modal-first">
-    <div class="modal-center">
-      <div class="modal-hiden">
-        <div class="center-col">
-          <!-- <div class="px-4 py-4 sm:px-5 sm:py-4"> -->
-          <h3 class="text-base font-semibold p-text" id="modal-title">Detalles de la Sucursal</h3>
-          <div class="mt-4">
-            <dl class="grid grid-cols-2 gap-4">
-              <!-- Nombre de la Sucursal -->
-              <div>
-                <dt class="text-sm font-medium p-text">Nombre</dt>
-                <dd class="mt-1 text-sm p-text">{{ $sucursalSeleccionada->nombre ?? 'No especificado' }}</dd>
-              </div>
+  @if($detalleModal && $sucursalSeleccionada)
+<div class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-content flex flex-col gap-4">
 
-              <!-- Empresa asociada -->
-              <div>
-                <dt class="text-sm font-medium p-text">Empresa</dt>
-                <dd class="mt-1 text-sm p-text">{{ $sucursalSeleccionada->empresa->nombre ?? 'No asignada' }}</dd>
-              </div>
+            <div class="flex justify-center items-center">
+                <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
+                    {{ strtoupper(substr($sucursalSeleccionada->nombre,0,1)) }}
+                </div>
+            </div>
 
-              <!-- Dirección -->
-              <div>
-                <dt class="text-sm font-medium p-text">Dirección</dt>
-                <dd class="mt-1 text-sm p-text">{{ $sucursalSeleccionada->direccion ?? 'No especificada' }}</dd>
-              </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span class="label-info">Nombre:</span>
+                        <span class="badge-info">{{ $sucursalSeleccionada->nombre }}</span>
+                    </div>
 
-              <!-- Teléfono -->
-              <div>
-                <dt class="text-sm font-medium p-text">Teléfono</dt>
-                <dd class="mt-1 text-sm p-text">{{ $sucursalSeleccionada->telefono ?? 'No especificado' }}</dd>
-              </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span class="label-info">Dirección:</span>
+                        <span class="badge-info">{{ $sucursalSeleccionada->direccion ?? '-' }}</span>
+                    </div>
 
-              <!-- Zona -->
-              <div>
-                <dt class="text-sm font-medium p-text">Zona</dt>
-                <dd class="mt-1 text-sm p-text">{{ $sucursalSeleccionada->zona ?? 'No especificada' }}</dd>
-              </div>
-            </dl>
-            <!-- </div> -->
-          </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span class="label-info">Teléfono:</span>
+                        <span class="badge-info">{{ $sucursalSeleccionada->telefono ?? '-' }}</span>
+                    </div>
+                </div>
 
-          <div>
-            <button type="button" wire:click="cerrarModal"
-              class="text-red-500 hover:text-red-600 mx-1 transition-transform duration-200 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full"><svg
-                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                class="icon icon-tabler icons-tabler-outline icon-tabler-x">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M18 6l-12 12" />
-                <path d="M6 6l12 12" />
-              </svg></button>
-          </div>
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span class="label-info">Zona:</span>
+                        <span class="badge-info">{{ $sucursalSeleccionada->zona ?? '-' }}</span>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span class="label-info">Empresa:</span>
+                        <span class="badge-info">{{ $sucursalSeleccionada->empresa->nombre ?? '-' }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="modal-footer">
+            <button wire:click="$set('detalleModal', false)" class="btn-circle btn-cyan" title="Cerrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" />
+                    <path d="M10 10l4 4m0 -4l-4 4" />
+                    <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                </svg>
+            </button>
+        </div>
     </div>
-    @endif
+</div>
+@endif
 
 
-  </div>
+</div>
