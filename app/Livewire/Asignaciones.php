@@ -27,6 +27,7 @@ class Asignaciones extends Component
     public $modalError = false;
     public $mensajeError = '';
 
+    // Abrir modal para crear o editar
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
@@ -39,18 +40,23 @@ class Asignaciones extends Component
             'motivo',
             'codigo',
         ]);
+
         $this->accion = $accion;
+
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
+
         if (!in_array($rol, [1, 2])) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
+
         $personal = $usuario->personal;
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
             return;
         }
+
         $sucursal_id = null;
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -60,34 +66,38 @@ class Asignaciones extends Component
                 return;
             }
         }
+
+        // Existencias disponibles
         $query = Existencia::with('existenciable', 'sucursal')
             ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0));
 
         if ($rol === 2) {
-            $query->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)
-                ->where('sucursal_id', $sucursal_id));
+            $query->where('sucursal_id', $sucursal_id);
         }
 
         $this->existencias = $query->get();
-        $this->personal_id = $rol === 2 ? $personal->id : null;
 
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+            $this->personal_id = $personal->id; // al crear siempre usuario logueado
         }
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
 
         $this->modal = true;
     }
+
+
     public function editar($id)
     {
         $asignado = Asignado::findOrFail($id);
         $this->asignacion_id = $asignado->id;
         $this->codigo = $asignado->codigo;
         $this->existencia_id = $asignado->existencia_id;
-        $this->personal_id = $asignado->personal_id;
+        $this->personal_id = $asignado->personal_id; // siempre mostrar el creador original
         $this->cantidad = $asignado->cantidad;
         $this->cantidad_original = $asignado->cantidad;
         $this->fecha = $asignado->fecha;
@@ -95,94 +105,93 @@ class Asignaciones extends Component
         $this->observaciones = $asignado->observaciones;
     }
 
+    // Guardar asignación
     public function guardarAsignacion()
-{
-    $usuario = auth()->user();
-    $rol = $usuario->rol_id;
+    {
+        $usuario = auth()->user();
 
-    if ($rol === 2) $this->personal_id = $usuario->personal->id;
-    if ($rol === 1 && !$this->personal_id) $this->personal_id = $usuario->personal->id;
-
-    $validator = Validator::make([
-        'existencia_id' => $this->existencia_id,
-        'personal_id' => $this->personal_id,
-        'cantidad' => $this->cantidad,
-        'fecha' => $this->fecha,
-        'motivo' => $this->motivo,
-        'observaciones' => $this->observaciones,
-    ], [
-        'existencia_id' => 'required|exists:existencias,id',
-        'personal_id' => 'required|exists:personals,id',
-        'cantidad' => 'required|integer|min:1',
-        'fecha' => 'required|date',
-        'motivo' => 'nullable|string|max:255',
-        'observaciones' => 'nullable|string|max:500',
-    ]);
-
-    if ($validator->fails()) {
-        $this->mensajeError = implode("\n", $validator->errors()->all());
-        $this->modalError = true;
-        return;
-    }
-
-    $existencia = Existencia::findOrFail($this->existencia_id);
-    $cantidadSolicitada = $this->cantidad;
-    $totalDisponible = Reposicion::where('existencia_id', $this->existencia_id)->sum('cantidad');
-
-    if ($cantidadSolicitada > $totalDisponible) {
-        $this->mensajeError = "La cantidad solicitada supera el stock total disponible ({$totalDisponible}).";
-        $this->modalError = true;
-        return;
-    }
-
-    DB::transaction(function () use ($existencia, $cantidadSolicitada) {
-        $restante = $cantidadSolicitada;
-
+        // Personal_id según acción
         if ($this->accion === 'edit' && $this->asignacion_id) {
             $asignado = Asignado::findOrFail($this->asignacion_id);
-            $fechaFormateada = \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s');
-
-            foreach ($asignado->reposiciones as $lote) {
-                $lote->cantidad += $lote->pivot->cantidad;
-                $lote->save();
-            }
-            $existencia->cantidad += $asignado->cantidad;
-            $asignado->reposiciones()->detach();
-
-            $asignado->update([
-                'existencia_id' => $this->existencia_id,
-                'personal_id' => $this->personal_id,
-                'cantidad' => $cantidadSolicitada,
-                'cantidad_original' => $this->cantidad_original,
-                'motivo' => $this->motivo,
-                'observaciones' => $this->observaciones,
-                'fecha' => $fechaFormateada,
-            ]);
+            $this->personal_id = $asignado->personal_id; // mantener creador original
         } else {
-            $fechaFormateada = \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s');
-
-            $asignado = Asignado::create([
-                'codigo' => $this->codigo,
-                'existencia_id' => $this->existencia_id,
-                'personal_id' => $this->personal_id,
-                'cantidad' => $cantidadSolicitada,
-                'cantidad_original' => $cantidadSolicitada,
-                'fecha' => $fechaFormateada,
-                'motivo' => $this->motivo,
-                'observaciones' => $this->observaciones,
-            ]);
+            $this->personal_id = $usuario->personal->id ?? null; // nuevo => usuario logueado
         }
 
-        $lotes = Reposicion::where('existencia_id', $this->existencia_id)->get();
-        $loteFifo = $lotes->sortBy('fecha')->first(fn($l) => $l->cantidad >= $restante);
+        // Validación
+        $validator = Validator::make([
+            'existencia_id' => $this->existencia_id,
+            'personal_id' => $this->personal_id,
+            'cantidad' => $this->cantidad,
+            'fecha' => $this->fecha,
+            'motivo' => $this->motivo,
+            'observaciones' => $this->observaciones,
+        ], [
+            'existencia_id' => 'required|exists:existencias,id',
+            'personal_id' => 'required|exists:personals,id',
+            'cantidad' => 'required|integer|min:1',
+            'fecha' => 'required|date',
+            'motivo' => 'nullable|string|max:255',
+            'observaciones' => 'nullable|string|max:500',
+        ]);
 
-        if ($loteFifo) {
-            $asignado->reposiciones()->attach($loteFifo->id, ['cantidad' => $restante]);
-            $loteFifo->cantidad -= $restante;
-            $loteFifo->save();
-            $restante = 0;
-        } else {
-            foreach ($lotes->sortByDesc('cantidad') as $lote) {
+        if ($validator->fails()) {
+            $this->mensajeError = implode("\n", $validator->errors()->all());
+            $this->modalError = true;
+            return;
+        }
+
+        $existencia = Existencia::findOrFail($this->existencia_id);
+        $cantidadSolicitada = $this->cantidad;
+        $totalDisponible = Reposicion::where('existencia_id', $this->existencia_id)->sum('cantidad');
+
+        if ($cantidadSolicitada > $totalDisponible) {
+            $this->mensajeError = "La cantidad solicitada supera el stock total disponible ({$totalDisponible}).";
+            $this->modalError = true;
+            return;
+        }
+
+        DB::transaction(function () use ($existencia, $cantidadSolicitada) {
+            $restante = $cantidadSolicitada;
+
+            if ($this->accion === 'edit' && $this->asignacion_id) {
+                $asignado = Asignado::findOrFail($this->asignacion_id);
+                $fechaFormateada = \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s');
+
+                foreach ($asignado->reposiciones as $lote) {
+                    $lote->cantidad += $lote->pivot->cantidad;
+                    $lote->save();
+                }
+                $existencia->cantidad += $asignado->cantidad;
+                $asignado->reposiciones()->detach();
+
+                $asignado->update([
+                    'existencia_id' => $this->existencia_id,
+                    'personal_id' => $this->personal_id, // no cambia
+                    'cantidad' => $cantidadSolicitada,
+                    'cantidad_original' => $this->cantidad_original,
+                    'motivo' => $this->motivo,
+                    'observaciones' => $this->observaciones,
+                    'fecha' => $fechaFormateada,
+                ]);
+            } else {
+                $fechaFormateada = \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s');
+
+                $asignado = Asignado::create([
+                    'codigo' => $this->codigo,
+                    'existencia_id' => $this->existencia_id,
+                    'personal_id' => $this->personal_id,
+                    'cantidad' => $cantidadSolicitada,
+                    'cantidad_original' => $cantidadSolicitada,
+                    'fecha' => $fechaFormateada,
+                    'motivo' => $this->motivo,
+                    'observaciones' => $this->observaciones,
+                ]);
+            }
+
+            // Distribuir en lotes
+            $lotes = Reposicion::where('existencia_id', $this->existencia_id)->get();
+            foreach ($lotes->sortBy('fecha') as $lote) {
                 if ($restante <= 0) break;
                 if ($lote->cantidad <= 0) continue;
 
@@ -192,30 +201,16 @@ class Asignaciones extends Component
                 $lote->save();
                 $restante -= $usar;
             }
-        }
 
-        $existencia->cantidad -= $cantidadSolicitada;
-        $existencia->save();
-    });
+            $existencia->cantidad -= $cantidadSolicitada;
+            $existencia->save();
+        });
 
-    $this->modal = false;
-    $this->reset([
-        'asignacion_id',
-        'codigo',
-        'existencia_id',
-        'personal_id',
-        'cantidad',
-        'cantidad_original',
-        'fecha',
-        'motivo',
-        'observaciones',
-    ]);
+        $this->cerrarModal();
+        session()->flash('message', 'Asignación guardada correctamente!');
+    }
 
-    session()->flash('message', 'Asignación guardada correctamente!');
-}
-
-
-
+    // Eliminar asignación
     public function eliminarAsignacion($id)
     {
         $asignado = Asignado::with('reposiciones')->findOrFail($id);
@@ -235,7 +230,6 @@ class Asignaciones extends Component
 
         session()->flash('message', 'Asignación eliminada y lotes restaurados correctamente!');
     }
-
 
     public function cerrarModal()
     {
@@ -261,8 +255,8 @@ class Asignaciones extends Component
         $query = Asignado::with('existencia.existenciable', 'personal');
 
         if ($rol === 2) {
-            $sucursal_id = $usuario->personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $query->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
+            // Solo sus asignaciones
+            $query->where('personal_id', $usuario->personal->id);
         }
 
         $asignaciones = $query

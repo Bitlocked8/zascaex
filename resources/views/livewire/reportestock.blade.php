@@ -88,48 +88,43 @@
                     @endforeach
 
                     @php
-$acumuladoDisponibleCantidad = $acumuladoCantidad; // después de salidas
-$acumuladoDisponibleMonto = $acumuladoMonto;      // después de salidas
-@endphp
+                    $acumuladoDisponibleCantidad = $acumuladoCantidad; // después de salidas
+                    $acumuladoDisponibleMonto = $acumuladoMonto; // después de salidas
+                    @endphp
 
-@foreach($reposicions as $r)
-    @php
-    $cantidadAsignada = $r->asignados->sum(function($a) use ($r) {
-        $rel = $a->reposiciones->find($r->id);
-        return $rel ? $rel->pivot->cantidad : 0;
-    });
-    $disponibleCantidad = $r->cantidad_inicial - $cantidadAsignada;
-    
-    $montoTotal = $r->comprobantes->sum('monto');
-    $precioUnitario = $r->cantidad_inicial ? $montoTotal / $r->cantidad_inicial : 0;
-    $disponibleMonto = $disponibleCantidad * $precioUnitario;
+                    @foreach($reposicions as $r)
+                    @php
+                    $cantidadAsignada = $r->asignados->sum(function($a) use ($r) {
+                    $rel = $a->reposiciones->find($r->id);
+                    return $rel ? $rel->pivot->cantidad : 0;
+                    });
+                    $disponibleCantidad = $r->cantidad_inicial - $cantidadAsignada;
 
-    if ($disponibleCantidad > 0) {
-        $acumuladoDisponibleCantidad -= $disponibleCantidad;
-        $acumuladoDisponibleMonto -= $disponibleMonto;
-    }
-    @endphp
+                    $montoTotal = $r->comprobantes->sum('monto');
+                    $precioUnitario = $r->cantidad_inicial ? $montoTotal / $r->cantidad_inicial : 0;
+                    $disponibleMonto = $disponibleCantidad * $precioUnitario;
 
-    @if($disponibleCantidad > 0)
-        <tr class="hover:bg-gray-100 bg-yellow-50">
-            <td>{{ $r->fecha }}</td>
-            <td>{{ $r->codigo }}</td>
-            <td>Disponible</td>
-            <td></td>
-            <td></td>
-            <td class="text-right">{{ $disponibleCantidad }}</td>
-            <td class="text-right">{{ number_format($disponibleMonto, 2) }}</td>
-            <td class="text-right">{{ $acumuladoDisponibleCantidad }}</td>
-            <td class="text-right">{{ number_format($acumuladoDisponibleMonto, 2) }}</td>
-        </tr>
-    @endif
-@endforeach
+                    if ($disponibleCantidad > 0) {
+                    $acumuladoDisponibleCantidad -= $disponibleCantidad;
+                    $acumuladoDisponibleMonto -= $disponibleMonto;
+                    }
+                    @endphp
 
-
-
-
+                    @if($disponibleCantidad > 0)
+                    <tr class="hover:bg-gray-100 bg-yellow-50">
+                        <td>{{ $r->fecha }}</td>
+                        <td>{{ $r->codigo }}</td>
+                        <td>Disponible</td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right">{{ $disponibleCantidad }}</td>
+                        <td class="text-right">{{ number_format($disponibleMonto, 2) }}</td>
+                        <td class="text-right">{{ $acumuladoDisponibleCantidad }}</td>
+                        <td class="text-right">{{ number_format($acumuladoDisponibleMonto, 2) }}</td>
+                    </tr>
+                    @endif
+                    @endforeach
                     </tbody>
-
                 </table>
             </div>
         </div>
