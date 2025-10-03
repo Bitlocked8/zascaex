@@ -62,6 +62,15 @@
                 class="px-5 py-2 rounded-lg font-semibold {{ is_null($tablaActiva) ? 'bg-cyan-600 text-white' : 'bg-white border' }} transition">
                 Ninguna
             </button>
+            <button wire:click="toggleCantidades"
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                {{ $ocultarCantidades ? 'Mostrar Cantidades' : 'Ocultar Cantidades' }}
+            </button>
+
+            <button wire:click="toggleMontos"
+                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                {{ $ocultarMontos ? 'Mostrar Montos' : 'Ocultar Montos' }}
+            </button>
         </div>
     </div>
     <div class="w-full max-w-screen-xl mx-auto">
@@ -265,7 +274,21 @@
         @endif
         @if($tablaActiva == 'asignado_reposicions')
         <div class="bg-white shadow-lg rounded-xl p-4">
+
             <h2 class="text-lg font-semibold mb-3 text-center">Asignaciones por Reposición (Kardex)</h2>
+
+            {{-- Botones para ocultar Montos y Cantidades --}}
+            <div class="flex gap-2 mb-4 justify-center">
+                <button wire:click="toggleCantidades"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    {{ $ocultarCantidades ? 'Mostrar Cantidades' : 'Ocultar Cantidades' }}
+                </button>
+
+                <button wire:click="toggleMontos"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                    {{ $ocultarMontos ? 'Mostrar Montos' : 'Ocultar Montos' }}
+                </button>
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="min-w-full border border-gray-800 text-center table-auto text-xs rounded-lg overflow-hidden">
@@ -275,17 +298,21 @@
                             <th class="px-2 py-1 border-b">Proveedor</th>
                             <th class="px-2 py-1 border-b">Código Asignación</th>
                             <th class="px-2 py-1 border-b">Código Reposición</th>
-                            <th class="px-2 py-1 border-b">Cantidad inicial</th>
-                            <th class="px-2 py-1 border-b">Cantidad asignada</th>
-                            <th class="px-2 py-1 border-b">Cantidad restante</th>
-                            <th class="px-2 py-1 border-b">Monto inicial</th>
-                            <th class="px-2 py-1 border-b">Monto asignado</th>
-                            <th class="px-2 py-1 border-b">Monto restante</th>
+
+                            <th class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">Cantidad inicial</th>
+                            <th class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">Cantidad asignada</th>
+                            <th class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">Cantidad restante</th>
+
+                            <th class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">Monto inicial</th>
+                            <th class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">Monto asignado</th>
+                            <th class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">Monto restante</th>
+
                             <th class="px-2 py-1 border-b">Personal</th>
                             <th class="px-2 py-1 border-b">Fecha</th>
-                            <th class="px-2 py-1 border-b">Acumulado</th>
+                            <th class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">Acumulado</th>
                         </tr>
                     </thead>
+
                     <tbody class="text-xs">
                         @foreach($asignados as $a)
                         @foreach($a->reposiciones as $r)
@@ -304,15 +331,18 @@
                             <td class="px-2 py-1 border-b">{{ $r->proveedor?->razonSocial ?? 'Sin proveedor' }}</td>
                             <td class="px-2 py-1 border-b">-</td>
                             <td class="px-2 py-1 border-b">{{ $r->codigo }}</td>
-                            <td class="px-2 py-1 border-b">{{ $cantidadInicial }}</td>
+
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">{{ $cantidadInicial }}</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">-</td>
+
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">{{ number_format($montoInicial, 2) }}</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
+
                             <td class="px-2 py-1 border-b">-</td>
                             <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">{{ number_format($montoInicial, 2) }}</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
                         </tr>
 
                         {{-- Filas de asignaciones (salidas) --}}
@@ -329,15 +359,18 @@
                             <td class="px-2 py-1 border-b">-</td>
                             <td class="px-2 py-1 border-b">{{ $asign->codigo }}</td>
                             <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">{{ $cantidadAsignada }}</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">{{ number_format($montoAsignado, 2) }}</td>
-                            <td class="px-2 py-1 border-b">-</td>
+
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">{{ $cantidadAsignada }}</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">{{ $cantidadAsignada }}</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">-</td>
+
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">{{ number_format($montoAsignado, 2) }}</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
+
                             <td class="px-2 py-1 border-b">{{ $asign->personal->nombres ?? 'N/A' }}</td>
                             <td class="px-2 py-1 border-b">{{ $asign->fecha }}</td>
-                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
                         </tr>
 
                         {{-- Fila separada: cantidad restante, monto restante y acumulado --}}
@@ -346,15 +379,18 @@
                             <td class="px-2 py-1 border-b">-</td>
                             <td class="px-2 py-1 border-b">-</td>
                             <td class="px-2 py-1 border-b">-</td>
+
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarCantidades ? 'hidden' : '' }}">{{ $cantidadRestante }}</td>
+
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">-</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">{{ number_format($montoRestante, 2) }}</td>
+
                             <td class="px-2 py-1 border-b">-</td>
                             <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">{{ $cantidadRestante }}</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">{{ number_format($montoRestante, 2) }}</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">-</td>
-                            <td class="px-2 py-1 border-b">{{ number_format($acumuladoMonto, 2) }}</td>
+                            <td class="px-2 py-1 border-b {{ $ocultarMontos ? 'hidden' : '' }}">{{ number_format($acumuladoMonto, 2) }}</td>
                         </tr>
                         @endforeach
                         @endforeach
@@ -364,5 +400,6 @@
             </div>
         </div>
         @endif
+
     </div>
 </div>
