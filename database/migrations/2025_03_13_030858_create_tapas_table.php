@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('descripcion')->nullable();
             $table->string('color');
             $table->string('tipo');
-            $table->tinyInteger('estado'); 
+            $table->boolean('estado')->default(1);
             $table->timestamps();
         });
     }

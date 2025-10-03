@@ -27,6 +27,19 @@
           <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactiva</span>
           @endif
         </p>
+        <p><strong>Sucursales:</strong>
+          @if($tapa->existencias->isEmpty())
+          N/A
+          @else
+          @foreach($tapa->existencias as $existencia)
+          <span class="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded mr-1 mb-1">
+            {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
+            (Cantidad: {{ $existencia->cantidad }}, Mínima: {{ $existencia->cantidadMinima ?? 0 }})
+          </span>
+          @endforeach
+          @endif
+        </p>
+
       </div>
 
       <!-- Botones de acción -->
@@ -91,15 +104,22 @@
           </div>
 
           <div>
+            <label class="font-semibold text-sm mb-1 block">Color</label>
+            <input type="text" wire:model="color" class="input-minimal" placeholder="Color">
+            @error('color') <span class="error-message">{{ $message }}</span> @enderror
+          </div>
+
+          <div>
             <label class="font-semibold text-sm mb-1 block">Nombre</label>
             <input wire:model="descripcion" class="input-minimal" placeholder="Descripción"></input>
             @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
           </div>
           <div>
-            <label class="font-semibold text-sm mb-1 block">Observaciones</label>
-            <textarea wire:model="observaciones" class="input-minimal" placeholder="Observaciones"></textarea>
-            @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
+            <label class="font-semibold text-sm mb-1 block">Tipo</label>
+            <input type="text" wire:model="tipo" class="input-minimal" placeholder="Tipo de tapa">
+            @error('tipo') <span class="error-message">{{ $message }}</span> @enderror
           </div>
+       
           <div class="flex flex-wrap justify-center gap-2 mt-2">
             @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
             <button type="button" wire:click="$set('estado', {{ $key }})"
@@ -108,6 +128,11 @@
               {{ $label }}
             </button>
             @endforeach
+          </div>
+          <div>
+            <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
+            <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
+            @error('cantidadMinima') <span class="error-message">{{ $message }}</span> @enderror
           </div>
         </div>
       </div>

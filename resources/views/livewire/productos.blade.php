@@ -32,6 +32,18 @@
                     <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
                     @endif
                 </p>
+                <p><strong>Sucursales:</strong>
+                    @if($producto->existencias->isEmpty())
+                    N/A
+                    @else
+                    @foreach($producto->existencias as $existencia)
+                    <span class="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded mr-1 mb-1">
+                        {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
+                        (Cantidad: {{ $existencia->cantidad }}, Mínima: {{ $existencia->cantidadMinima ?? 0 }})
+                    </span>
+                    @endforeach
+                    @endif
+                </p>
             </div>
 
             <!-- Botones -->
@@ -122,6 +134,12 @@
                             {{ $label }}
                         </button>
                         @endforeach
+                    </div>
+
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
+                        <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
+                        @error('cantidadMinima') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
 
 

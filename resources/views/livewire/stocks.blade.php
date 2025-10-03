@@ -113,20 +113,15 @@
                     </p>
 
 
-                    @php
-                    $trabajoActivo = auth()->user()->personal->trabajos
-                    ->where('estado', 1)
-                    ->sortByDesc('fechaInicio')
-                    ->first();
-                    $sucursal = $trabajoActivo?->sucursal?->nombre ?? 'Sin sucursal';
-                    $nombrePersonal = auth()->user()->personal->nombres ?? 'Sin nombre';
-                    @endphp
-
-                    <p class="font-semibold text-sm">
-                        Personal: <span class="font-normal">{{ $nombrePersonal }}</span>
+                      <p class="font-semibold text-sm">
+                        Personal: <span class="font-normal">
+                            {{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}
+                        </span>
                     </p>
-                    <p class="font-semibold text-sm">
-                        Sucursal: <span class="font-normal">{{ $sucursal }}</span>
+                     <p class="font-semibold text-sm">
+                        Sucursal: <span class="font-normal">
+                            {{ optional($existencias->firstWhere('id', $existencia_id))->sucursal->nombre ?? 'Sin sucursal' }}
+                        </span>
                     </p>
                 </div>
 

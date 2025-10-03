@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Producto;
 use App\Models\Existencia;
+use Illuminate\Support\Facades\Auth;
 
 class Productos extends Component
 {
@@ -20,11 +21,12 @@ class Productos extends Component
     public $imagenExistente;
     public $nombre = '';
     public $tipoContenido = '';
-    public $tipoProducto = 0; // 0 = sin retorno, 1 = con retorno
+    public $tipoProducto = 0;
     public $capacidad = '';
     public $precioReferencia = '';
     public $descripcion = '';
     public $estado = 1;
+    public $cantidadMinima = 0;
 
     public $accion = 'create';
     public $productoSeleccionado = null;
@@ -43,14 +45,21 @@ class Productos extends Component
 
     public function render()
     {
-        $productos = Producto::query()
-            ->when($this->search, function ($query) {
-                $searchTerm = '%' . $this->search . '%';
-                $query->where('nombre', 'like', $searchTerm)
-                      ->orWhere('descripcion', 'like', $searchTerm)
-                      ->orWhere('capacidad', 'like', $searchTerm);
-            })
-            ->get();
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        $productosQuery = Producto::query()
+            ->when($this->search, fn($q) => $q->where('nombre', 'like', "%{$this->search}%")
+            ->orWhere('descripcion', 'like', "%{$this->search}%")
+            ->orWhere('capacidad', 'like', "%{$this->search}%"));
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $productosQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
+        }
+
+        $productos = $productosQuery->with('existencias')->get();
 
         return view('livewire.productos', compact('productos'));
     }
@@ -59,8 +68,9 @@ class Productos extends Component
     {
         $this->reset([
             'producto_id', 'nombre', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'descripcion',
-            'estado', 'imagen', 'imagenExistente', 'productoSeleccionado'
+            'capacidad', 'precioReferencia', 'descripcion', 'estado',
+            'imagen', 'imagenExistente', 'productoSeleccionado',
+            'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -74,7 +84,7 @@ class Productos extends Component
 
     public function editar($id)
     {
-        $producto = Producto::findOrFail($id);
+        $producto = Producto::with('existencias')->findOrFail($id);
         $this->producto_id = $producto->id;
         $this->nombre = $producto->nombre;
         $this->tipoContenido = $producto->tipoContenido;
@@ -84,11 +94,12 @@ class Productos extends Component
         $this->descripcion = $producto->descripcion;
         $this->estado = $producto->estado;
 
-        $this->imagen = null; // solo si suben nueva
+        $this->imagen = null;
         $this->imagenExistente = $producto->imagen;
 
         $this->productoSeleccionado = $producto;
         $this->accion = 'edit';
+        $this->cantidadMinima = $producto->existencias->first()?->cantidadMinima ?? 0;
     }
 
     public function guardar()
@@ -101,12 +112,11 @@ class Productos extends Component
             'precioReferencia' => 'required|numeric|min:0',
             'descripcion' => 'nullable|string|max:500',
             'estado' => 'required|boolean',
+            'cantidadMinima' => 'nullable|integer|min:0',
         ]);
 
         if ($this->imagen && is_object($this->imagen)) {
-            $this->validate([
-                'imagen' => 'image|max:5120', // 5MB
-            ]);
+            $this->validate(['imagen' => 'image|max:5120']);
             $imagenPath = $this->imagen->store('productos', 'public');
         } else {
             $imagenPath = $this->imagenExistente ?? null;
@@ -126,12 +136,29 @@ class Productos extends Component
             ]
         );
 
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
         if (!$this->producto_id) {
-            Existencia::create([
+            $existenciaData = [
                 'existenciable_type' => Producto::class,
                 'existenciable_id' => $producto->id,
                 'cantidad' => 0,
-            ]);
+                'cantidadMinima' => $this->cantidadMinima,
+            ];
+
+            if ($rol === 2 && $personal) {
+                $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+                $existenciaData['sucursal_id'] = $sucursal_id;
+            }
+
+            Existencia::create($existenciaData);
+        } else {
+            $existencia = $producto->existencias->first();
+            if ($existencia) {
+                $existencia->update(['cantidadMinima' => $this->cantidadMinima]);
+            }
         }
 
         $this->cerrarModal();
@@ -142,15 +169,28 @@ class Productos extends Component
         $this->modal = false;
         $this->reset([
             'producto_id', 'nombre', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'descripcion',
-            'estado', 'imagen', 'imagenExistente', 'productoSeleccionado'
+            'capacidad', 'precioReferencia', 'descripcion', 'estado',
+            'imagen', 'imagenExistente', 'productoSeleccionado',
+            'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }
 
     public function modaldetalle($id)
     {
-        $this->productoSeleccionado = Producto::findOrFail($id);
+        $producto = Producto::with('existencias')->findOrFail($id);
+
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $producto->existencias = $producto->existencias->where('sucursal_id', $sucursal_id);
+        }
+
+        $this->productoSeleccionado = $producto;
+        $this->cantidadMinima = $producto->existencias->first()?->cantidadMinima ?? 0;
         $this->modalDetalle = true;
     }
 
@@ -158,5 +198,6 @@ class Productos extends Component
     {
         $this->modalDetalle = false;
         $this->productoSeleccionado = null;
+        $this->cantidadMinima = 0;
     }
 }

@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use App\Models\Etiqueta;
 use App\Models\Cliente;
 use App\Models\Existencia;
+use Illuminate\Support\Facades\Auth;
 
 class Etiquetas extends Component
 {
@@ -26,6 +27,7 @@ class Etiquetas extends Component
     public $descripcion = '';
     public $accion = 'create';
     public $etiquetaSeleccionada = null;
+    public $cantidadMinima = 0;
 
     protected $rules = [
         'capacidad' => 'required|string|max:255',
@@ -33,6 +35,7 @@ class Etiquetas extends Component
         'descripcion' => 'nullable|string|max:255',
         'estado' => 'required|boolean',
         'cliente_id' => 'nullable|exists:clientes,id',
+        'cantidadMinima' => 'nullable|integer|min:0',
     ];
 
     protected $messages = [
@@ -47,12 +50,20 @@ class Etiquetas extends Component
 
     public function render()
     {
-        $etiquetas = Etiqueta::with('existencias')
-            ->when($this->search, function ($query) {
-                $query->where('capacidad', 'like', '%' . $this->search . '%')
-                    ->orWhere('descripcion', 'like', '%' . $this->search . '%');
-            })
-            ->get();
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        $etiquetasQuery = Etiqueta::query()->with('existencias')
+            ->when($this->search, fn($q) => $q->where('capacidad', 'like', "%{$this->search}%")
+            ->orWhere('descripcion', 'like', "%{$this->search}%"));
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $etiquetasQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
+        }
+
+        $etiquetas = $etiquetasQuery->get();
 
         return view('livewire.etiquetas', compact('etiquetas'));
     }
@@ -61,7 +72,8 @@ class Etiquetas extends Component
     {
         $this->reset([
             'imagen', 'imagenExistente', 'capacidad', 'unidad', 'estado',
-            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada'
+            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada',
+            'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -75,17 +87,18 @@ class Etiquetas extends Component
 
     public function editar($id)
     {
-        $etiqueta = Etiqueta::findOrFail($id);
+        $etiqueta = Etiqueta::with('existencias')->findOrFail($id);
         $this->etiqueta_id = $etiqueta->id;
         $this->capacidad = $etiqueta->capacidad;
         $this->unidad = $etiqueta->unidad;
         $this->estado = $etiqueta->estado;
         $this->descripcion = $etiqueta->descripcion;
         $this->cliente_id = $etiqueta->cliente_id;
-        $this->imagen = null; // Se usará solo si se sube nueva imagen
-        $this->imagenExistente = $etiqueta->imagen; // Para mostrar en el modal
+        $this->imagen = null;
+        $this->imagenExistente = $etiqueta->imagen;
         $this->accion = 'edit';
         $this->etiquetaSeleccionada = $etiqueta;
+        $this->cantidadMinima = $etiqueta->existencias->first()?->cantidadMinima ?? 0;
     }
 
     public function guardar()
@@ -93,9 +106,7 @@ class Etiquetas extends Component
         $this->validate();
 
         if ($this->imagen && is_object($this->imagen)) {
-            $this->validate([
-                'imagen' => 'image|max:5120', // 5 MB
-            ]);
+            $this->validate(['imagen' => 'image|max:5120']);
             $imagenPath = $this->imagen->store('etiquetas', 'public');
         } else {
             $imagenPath = $this->imagenExistente ?? null;
@@ -113,13 +124,29 @@ class Etiquetas extends Component
             ]
         );
 
-        // Crear existencia solo si es nueva etiqueta
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
         if (!$this->etiqueta_id) {
-            Existencia::create([
+            $existenciaData = [
                 'existenciable_type' => Etiqueta::class,
                 'existenciable_id' => $etiqueta->id,
                 'cantidad' => 0,
-            ]);
+                'cantidadMinima' => $this->cantidadMinima,
+            ];
+
+            if ($rol === 2 && $personal) {
+                $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+                $existenciaData['sucursal_id'] = $sucursal_id;
+            }
+
+            Existencia::create($existenciaData);
+        } else {
+            $existencia = $etiqueta->existencias->first();
+            if ($existencia) {
+                $existencia->update(['cantidadMinima' => $this->cantidadMinima]);
+            }
         }
 
         $this->cerrarModal();
@@ -130,14 +157,27 @@ class Etiquetas extends Component
         $this->modal = false;
         $this->reset([
             'imagen', 'imagenExistente', 'capacidad', 'unidad', 'estado',
-            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada'
+            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada',
+            'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }
 
     public function modaldetalle($id)
     {
-        $this->etiquetaSeleccionada = Etiqueta::findOrFail($id);
+        $etiqueta = Etiqueta::with('existencias')->findOrFail($id);
+
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $etiqueta->existencias = $etiqueta->existencias->where('sucursal_id', $sucursal_id);
+        }
+
+        $this->etiquetaSeleccionada = $etiqueta;
+        $this->cantidadMinima = $etiqueta->existencias->first()?->cantidadMinima ?? 0;
         $this->modalDetalle = true;
     }
 
@@ -145,5 +185,6 @@ class Etiquetas extends Component
     {
         $this->modalDetalle = false;
         $this->etiquetaSeleccionada = null;
+        $this->cantidadMinima = 0;
     }
 }

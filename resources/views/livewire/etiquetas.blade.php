@@ -27,6 +27,19 @@
                     <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
                     @endif
                 </p>
+                <p><strong>Sucursales:</strong>
+                    @if($etiqueta->existencias->isEmpty())
+                    N/A
+                    @else
+                    @foreach($etiqueta->existencias as $existencia)
+                    <span class="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded mr-1 mb-1">
+                        {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
+                        (Cantidad: {{ $existencia->cantidad }}, Mínima: {{ $existencia->cantidadMinima ?? 0 }})
+                    </span>
+                    @endforeach
+                    @endif
+                </p>
+
             </div>
 
             <div class="flex flex-col items-end gap-4 col-span-3">
@@ -131,6 +144,11 @@
                     </button>
                     @endforeach
                 </div>
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
+                    <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
+                    @error('cantidadMinima') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
             </div>
 
             <div class="modal-footer">
@@ -189,7 +207,7 @@
                     </div>
                 </div>
             </div>
-               <div class="modal-footer">
+            <div class="modal-footer">
                 <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"

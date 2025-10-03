@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Base;
 use App\Models\Existencia;
+use Illuminate\Support\Facades\Auth;
 
 class Bases extends Component
 {
@@ -21,6 +22,7 @@ class Bases extends Component
     public $capacidad = '';
     public $estado = 1;
     public $observaciones = '';
+    public $cantidadMinima = 0;
     public $accion = 'create';
     public $baseSeleccionada = null;
 
@@ -33,14 +35,21 @@ class Bases extends Component
 
     public function render()
     {
-        $bases = Base::query()
-            ->when($this->search, function ($query) {
-                $searchTerm = '%' . $this->search . '%';
-                $query->where('capacidad', 'like', $searchTerm)
-                      ->orWhere('descripcion', 'like', $searchTerm)
-                      ->orWhere('observaciones', 'like', $searchTerm);
-            })
-            ->get();
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        $basesQuery = Base::query()
+            ->when($this->search, fn($q) => $q->where('capacidad', 'like', "%{$this->search}%")
+                ->orWhere('descripcion', 'like', "%{$this->search}%")
+                ->orWhere('observaciones', 'like', "%{$this->search}%"));
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $basesQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
+        }
+
+        $bases = $basesQuery->with('existencias')->get();
 
         return view('livewire.bases', compact('bases'));
     }
@@ -49,7 +58,7 @@ class Bases extends Component
     {
         $this->reset([
             'base_id', 'capacidad', 'estado', 'descripcion', 
-            'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada'
+            'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada', 'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -63,16 +72,17 @@ class Bases extends Component
 
     public function editar($id)
     {
-        $base = Base::findOrFail($id);
+        $base = Base::with('existencias')->findOrFail($id);
         $this->base_id = $base->id;
         $this->capacidad = $base->capacidad;
         $this->estado = $base->estado;
         $this->descripcion = $base->descripcion;
         $this->observaciones = $base->observaciones;
-        $this->imagen = null; // Dejar null para solo usar si suben un nuevo archivo
-        $this->imagenExistente = $base->imagen; // Guardar imagen existente para mostrar en modal
+        $this->imagen = null;
+        $this->imagenExistente = $base->imagen;
         $this->accion = 'edit';
         $this->baseSeleccionada = $base;
+        $this->cantidadMinima = $base->existencias->first()?->cantidadMinima ?? 0;
     }
 
     public function guardar()
@@ -82,13 +92,11 @@ class Bases extends Component
             'estado' => 'required|boolean',
             'descripcion' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string',
+            'cantidadMinima' => 'nullable|integer|min:0',
         ]);
 
-        // Validar y guardar nueva imagen si se sube
         if ($this->imagen && is_object($this->imagen)) {
-            $this->validate([
-                'imagen' => 'image|max:5120',
-            ]);
+            $this->validate(['imagen' => 'image|max:5120']);
             $imagenPath = $this->imagen->store('bases', 'public');
         } else {
             $imagenPath = $this->imagenExistente ?? null;
@@ -105,13 +113,29 @@ class Bases extends Component
             ]
         );
 
-        // Crear existencia solo si es nueva base
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
         if (!$this->base_id) {
-            Existencia::create([
+            $existenciaData = [
                 'existenciable_type' => Base::class,
                 'existenciable_id' => $base->id,
                 'cantidad' => 0,
-            ]);
+                'cantidadMinima' => $this->cantidadMinima,
+            ];
+
+            if ($rol === 2 && $personal) {
+                $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+                $existenciaData['sucursal_id'] = $sucursal_id;
+            }
+
+            Existencia::create($existenciaData);
+        } else {
+            $existencia = $base->existencias->first();
+            if ($existencia) {
+                $existencia->update(['cantidadMinima' => $this->cantidadMinima]);
+            }
         }
 
         $this->cerrarModal();
@@ -122,14 +146,25 @@ class Bases extends Component
         $this->modal = false;
         $this->reset([
             'base_id', 'capacidad', 'estado', 'descripcion', 
-            'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada'
+            'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada', 'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }
 
     public function modaldetalle($id)
     {
-        $this->baseSeleccionada = Base::findOrFail($id);
+        $base = Base::with('existencias')->findOrFail($id);
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $base->existencias = $base->existencias->where('sucursal_id', $sucursal_id);
+        }
+
+        $this->baseSeleccionada = $base;
+        $this->cantidadMinima = $base->existencias->first()?->cantidadMinima ?? 0;
         $this->modalDetalle = true;
     }
 
@@ -137,5 +172,6 @@ class Bases extends Component
     {
         $this->modalDetalle = false;
         $this->baseSeleccionada = null;
+        $this->cantidadMinima = 0;
     }
 }
