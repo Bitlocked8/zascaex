@@ -1,23 +1,68 @@
-<div class="p-4 mt-20 bg-gray-100 min-h-screen">
+<div class="p-4 mt-16">
 
-    <div class="flex justify-center gap-4 mb-6">
-        <button wire:click="mostrarTabla('asignados')"
-            class="px-4 py-2 rounded-lg font-semibold {{ $tablaActiva == 'asignados' ? 'bg-cyan-600 text-white' : 'bg-white border' }}">
-            Asignaciones
-        </button>
-        <button wire:click="mostrarTabla('reposicions')"
-            class="px-4 py-2 rounded-lg font-semibold {{ $tablaActiva == 'reposicions' ? 'bg-cyan-600 text-white' : 'bg-white border' }}">
-            Reposiciones
-        </button>
-        <button wire:click="mostrarTabla('asignado_reposicions')"
-            class="px-4 py-2 rounded-lg font-semibold {{ $tablaActiva == 'asignado_reposicions' ? 'bg-cyan-600 text-white' : 'bg-white border' }}">
-            Asignado - Reposiciones
-        </button>
-        <button wire:click="deseleccionarTabla"
-            class="px-4 py-2 rounded-lg font-semibold {{ is_null($tablaActiva) ? 'bg-cyan-600 text-white' : 'bg-white border' }}">
-            Ninguna
-        </button>
-        <button wire:click="mostrarTabla('kardex')" class="px-4 py-2 bg-indigo-500 text-white rounded">Kardex</button>
+    <div class="bg-white shadow-md rounded-xl p-4 mb-6">
+        <div class="flex flex-wrap justify-center gap-6 items-end mb-6">
+            <!-- Fecha Inicio -->
+            <div class="flex flex-col">
+                <label for="fechaInicio" class="text-sm font-medium text-gray-600 mb-1">Desde</label>
+                <input type="date" wire:model.live="fechaInicio" id="fechaInicio"
+                    class="border rounded-lg p-2 w-48 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <!-- Fecha Fin -->
+            <div class="flex flex-col">
+                <label for="fechaFin" class="text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                <input type="date" wire:model.live="fechaFin" id="fechaFin"
+                    class="border rounded-lg p-2 w-48 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+
+            <!-- Ítem -->
+            <div class="flex flex-col">
+                <label for="existenciableId" class="text-sm font-medium text-gray-600 mb-1">Ítem</label>
+                <select wire:model.live="existenciableId" id="existenciableId"
+                    class="border rounded-lg p-2 w-64 focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">-- Todos --</option>
+                    @foreach($existenciables as $ex)
+                    <option value="{{ $ex->id }}">
+                        {{ $ex->existenciable->descripcion ?? 'Sin nombre' }}
+                        ({{ class_basename($ex->existenciable_type) }})
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <button wire:click="aplicarFiltros"
+                class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition">
+                Aplicar
+            </button>
+            <button wire:click="limpiarFiltros"
+                class="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600 transition">
+                Limpiar
+            </button>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4">
+            <button wire:click="mostrarTabla('asignados')"
+                class="px-5 py-2 rounded-lg font-semibold {{ $tablaActiva == 'asignados' ? 'bg-cyan-600 text-white' : 'bg-white border' }} transition">
+                Asignaciones
+            </button>
+            <button wire:click="mostrarTabla('reposicions')"
+                class="px-5 py-2 rounded-lg font-semibold {{ $tablaActiva == 'reposicions' ? 'bg-cyan-600 text-white' : 'bg-white border' }} transition">
+                Reposiciones
+            </button>
+            <button wire:click="mostrarTabla('asignado_reposicions')"
+                class="px-5 py-2 rounded-lg font-semibold {{ $tablaActiva == 'asignado_reposicions' ? 'bg-cyan-600 text-white' : 'bg-white border' }} transition">
+                Asignado - Reposiciones
+            </button>
+
+            <button wire:click="mostrarTabla('kardex')"
+                class="px-5 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                Kardex
+            </button>
+            <button wire:click="deseleccionarTabla"
+                class="px-5 py-2 rounded-lg font-semibold {{ is_null($tablaActiva) ? 'bg-cyan-600 text-white' : 'bg-white border' }} transition">
+                Ninguna
+            </button>
+        </div>
     </div>
     <div class="w-full max-w-screen-xl mx-auto">
         @if($tablaActiva == 'kardex')
@@ -219,52 +264,105 @@
         </div>
         @endif
         @if($tablaActiva == 'asignado_reposicions')
-        <div class="bg-white shadow-lg rounded-xl p-6">
-            <h2 class="text-xl font-semibold mb-4">Asignaciones por Reposición</h2>
+        <div class="bg-white shadow-lg rounded-xl p-4">
+            <h2 class="text-lg font-semibold mb-3 text-center">Asignaciones por Reposición (Kardex)</h2>
+
             <div class="overflow-x-auto">
-                <table class="min-w-full border border-gray-200 rounded-lg text-center">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full border border-gray-800 text-center table-auto text-xs rounded-lg overflow-hidden">
+                    <thead class="bg-indigo-900 text-white text-xs">
                         <tr>
-                            <th class="px-4 py-2 border-b">ID</th>
-                            <th class="px-4 py-2 border-b">Código Asignación</th>
-                            <th class="px-4 py-2 border-b">Código Reposición</th>
-                            <th class="px-4 py-2 border-b">Cantidad asignada</th>
-                            <th class="px-4 py-2 border-b">Personal</th>
-                            <th class="px-4 py-2 border-b">Fecha</th>
-                            <th class="px-4 py-2 border-b text-center">Precio completo</th>
+                            <th class="px-2 py-1 border-b">Ítem</th>
+                            <th class="px-2 py-1 border-b">Proveedor</th>
+                            <th class="px-2 py-1 border-b">Código Asignación</th>
+                            <th class="px-2 py-1 border-b">Código Reposición</th>
+                            <th class="px-2 py-1 border-b">Cantidad inicial</th>
+                            <th class="px-2 py-1 border-b">Cantidad asignada</th>
+                            <th class="px-2 py-1 border-b">Cantidad restante</th>
+                            <th class="px-2 py-1 border-b">Monto inicial</th>
+                            <th class="px-2 py-1 border-b">Monto asignado</th>
+                            <th class="px-2 py-1 border-b">Monto restante</th>
+                            <th class="px-2 py-1 border-b">Personal</th>
+                            <th class="px-2 py-1 border-b">Fecha</th>
+                            <th class="px-2 py-1 border-b">Acumulado</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="text-xs">
                         @foreach($asignados as $a)
                         @foreach($a->reposiciones as $r)
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-4 py-2 border-b">{{ $r->pivot->id }}</td>
-                            <td class="px-4 py-2 border-b">{{ $a->codigo }}</td>
-                            <td class="px-4 py-2 border-b">{{ $r->codigo }}</td>
-                            <td class="px-4 py-2 border-b">{{ $r->pivot->cantidad }}</td>
-                            <td class="px-4 py-2 border-b">{{ $a->personal->nombres ?? 'N/A' }}</td>
-                            <td class="px-4 py-2 border-b">{{ $a->fecha }}</td>
-                            <td class="px-4 py-2 border-b text-center">
-                                {{ number_format(
-                                  $r->cantidad_inicial && $r->comprobantes->sum('monto') > 0 
-                                  ? ($r->pivot->cantidad * $r->comprobantes->sum('monto')) / $r->cantidad_inicial 
-                                  : 0
-                                     , 2) }}
-                            </td>
+                        @php
+                        $cantidadInicial = $r->cantidad_inicial;
+                        $cantidadRestante = $cantidadInicial;
+                        $montoInicial = $r->comprobantes->sum('monto');
+                        $montoRestante = $montoInicial;
+                        $precioUnitario = $cantidadInicial > 0 ? $montoInicial / $cantidadInicial : 0;
+                        $acumuladoMonto = 0;
+                        @endphp
 
+                        {{-- Fila de reposición (entrada) --}}
+                        <tr class="bg-indigo-700 text-white font-semibold text-xs rounded-t-lg">
+                            <td class="px-2 py-1 border-b">{{ class_basename($r->existencia->existenciable_type) }} - {{ $r->existencia->existenciable->descripcion ?? 'N/A' }}</td>
+                            <td class="px-2 py-1 border-b">{{ $r->proveedor?->razonSocial ?? 'Sin proveedor' }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ $r->codigo }}</td>
+                            <td class="px-2 py-1 border-b">{{ $cantidadInicial }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ number_format($montoInicial, 2) }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
                         </tr>
+
+                        {{-- Filas de asignaciones (salidas) --}}
+                        @foreach($r->asignados as $asign)
+                        @php
+                        $cantidadAsignada = $asign->pivot->cantidad;
+                        $cantidadRestante -= $cantidadAsignada;
+                        $montoAsignado = $cantidadAsignada * $precioUnitario;
+                        $montoRestante -= $montoAsignado;
+                        $acumuladoMonto += $montoAsignado;
+                        @endphp
+                        <tr class="hover:bg-gray-50 text-xs">
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ $asign->codigo }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ $cantidadAsignada }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ number_format($montoAsignado, 2) }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ $asign->personal->nombres ?? 'N/A' }}</td>
+                            <td class="px-2 py-1 border-b">{{ $asign->fecha }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                        </tr>
+
+                        {{-- Fila separada: cantidad restante, monto restante y acumulado --}}
+                        <tr class="bg-indigo-100 text-xs font-semibold rounded-b-lg">
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ $cantidadRestante }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ number_format($montoRestante, 2) }}</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">-</td>
+                            <td class="px-2 py-1 border-b">{{ number_format($acumuladoMonto, 2) }}</td>
+                        </tr>
+                        @endforeach
                         @endforeach
                         @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
-
-
-
-
         @endif
-
-
     </div>
 </div>
