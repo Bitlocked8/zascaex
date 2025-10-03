@@ -29,13 +29,25 @@
       </div>
 
       <div class="flex flex-col items-end gap-4 col-span-3">
-        <button wire:click="editarSucursal({{ $sucursal->id }})" class="btn-circle btn-cyan" title="Editar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button wire:click="editarSucursal({{ $sucursal->id }})" class="btn-circle btn-cyan">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -3 -3l-10.5 10.5v4" />
-            <path d="M13.5 6.5l4 4" />
+            <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+            <path d="M6 4v4" />
+            <path d="M6 12v8" />
+            <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
+            <path d="M12 4v10" />
+            <path d="M12 18v2" />
+            <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+            <path d="M18 4v1" />
+            <path d="M18 9v2.5" />
+            <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+            <path d="M19.001 15.5v1.5" />
+            <path d="M19.001 21v1.5" />
+            <path d="M22.032 17.25l-1.299 .75" />
+            <path d="M17.27 20l-1.3 .75" />
+            <path d="M15.97 17.25l1.3 .75" />
+            <path d="M20.733 20l1.3 .75" />
           </svg>
         </button>
 
@@ -119,62 +131,62 @@
   @endif
 
   @if($detalleModal && $sucursalSeleccionada)
-<div class="modal-overlay">
+  <div class="modal-overlay">
     <div class="modal-box">
-        <div class="modal-content flex flex-col gap-4">
+      <div class="modal-content flex flex-col gap-4">
 
-            <div class="flex justify-center items-center">
-                <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
-                    {{ strtoupper(substr($sucursalSeleccionada->nombre,0,1)) }}
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="flex flex-col gap-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span class="label-info">Nombre:</span>
-                        <span class="badge-info">{{ $sucursalSeleccionada->nombre }}</span>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span class="label-info">Dirección:</span>
-                        <span class="badge-info">{{ $sucursalSeleccionada->direccion ?? '-' }}</span>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span class="label-info">Teléfono:</span>
-                        <span class="badge-info">{{ $sucursalSeleccionada->telefono ?? '-' }}</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3">
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span class="label-info">Zona:</span>
-                        <span class="badge-info">{{ $sucursalSeleccionada->zona ?? '-' }}</span>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span class="label-info">Empresa:</span>
-                        <span class="badge-info">{{ $sucursalSeleccionada->empresa->nombre ?? '-' }}</span>
-                    </div>
-                </div>
-            </div>
+        <div class="flex justify-center items-center">
+          <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
+            {{ strtoupper(substr($sucursalSeleccionada->nombre,0,1)) }}
+          </div>
         </div>
 
-        <div class="modal-footer">
-            <button wire:click="$set('detalleModal', false)" class="btn-circle btn-cyan" title="Cerrar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" />
-                    <path d="M10 10l4 4m0 -4l-4 4" />
-                    <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                </svg>
-            </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Nombre:</span>
+              <span class="badge-info">{{ $sucursalSeleccionada->nombre }}</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Dirección:</span>
+              <span class="badge-info">{{ $sucursalSeleccionada->direccion ?? '-' }}</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Teléfono:</span>
+              <span class="badge-info">{{ $sucursalSeleccionada->telefono ?? '-' }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Zona:</span>
+              <span class="badge-info">{{ $sucursalSeleccionada->zona ?? '-' }}</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Empresa:</span>
+              <span class="badge-info">{{ $sucursalSeleccionada->empresa->nombre ?? '-' }}</span>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div class="modal-footer">
+        <button wire:click="$set('detalleModal', false)" class="btn-circle btn-cyan" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" />
+            <path d="M10 10l4 4m0 -4l-4 4" />
+            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+          </svg>
+        </button>
+      </div>
     </div>
-</div>
-@endif
+  </div>
+  @endif
 
 
 </div>
