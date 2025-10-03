@@ -3,15 +3,10 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithPagination;
 use App\Models\Coche as ModeloCoche;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 
 class Coche extends Component
 {
-    use WithPagination;
-    // use LivewireAlert;
-
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
@@ -26,25 +21,13 @@ class Coche extends Component
     public $estado = 1;
     public $cocheSeleccionado = null;
 
-    protected $paginationTheme = 'tailwind';
-
-    // protected $rules = [
-    //     'movil' => 'required|integer',
-    //     'marca' => 'required|string|max:255',
-    //     'modelo' => 'required|string|max:255',
-    //     'anio' => 'required|integer|min:1900|max:' . date('Y'),
-    //     'color' => 'required|string|max:255',
-    //     'placa' => 'required|string|max:20|unique:coches,placa',
-    //     'estado' => 'required|boolean',
-    // ];
-
     public function render()
     {
         $coches = ModeloCoche::when($this->search, function ($query) {
             $query->where('marca', 'like', '%' . $this->search . '%')
-                  ->orWhere('modelo', 'like', '%' . $this->search . '%')
-                  ->orWhere('placa', 'like', '%' . $this->search . '%');
-        })->paginate(5);
+                ->orWhere('modelo', 'like', '%' . $this->search . '%')
+                ->orWhere('placa', 'like', '%' . $this->search . '%');
+        })->get();
 
         return view('livewire.coche', compact('coches'));
     }
@@ -77,9 +60,6 @@ class Coche extends Component
         $this->accion = 'edit';
         $this->modal = true;
         $this->detalleModal = false;
-
-        // Ajustar la validación de placa para permitir el valor actual
-        // $this->rules['placa'] = 'required|string|max:20|unique:coches,placa,' . $coche->id;
     }
 
     public function verDetalle($id)
@@ -93,42 +73,30 @@ class Coche extends Component
     {
         $this->validate();
 
-        try {
-            if ($this->accion === 'edit' && $this->cocheId) {
-                $coche = ModeloCoche::findOrFail($this->cocheId);
-                $coche->update([
-                    'movil' => $this->movil,
-                    'marca' => $this->marca,
-                    'modelo' => $this->modelo,
-                    'anio' => $this->anio,
-                    'color' => $this->color,
-                    'placa' => $this->placa,
-                    'estado' => $this->estado,
-                ]);
-                LivewireAlert::title('Coche actualizado con éxito.')
-                    ->success()
-                    ->show();
-            } else {
-                ModeloCoche::create([
-                    'movil' => $this->movil,
-                    'marca' => $this->marca,
-                    'modelo' => $this->modelo,
-                    'anio' => $this->anio,
-                    'color' => $this->color,
-                    'placa' => $this->placa,
-                    'estado' => $this->estado,
-                ]);
-                LivewireAlert::title('Coche registrado con éxito.')
-                    ->success()
-                    ->show();
-            }
-
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            LivewireAlert::title('Ocurrió un error: ' . $e->getMessage())
-                ->error()
-                ->show();
+        if ($this->accion === 'edit' && $this->cocheId) {
+            $coche = ModeloCoche::findOrFail($this->cocheId);
+            $coche->update([
+                'movil' => $this->movil,
+                'marca' => $this->marca,
+                'modelo' => $this->modelo,
+                'anio' => $this->anio,
+                'color' => $this->color,
+                'placa' => $this->placa,
+                'estado' => $this->estado,
+            ]);
+        } else {
+            ModeloCoche::create([
+                'movil' => $this->movil,
+                'marca' => $this->marca,
+                'modelo' => $this->modelo,
+                'anio' => $this->anio,
+                'color' => $this->color,
+                'placa' => $this->placa,
+                'estado' => $this->estado,
+            ]);
         }
+
+        $this->cerrarModal();
     }
 
     public function cerrarModal()
@@ -137,6 +105,5 @@ class Coche extends Component
         $this->detalleModal = false;
         $this->reset(['movil', 'marca', 'modelo', 'anio', 'color', 'placa', 'estado', 'cocheId', 'cocheSeleccionado']);
         $this->resetErrorBag();
-        // $this->rules['placa'] = 'required|string|max:20|unique:coches,placa'; // Restaurar regla original
     }
 }
