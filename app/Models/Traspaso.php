@@ -6,23 +6,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class Traspaso extends Model
 {
+
+
     protected $fillable = [
-        'existencia_origen_id',
-        'existencia_destino_id',
+        'reposicion_origen_id',
+        'reposicion_destino_id',
         'personal_id',
         'cantidad',
         'fecha_traspaso',
         'observaciones',
+        'codigo',
     ];
 
-    public function existenciaOrigen()
+    // Relación con reposiciones
+    public function reposicionOrigen()
     {
-        return $this->belongsTo(Existencia::class, 'existencia_origen_id');
+        return $this->belongsTo(Reposicion::class, 'reposicion_origen_id');
     }
 
-    public function existenciaDestino()
+    public function reposicionDestino()
     {
-        return $this->belongsTo(Existencia::class, 'existencia_destino_id');
+        return $this->belongsTo(Reposicion::class, 'reposicion_destino_id');
     }
 
     public function personal()

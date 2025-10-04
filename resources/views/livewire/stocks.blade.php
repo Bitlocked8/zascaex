@@ -30,7 +30,7 @@
                 <p><strong>Código:</strong> {{ $repo->codigo ?? 'N/A' }}</p>
                 <p><strong>Nombre:</strong> {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}</p>
                 <p><strong>Cantidad inicial:</strong> {{ $repo->cantidad_inicial }}</p>
-                <p><strong>Cantidad:</strong> {{ $repo->cantidad }}</p>
+                <p><strong>Cantidad aun no usada:</strong> {{ $repo->cantidad }}</p>
                 <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
                 <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
             </div>
