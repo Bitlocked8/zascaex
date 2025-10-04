@@ -66,6 +66,21 @@
                         <p class="font-semibold text-sm">
                             Fecha de Traspaso: <span class="font-normal">{{ $fecha_traspaso }}</span>
                         </p>
+                        <p class="font-semibold text-sm">
+                            Personal Responsable:
+                            <span class="font-normal">
+                                {{ $accion === 'create' ? auth()->user()->personal->nombres : ($traspaso_id ? $traspaso->personal->nombres : 'N/A') }}
+                            </span>
+                        </p>
+                        <p class="font-semibold text-sm">
+                            Sucursal:
+                            <span class="font-normal">
+                                {{ $accion === 'create' 
+            ? (auth()->user()->personal->trabajos()->where('estado',1)->first()->sucursal->nombre ?? 'N/A') 
+            : ($traspaso_id ? $traspaso->personal->trabajos()->where('estado',1)->first()->sucursal->nombre ?? 'N/A' : 'N/A') }}
+                            </span>
+                        </p>
+
                     </div>
 
                     <div>
@@ -133,18 +148,18 @@
                         $repo = $reposicionesDestino->firstWhere('id', $destino_id);
                         $ex = $repo ? $repo->existencia : null;
                         $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
-                        $comprobante = $repo && $repo->comprobantes->first() ? $repo->comprobantes->first()->monto : 0;
+                        $comprobante = $repo ? $repo->comprobantes->sum('monto') : 0;
                         @endphp
                         <p class="flex items-center gap-2">
                             <span>{{ $tipo }}: {{ $ex->existenciable->descripcion ?? 'Existencia #' . $destino_id }}</span>
-                            <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                            <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                 Disponible: {{ $repo->cantidad ?? 0 }}
                             </span>
-                            <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                            <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                 {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
                             </span>
-                            <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                Monto: ${{ number_format($comprobante, 2) }}
+                            <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                Monto: Bs {{ number_format($comprobante) }}
                             </span>
                         </p>
                         @else
@@ -154,23 +169,23 @@
                             $ex = $repo->existencia;
                             $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
                             $descripcion = $ex ? $ex->existenciable->descripcion : 'Existencia #' . $repo->id;
-                            $comprobante = $repo->comprobantes->first() ? $repo->comprobantes->first()->monto : 0;
+                            $comprobante = $repo->comprobantes->sum('monto');
                             @endphp
                             <button
                                 type="button"
                                 wire:click="$set('destino_id', {{ $repo->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                        {{ $destino_id == $repo->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        {{ $destino_id == $repo->id ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-green-100' }}">
                                 <span>{{ $tipo }}: {{ $descripcion }}</span>
                                 <span class="flex items-center gap-2">
-                                    <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         Disponible: {{ $repo->cantidad }}
                                     </span>
-                                    <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
                                     </span>
-                                    <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        Monto: ${{ number_format($comprobante, 2) }}
+                                    <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        Monto: Bs {{ number_format($comprobante) }}
                                     </span>
                                 </span>
                             </button>
@@ -180,6 +195,7 @@
 
                         @error('destino_id') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
+
 
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Cantidad</label>
@@ -213,22 +229,6 @@
                         </div>
                     </div>
 
-                    <!-- Personal -->
-                    <div>
-                        <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
-                        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[170px]">
-                            @foreach($personals as $p)
-                            <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
-                                class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                {{ $personal_id == $p->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                {{ $p->nombres }}
-                            </button>
-                            @endforeach
-                        </div>
-                        @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
-                    </div>
-
-                    <!-- Observaciones -->
                     <div>
                         <label class="font-semibold text-sm">Observaciones</label>
                         <textarea wire:model="observaciones" placeholder="Observaciones" class="input-minimal"></textarea>

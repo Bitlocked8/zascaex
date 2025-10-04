@@ -34,11 +34,37 @@ class Traspaso extends Component
 
     public function mount()
     {
-        $this->reposicionesOrigen = collect();
-        $this->reposicionesDestino = collect();
+        $usuario = auth()->user();
+
+        // Personal
+        if ($usuario->rol_id == 1) {
+            $this->personals = Personal::all();
+        } else {
+            $this->personals = collect([$usuario->personal]); // solo logueado
+            $this->personal_id = $usuario->personal->id; // asignado automáticamente
+        }
+
+        // Reposiciones
+        if ($usuario->rol_id == 1) {
+            $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')->get();
+            $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')->get();
+        } else {
+            $trabajo = $usuario->personal->trabajos()->where('estado', 1)->first();
+            $sucursalId = $trabajo ? $trabajo->sucursal_id : null;
+
+            $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')
+                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
+                ->get();
+
+            $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')
+                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', '!=', $sucursalId))
+                ->get();
+        }
+
         $this->traspasos = collect();
-        $this->personals = Personal::all();
     }
+
+
 
     public function abrirModal($accion, $id = null)
     {
@@ -215,6 +241,33 @@ class Traspaso extends Component
 
     public function render()
     {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+
+        // Sucursal del empleado
+        $sucursalId = null;
+        if ($rol == 2) {
+            $trabajo = $usuario->personal->trabajos()->where('estado', 1)->first();
+            $sucursalId = $trabajo ? $trabajo->sucursal_id : null;
+        }
+
+        // Reposiciones para origen y destino
+        if ($rol == 1) {
+            // Admin: todos los items
+            $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')->get();
+            $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')->get();
+        } else {
+            // Empleado: origen de su sucursal, destino fuera de su sucursal
+            $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')
+                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
+                ->get();
+
+            $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')
+                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', '!=', $sucursalId))
+                ->get();
+        }
+
+        // Traspasos
         $query = TraspasoModel::with([
             'personal',
             'reposicionOrigen.existencia',
@@ -223,16 +276,23 @@ class Traspaso extends Component
             'reposicionDestino.comprobantes',
         ]);
 
-        if ($this->search) {
-            $query->where(fn($q) => $q->where('codigo', 'like', "%{$this->search}%")
-                ->orWhere('observaciones', 'like', "%{$this->search}%"));
+        // Filtro según rol
+        if ($rol == 2 && $sucursalId) {
+            // Solo los traspasos creados por el empleado
+            $query->where('personal_id', $usuario->personal->id);
         }
 
-        $this->traspasos = $query->get();
+        // Filtro de búsqueda
+        if ($this->search) {
+            $query->where(
+                fn($q) =>
+                $q->where('codigo', 'like', "%{$this->search}%")
+                    ->orWhere('observaciones', 'like', "%{$this->search}%")
+            );
+        }
 
-        $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')->get();
-        $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')->get();
-        $this->personals = Personal::all();
+        $this->traspasos = $query->latest()->get();
+        $this->personals = $rol == 1 ? Personal::all() : collect([$usuario->personal]);
 
         return view('livewire.traspaso');
     }
