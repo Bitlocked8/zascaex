@@ -26,7 +26,7 @@ class Asignaciones extends Component
     public $existencias = [];
     public $modalError = false;
     public $mensajeError = '';
-
+    public $confirmingDeleteAsignacionId = null;
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
@@ -105,16 +105,12 @@ class Asignaciones extends Component
     public function guardarAsignacion()
     {
         $usuario = auth()->user();
-
-        // Determinar personal
         if ($this->accion === 'edit' && $this->asignacion_id) {
             $asignado = Asignado::findOrFail($this->asignacion_id);
             $this->personal_id = $asignado->personal_id;
         } else {
             $this->personal_id = $usuario->personal->id ?? null;
         }
-
-        // Validación básica
         $validator = Validator::make([
             'existencia_id' => $this->existencia_id,
             'personal_id' => $this->personal_id,
@@ -130,17 +126,13 @@ class Asignaciones extends Component
             'motivo' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string|max:500',
         ]);
-
         if ($validator->fails()) {
             $this->mensajeError = implode("\n", $validator->errors()->all());
             $this->modalError = true;
             return;
         }
-
         $existencia = Existencia::findOrFail($this->existencia_id);
         $cantidadSolicitada = $this->cantidad;
-
-        // ✅ Calcular total disponible sumando solo cantidades actuales de los lotes
         $totalDisponible = Reposicion::where('existencia_id', $this->existencia_id)
             ->sum('cantidad');
 
@@ -149,16 +141,12 @@ class Asignaciones extends Component
             $this->modalError = true;
             return;
         }
-
-        // Asignación dentro de una transacción
         DB::transaction(function () use ($existencia, $cantidadSolicitada) {
             $restante = $cantidadSolicitada;
 
             if ($this->accion === 'edit' && $this->asignacion_id) {
                 $asignado = Asignado::findOrFail($this->asignacion_id);
                 $fechaFormateada = \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s');
-
-                // Restaurar los lotes previos
                 foreach ($asignado->reposiciones as $lote) {
                     $lote->cantidad += $lote->pivot->cantidad;
                     $lote->save();
@@ -189,10 +177,8 @@ class Asignaciones extends Component
                     'observaciones' => $this->observaciones,
                 ]);
             }
-
-            // Repartir la cantidad entre los lotes disponibles
             $lotes = Reposicion::where('existencia_id', $this->existencia_id)
-                ->where('cantidad', '>', 0) // solo lotes con stock
+                ->where('cantidad', '>', 0)
                 ->orderBy('fecha')
                 ->get();
 
@@ -267,5 +253,18 @@ class Asignaciones extends Component
             ->get();
 
         return view('livewire.asignaciones', compact('asignaciones'));
+    }
+    public function confirmarEliminarAsignacion($id)
+    {
+        $this->confirmingDeleteAsignacionId = $id;
+    }
+
+    public function eliminarAsignacionConfirmado()
+    {
+        if (!$this->confirmingDeleteAsignacionId) return;
+
+        $this->eliminarAsignacion($this->confirmingDeleteAsignacionId);
+
+        $this->confirmingDeleteAsignacionId = null;
     }
 }

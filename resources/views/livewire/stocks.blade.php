@@ -172,7 +172,6 @@
                             @endforeach
                         </div>
                         @endif
-                        @error('existencia_id') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
@@ -184,11 +183,9 @@
                             <input type="number" wire:model="cantidad" class="input-minimal" min="1">
                             @endif
                         </div>
-
                         <div>
                             <label class="font-semibold text-sm">Observaciones</label>
                             <input wire:model="observaciones" class="input-minimal">
-                            @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
                     </div>
                     <div class="grid grid-cols-1 gap-2 mt-2">

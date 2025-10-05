@@ -1,6 +1,5 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Buscador y botón de nueva asignación -->
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input
                 type="text"
@@ -67,15 +66,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
                     </svg>
                 </button>
-                <button wire:click="eliminarAsignacion({{ $asignado->id }})"
-                    onclick="confirm('¿Estás seguro de eliminar esta asignación?') || event.stopImmediatePropagation()" class="btn-circle btn-cyan"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M4 7l16 0" />
                         <path d="M10 11l0 6" />
                         <path d="M14 11l0 6" />
                         <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                         <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                    </svg></button>
+                    </svg>
                 </button>
 
             </div>
@@ -92,7 +91,6 @@
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
 
-                <!-- ALERTA DE ERRORES -->
                 @if ($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                     <strong class="font-bold">¡Atención!</strong>
@@ -104,8 +102,6 @@
                     </ul>
                 </div>
                 @endif
-
-                <!-- Código y Fecha -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <p class="font-semibold text-sm">
                         Código: <span class="font-normal">{{ $codigo }}</span>
@@ -212,7 +208,6 @@
     </div>
     @endif
 
-
     @if($modalError)
     <div wire:click.self="$set('modalError', false)"
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -220,6 +215,38 @@
             <h2 class="text-lg font-semibold mb-4">Error</h2>
             <p>{{ $mensajeError }}</p>
 
+        </div>
+    </div>
+    @endif
+    @if($confirmingDeleteAsignacionId)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="flex flex-col gap-4 text-center">
+                    <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
+                    <p class="text-gray-600">
+                        La asignación seleccionada se eliminará y se restaurarán los lotes.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" wire:click="eliminarAsignacionConfirmado" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
+                    </svg>
+                </button>
+
+                <button type="button" wire:click="$set('confirmingDeleteAsignacionId', null)" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 10l4 4m0-4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
     @endif
