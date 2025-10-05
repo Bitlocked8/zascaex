@@ -14,6 +14,11 @@
                     <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
             </button>
+            @php
+            $usuario = auth()->user();
+            @endphp
+
+            @if($usuario && $usuario->rol_id === 1)
             <button wire:click="abrirModalConfigGlobal" class="btn-circle btn-cyan" title="Config. Global">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -22,6 +27,8 @@
                     <path d="M4 18l12 0" />
                 </svg>
             </button>
+            @endif
+
         </div>
 
         @forelse($reposiciones as $repo)
@@ -57,7 +64,7 @@
                     </svg>
                 </button>
 
-                <button wire:click="modaldetalle({{ $repo->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
+                <button wire:click="verDetalleReposicion({{ $repo->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -66,6 +73,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
                     </svg>
                 </button>
+
                 <button wire:click="abrirModalPagos({{ $repo->id }})" class="btn-circle btn-cyan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -78,16 +86,21 @@
                     </svg>
                 </button>
                 <button
-                    wire:click="eliminarReposicion({{ $repo->id }})"
-
-                    onclick="confirm('¿Estás seguro de eliminar esta reposición?') || event.stopImmediatePropagation()" class="btn-circle btn-cyan"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    type="button"
+                    wire:click="confirmarEliminarReposicion({{ $repo->id }})"
+                    class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M4 7l16 0" />
                         <path d="M10 11l0 6" />
                         <path d="M14 11l0 6" />
                         <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                         <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                    </svg></button>
+                    </svg>
+                </button>
+
 
             </div>
         </div>
@@ -102,8 +115,6 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
-
-                <!-- Información general -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <p class="font-semibold text-sm">
                         Código: <span class="font-normal">{{ $codigo }}</span>
@@ -111,22 +122,17 @@
                     <p class="font-semibold text-sm">
                         Fecha: <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
                     </p>
-
-
-                      <p class="font-semibold text-sm">
+                    <p class="font-semibold text-sm">
                         Personal: <span class="font-normal">
                             {{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}
                         </span>
                     </p>
-                     <p class="font-semibold text-sm">
+                    <p class="font-semibold text-sm">
                         Sucursal: <span class="font-normal">
                             {{ optional($existencias->firstWhere('id', $existencia_id))->sucursal->nombre ?? 'Sin sucursal' }}
                         </span>
                     </p>
                 </div>
-
-
-                <!-- Selección de producto -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Producto</label>
@@ -168,8 +174,6 @@
                         @endif
                         @error('existencia_id') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
-
-                    <!-- Cantidad y Observaciones -->
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm">Cantidad</label>
@@ -187,8 +191,6 @@
                             @error('observaciones') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
                     </div>
-
-                    <!-- Proveedor opcional -->
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm mb-2 block">Proveedor (Opcional)</label>
@@ -219,8 +221,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Footer con botones -->
                 <div class="modal-footer">
                     <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -237,22 +237,17 @@
                             <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
                         </svg>
                     </button>
-
-
-
                 </div>
-
             </div>
         </div>
     </div>
     @endif
 
-
     @if($modalConfigGlobal)
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content">
-                @foreach($existencias as $ex)
+                @forelse($existencias as $ex)
                 <div class="grid grid-cols-12 gap-4 items-start border-b pb-4">
                     <div class="col-span-6 flex flex-col gap-1">
                         <span class="uppercase text-cyan-600 font-semibold">
@@ -264,25 +259,16 @@
                         <span class="bg-cyan-600 text-white text-xs px-2 py-1 rounded-full font-semibold w-max">
                             Disponible: {{ $ex->cantidad }}
                         </span>
-                        <div>
-                            <label class="text-sm font-semibold mb-1 block">Cantidad mínima</label>
-                            <input type="number"
-                                wire:model="configExistencias.{{ $ex->id }}.cantidad_minima"
-                                class="input-minimal w-full"
-                                placeholder="Cantidad mínima">
-                        </div>
                     </div>
-                    <div class="col-span-6 flex flex-col gap-2">
 
+                    <div class="col-span-6 flex flex-col gap-2">
                         <div>
                             <label class="font-semibold text-sm mb-2 block">Sucursal (Opcional)</label>
                             <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
-
-
                                 <button type="button"
                                     wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)"
                                     class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                      {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                  {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                     Sin sucursal
                                 </button>
 
@@ -290,18 +276,19 @@
                                 <button type="button"
                                     wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
                                     class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                       {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                   {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                     {{ $suc->nombre }}
                                 </button>
                                 @endforeach
-
                             </div>
                         </div>
-
                     </div>
-
                 </div>
-                @endforeach
+                @empty
+                <div class="text-center text-gray-500 py-8">
+                    No hay existencias disponibles para asignar a una sucursal.
+                </div>
+                @endforelse
             </div>
 
             <div class="modal-footer">
@@ -311,7 +298,8 @@
                         <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                         <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                         <path d="M14 4l0 4l-6 0l0 -4" />
-                    </svg></button>
+                    </svg>
+                </button>
                 <button wire:click="$set('modalConfigGlobal', false)" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -319,12 +307,12 @@
                         <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M10 10l4 4m0 -4l-4 4" />
                         <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                    </svg></button>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
     @endif
-
     @if($modalPagos)
     <div class="modal-overlay">
         <div class="modal-box">
@@ -426,37 +414,63 @@
         </div>
     </div>
     @endif
-    @if($modalDetalle)
+    @if($modalDetalle && $reposicionSeleccionada)
     <div class="modal-overlay">
         <div class="modal-box">
-            <div class="modal-content flex flex-col gap-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col gap-3">
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
-                            <span class="label-info">Cantidad:</span>
-                            <span class="badge-info">{{ $existenciaSeleccionada->cantidad }}</span>
-                        </div>
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
-                            <span class="label-info">Observaciones:</span>
-                            <span class="badge-info">{{ $existenciaSeleccionada->existenciable->observaciones ?? '-' }}</span>
-                        </div>
-                    </div>
+            <div class="modal-content flex flex-col gap-4">
 
-                    <div class="flex flex-col gap-3">
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
-                            <span class="label-info">Nombre:</span>
-                            <span class="badge-info">{{ $existenciaSeleccionada->existenciable->descripcion ?? '-' }}</span>
-                        </div>
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
-                            <span class="label-info">Sucursal:</span>
-                            <span class="badge-info">{{ $existenciaSeleccionada->sucursal->nombre ?? '-' }}</span>
-                        </div>
-
+                <!-- Icono con inicial -->
+                <div class="flex justify-center items-center">
+                    <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
+                        {{ strtoupper(substr($reposicionSeleccionada->codigo ?? '-', 0, 1)) }}
                     </div>
                 </div>
+
+                <!-- Información de la Reposición -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Código:</span>
+                            <span class="badge-info">{{ $reposicionSeleccionada->codigo ?? '-' }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Fecha:</span>
+                            <span class="badge-info">{{ \Carbon\Carbon::parse($reposicionSeleccionada->fecha)->format('d/m/Y H:i') ?? '-' }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Cantidad:</span>
+                            <span class="badge-info">{{ $reposicionSeleccionada->cantidad ?? '-' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Responsable:</span>
+                            <span class="badge-info">{{ $reposicionSeleccionada->personal?->nombres ?? '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalles de la Existencia -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div class="flex flex-col gap-2">
+                        <span class="label-info">Nombre:</span>
+                        <span class="badge-info">{{ $reposicionSeleccionada->existencia->existenciable?->descripcion ?? '-' }}</span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <span class="label-info">Observaciones:</span>
+                        <span class="badge-info">{{ $reposicionSeleccionada->observaciones ?? '-' }}</span>
+                    </div>
+                </div>
+
             </div>
-            <div class="modal-footer">
-                <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
+
+            <!-- Footer -->
+            <div class="modal-footer mt-4">
+                <button wire:click="cerrarModalDetalleReposicion" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -469,4 +483,40 @@
         </div>
     </div>
     @endif
+    @if($confirmingDeleteReposicionId)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="flex flex-col gap-4 text-center">
+                    <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
+                    <p class="text-gray-600">
+                        La reposición seleccionada se eliminará y se revertirán los cambios en stock.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" wire:click="eliminarReposicionConfirmado" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
+                    </svg>
+                </button>
+
+                <!-- Botón Cancelar -->
+                <button type="button" wire:click="$set('confirmingDeleteReposicionId', null)" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 10l4 4m0-4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+
+
 </div>

@@ -18,7 +18,8 @@ class Traspaso extends Component
     public $accion = 'create';
     public $codigo;
     public $fecha_traspaso;
-
+    public $detalleModal = false;
+    public $traspasoSeleccionado = null;
     public $traspaso_id;
     public $origen_id;
     public $destino_id;
@@ -31,20 +32,16 @@ class Traspaso extends Component
     public $reposicionesOrigen;
     public $reposicionesDestino;
     public $personals;
-
+    public $confirmingDeleteId = null;
     public function mount()
     {
         $usuario = auth()->user();
-
-        // Personal
         if ($usuario->rol_id == 1) {
             $this->personals = Personal::all();
         } else {
-            $this->personals = collect([$usuario->personal]); // solo logueado
-            $this->personal_id = $usuario->personal->id; // asignado automáticamente
+            $this->personals = collect([$usuario->personal]);
+            $this->personal_id = $usuario->personal->id;
         }
-
-        // Reposiciones
         if ($usuario->rol_id == 1) {
             $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')->get();
             $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')->get();
@@ -60,12 +57,8 @@ class Traspaso extends Component
                 ->whereHas('existencia', fn($q) => $q->where('sucursal_id', '!=', $sucursalId))
                 ->get();
         }
-
         $this->traspasos = collect();
     }
-
-
-
     public function abrirModal($accion, $id = null)
     {
         $this->accion = $accion;
@@ -82,7 +75,6 @@ class Traspaso extends Component
             $this->destino_id = null;
             $this->personal_id = null;
             $this->observaciones = null;
-            $this->estado = null;
         }
 
         if ($accion === 'edit' && $id) {
@@ -95,10 +87,8 @@ class Traspaso extends Component
             $this->cantidad = $traspaso->cantidad;
             $this->observaciones = $traspaso->observaciones;
             $this->personal_id = $traspaso->personal_id;
-            $this->estado = $traspaso->estado;
         }
     }
-
     public function guardar()
     {
         $usuario = auth()->user();
@@ -153,23 +143,13 @@ class Traspaso extends Component
                     'cantidad' => $this->cantidad,
                     'fecha_traspaso' => now(),
                     'observaciones' => $mensaje,
-                    'estado' => $this->estado,
                 ]);
-
-                // Ajustar comprobantes
                 $comprobanteOrigen = $origen->comprobantes->first();
                 if ($comprobanteOrigen) {
-                    // Costo unitario basado en cantidad antes del traspaso
                     $costoUnitario = $comprobanteOrigen->monto / $cantidadOriginal;
-
-                    // Monto del traspaso
                     $montoTraspaso = $this->cantidad * $costoUnitario;
-
-                    // Restar del comprobante origen
                     $comprobanteOrigen->monto -= $montoTraspaso;
                     $comprobanteOrigen->save();
-
-                    // Crear comprobante en destino
                     ComprobantePago::create([
                         'reposicion_id' => $destino->id,
                         'codigo' => 'PAGO-' . now()->format('YmdHis'),
@@ -182,7 +162,6 @@ class Traspaso extends Component
         } elseif ($this->accion === 'edit' && $this->traspaso_id) {
             $traspaso = TraspasoModel::findOrFail($this->traspaso_id);
             $traspaso->update([
-                'estado' => $this->estado,
                 'observaciones' => $this->observaciones,
             ]);
         }
@@ -235,7 +214,6 @@ class Traspaso extends Component
             'destino_id',
             'cantidad',
             'observaciones',
-            'estado',
         ]);
     }
 
@@ -243,21 +221,15 @@ class Traspaso extends Component
     {
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
-
-        // Sucursal del empleado
         $sucursalId = null;
         if ($rol == 2) {
             $trabajo = $usuario->personal->trabajos()->where('estado', 1)->first();
             $sucursalId = $trabajo ? $trabajo->sucursal_id : null;
         }
-
-        // Reposiciones para origen y destino
         if ($rol == 1) {
-            // Admin: todos los items
             $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')->get();
             $this->reposicionesDestino = Reposicion::with('existencia', 'comprobantes')->get();
         } else {
-            // Empleado: origen de su sucursal, destino fuera de su sucursal
             $this->reposicionesOrigen = Reposicion::with('existencia', 'comprobantes')
                 ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
                 ->get();
@@ -266,8 +238,6 @@ class Traspaso extends Component
                 ->whereHas('existencia', fn($q) => $q->where('sucursal_id', '!=', $sucursalId))
                 ->get();
         }
-
-        // Traspasos
         $query = TraspasoModel::with([
             'personal',
             'reposicionOrigen.existencia',
@@ -275,14 +245,9 @@ class Traspaso extends Component
             'reposicionDestino.existencia',
             'reposicionDestino.comprobantes',
         ]);
-
-        // Filtro según rol
         if ($rol == 2 && $sucursalId) {
-            // Solo los traspasos creados por el empleado
             $query->where('personal_id', $usuario->personal->id);
         }
-
-        // Filtro de búsqueda
         if ($this->search) {
             $query->where(
                 fn($q) =>
@@ -290,10 +255,34 @@ class Traspaso extends Component
                     ->orWhere('observaciones', 'like', "%{$this->search}%")
             );
         }
-
         $this->traspasos = $query->latest()->get();
         $this->personals = $rol == 1 ? Personal::all() : collect([$usuario->personal]);
-
         return view('livewire.traspaso');
+    }
+
+    public function confirmarEliminar($id)
+    {
+        $this->confirmingDeleteId = $id;
+    }
+
+    public function eliminarTraspasoConfirmado()
+    {
+        if (!$this->confirmingDeleteId) return;
+
+        $this->eliminarTraspaso($this->confirmingDeleteId);
+        $this->confirmingDeleteId = null;
+    }
+
+    public function verDetalle($id)
+    {
+        $this->traspasoSeleccionado = TraspasoModel::with([
+            'personal',
+            'reposicionOrigen.existencia.sucursal',
+            'reposicionDestino.existencia.sucursal'
+        ])->findOrFail($id);
+
+        $this->modal = false;
+        $this->modalError = false;
+        $this->detalleModal = true;
     }
 }

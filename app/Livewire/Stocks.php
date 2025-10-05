@@ -11,6 +11,7 @@ use App\Models\Personal;
 use Carbon\Carbon;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
+
 class Stocks extends Component
 {
     use WithFileUploads;
@@ -18,7 +19,7 @@ class Stocks extends Component
     public $searchCodigo = '';
     public $ultimaReposicion = null;
     public $modal = false;
-    public $modalDetalle = false;
+    public $reposicionSeleccionada = null;
     public $modalConfigGlobal = false;
     public $codigo;
     public $reposicion_id = null;
@@ -32,12 +33,13 @@ class Stocks extends Component
     public $configExistencias = [];
     public $accion = 'create';
     public $existenciaSeleccionada = null;
-
+    public $modalDetalle = false;
     public $modalPagos = false;
     public $reposicionParaPago = null;
     public $pagos = [];
     public $modalError = false;
     public $mensajeError = '';
+    public $confirmingDeleteReposicionId = null;
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
         'personal_id' => 'required|exists:personals,id',
@@ -96,9 +98,6 @@ class Stocks extends Component
 
         $this->modal = true;
     }
-
-
-
     public function editar($id)
     {
         $reposicion = Reposicion::findOrFail($id);
@@ -166,21 +165,24 @@ class Stocks extends Component
         ]);
         $this->resetErrorBag();
     }
-
-    public function modaldetalle($id)
+    public function verDetalleReposicion($id)
     {
-        $this->existenciaSeleccionada = Existencia::with(['existenciable', 'sucursal', 'reposiciones'])->findOrFail($id);
-        $this->ultimaReposicion = $this->existenciaSeleccionada->reposiciones->first();
+        $this->reposicionSeleccionada = Reposicion::with([
+            'existencia.existenciable',
+            'personal',
+            'proveedor',
+            'comprobantes'
+        ])->findOrFail($id);
+
+        $this->existenciaSeleccionada = $this->reposicionSeleccionada->existencia;
+
         $this->modalDetalle = true;
     }
-
-    public function cerrarModalDetalle()
+    public function cerrarModalDetalleReposicion()
     {
+        $this->reposicionSeleccionada = null;
         $this->modalDetalle = false;
-        $this->existenciaSeleccionada = null;
-        $this->ultimaReposicion = null;
     }
-
     public function abrirModalConfigGlobal()
     {
         $usuario = auth()->user();
@@ -189,21 +191,23 @@ class Stocks extends Component
 
         $queryExistencias = Existencia::with('existenciable')
             ->where('existenciable_type', '!=', \App\Models\Producto::class)
+            ->whereNull('sucursal_id') // solo las que no tienen sucursal
             ->orderBy('id');
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $queryExistencias->where('sucursal_id', $sucursal_id);
+            // Si quieres filtrar por sucursal del personal, descomenta esta línea:
+            // $queryExistencias->where('sucursal_id', $sucursal_id);
         }
 
         $existencias = $queryExistencias->get();
         $this->existencias = $existencias;
 
+        // Solo guardamos sucursal para cada existencia
         $this->configExistencias = $existencias
             ->sortByDesc('updated_at')
             ->mapWithKeys(fn($ex) => [
                 $ex->id => [
-                    'cantidad_minima' => $ex->cantidadMinima,
                     'sucursal_id' => $ex->sucursal_id,
                 ],
             ])->toArray();
@@ -217,7 +221,6 @@ class Stocks extends Component
             $existencia = Existencia::find($id);
             if ($existencia) {
                 $existencia->update([
-                    'cantidadMinima' => $config['cantidad_minima'] ?? 0,
                     'sucursal_id' => $config['sucursal_id'] ?: null,
                 ]);
             }
@@ -225,6 +228,7 @@ class Stocks extends Component
 
         $this->modalConfigGlobal = false;
     }
+
     public function abrirModalPagos($reposicion_id)
     {
         $this->reposicionParaPago = $reposicion_id;
@@ -348,44 +352,44 @@ class Stocks extends Component
             $this->modalError = true;
             return;
         }
-
         $existencia = $reposicion->existencia;
-
         DB::transaction(function () use ($reposicion, $existencia) {
             $loteId = $reposicion->id;
-
-            // Recorremos todas las asignaciones asociadas a este lote
             foreach ($reposicion->asignados as $asignado) {
                 $cantidadDelLote = $asignado->reposiciones()
                     ->where('reposicion_id', $loteId)
                     ->first()?->pivot->cantidad ?? 0;
-
                 if ($cantidadDelLote > 0) {
-                    // Restamos del total de la asignación
                     $asignado->cantidad -= $cantidadDelLote;
-
-                    // Eliminamos la relación con el lote
                     $asignado->reposiciones()->detach($loteId);
-
                     if ($asignado->cantidad <= 0) {
-                        $asignado->delete(); // eliminamos la asignación si quedó en 0
+                        $asignado->delete();
                     } else {
-                        $asignado->save(); // actualizamos la cantidad restante
+                        $asignado->save();
                     }
                 }
             }
-
-            // Ajustamos el stock total de la existencia
             if ($existencia) {
                 $existencia->cantidad -= $reposicion->cantidad;
                 if ($existencia->cantidad < 0) $existencia->cantidad = 0;
                 $existencia->save();
             }
-
-            // Finalmente eliminamos la reposición
             $reposicion->delete();
         });
 
         session()->flash('message', 'Reposición eliminada correctamente y asignaciones actualizadas.');
+    }
+    public function confirmarEliminarReposicion($id)
+    {
+        $this->confirmingDeleteReposicionId = $id;
+    }
+
+    public function eliminarReposicionConfirmado()
+    {
+        if (!$this->confirmingDeleteReposicionId) return;
+
+        $this->eliminarReposicion($this->confirmingDeleteReposicionId);
+
+        $this->confirmingDeleteReposicionId = null;
     }
 }
