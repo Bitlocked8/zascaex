@@ -27,8 +27,10 @@ class Asignaciones extends Component
     public $modalError = false;
     public $mensajeError = '';
     public $confirmingDeleteAsignacionId = null;
+
     public function abrirModal($accion = 'create', $id = null)
     {
+        // Resetear los campos
         $this->reset([
             'asignacion_id',
             'existencia_id',
@@ -56,36 +58,43 @@ class Asignaciones extends Component
             return;
         }
 
-        $sucursal_id = null;
-        if ($rol === 2) {
-            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            if (!$sucursal_id) {
-                $this->mensajeError = "No estás asignado a ninguna sucursal.";
-                $this->modalError = true;
-                return;
-            }
-        }
+        $this->personal_id = $personal->id;
+
+        // Construir query de existencias
         $query = Existencia::with('existenciable', 'sucursal')
             ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0));
 
+        // Si el rol es 2 y tiene sucursal asignada, filtrar por sucursal
         if ($rol === 2) {
-            $query->where('sucursal_id', $sucursal_id);
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+
+            if ($sucursal_id) {
+                $query->where('sucursal_id', $sucursal_id);
+            } else {
+                // Opcional: mostrar advertencia pero no bloquear
+                $this->mensajeError = "No tienes una sucursal asignada. Mostrando todas las existencias disponibles.";
+                $this->modalError = true;
+            }
         }
 
-        $this->existencias = $query->get();
+        // Obtener existencias ordenadas
+        $this->existencias = $query->orderBy('id')->get();
 
+        // Inicializar datos para creación
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-            $this->personal_id = $personal->id;
         }
 
+        // Si es edición, cargar datos
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
 
         $this->modal = true;
     }
+
+
 
 
     public function editar($id)
@@ -242,9 +251,15 @@ class Asignaciones extends Component
     {
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
         $query = Asignado::with('existencia.existenciable', 'personal');
-        if ($rol === 2) {
-            $query->where('personal_id', $usuario->personal->id);
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()
+                ->latest('fechaInicio')
+                ->value('sucursal_id');
+
+            $query->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
 
         $asignaciones = $query
@@ -254,6 +269,7 @@ class Asignaciones extends Component
 
         return view('livewire.asignaciones', compact('asignaciones'));
     }
+
     public function confirmarEliminarAsignacion($id)
     {
         $this->confirmingDeleteAsignacionId = $id;

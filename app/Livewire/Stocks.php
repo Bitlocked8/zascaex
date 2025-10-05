@@ -296,8 +296,9 @@ class Stocks extends Component
         $usuario  = auth()->user();
         $rol      = $usuario->rol_id;
         $personal = $usuario->personal;
+
+        // EXISTENCIAS
         $queryExistencias = Existencia::with('existenciable')
-            ->where('existenciable_type', '!=', \App\Models\Producto::class)
             ->where('cantidad', '>', 0)
             ->orderBy('id');
 
@@ -308,31 +309,29 @@ class Stocks extends Component
 
             $queryExistencias->where('sucursal_id', $sucursal_id);
         }
+
         $existencias = $queryExistencias->get();
+
+        // REPOSICIONES
         $queryReposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
-            ->when(
-                $this->searchCodigo,
-                fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%')
-            );
+            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'));
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()
                 ->latest('fechaInicio')
                 ->value('sucursal_id');
 
-            $queryReposiciones
-                ->where('personal_id', $personal->id)
-                ->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
+            // Solo filtrar por sucursal de la existencia, NO por personal_id
+            $queryReposiciones->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
+
         $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')->get();
-        $personalList = Personal::whereHas(
-            'trabajos',
-            fn($q) => $q->where('estado', 1)
-        )->with([
-            'trabajos' => fn($q) => $q->where('estado', 1)
+
+        $personalList = Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
+            ->with(['trabajos' => fn($q) => $q->where('estado', 1)
                 ->latest('fechaInicio')
-                ->with('sucursal')
-        ])->get();
+                ->with('sucursal')])
+            ->get();
 
         return view('livewire.stocks', [
             'existencias'  => $existencias,
@@ -342,6 +341,7 @@ class Stocks extends Component
             'sucursales'   => Sucursal::all(),
         ]);
     }
+
 
     public function eliminarReposicion($id)
     {
