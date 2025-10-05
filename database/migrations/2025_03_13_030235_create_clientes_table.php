@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('clientes', function (Blueprint $table) {
             $table->id();
+            $table->string('codigo'); 
             $table->string('nombre'); // Nombre del cliente
             $table->string('empresa')->nullable(); // Empresa del cliente (opcional)
             $table->string('nitCi')->unique()->nullable(); // NIT/CI único

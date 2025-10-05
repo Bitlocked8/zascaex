@@ -61,7 +61,11 @@ class MapaClienteController extends Controller
                 'estado' => 1,
             ]);
 
-            Cliente::create([
+
+            $ultimoCliente = Cliente::latest('id')->first();
+            $codigo = 'C-' . str_pad(($ultimoCliente->id ?? 0) + 1, 4, '0', STR_PAD_LEFT);
+            $cliente = Cliente::create([
+                'codigo' => $codigo,
                 'nombre' => $validated['nombre'],
                 'empresa' => $validated['empresa'],
                 'razonSocial' => $validated['razonSocial'],
@@ -75,12 +79,45 @@ class MapaClienteController extends Controller
                 'categoria' => $validated['categoria'],
                 'user_id' => $user->id,
             ]);
-
-            return Redirect::route('home')->with('success', 'Cliente registrado con éxito.');
+            return Redirect::route('home')->with('success', "Cliente registrado con éxito. Código: $codigo");
         } catch (\Exception $e) {
             return Redirect::back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
+
+    public function actualizarCoordenadas(Request $request, $id)
+    {
+        // Validación
+        $validated = $request->validate([
+            'latitud' => 'required|numeric|between:-90,90',
+            'longitud' => 'required|numeric|between:-180,180',
+        ]);
+
+        try {
+            $cliente = Cliente::findOrFail($id);
+            $cliente->latitud = $validated['latitud'];
+            $cliente->longitud = $validated['longitud'];
+            $cliente->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Coordenadas actualizadas correctamente.',
+                'cliente' => $cliente
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar las coordenadas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function editar($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        return view('clientes.editar', compact('cliente'));
+    }
+
 
 
     public function showMapClient(Request $request)

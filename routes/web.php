@@ -13,6 +13,10 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::get('/clientes/mapa', [MapaClienteController::class, 'mostrar'])->name('clientes.mapa');
 Route::get('/cliente/registrar', [MapaClienteController::class, 'mostrarFormularioMapa'])->name('cliente.registrar');
 Route::post('/cliente/registrar', [MapaClienteController::class, 'store'])->name('clientes.store');
+Route::get('/clientes/{id}/editar-coordenadas', [MapaClienteController::class, 'editar'])->name('clientes.editar');
+Route::post('/clientes/{id}/actualizar-coordenadas', [MapaClienteController::class, 'actualizarCoordenadas'])
+    ->name('clientes.actualizarCoordenadas');
+
 Route::get('/clientes/{id}/mapa', [MapaClienteController::class, 'showMapClient'])->name('clientes.map');
 Route::middleware('auth')->group(function () {
     Route::view('about', 'about')->name('about');
