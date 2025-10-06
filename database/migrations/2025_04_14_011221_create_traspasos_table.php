@@ -10,11 +10,7 @@ return new class extends Migration
     {
         Schema::create('traspasos', function (Blueprint $table) {
             $table->id();
-            $table->string('codigo')->unique(); // Código automático
-
-            $table->foreignId('reposicion_origen_id')
-                  ->constrained('reposicions')
-                  ->onDelete('cascade');
+            $table->string('codigo')->unique();
 
             $table->foreignId('reposicion_destino_id')
                   ->constrained('reposicions')

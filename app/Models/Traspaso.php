@@ -6,29 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class Traspaso extends Model
 {
-
-
     protected $fillable = [
-        'reposicion_origen_id',
         'reposicion_destino_id',
         'personal_id',
-        'cantidad',
         'fecha_traspaso',
+        'cantidad',
         'observaciones',
         'codigo',
     ];
 
-    // Relación con reposiciones
-    public function reposicionOrigen()
+    // Relación con múltiples reposiciones de origen
+    public function reposicionesOrigen()
     {
-        return $this->belongsTo(Reposicion::class, 'reposicion_origen_id');
+        return $this->belongsToMany(Reposicion::class, 'reposicion_traspasos')
+            ->withPivot('cantidad')
+            ->withTimestamps();
     }
 
+    // Relación con reposición destino
     public function reposicionDestino()
     {
         return $this->belongsTo(Reposicion::class, 'reposicion_destino_id');
     }
 
+    // Relación con personal
     public function personal()
     {
         return $this->belongsTo(Personal::class);

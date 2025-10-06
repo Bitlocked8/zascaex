@@ -30,7 +30,6 @@ class Asignaciones extends Component
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        // Resetear los campos
         $this->reset([
             'asignacion_id',
             'existencia_id',
@@ -41,62 +40,41 @@ class Asignaciones extends Component
             'motivo',
             'codigo',
         ]);
-
         $this->accion = $accion;
-
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
-
         if (!in_array($rol, [1, 2])) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
-
         $personal = $usuario->personal;
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
             return;
         }
-
         $this->personal_id = $personal->id;
-
-        // Construir query de existencias
         $query = Existencia::with('existenciable', 'sucursal')
             ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0));
-
-        // Si el rol es 2 y tiene sucursal asignada, filtrar por sucursal
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
 
             if ($sucursal_id) {
                 $query->where('sucursal_id', $sucursal_id);
             } else {
-                // Opcional: mostrar advertencia pero no bloquear
                 $this->mensajeError = "No tienes una sucursal asignada. Mostrando todas las existencias disponibles.";
                 $this->modalError = true;
             }
         }
-
-        // Obtener existencias ordenadas
         $this->existencias = $query->orderBy('id')->get();
-
-        // Inicializar datos para creación
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
-
-        // Si es edición, cargar datos
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
-
         $this->modal = true;
     }
-
-
-
-
     public function editar($id)
     {
         $asignado = Asignado::findOrFail($id);
@@ -110,7 +88,6 @@ class Asignaciones extends Component
         $this->motivo = $asignado->motivo;
         $this->observaciones = $asignado->observaciones;
     }
-
     public function guardarAsignacion()
     {
         $usuario = auth()->user();
@@ -207,7 +184,6 @@ class Asignaciones extends Component
         });
 
         $this->cerrarModal();
-        session()->flash('message', 'Asignación guardada correctamente!');
     }
 
 

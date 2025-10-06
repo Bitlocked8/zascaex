@@ -55,4 +55,16 @@ class Reposicion extends Model
             ->withPivot('cantidad')
             ->withTimestamps();
     }
+
+    public function traspasosOrigen()
+    {
+        return $this->belongsToMany(Traspaso::class, 'reposicion_traspasos')
+            ->withPivot('cantidad')
+            ->withTimestamps();
+    }
+
+    public function traspasosDestino()
+    {
+        return $this->hasMany(Traspaso::class, 'reposicion_destino_id');
+    }
 }

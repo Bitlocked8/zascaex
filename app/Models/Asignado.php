@@ -9,7 +9,6 @@ class Asignado extends Model
 {
     use HasFactory;
 
-    // Campos que se pueden asignar masivamente
     protected $fillable = [
         'codigo',
         'existencia_id',
@@ -21,13 +20,12 @@ class Asignado extends Model
         'observaciones'
     ];
 
-    // Relación con existencia
+
     public function existencia()
     {
         return $this->belongsTo(Existencia::class);
     }
 
-    // Relación con personal
     public function personal()
     {
         return $this->belongsTo(Personal::class);
@@ -36,7 +34,7 @@ class Asignado extends Model
     public function reposiciones()
     {
         return $this->belongsToMany(Reposicion::class, 'asignado_reposicions')
-            ->withPivot('cantidad') // guarda cuántas unidades se usaron de ese lote
+            ->withPivot('cantidad')
             ->withTimestamps();
     }
 }
