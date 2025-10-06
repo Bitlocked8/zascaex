@@ -3,34 +3,21 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Cliente;
 
 class Pruebaestilo extends Component
 {
-    public $modal = false;
-    public $direccion = '';
+    public $usuario;
+    public $cliente;
 
-    public function abrirModal()
+    public function mount()
     {
-        $this->modal = true;
-    }
+        // Obtener el usuario logueado
+        $this->usuario = Auth::user();
 
-    public function cerrarModal()
-    {
-        $this->modal = false;
-    }
-
-    public function buscarDireccion()
-    {
-        // Dispara un evento de navegador para buscar la dirección.
-        // (En Livewire 3 se usa dispatch en lugar de dispatchBrowserEvent)
-        $this->dispatch('buscarDireccion', direccion: $this->direccion);
-    }
-
-    public function guardarDireccion()
-    {
-        // Aquí podrías guardar la dirección en la base de datos.
-        session()->flash('mensaje', 'Dirección guardada: ' . $this->direccion);
-        $this->cerrarModal();
+        // Obtener el cliente asociado al usuario (si existe)
+        $this->cliente = $this->usuario && $this->usuario->cliente ? $this->usuario->cliente : null;
     }
 
     public function render()

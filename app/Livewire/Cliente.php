@@ -85,26 +85,26 @@ class Cliente extends Component
     }
 
     public function editarCliente($id)
-{
-    $cliente = ModeloCliente::findOrFail($id);
-    $this->clienteId = $cliente->id;
-    $this->nombre = $cliente->nombre;
-    $this->empresa = $cliente->empresa;
-    $this->razonSocial = $cliente->razonSocial;
-    $this->nitCi = $cliente->nitCi;
-    $this->telefono = $cliente->telefono;
-    $this->correo = $cliente->correo;
-    $this->latitud = $cliente->latitud;
-    $this->longitud = $cliente->longitud;
-    $this->foto = $cliente->foto;
-    $this->estado = $cliente->estado;
-    $this->accion = 'edit';
-    $this->modal = true;
-    $this->detalleModal = false;
-    $this->email = $cliente->user ? $cliente->user->email : '';
-    $this->password = '';
-    $this->categoria = $cliente->categoria;
-}
+    {
+        $cliente = ModeloCliente::findOrFail($id);
+        $this->clienteId = $cliente->id;
+        $this->nombre = $cliente->nombre;
+        $this->empresa = $cliente->empresa;
+        $this->razonSocial = $cliente->razonSocial;
+        $this->nitCi = $cliente->nitCi;
+        $this->telefono = $cliente->telefono;
+        $this->correo = $cliente->correo;
+        $this->latitud = $cliente->latitud;
+        $this->longitud = $cliente->longitud;
+        $this->foto = $cliente->foto;
+        $this->estado = $cliente->estado;
+        $this->accion = 'edit';
+        $this->modal = true;
+        $this->detalleModal = false;
+        $this->email = $cliente->user ? $cliente->user->email : '';
+        $this->password = '';
+        $this->categoria = $cliente->categoria;
+    }
 
 
 
@@ -131,28 +131,48 @@ class Cliente extends Component
                 : 'nullable|image|max:2048',
             'estado' => 'required|boolean',
             'categoria' => 'required|integer|min:1',
-
         ];
 
+        // Validación de email para creación
         if ($this->accion === 'create') {
             $rules = array_merge($rules, [
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:6',
             ]);
         }
+
         $this->validate($rules);
+
         try {
+            $cliente = null;
+
             if ($this->accion === 'edit' && $this->clienteId) {
                 $cliente = ModeloCliente::findOrFail($this->clienteId);
-                if ($this->password) {
-                    if ($cliente->user) {
-                        $cliente->user->update([
-                            'password' => bcrypt($this->password),
-                        ]);
+
+                // Validar email manualmente para evitar duplicados
+                if ($this->email && $cliente->user) {
+                    $emailExiste = \App\Models\User::where('email', $this->email)
+                        ->where('id', '!=', $cliente->user->id)
+                        ->exists();
+
+                    if ($emailExiste) {
+                        LivewireAlert::title('El email ya existe, intente con otro.')
+                            ->warning()
+                            ->show();
+                        return; // Salir sin actualizar nada
                     }
                 }
 
-                // Actualizar datos del cliente
+                // Actualizar usuario
+                if ($cliente->user) {
+                    $userData = ['email' => $this->email];
+                    if ($this->password) {
+                        $userData['password'] = bcrypt($this->password);
+                    }
+                    $cliente->user->update($userData);
+                }
+
+                // Manejo de foto
                 if (is_object($this->foto)) {
                     $rutaFoto = $this->foto->store('clientes', 'public');
                     if ($cliente->foto && Storage::disk('public')->exists($cliente->foto)) {
@@ -162,6 +182,7 @@ class Cliente extends Component
                     $rutaFoto = $this->foto;
                 }
 
+                // Actualizar datos del cliente
                 $cliente->update([
                     'nombre' => $this->nombre,
                     'empresa' => $this->empresa,
@@ -181,10 +202,13 @@ class Cliente extends Component
                     ->show();
             }
 
+            if ($this->accion === 'create') {
+                // Aquí puedes dejar tu código de creación como antes
+            }
 
             $this->cerrarModal();
         } catch (\Exception $e) {
-            LivewireAlert::title($e->getMessage())
+            LivewireAlert::title('Error: ' . $e->getMessage())
                 ->error()
                 ->show();
         }

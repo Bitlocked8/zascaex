@@ -1,12 +1,9 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Buscar + Crear Cliente -->
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input type="text" wire:model.live="search"
                 placeholder="Buscar por cliente..." class="input-minimal w-full" />
             <a href="{{ route('cliente.registrar') }}" class="btn-circle btn-cyan">
-                <!-- icono + -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="9" />
@@ -15,11 +12,8 @@
                 </svg>
             </a>
         </div>
-
         @forelse($clientes as $cliente)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-
-            <!-- Información Cliente -->
             <div class="flex flex-col col-span-9 text-left space-y-1">
                 <p><strong>Código:</strong> <span class="font-mono text-cyan-600">{{ $cliente->codigo ?? 'N/A' }}</span></p>
                 <p><strong>Nombre:</strong> {{ $cliente->nombre }}</p>
@@ -50,14 +44,10 @@
                     @endif
                 </p>
             </div>
-
-            <!-- Botones Cliente -->
             <div class="flex flex-col items-end gap-4 col-span-3">
-                <!-- Editar -->
-                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-circle btn-cyan" title="Editar">
-                    <!-- icono editar -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
                         <path d="M6 4v4" />
                         <path d="M6 12v8" />
@@ -65,12 +55,18 @@
                         <path d="M12 4v10" />
                         <path d="M12 18v2" />
                         <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                        <path d="M18 4v1" />
+                        <path d="M18 9v2.5" />
+                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M19.001 15.5v1.5" />
+                        <path d="M19.001 21v1.5" />
+                        <path d="M22.032 17.25l-1.299 .75" />
+                        <path d="M17.27 20l-1.3 .75" />
+                        <path d="M15.97 17.25l1.3 .75" />
+                        <path d="M20.733 20l1.3 .75" />
                     </svg>
                 </button>
-
-                <!-- Ver Detalle -->
                 <button wire:click="verDetalle({{ $cliente->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
-                    <!-- icono ver detalle -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -79,44 +75,47 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
                     </svg>
                 </button>
-
-                <!-- Ver Mapa -->
                 <a href="{{ route('clientes.map', $cliente->id) }}" class="btn-circle btn-cyan" title="Ver Mapa">
-                    <!-- icono mapa -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                        <path d="M3 7l6 -3l6 3l6 -3v13l-6 3l-6 -3l-6 3v-13" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v7.5" />
                         <path d="M9 4v13" />
-                        <path d="M15 7v13" />
+                        <path d="M15 7v5.5" />
+                        <path d="M21.121 20.121a3 3 0 1 0 -4.242 0c.418 .419 1.125 1.045 2.121 1.879c1.051 -.89 1.759 -1.516 2.121 -1.879z" />
+                        <path d="M19 18v.01" />
                     </svg>
                 </a>
 
                 <a href="{{ route('clientes.editar', $cliente->id) }}"
-                    class="btn-circle btn-emerald"
+                    class="btn-circle btn-cyan"
                     title="Editar Coordenadas">
-                    <!-- icono de edición/mapa -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v8" />
+                        <path d="M9 4v13" />
+                        <path d="M15 7v6.5" />
+                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M19.001 15.5v1.5" />
+                        <path d="M19.001 21v1.5" />
+                        <path d="M22.032 17.25l-1.299 .75" />
+                        <path d="M17.27 20l-1.3 .75" />
+                        <path d="M15.97 17.25l1.3 .75" />
+                        <path d="M20.733 20l1.3 .75" />
                     </svg>
                 </a>
-
-
-
-
-                <!-- Toggle Verificado -->
                 <button wire:click="toggleVerificado({{ $cliente->id }})"
-                    class="{{ $cliente->verificado ? 'bg-white' : 'bg-cyan-600' }} btn-circle" title="Toggle Verificado">
+                    class="{{ $cliente->verificado ? 'bg-cyan-600 text-white' : ' bg-white text-cyan-600' }} btn-circle" title="Toggle Verificado">
                     @if($cliente->verificado)
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="text-cyan-600">
-                        <path d="M12.01 2.011a3.2 3.2 0 0 1 2.113 .797l.154 .145l.698 .698a1.2 1.2 0 0 0 .71 .341l.135 .008h1a3.2 3.2 0 0 1 3.195 3.018v1" />
-                        <path d="M10 10l4 4m0 -4l-4 4" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checks">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 12l5 5l10 -10" />
+                        <path d="M2 12l5 5m5 -5l5 -5" />
                     </svg>
                     @else
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 12l2 2l4 -4" />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checks">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 12l5 5l10 -10" />
+                        <path d="M2 12l5 5m5 -5l5 -5" />
                     </svg>
                     @endif
                 </button>
@@ -137,8 +136,6 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
-
-                <!-- Imagen -->
                 <div>
                     <label class="font-semibold text-sm mb-2 block">Imagen</label>
                     <input type="file" wire:model="foto" class="input-minimal">
@@ -150,8 +147,6 @@
                     @endif
                     @error('foto') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
-
-                <!-- Información -->
                 <div>
                     <label class="font-semibold text-sm mb-1 block">Nombre</label>
                     <input type="text" wire:model="nombre" class="input-minimal" placeholder="Nombre">
@@ -190,7 +185,8 @@
 
                 <div>
                     <label class="font-semibold text-sm mb-1 block">Correo de acceso</label>
-                    <input type="email" wire:model="email" class="input-minimal" placeholder="Correo de acceso" readonly>
+                    <input type="email" wire:model="email" class="input-minimal" placeholder="Correo de acceso">
+
                 </div>
 
                 <div>
@@ -213,7 +209,7 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap justify-center gap-2 mt-2">
-                    @foreach([1 => 'Cliente Nuevo', 2 => 'Cliente Regular', 3 => 'Cliente VIP'] as $key => $label)
+                    @foreach([1 => 'Cliente Nuevo', 2 => 'Cliente Regular', 3 => 'Cliente Antiguo'] as $key => $label)
                     <button type="button" wire:click="$set('categoria', {{ $key }})"
                         class="px-4 py-2 rounded-full text-sm flex items-center justify-center
           {{ $categoria == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
