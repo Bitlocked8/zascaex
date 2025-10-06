@@ -4,17 +4,16 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use App\Models\Cliente as ModeloCliente;
 use Livewire\WithFileUploads;
 use App\Models\User;
-use App\Models\Rol;
 use Illuminate\Support\Facades\Storage;
 
 class Cliente extends Component
 {
     use WithFileUploads;
     use WithPagination;
+
     public $categoria = 1;
     public $search = '';
     public $modal = false;
@@ -32,6 +31,7 @@ class Cliente extends Component
     public $foto = null;
     public $estado = 1;
     public $clienteSeleccionado = null;
+
     // User fields
     public $email = '';
     public $password = '';
@@ -39,6 +39,12 @@ class Cliente extends Component
 
     public $coordenadas;
 
+    // Alert modal
+    public $alertMessage = '';
+    public $alertType = ''; // 'success', 'error', 'warning'
+    public $showAlert = false;
+
+    protected $listeners = ['ocultarAlerta'];
 
     public function render()
     {
@@ -50,11 +56,10 @@ class Cliente extends Component
                 ->orWhere('correo', 'like', '%' . $this->search . '%');
         })
             ->orderBy('id', 'desc')
-            ->get(); // <-- aquí reemplazamos paginate() por get()
+            ->get();
 
         return view('livewire.cliente', compact('clientes'));
     }
-
 
     public function updatingSearch()
     {
@@ -75,7 +80,9 @@ class Cliente extends Component
             'foto',
             'estado',
             'clienteId',
-            'categoria'
+            'categoria',
+            'email',
+            'password'
         ]);
         $this->accion = $accion;
         $this->estado = 1;
@@ -106,8 +113,6 @@ class Cliente extends Component
         $this->categoria = $cliente->categoria;
     }
 
-
-
     public function verDetalle($id)
     {
         $this->clienteSeleccionado = ModeloCliente::findOrFail($id);
@@ -133,7 +138,6 @@ class Cliente extends Component
             'categoria' => 'required|integer|min:1',
         ];
 
-        // Validación de email para creación
         if ($this->accion === 'create') {
             $rules = array_merge($rules, [
                 'email' => 'required|email|unique:users,email',
@@ -144,22 +148,16 @@ class Cliente extends Component
         $this->validate($rules);
 
         try {
-            $cliente = null;
-
             if ($this->accion === 'edit' && $this->clienteId) {
                 $cliente = ModeloCliente::findOrFail($this->clienteId);
 
-                // Validar email manualmente para evitar duplicados
+                // Validar email para evitar duplicados
                 if ($this->email && $cliente->user) {
-                    $emailExiste = \App\Models\User::where('email', $this->email)
+                    $emailExiste = User::where('email', $this->email)
                         ->where('id', '!=', $cliente->user->id)
                         ->exists();
-
                     if ($emailExiste) {
-                        LivewireAlert::title('El email ya existe, intente con otro.')
-                            ->warning()
-                            ->show();
-                        return; // Salir sin actualizar nada
+                        return $this->mostrarAlerta('El email ya existe, intente con otro.', 'error');
                     }
                 }
 
@@ -197,46 +195,36 @@ class Cliente extends Component
                     'categoria' => $this->categoria,
                 ]);
 
-                LivewireAlert::title('Cliente actualizado con éxito.')
-                    ->success()
-                    ->show();
+                $this->mostrarAlerta('Cliente actualizado con éxito.', 'success');
             }
 
             if ($this->accion === 'create') {
-                // Aquí puedes dejar tu código de creación como antes
+                // Aquí va tu código de creación si quieres
             }
 
             $this->cerrarModal();
         } catch (\Exception $e) {
-            LivewireAlert::title('Error: ' . $e->getMessage())
-                ->error()
-                ->show();
+            $this->mostrarAlerta('Error: ' . $e->getMessage(), 'error');
         }
     }
-
 
     public function toggleVerificado($clienteId)
     {
         try {
             $cliente = ModeloCliente::findOrFail($clienteId);
-            $nuevoEstado = !$cliente->verificado; // Toggle: 0 -> 1 or 1 -> 0
+            $nuevoEstado = !$cliente->verificado;
             $cliente->update(['verificado' => $nuevoEstado]);
 
             if ($nuevoEstado) {
-                LivewireAlert::title('Cliente verificado con éxito.')
-                    ->success()
-                    ->show();
+                $this->mostrarAlerta('Cliente verificado con éxito.', 'success');
             } else {
-                LivewireAlert::title('Verificación cancelada.')
-                    ->warning()
-                    ->show();
+                $this->mostrarAlerta('Verificación cancelada.', 'warning');
             }
         } catch (\Exception $e) {
-            LivewireAlert::title('Error al actualizar la verificación: ' . $e->getMessage())
-                ->error()
-                ->show();
+            $this->mostrarAlerta('Error al actualizar la verificación: ' . $e->getMessage(), 'error');
         }
     }
+
     public function separarCoordenadas()
     {
         if ($this->coordenadas) {
@@ -265,8 +253,26 @@ class Cliente extends Component
             'estado',
             'clienteId',
             'clienteSeleccionado',
-            'categoria'
+            'categoria',
+            'email',
+            'password'
         ]);
         $this->resetErrorBag();
+    }
+
+    // ✅ Nuevo método de alerta interna
+  public function mostrarAlerta($mensaje, $tipo = 'success')
+{
+    $this->alertMessage = $mensaje;
+    $this->alertType = $tipo;
+    $this->showAlert = true;
+
+    // Livewire 3 usa dispatch en lugar de dispatchBrowserEvent
+    $this->dispatch('hide-alert');
+}
+
+    public function ocultarAlerta()
+    {
+        $this->showAlert = false;
     }
 }
