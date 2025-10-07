@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 class Stocks extends Component
 {
     use WithFileUploads;
+    public $estado_revision = 0;
 
     public $searchCodigo = '';
     public $ultimaReposicion = null;
@@ -77,7 +78,6 @@ class Stocks extends Component
         $this->personal_id = $personal->id;
 
         $queryExistencias = Existencia::with('existenciable', 'sucursal')
-            ->where('existenciable_type', '!=', \App\Models\Producto::class)
             ->orderBy('id');
 
         if ($rol === 2) {
@@ -110,6 +110,7 @@ class Stocks extends Component
         $this->fecha = $reposicion->fecha;
         $this->observaciones = $reposicion->observaciones;
         $this->codigo = $reposicion->codigo;
+        $this->estado_revision = $reposicion->estado_revision;
     }
 
     public function guardar()
@@ -132,6 +133,7 @@ class Stocks extends Component
             'cantidad' => $this->cantidad,
             'fecha'        => \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s'),
             'observaciones' => $this->observaciones,
+            'estado_revision' => $this->estado_revision ?? 0,
         ];
         if (!$this->reposicion_id) {
             $data['cantidad_inicial'] = $this->cantidad;
@@ -191,19 +193,14 @@ class Stocks extends Component
 
         $queryExistencias = Existencia::with('existenciable')
             ->where('existenciable_type', '!=', \App\Models\Producto::class)
-            ->whereNull('sucursal_id') // solo las que no tienen sucursal
+            ->whereNull('sucursal_id')
             ->orderBy('id');
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            // Si quieres filtrar por sucursal del personal, descomenta esta línea:
-            // $queryExistencias->where('sucursal_id', $sucursal_id);
         }
-
         $existencias = $queryExistencias->get();
         $this->existencias = $existencias;
-
-        // Solo guardamos sucursal para cada existencia
         $this->configExistencias = $existencias
             ->sortByDesc('updated_at')
             ->mapWithKeys(fn($ex) => [
@@ -296,10 +293,9 @@ class Stocks extends Component
         $usuario  = auth()->user();
         $rol      = $usuario->rol_id;
         $personal = $usuario->personal;
-
-        // EXISTENCIAS
         $queryExistencias = Existencia::with('existenciable')
             ->where('cantidad', '>', 0)
+            
             ->orderBy('id');
 
         if ($rol === 2 && $personal) {
@@ -391,5 +387,17 @@ class Stocks extends Component
         $this->eliminarReposicion($this->confirmingDeleteReposicionId);
 
         $this->confirmingDeleteReposicionId = null;
+    }
+    public function toggleEstado($id)
+    {
+        $reposicion = Reposicion::find($id);
+        if ($reposicion) {
+            $reposicion->estado_revision = !$reposicion->estado_revision;
+            $reposicion->save();
+            session()->flash('message', 'Estado de reposición actualizado correctamente.');
+        } else {
+            $this->mensajeError = "La reposición no existe.";
+            $this->modalError = true;
+        }
     }
 }

@@ -106,11 +106,14 @@ class Traspaso extends Component
     {
         $usuario = auth()->user();
         $personal = $usuario->personal;
+
         if (!$personal) {
             $this->mensajeError = "No estás asignado a un personal válido.";
             $this->modalError = true;
             return;
         }
+
+        // Validación
         $validator = Validator::make([
             'origen_id' => $this->origen_id,
             'destino_id' => $this->destino_id,
@@ -126,51 +129,74 @@ class Traspaso extends Component
             $this->modalError = true;
             return;
         }
+
         try {
             $origenPrincipal = Reposicion::findOrFail($this->origen_id);
             $destino = Reposicion::findOrFail($this->destino_id);
+
+            // Traemos todos los lotes del mismo producto (FIFO)
             $lotes = Reposicion::where('existencia_id', $origenPrincipal->existencia_id)
                 ->where('cantidad', '>', 0)
                 ->orderBy('fecha')
                 ->get();
+
             $cantidadRestante = $this->cantidad;
             $reposicionesSeleccionadas = [];
+
+            // Seleccionamos los lotes necesarios para cubrir la cantidad
             foreach ($lotes as $lote) {
                 if ($cantidadRestante <= 0) break;
 
                 $usar = min($lote->cantidad, $cantidadRestante);
+
                 $reposicionesSeleccionadas[$lote->id] = [
                     'obj' => $lote,
                     'cantidad' => $usar,
                 ];
+
                 $cantidadRestante -= $usar;
             }
+
             if ($cantidadRestante > 0) {
                 $this->mensajeError = "No hay suficiente stock en los lotes de origen para cubrir la cantidad solicitada.";
                 $this->modalError = true;
                 return;
             }
+
+            // Guardamos todo dentro de una transacción
             DB::transaction(function () use ($reposicionesSeleccionadas, $personal, $destino) {
                 $totalTraspasado = array_sum(array_map(fn($r) => $r['cantidad'], $reposicionesSeleccionadas));
+
+                // Crear el traspaso
                 $traspaso = TraspasoModel::create([
                     'codigo' => 'T-' . now()->format('YmdHis'),
                     'reposicion_destino_id' => $destino->id,
                     'personal_id' => $personal->id,
                     'cantidad' => $totalTraspasado,
                     'fecha_traspaso' => now(),
-                    'observaciones' => 'Traspaso automático de lotes',
+                    'observaciones' => 'Traspaso automático de múltiples lotes',
                 ]);
+
+                // Restar en origen y acumular en destino
                 foreach ($reposicionesSeleccionadas as $id => $data) {
                     $lote = $data['obj'];
                     $usar = $data['cantidad'];
+
+                    // Restamos cantidad y cantidad inicial del lote origen
                     $lote->cantidad -= $usar;
                     $lote->cantidad_inicial -= $usar;
+                    if ($lote->cantidad < 0) $lote->cantidad = 0;
+                    if ($lote->cantidad_inicial < 0) $lote->cantidad_inicial = 0;
                     $lote->save();
-                    $destino->cantidad += $usar;
-                    $destino->cantidad_inicial += $usar;
-                    $destino->save();
+
+                    // Registramos en la tabla pivote
                     $traspaso->reposicionesOrigen()->attach($lote->id, ['cantidad' => $usar]);
                 }
+
+                // Actualizamos destino una sola vez con el total
+                $destino->cantidad += $totalTraspasado;
+                $destino->cantidad_inicial += $totalTraspasado;
+                $destino->save();
             });
 
             $this->cerrarModal();
@@ -183,6 +209,7 @@ class Traspaso extends Component
             $this->modalError = true;
         }
     }
+
 
 
 

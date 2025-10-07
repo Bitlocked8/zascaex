@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade'); // Quién repuso
             $table->foreignId('proveedor_id')->nullable()->constrained('proveedors')->nullOnDelete(); // Proveedor opcional
             $table->text('observaciones')->nullable(); // Detalles opcionales
+            $table->boolean('estado_revision')->default(0);
+
             $table->timestamps();
         });
     }

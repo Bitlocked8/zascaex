@@ -125,15 +125,19 @@
 
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Producto</label>
+
                         @if($accion === 'edit')
                         @php
                         $ex = $existencias->firstWhere('id', $existencia_id);
                         $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
+                        $cantidadDisponible = $ex
+                        ? $ex->reposiciones->where('estado_revision', true)->sum('cantidad')
+                        : 0;
                         @endphp
                         <p class="flex items-center gap-2">
                             <span>{{ $tipo }}: {{ $ex->existenciable->descripcion ?? 'Existencia #' . $existencia_id }}</span>
                             <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                Disponible: {{ $ex->cantidad ?? 0 }}
+                                Disponible: {{ $cantidadDisponible }}
                             </span>
                             <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                 {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
@@ -142,15 +146,18 @@
                         @else
                         <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
                             @foreach($existencias as $existencia)
-                            @php $tipo = class_basename($existencia->existenciable_type); @endphp
+                            @php
+                            $tipo = class_basename($existencia->existenciable_type);
+                            $cantidadDisponible = $existencia->reposiciones->where('estado_revision', true)->sum('cantidad');
+                            @endphp
                             <button type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                                   {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                 <span>{{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}</span>
                                 <span class="flex items-center gap-2">
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        Disponible: {{ $existencia->cantidad }}
+                                        Disponible: {{ $cantidadDisponible }}
                                     </span>
                                     <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
@@ -161,6 +168,7 @@
                         </div>
                         @endif
                     </div>
+
 
                     <div>
                         <label class="font-semibold text-sm">Cantidad</label>

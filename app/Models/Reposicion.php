@@ -13,6 +13,7 @@ class Reposicion extends Model
         'codigo',
         'fecha',
         'cantidad',
+        'estado_revision',
         'existencia_id',
         'cantidad_inicial',
         'personal_id',

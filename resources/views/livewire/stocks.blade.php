@@ -40,7 +40,14 @@
                 <p><strong>Cantidad aun no usada:</strong> {{ $repo->cantidad }}</p>
                 <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
                 <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
+                <p>
+                    <strong>Estado:</strong>
+                    <span class="{{ $repo->estado_revision ? 'text-green-600 font-semibold' : 'text-yellow-600 font-semibold' }}">
+                        {{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}
+                    </span>
+                </p>
             </div>
+
             <div class="flex flex-col items-end gap-4 col-span-3">
                 <button wire:click="abrirModal('edit', {{ $repo->id }})" class="btn-circle btn-cyan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,10 +92,12 @@
                         <path d="M11 15h2" />
                     </svg>
                 </button>
+                @if(!$repo->estado_revision)
                 <button
                     type="button"
                     wire:click="confirmarEliminarReposicion({{ $repo->id }})"
-                    class="btn-circle btn-cyan">
+                    class="btn-circle btn-cyan"
+                    title="Eliminar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -100,6 +109,29 @@
                         <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
                     </svg>
                 </button>
+                @endif
+
+                <button
+                    wire:click="toggleEstado({{ $repo->id }})"
+                    class="btn-circle {{ $repo->estado_revision ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
+                    title="{{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}">
+                    @if($repo->estado_revision)
+                    <!-- Icono confirmado -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 11l3 3l8 -8" />
+                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+                    </svg>
+                    @else
+                    <!-- Icono en revisión -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 11l3 3l8 -8" />
+                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+                    </svg>
+                    @endif
+                </button>
+
 
 
             </div>
@@ -153,12 +185,17 @@
                         @else
                         <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
                             @foreach($existencias as $existencia)
-                            @php $tipo = class_basename($existencia->existenciable_type); @endphp
+                            @php
+                            $tipo = class_basename($existencia->existenciable_type);
+                            $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
+                            @endphp
                             <button
                                 type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                                        {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                       {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
+                                         {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                @if($disabled) disabled @endif>
                                 <span>{{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}</span>
                                 <span class="flex items-center gap-2">
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
@@ -170,6 +207,7 @@
                                 </span>
                             </button>
                             @endforeach
+
                         </div>
                         @endif
                     </div>
