@@ -360,14 +360,21 @@
                             <p class="text-sm text-gray-600">
                                 Fecha: {{ $pago['fecha'] }}
                             </p>
-                            <button type="button" wire:click="eliminarPago({{ $index }})" class="btn-circle btn-cyan"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <button type="button" wire:click="confirmarEliminarPago({{ $index }})" class="btn-circle btn-cyan"
+                                title="Eliminar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                     <path d="M4 7l16 0" />
                                     <path d="M10 11l0 6" />
                                     <path d="M14 11l0 6" />
                                     <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                                     <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                                </svg></button>
+                                </svg>
+                            </button>
+
+
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -551,6 +558,41 @@
         </div>
     </div>
     @endif
+    @if($confirmingDeletePagoIndex !== null)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="flex flex-col gap-4 text-center">
+                    <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
+                    <p class="text-gray-600">
+                        El comprobante de pago seleccionado se eliminará permanentemente.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" wire:click="eliminarPagoConfirmado" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
+                    </svg>
+                </button>
+
+                <!-- Botón Cancelar -->
+                <button type="button" wire:click="$set('confirmingDeletePagoIndex', null)" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 10l4 4m0-4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+
 
 
 

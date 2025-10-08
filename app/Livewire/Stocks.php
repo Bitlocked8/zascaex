@@ -41,6 +41,8 @@ class Stocks extends Component
     public $modalError = false;
     public $mensajeError = '';
     public $confirmingDeleteReposicionId = null;
+
+    public $confirmingDeletePagoIndex = null;
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
         'personal_id' => 'required|exists:personals,id',
@@ -295,7 +297,7 @@ class Stocks extends Component
         $personal = $usuario->personal;
         $queryExistencias = Existencia::with('existenciable')
             ->where('cantidad', '>', 0)
-            
+
             ->orderBy('id');
 
         if ($rol === 2 && $personal) {
@@ -375,6 +377,22 @@ class Stocks extends Component
 
         session()->flash('message', 'Reposición eliminada correctamente y asignaciones actualizadas.');
     }
+
+
+    public function confirmarEliminarPago($index)
+    {
+        $this->confirmingDeletePagoIndex = $index;
+    }
+
+    public function eliminarPagoConfirmado()
+    {
+        if ($this->confirmingDeletePagoIndex === null) return;
+
+        $this->eliminarPago($this->confirmingDeletePagoIndex);
+
+        $this->confirmingDeletePagoIndex = null;
+    }
+
     public function confirmarEliminarReposicion($id)
     {
         $this->confirmingDeleteReposicionId = $id;

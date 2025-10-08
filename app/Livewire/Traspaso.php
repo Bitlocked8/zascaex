@@ -50,7 +50,12 @@ class Traspaso extends Component
             $trabajo = $usuario->personal->trabajos()->where('estado', 1)->first();
             $sucursalId = $trabajo ? $trabajo->sucursal_id : null;
         }
-        $repos = Reposicion::with('existencia', 'comprobantes')->get();
+
+        // Traemos solo lotes con estado_revision = true
+        $repos = Reposicion::with('existencia', 'comprobantes')
+            ->where('estado_revision', true)
+            ->get();
+
         $this->reposicionesOrigen = $repos->filter(function ($r) use ($usuario, $sucursalId) {
             return $usuario->rol_id == 1 || ($r->existencia && $r->existencia->sucursal_id == $sucursalId);
         })->groupBy('existencia_id')->map(function ($lotes) {
@@ -61,6 +66,7 @@ class Traspaso extends Component
                 'reposicionesIds' => $lotes->pluck('id')->toArray(),
             ];
         })->values();
+
         $this->reposicionesDestino = $repos->filter(function ($r) use ($usuario, $sucursalId) {
             return $usuario->rol_id == 1 || ($r->existencia && $r->existencia->sucursal_id != $sucursalId);
         })->groupBy('existencia_id')->map(function ($lotes) {
@@ -77,8 +83,8 @@ class Traspaso extends Component
     {
         $this->accion = $accion;
         $this->modal = true;
-        $this->cargarReposiciones(auth()->user());
-        $this->personals = Personal::all();
+        $usuario = auth()->user();
+        $this->cargarReposiciones($usuario);
 
         if ($accion === 'create') {
             $this->codigo = 'T-' . now()->format('Ymd-His');
@@ -86,11 +92,12 @@ class Traspaso extends Component
             $this->cantidad = null;
             $this->origen_id = null;
             $this->destino_id = null;
-            $this->personal_id = null;
+            $this->personal_id = $usuario->personal->id ?? null;
             $this->observaciones = null;
         }
+
         if ($accion === 'edit' && $id) {
-            $traspaso = TraspasoModel::findOrFail($id);
+            $traspaso = TraspasoModel::with(['reposicionesOrigen' => fn($q) => $q->where('estado_revision', true)])->findOrFail($id);
             $this->traspaso_id = $traspaso->id;
             $this->codigo = $traspaso->codigo;
             $this->fecha_traspaso = $traspaso->fecha_traspaso;
@@ -98,7 +105,19 @@ class Traspaso extends Component
             $this->destino_id = $traspaso->reposicion_destino_id;
             $this->personal_id = $traspaso->personal_id;
             $this->observaciones = $traspaso->observaciones;
-            $this->origen_id = optional($traspaso->reposicionesOrigen->first())->id;
+
+            // Incluir la reposicion origen asociada al traspaso aunque no tenga stock
+            if ($traspaso->reposicionesOrigen->count()) {
+                $this->origen_id = $traspaso->reposicionesOrigen->first()->id;
+                $origenExistenciaId = $traspaso->reposicionesOrigen->first()->existencia_id;
+                if (!$this->reposicionesOrigen->pluck('existencia.id')->contains($origenExistenciaId)) {
+                    $this->reposicionesOrigen->push((object)[
+                        'existencia' => $traspaso->reposicionesOrigen->first()->existencia,
+                        'totalDisponible' => $traspaso->reposicionesOrigen->sum('pivot->cantidad'),
+                        'reposicionesIds' => $traspaso->reposicionesOrigen->pluck('id')->toArray(),
+                    ]);
+                }
+            }
         }
     }
 
@@ -113,7 +132,6 @@ class Traspaso extends Component
             return;
         }
 
-        // Validación
         $validator = Validator::make([
             'origen_id' => $this->origen_id,
             'destino_id' => $this->destino_id,
@@ -131,29 +149,22 @@ class Traspaso extends Component
         }
 
         try {
-            $origenPrincipal = Reposicion::findOrFail($this->origen_id);
-            $destino = Reposicion::findOrFail($this->destino_id);
+            $origenPrincipal = Reposicion::where('estado_revision', true)->findOrFail($this->origen_id);
+            $destino = Reposicion::where('estado_revision', true)->findOrFail($this->destino_id);
 
-            // Traemos todos los lotes del mismo producto (FIFO)
             $lotes = Reposicion::where('existencia_id', $origenPrincipal->existencia_id)
                 ->where('cantidad', '>', 0)
+                ->where('estado_revision', true)
                 ->orderBy('fecha')
                 ->get();
 
             $cantidadRestante = $this->cantidad;
             $reposicionesSeleccionadas = [];
 
-            // Seleccionamos los lotes necesarios para cubrir la cantidad
             foreach ($lotes as $lote) {
                 if ($cantidadRestante <= 0) break;
-
                 $usar = min($lote->cantidad, $cantidadRestante);
-
-                $reposicionesSeleccionadas[$lote->id] = [
-                    'obj' => $lote,
-                    'cantidad' => $usar,
-                ];
-
+                $reposicionesSeleccionadas[$lote->id] = ['obj' => $lote, 'cantidad' => $usar];
                 $cantidadRestante -= $usar;
             }
 
@@ -163,11 +174,9 @@ class Traspaso extends Component
                 return;
             }
 
-            // Guardamos todo dentro de una transacción
             DB::transaction(function () use ($reposicionesSeleccionadas, $personal, $destino) {
                 $totalTraspasado = array_sum(array_map(fn($r) => $r['cantidad'], $reposicionesSeleccionadas));
 
-                // Crear el traspaso
                 $traspaso = TraspasoModel::create([
                     'codigo' => 'T-' . now()->format('YmdHis'),
                     'reposicion_destino_id' => $destino->id,
@@ -177,126 +186,127 @@ class Traspaso extends Component
                     'observaciones' => 'Traspaso automático de múltiples lotes',
                 ]);
 
-                // Restar en origen y acumular en destino
                 foreach ($reposicionesSeleccionadas as $id => $data) {
                     $lote = $data['obj'];
                     $usar = $data['cantidad'];
 
-                    // Restamos cantidad y cantidad inicial del lote origen
+                    // Ajustamos cantidad en origen
                     $lote->cantidad -= $usar;
                     $lote->cantidad_inicial -= $usar;
-                    if ($lote->cantidad < 0) $lote->cantidad = 0;
-                    if ($lote->cantidad_inicial < 0) $lote->cantidad_inicial = 0;
                     $lote->save();
 
-                    // Registramos en la tabla pivote
                     $traspaso->reposicionesOrigen()->attach($lote->id, ['cantidad' => $usar]);
+
+                    // Trasladamos los comprobantes proporcionalmente
+                    foreach ($lote->comprobantes as $comprobante) {
+                        $proporcion = $usar / ($lote->cantidad + $usar); // cantidad movida / cantidad original
+                        $montoTraslado = round($comprobante->monto * $proporcion, 2);
+
+                        if ($montoTraslado > 0) {
+                            // Reducimos monto en origen
+                            $comprobante->monto -= $montoTraslado;
+                            $comprobante->save();
+
+                            // Creamos comprobante en destino
+                            \App\Models\ComprobantePago::create([
+                                'reposicion_id' => $destino->id,
+                                'codigo' => $comprobante->codigo . '-T',
+                                'monto' => $montoTraslado,
+                                'fecha' => now(),
+                                'observaciones' => 'Traspaso de lote ' . $lote->id,
+                            ]);
+                        }
+                    }
                 }
 
-                // Actualizamos destino una sola vez con el total
+                // Ajustamos cantidad en destino
                 $destino->cantidad += $totalTraspasado;
                 $destino->cantidad_inicial += $totalTraspasado;
                 $destino->save();
             });
 
             $this->cerrarModal();
-            session()->flash('message', 'Traspaso guardado correctamente!');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $this->mensajeError = "Error: no se encontró uno de los registros requeridos.";
-            $this->modalError = true;
+            session()->flash('message', 'Traspaso guardado correctamente con comprobantes actualizados!');
         } catch (\Throwable $e) {
-            $this->mensajeError = "Ocurrió un error inesperado al guardar el traspaso: " . $e->getMessage();
+            $this->mensajeError = "Ocurrió un error: " . $e->getMessage();
             $this->modalError = true;
         }
     }
 
 
-
-
     public function eliminarTraspaso($id)
-    {
-        $traspaso = TraspasoModel::findOrFail($id);
+{
+    $traspaso = TraspasoModel::with('reposicionesOrigen.comprobantes', 'reposicionDestino.comprobantes')->findOrFail($id);
 
-        DB::transaction(function () use ($traspaso) {
-            foreach ($traspaso->reposicionesOrigen as $reposicion) {
-                $cant = $reposicion->pivot->cantidad;
-                $origen = Reposicion::find($reposicion->id);
-                $origen->cantidad += $cant;
-                $origen->cantidad_inicial += $cant;
-                $origen->save();
+    DB::transaction(function () use ($traspaso) {
+        $destino = Reposicion::find($traspaso->reposicion_destino_id);
 
-                $destino = Reposicion::find($traspaso->reposicion_destino_id);
-                $destino->cantidad -= $cant;
-                $destino->cantidad_inicial -= $cant;
-                $destino->save();
+        foreach ($traspaso->reposicionesOrigen as $reposicion) {
+            $cant = $reposicion->pivot->cantidad;
+            $origen = Reposicion::find($reposicion->id);
 
-                $comprobanteDestino = $destino->comprobantes()
-                    ->where('observaciones', 'like', '%Generado automáticamente por traspaso%')
-                    ->first();
+            // Restaurar cantidades
+            $origen->cantidad += $cant;
+            $origen->cantidad_inicial += $cant;
+            $origen->save();
 
-                $comprobanteOrigen = $origen->comprobantes->first();
-                if ($comprobanteOrigen && $comprobanteDestino) {
-                    $comprobanteOrigen->monto += $comprobanteDestino->monto;
-                    $comprobanteOrigen->save();
-                    $comprobanteDestino->delete();
+            $destino->cantidad -= $cant;
+            $destino->cantidad_inicial -= $cant;
+            $destino->save();
+
+            // Restaurar montos de todos los comprobantes divididos en destino
+            $comprobantesDestino = $destino->comprobantes()
+                ->where('observaciones', 'like', '%Traspaso de lote ' . $reposicion->id . '%')
+                ->get();
+
+            foreach ($comprobantesDestino as $comprobanteDestino) {
+                $origenComprobante = $reposicion->comprobantes()->first();
+                if ($origenComprobante) {
+                    $origenComprobante->monto += $comprobanteDestino->monto;
+                    $origenComprobante->save();
                 }
+                $comprobanteDestino->delete();
             }
+        }
 
-            $traspaso->reposicionesOrigen()->detach();
-            $traspaso->delete();
-        });
+        // Limpiar la relación y eliminar el traspaso
+        $traspaso->reposicionesOrigen()->detach();
+        $traspaso->delete();
+    });
 
-        $this->traspasos = $this->traspasos->filter(fn($t) => $t->id != $id);
-        session()->flash('message', 'Traspaso y comprobantes asociados eliminados correctamente!');
-    }
+    $this->traspasos = $this->traspasos->filter(fn($t) => $t->id != $id);
+    session()->flash('message', 'Traspaso y comprobantes asociados eliminados correctamente y montos restaurados!');
+}
+
 
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset([
-            'traspaso_id',
-            'origen_id',
-            'destino_id',
-            'cantidad',
-            'observaciones',
-        ]);
+        $this->reset(['traspaso_id', 'origen_id', 'destino_id', 'cantidad', 'observaciones']);
     }
 
     public function render()
     {
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
-        $sucursalId = null;
-        if ($rol == 2) {
-            $trabajo = $usuario->personal->trabajos()->where('estado', 1)->first();
-            $sucursalId = $trabajo ? $trabajo->sucursal_id : null;
-        }
 
         $this->cargarReposiciones($usuario);
 
         $query = TraspasoModel::with([
             'personal',
             'reposicionesOrigen.existencia',
-            'reposicionesOrigen.comprobantes',
             'reposicionDestino.existencia',
-            'reposicionDestino.comprobantes',
         ]);
 
-        if ($rol == 2 && $sucursalId) {
+        if ($rol == 2) {
             $query->where('personal_id', $usuario->personal->id);
         }
 
         if ($this->search) {
-            $query->where(
-                fn($q) =>
-                $q->where('codigo', 'like', "%{$this->search}%")
-                    ->orWhere('observaciones', 'like', "%{$this->search}%")
-            );
+            $query->where(fn($q) => $q->where('codigo', 'like', "%{$this->search}%"));
         }
 
         $this->traspasos = $query->latest()->get();
-        $this->personals = $rol == 1 ? Personal::all() : collect([$usuario->personal]);
-
         return view('livewire.traspaso');
     }
 
@@ -304,7 +314,6 @@ class Traspaso extends Component
     {
         $this->confirmingDeleteId = $id;
     }
-
     public function eliminarTraspasoConfirmado()
     {
         if (!$this->confirmingDeleteId) return;
