@@ -12,8 +12,9 @@ class Soplado extends Model
     protected $fillable = [
         'codigo',
         'asignado_id',
-        'existencia_id', // ← item destino
+        'existencia_id',
         'reposicion_id',
+        'personal_id',
         'cantidad',
         'merma',
         'estado',
@@ -21,7 +22,6 @@ class Soplado extends Model
         'fecha',
     ];
 
-    // Relaciones
     public function asignado()
     {
         return $this->belongsTo(Asignado::class);
@@ -35,5 +35,9 @@ class Soplado extends Model
     public function existencia()
     {
         return $this->belongsTo(Existencia::class);
+    }
+    public function personal()
+    {
+        return $this->belongsTo(Personal::class);
     }
 }

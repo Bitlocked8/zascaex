@@ -14,12 +14,12 @@ return new class extends Migration
             $table->foreignId('asignado_id')->constrained('asignados')->onDelete('cascade');
             $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
             $table->foreignId('reposicion_id')->constrained('reposicions')->onDelete('cascade');
-            $table->decimal('cantidad', 10, 2);
-            $table->decimal('merma', 10, 2)->default(0);
+            $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade'); // <-- agregado
+            $table->decimal('cantidad', 10, 2)->nullable(); // <-- ahora permite null
+            $table->decimal('merma', 10, 2)->default(0)->nullable(); // opcional nullable
             $table->tinyInteger('estado')->default(0);
             $table->text('observaciones')->nullable();
-            $table->dateTime('fecha')->default(now());
-
+            $table->dateTime('fecha')->nullable(); // <-- nullable para evitar problemas
             $table->timestamps();
         });
     }
