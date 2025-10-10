@@ -27,6 +27,8 @@ class Asignaciones extends Component
     public $modalError = false;
     public $mensajeError = '';
     public $confirmingDeleteAsignacionId = null;
+    public $modalDetalle = false;
+    public $asignacionSeleccionada;
 
     public function abrirModal($accion = 'create', $id = null)
     {
@@ -267,5 +269,17 @@ class Asignaciones extends Component
         if (!$this->confirmingDeleteAsignacionId) return;
         $this->eliminarAsignacion($this->confirmingDeleteAsignacionId);
         $this->confirmingDeleteAsignacionId = null;
+    }
+
+    public function modaldetalle($id)
+    {
+        $this->asignacionSeleccionada = \App\Models\Asignado::with(['existencia.existenciable', 'existencia.sucursal', 'reposiciones', 'personal'])->find($id);
+        $this->modalDetalle = true;
+    }
+
+    public function cerrarModalDetalle()
+    {
+        $this->modalDetalle = false;
+        $this->asignacionSeleccionada = null;
     }
 }

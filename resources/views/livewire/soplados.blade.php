@@ -25,6 +25,34 @@
                 <p><strong>Cantidad:</strong> {{ $soplado->cantidad }}</p>
                 <p><strong>Merma:</strong> {{ $soplado->merma }}</p>
                 <p><strong>Observaciones:</strong> {{ $soplado->observaciones ?? 'N/A' }}</p>
+                @php
+                $montoUsado = 0;
+                $montoMerma = 0;
+
+                if($soplado->asignado) {
+                foreach ($soplado->asignado->reposiciones as $reposicion) {
+                $precioUnitario = $reposicion->cantidad_inicial > 0
+                ? $reposicion->comprobantes->sum('monto') / $reposicion->cantidad_inicial
+                : 0;
+
+                // Cantidad usada en soplado
+                $montoUsado += $precioUnitario * $soplado->cantidad;
+
+                // Merma
+                $montoMerma += $precioUnitario * ($soplado->merma ?? 0);
+                }
+                }
+                @endphp
+
+                <span class="inline-block bg-cyan-700 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    Monto usado: {{ number_format($montoUsado, 2, ',', '.') }} Bs
+                </span>
+
+                <span class="inline-block bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    Monto merma: {{ number_format($montoMerma, 2, ',', '.') }} Bs
+                </span>
+
+
                 <p>
                     <strong>Estado:</strong>
                     <span class="
@@ -278,7 +306,7 @@
     @endif
 
     @if($modalDetalle && $sopladoSeleccionado)
-    <div class="modal-overlay" wire:ignore.self>
+    <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
 
