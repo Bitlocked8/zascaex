@@ -40,30 +40,21 @@ class Asignaciones extends Component
             'motivo',
             'codigo',
         ]);
-
         $this->accion = $accion;
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
-
-        // Verificar permisos
         if (!in_array($rol, [1, 2])) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
-
         $personal = $usuario->personal;
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
             return;
         }
-
         $this->personal_id = $personal->id;
-
-        // Consulta básica de existencias con lotes confirmados
         $query = Existencia::with('existenciable', 'sucursal')
             ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)->where('estado_revision', true));
-
-        // Filtrar por sucursal si es rol 2
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             if ($sucursal_id) {
@@ -73,24 +64,17 @@ class Asignaciones extends Component
                 $this->modalError = true;
             }
         }
-
-        // Incluir la existencia actual si estamos editando
         if ($accion === 'edit' && $id) {
             $asignado = Asignado::find($id);
             if ($asignado && $asignado->existencia_id) {
                 $query->orWhere('id', $asignado->existencia_id);
             }
         }
-
         $this->existencias = $query->orderBy('id')->get();
-
-        // Configuración inicial para crear
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
-
-        // Cargar datos de asignación existente
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
@@ -159,8 +143,6 @@ class Asignaciones extends Component
             if ($this->accion === 'edit' && $this->asignacion_id) {
                 $asignado = Asignado::findOrFail($this->asignacion_id);
                 $fechaFormateada = \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s');
-
-                // Devolver lotes anteriores
                 foreach ($asignado->reposiciones as $lote) {
                     $lote->cantidad += $lote->pivot->cantidad;
                     $lote->save();
@@ -191,8 +173,6 @@ class Asignaciones extends Component
                     'observaciones' => $this->observaciones,
                 ]);
             }
-
-            // Distribuir lotes confirmados
             $lotes = Reposicion::where('existencia_id', $this->existencia_id)
                 ->where('cantidad', '>', 0)
                 ->where('estado_revision', true)

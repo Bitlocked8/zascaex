@@ -14,7 +14,6 @@ class Soplados extends Component
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
-
     public $soplado_id = null;
     public $asignado_id;
     public $existencia_destino_id;
@@ -24,10 +23,10 @@ class Soplados extends Component
     public $observaciones = '';
     public $fecha;
     public $codigo;
-
+    public $confirmingDeleteSopladoId = null;
     public $accion = 'create';
     public $sopladoSeleccionado = null;
-
+    public $existenciaSeleccionada = null;
     protected $rules = [
         'asignado_id' => 'required|exists:asignados,id',
         'existencia_destino_id' => 'required|exists:existencias,id',
@@ -125,42 +124,53 @@ class Soplados extends Component
 
         $personalId = $usuario->personal->id;
 
-        DB::transaction(function () use ($personalId) {
-            $asignado = Asignado::findOrFail($this->asignado_id);
-            $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
-            $cantidad = $this->cantidad ?? 0;
-            $merma = $cantidad > 0 ? max(0, $asignado->cantidad - $cantidad) : 0;
+        $asignado = Asignado::findOrFail($this->asignado_id);
+        $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
+        $cantidad = $this->cantidad ?? 0;
+        $merma = $cantidad > 0 ? max(0, $asignado->cantidad - $cantidad) : 0;
 
-            if ($cantidad > $asignado->cantidad) {
-                $this->addError('cantidad', 'La cantidad no puede superar la asignada.');
-                return;
-            }
+        $asignadoDisponible = $asignado->cantidad;
+        if ($this->accion === 'edit' && $this->soplado_id) {
+            $sopladoAnterior = Soplado::find($this->soplado_id);
+            $asignadoDisponible += ($sopladoAnterior->cantidad + $sopladoAnterior->merma);
+        }
+
+        if ($cantidad > $asignadoDisponible) {
+            $this->addError('cantidad', '⚠ No puedes usar más de la cantidad disponible en la asignación.');
+            return;
+        }
+
+        DB::transaction(function () use ($asignado, $existenciaDestino, $cantidad, $merma, $personalId) {
 
             if ($this->accion === 'edit' && $this->soplado_id) {
                 $soplado = Soplado::findOrFail($this->soplado_id);
                 $reposicion = $soplado->reposicion ?? $this->crearReposicion($existenciaDestino, $personalId);
 
-                // Revertir cantidades si el soplado estaba confirmado antes
-                if ($soplado->estado == 2) {
-                    $existenciaDestino->cantidad -= $soplado->cantidad;
+                $estadoAnterior = $soplado->estado;
+
+                // Si antes estaba confirmado y ahora no, revertimos
+                if ($estadoAnterior == 2 && $this->estado != 2) {
                     $asignado->cantidad += ($soplado->cantidad + $soplado->merma);
-                    $existenciaDestino->save();
+                    $existenciaDestino->cantidad -= $soplado->cantidad;
                     $asignado->save();
+                    $existenciaDestino->save();
                 }
 
-                // Aplicar cantidades si ahora está confirmado
-                if ($this->estado == 2) {
-                    $existenciaDestino->cantidad += $cantidad;
+                // Si ahora está confirmado y antes no, aplicamos movimiento
+                if ($this->estado == 2 && $estadoAnterior != 2) {
                     $asignado->cantidad -= ($cantidad + $merma);
-                    $existenciaDestino->save();
+                    $existenciaDestino->cantidad += $cantidad;
                     $asignado->save();
-
-                    $reposicion->cantidad = $cantidad;
-                    $reposicion->cantidad_inicial = $cantidad;
-                    $reposicion->estado_revision = 2;
-                    $reposicion->save();
+                    $existenciaDestino->save();
                 }
 
+                // Actualizar reposición según estado
+                $reposicion->cantidad = $this->estado == 2 ? $cantidad : 0;
+                $reposicion->cantidad_inicial = $this->estado == 2 ? $cantidad : 0;
+                $reposicion->estado_revision = $this->estado == 2;
+                $reposicion->save();
+
+                // Actualizar soplado
                 $soplado->update([
                     'cantidad' => $cantidad,
                     'merma' => $merma,
@@ -171,7 +181,6 @@ class Soplados extends Component
                     'reposicion_id' => $reposicion->id,
                 ]);
             } else {
-                // Crear nuevo soplado
                 $reposicionDestino = $this->crearReposicion($existenciaDestino, $personalId);
 
                 $soplado = Soplado::create([
@@ -187,16 +196,15 @@ class Soplados extends Component
                     'reposicion_id' => $reposicionDestino->id,
                 ]);
 
-                // Aplicar cantidades si está confirmado
                 if ($this->estado == 2 && $cantidad > 0) {
-                    $existenciaDestino->cantidad += $cantidad;
                     $asignado->cantidad -= ($cantidad + $merma);
-                    $existenciaDestino->save();
+                    $existenciaDestino->cantidad += $cantidad;
                     $asignado->save();
+                    $existenciaDestino->save();
 
                     $reposicionDestino->cantidad = $cantidad;
                     $reposicionDestino->cantidad_inicial = $cantidad;
-                    $reposicionDestino->estado_revision = 2;
+                    $reposicionDestino->estado_revision = true;
                     $reposicionDestino->save();
                 }
             }
@@ -205,6 +213,7 @@ class Soplados extends Component
         $this->cerrarModal();
         session()->flash('mensaje', 'Soplado guardado correctamente.');
     }
+
 
 
     private function crearReposicion($existenciaDestino, $personalId)
@@ -246,11 +255,21 @@ class Soplados extends Component
         $this->resetErrorBag();
     }
 
-    public function modalDetalle($id)
+    public function verDetalleSoplado($id)
     {
-        $this->sopladoSeleccionado = Soplado::with(['asignado', 'reposicion', 'existencia'])->findOrFail($id);
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->sopladoSeleccionado = Soplado::with([
+            'asignado.existencia.existenciable',
+            'existencia.existenciable',
+            'personal',
+            'reposicion'
+        ])->findOrFail($id);
+        $this->existenciaSeleccionada = $this->sopladoSeleccionado->existencia;
         $this->modalDetalle = true;
     }
+
+
 
     public function cerrarModalDetalle()
     {
@@ -267,6 +286,20 @@ class Soplados extends Component
         });
     }
 
+
+    public function confirmarEliminarSoplado($id)
+    {
+        $this->confirmingDeleteSopladoId = $id;
+    }
+
+    public function eliminarSopladoConfirmado()
+    {
+        if (!$this->confirmingDeleteSopladoId) return;
+
+        $this->eliminar($this->confirmingDeleteSopladoId);
+        $this->confirmingDeleteSopladoId = null;
+    }
+
     public function eliminar($soplado_id)
     {
         $soplado = Soplado::find($soplado_id);
@@ -280,7 +313,6 @@ class Soplados extends Component
             $asignado = $soplado->asignado;
             $existenciaDestino = $soplado->existencia;
 
-            // Solo revertir cantidades si el soplado estaba confirmado
             if ($soplado->estado == 2) {
                 if ($asignado) {
                     $asignado->cantidad += ($soplado->cantidad + $soplado->merma);
@@ -296,10 +328,11 @@ class Soplados extends Component
                 }
             }
 
-            // Eliminar reposición asociada si existe
             if ($soplado->reposicion_id) {
                 $reposicion = Reposicion::find($soplado->reposicion_id);
-                if ($reposicion) $reposicion->delete();
+                if ($reposicion) {
+                    $reposicion->delete();
+                }
             }
 
             $soplado->delete();

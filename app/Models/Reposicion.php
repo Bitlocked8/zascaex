@@ -68,4 +68,9 @@ class Reposicion extends Model
     {
         return $this->hasMany(Traspaso::class, 'reposicion_destino_id');
     }
+
+    public function soplados()
+{
+    return $this->hasMany(Soplado::class);
+}
 }

@@ -27,10 +27,12 @@
 
                 <p><strong>Observaciones:</strong> {{ $asignado->observaciones ?? 'N/A' }}</p>
                 @if(isset($asignado->cantidad_original) && $asignado->cantidad_original != $asignado->cantidad)
-                <p class="text-sm text-orange-600">
-                    ⚠ Se eliminó un lote, la cantidad actual es menor que la original, se recomienda eliminar y crear uno nuevo.
-                </p>
+                <span class="inline-block bg-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                     Fue usada en soplado
+                </span>
+
                 @endif
+
             </div>
 
             <div class="flex flex-col items-end gap-4 col-span-3">
