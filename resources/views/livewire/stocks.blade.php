@@ -46,6 +46,19 @@
                         {{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}
                     </span>
                 </p>
+                @if($repo->soplados()->exists() && $repo->comprobantes && $repo->comprobantes->count() > 0)
+                <div class="mt-4 border-t pt-2">
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($repo->comprobantes as $comprobante)
+                        <span class="inline-block bg-cyan-700 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                            {{ $comprobante->codigo }} - {{ number_format($comprobante->monto, 2, ',', '.') }} Bs
+                        </span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+
             </div>
             @if(!$repo->soplados()->exists())
             <div class="flex flex-col items-end gap-4 col-span-3">
@@ -92,6 +105,7 @@
                         <path d="M11 15h2" />
                     </svg>
                 </button>
+
                 @if(!$repo->estado_revision)
                 <button
                     type="button"
@@ -111,28 +125,26 @@
                 </button>
                 @endif
 
-                <button
-                    wire:click="toggleEstado({{ $repo->id }})"
-                    class="btn-circle {{ $repo->estado_revision ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
-                    title="{{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}">
-                    @if($repo->estado_revision)
-                    <!-- Icono confirmado -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M9 11l3 3l8 -8" />
-                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
-                    </svg>
-                    @else
-                    <!-- Icono en revisión -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M9 11l3 3l8 -8" />
-                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
-                    </svg>
-                    @endif
-                </button>
-
-
+                @if($repo->cantidad === $repo->cantidad_inicial)
+<button
+    wire:click="toggleEstado({{ $repo->id }})"
+    class="btn-circle {{ $repo->estado_revision ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
+    title="{{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}">
+    @if($repo->estado_revision)
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M9 11l3 3l8 -8" />
+        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+    </svg>
+    @else
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M9 11l3 3l8 -8" />
+        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+    </svg>
+    @endif
+</button>
+@endif
 
             </div>
             @endif
@@ -477,15 +489,11 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
-
-                <!-- Icono con inicial -->
                 <div class="flex justify-center items-center">
                     <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
                         {{ strtoupper(substr($reposicionSeleccionada->codigo ?? '-', 0, 1)) }}
                     </div>
                 </div>
-
-                <!-- Información de la Reposición -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -516,16 +524,12 @@
                         <span class="label-info">Nombre:</span>
                         <span class="badge-info">{{ $reposicionSeleccionada->existencia->existenciable?->descripcion ?? '-' }}</span>
                     </div>
-
                     <div class="flex flex-col gap-2">
                         <span class="label-info">Observaciones:</span>
                         <span class="badge-info">{{ $reposicionSeleccionada->observaciones ?? '-' }}</span>
                     </div>
                 </div>
-
             </div>
-
-            <!-- Footer -->
             <div class="modal-footer mt-4">
                 <button wire:click="cerrarModalDetalleReposicion" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
