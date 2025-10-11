@@ -8,24 +8,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('soplados', function (Blueprint $table) {
+        Schema::create('llenados', function (Blueprint $table) {
             $table->id();
             $table->string('codigo')->unique();
-            $table->foreignId('asignado_id')->constrained('asignados')->onDelete('cascade');
+            $table->foreignId('asignado_base_id')->constrained('asignados')->onDelete('cascade');
+            $table->foreignId('asignado_tapa_id')->constrained('asignados')->onDelete('cascade');
             $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
-            $table->foreignId('reposicion_id')->constrained('reposicions')->onDelete('cascade');
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade');
-            $table->decimal('cantidad', 10, 2)->nullable();
-            $table->decimal('merma', 10, 2)->default(0)->nullable();
+            $table->foreignId('reposicion_id')->nullable()->constrained('reposicions')->onDelete('cascade');
+            $table->decimal('cantidad', 10, 2)->nullable();  
+            $table->decimal('merma_base', 10, 2)->default(0);    
+            $table->decimal('merma_tapa', 10, 2)->default(0); 
             $table->tinyInteger('estado')->default(0);
             $table->text('observaciones')->nullable();
             $table->dateTime('fecha')->nullable();
+
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('soplados');
+        Schema::dropIfExists('llenados');
     }
 };
