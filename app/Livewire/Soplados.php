@@ -112,144 +112,132 @@ class Soplados extends Component
         return $prefijo . '-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
     }
 
-   public function guardar()
-{
-    $this->validate();
+    public function guardar()
+    {
+        $this->validate();
 
-    $usuario = auth()->user()->load('personal');
+        $usuario = auth()->user()->load('personal');
 
-    if (!$usuario->personal) {
-        $this->addError('personal_id', 'El usuario autenticado no tiene un personal asignado.');
-        return;
-    }
-
-    $personalId = $usuario->personal->id;
-
-    $asignado = Asignado::findOrFail($this->asignado_id);
-    $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
-    $cantidad = $this->cantidad ?? 0;
-    $merma = $cantidad > 0 ? max(0, $asignado->cantidad - $cantidad) : 0;
-
-    // Verificar cantidad disponible
-    $asignadoDisponible = $asignado->cantidad;
-    if ($this->accion === 'edit' && $this->soplado_id) {
-        $sopladoAnterior = Soplado::find($this->soplado_id);
-        $asignadoDisponible += ($sopladoAnterior->cantidad + $sopladoAnterior->merma);
-    }
-
-    if ($cantidad > $asignadoDisponible) {
-        $this->addError('cantidad', '⚠ No puedes usar más de la cantidad disponible en la asignación.');
-        return;
-    }
-
-    DB::transaction(function () use ($asignado, $existenciaDestino, $cantidad, $merma, $personalId) {
-
-        if ($this->accion === 'edit' && $this->soplado_id) {
-
-            $soplado = Soplado::findOrFail($this->soplado_id);
-            $reposicion = $soplado->reposicion ?? $this->crearReposicion($existenciaDestino, $personalId);
-
-            $estadoAnterior = $soplado->estado;
-
-            // Revertir si antes estaba confirmado y ahora no
-            if ($estadoAnterior == 2 && $this->estado != 2) {
-                $asignado->cantidad += ($soplado->cantidad + $soplado->merma);
-                $existenciaDestino->cantidad -= $soplado->cantidad;
-                $asignado->save();
-                $existenciaDestino->save();
-            }
-
-            // Aplicar movimiento si ahora está confirmado
-            if ($this->estado == 2 && $estadoAnterior != 2) {
-                $asignado->cantidad -= ($cantidad + $merma);
-                $existenciaDestino->cantidad += $cantidad;
-                $asignado->save();
-                $existenciaDestino->save();
-            }
-
-            // Actualizar reposición
-            $reposicion->cantidad = $this->estado == 2 ? $cantidad : 0;
-            $reposicion->cantidad_inicial = $this->estado == 2 ? $cantidad : 0;
-            $reposicion->estado_revision = $this->estado == 2;
-            $reposicion->save();
-
-            // Actualizar soplado
-            $soplado->update([
-                'cantidad' => $cantidad,
-                'merma' => $merma,
-                'estado' => $this->estado,
-                'observaciones' => $this->observaciones,
-                'fecha' => $this->fecha ?? now(),
-                'personal_id' => $personalId,
-                'reposicion_id' => $reposicion->id,
-            ]);
-
-            // Crear comprobante solo si está confirmado
-            if ($this->estado == 2 && $cantidad > 0) {
-                $this->crearComprobante($reposicion, $asignado, $cantidad);
-            }
-
-        } else {
-
-            $reposicionDestino = $this->crearReposicion($existenciaDestino, $personalId);
-
-            $soplado = Soplado::create([
-                'codigo' => $this->codigo ?? $this->generarCodigo('S'),
-                'asignado_id' => $asignado->id,
-                'existencia_id' => $existenciaDestino->id,
-                'cantidad' => $cantidad,
-                'merma' => $merma,
-                'estado' => $this->estado,
-                'observaciones' => $this->observaciones,
-                'fecha' => now(),
-                'personal_id' => $personalId,
-                'reposicion_id' => $reposicionDestino->id,
-            ]);
-
-            if ($this->estado == 2 && $cantidad > 0) {
-                $asignado->cantidad -= ($cantidad + $merma);
-                $existenciaDestino->cantidad += $cantidad;
-                $asignado->save();
-                $existenciaDestino->save();
-
-                $reposicionDestino->cantidad = $cantidad;
-                $reposicionDestino->cantidad_inicial = $cantidad;
-                $reposicionDestino->estado_revision = true;
-                $reposicionDestino->save();
-
-                // Crear comprobante automáticamente
-                $this->crearComprobante($reposicionDestino, $asignado, $cantidad);
-            }
+        if (!$usuario->personal) {
+            $this->addError('personal_id', 'El usuario autenticado no tiene un personal asignado.');
+            return;
         }
-    });
 
-    $this->cerrarModal();
-    session()->flash('mensaje', 'Soplado guardado correctamente.');
-}
+        $personalId = $usuario->personal->id;
 
-/**
- * Crear comprobante de pago basado en la cantidad usada
- */
-private function crearComprobante($reposicion, $asignado, $cantidadUsada)
-{
-    $monto = 0;
+        $asignado = Asignado::findOrFail($this->asignado_id);
+        $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
+        $cantidad = $this->cantidad ?? 0;
+        $merma = $cantidad > 0 ? max(0, $asignado->cantidad - $cantidad) : 0;
 
-    foreach ($asignado->reposiciones as $r) {
-        $precioUnitario = $r->cantidad_inicial > 0
-            ? $r->comprobantes->sum('monto') / $r->cantidad_inicial
-            : 0;
+        // Verificar cantidad disponible
+        $asignadoDisponible = $asignado->cantidad;
+        if ($this->accion === 'edit' && $this->soplado_id) {
+            $sopladoAnterior = Soplado::find($this->soplado_id);
+            $asignadoDisponible += ($sopladoAnterior->cantidad + $sopladoAnterior->merma);
+        }
 
-        $monto += $precioUnitario * $cantidadUsada;
+        if ($cantidad > $asignadoDisponible) {
+            $this->addError('cantidad', '⚠ No puedes usar más de la cantidad disponible en la asignación.');
+            return;
+        }
+
+        DB::transaction(function () use ($asignado, $existenciaDestino, $cantidad, $merma, $personalId) {
+
+            if ($this->accion === 'edit' && $this->soplado_id) {
+
+                $soplado = Soplado::findOrFail($this->soplado_id);
+                $reposicion = $soplado->reposicion ?? $this->crearReposicion($existenciaDestino, $personalId);
+                $estadoAnterior = $soplado->estado;
+
+                // 🔹 Siempre eliminar comprobante si no está confirmado
+                if ($this->estado != 2) {
+                    ComprobantePago::where('reposicion_id', $reposicion->id)->delete();
+                    $reposicion->update(['monto_usado' => 0]);
+                }
+
+                // 🔹 Si estaba confirmado y ahora NO → revertir movimientos
+                if ($estadoAnterior == 2 && $this->estado != 2) {
+                    $asignado->cantidad += ($soplado->cantidad + $soplado->merma);
+                    $existenciaDestino->cantidad -= $soplado->cantidad;
+                    $asignado->save();
+                    $existenciaDestino->save();
+                }
+                if ($this->estado == 2) {
+                    $asignado->cantidad -= ($cantidad + $merma);
+                    $existenciaDestino->cantidad += $cantidad;
+                    $asignado->save();
+                    $existenciaDestino->save();
+                    $this->crearComprobante($reposicion, $asignado, $cantidad);
+                }
+                $reposicion->update([
+                    'cantidad' => $this->estado == 2 ? $cantidad : 0,
+                    'cantidad_inicial' => $this->estado == 2 ? $cantidad : 0,
+                    'estado_revision' => $this->estado == 2,
+                ]);
+                $soplado->update([
+                    'cantidad' => $cantidad,
+                    'merma' => $merma,
+                    'estado' => $this->estado,
+                    'observaciones' => $this->observaciones,
+                    'fecha' => $this->fecha ?? now(),
+                    'personal_id' => $personalId,
+                    'reposicion_id' => $reposicion->id,
+                ]);
+            } else {
+                $reposicionDestino = $this->crearReposicion($existenciaDestino, $personalId);
+
+                $soplado = Soplado::create([
+                    'codigo' => $this->codigo ?? $this->generarCodigo('S'),
+                    'asignado_id' => $asignado->id,
+                    'existencia_id' => $existenciaDestino->id,
+                    'cantidad' => $cantidad,
+                    'merma' => $merma,
+                    'estado' => $this->estado,
+                    'observaciones' => $this->observaciones,
+                    'fecha' => now(),
+                    'personal_id' => $personalId,
+                    'reposicion_id' => $reposicionDestino->id,
+                ]);
+
+                if ($this->estado == 2 && $cantidad > 0) {
+                    $asignado->cantidad -= ($cantidad + $merma);
+                    $existenciaDestino->cantidad += $cantidad;
+                    $asignado->save();
+                    $existenciaDestino->save();
+
+                    $reposicionDestino->update([
+                        'cantidad' => $cantidad,
+                        'cantidad_inicial' => $cantidad,
+                        'estado_revision' => true,
+                    ]);
+                    $this->crearComprobante($reposicionDestino, $asignado, $cantidad);
+                }
+            }
+        });
+
+        $this->cerrarModal();
+        session()->flash('mensaje', 'Soplado guardado correctamente.');
     }
 
-    ComprobantePago::create([
-        'reposicion_id' => $reposicion->id,
-        'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-        'monto' => $monto,
-        'fecha' => now(),
-        'observaciones' => 'Pago generado por soplado ' . ($this->codigo ?? ''),
-    ]);
-}
+    private function crearComprobante($reposicion, $asignado, $cantidadUsada)
+    {
+        ComprobantePago::where('reposicion_id', $reposicion->id)->delete();
+        $precioUnitario = $asignado->precio_unitario ?? 1;
+        $monto = $precioUnitario * $cantidadUsada;
+        $comprobante = ComprobantePago::create([
+            'reposicion_id' => $reposicion->id,
+            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+            'monto' => $monto,
+            'fecha' => now(),
+            'observaciones' => 'Pago generado por soplado ' . ($this->codigo ?? ''),
+        ]);
+        $reposicion->update([
+            'monto_usado' => $comprobante->monto,
+        ]);
+    }
+
+
 
 
 

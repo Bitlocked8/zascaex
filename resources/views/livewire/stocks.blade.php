@@ -126,25 +126,25 @@
                 @endif
 
                 @if($repo->cantidad === $repo->cantidad_inicial)
-<button
-    wire:click="toggleEstado({{ $repo->id }})"
-    class="btn-circle {{ $repo->estado_revision ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
-    title="{{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}">
-    @if($repo->estado_revision)
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M9 11l3 3l8 -8" />
-        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
-    </svg>
-    @else
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <path d="M9 11l3 3l8 -8" />
-        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
-    </svg>
-    @endif
-</button>
-@endif
+                <button
+                    wire:click="toggleEstado({{ $repo->id }})"
+                    class="btn-circle {{ $repo->estado_revision ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
+                    title="{{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}">
+                    @if($repo->estado_revision)
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 11l3 3l8 -8" />
+                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+                    </svg>
+                    @else
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M9 11l3 3l8 -8" />
+                        <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
+                    </svg>
+                    @endif
+                </button>
+                @endif
 
             </div>
             @endif
