@@ -21,25 +21,19 @@ class Reposicion extends Model
         'observaciones'
     ];
 
-    /**
-     * Relación: Una reposición pertenece a una existencia (lote/artículo).
-     */
+
     public function existencia()
     {
         return $this->belongsTo(Existencia::class);
     }
 
-    /**
-     * Relación: Una reposición pertenece a un personal.
-     */
+
     public function personal()
     {
         return $this->belongsTo(Personal::class);
     }
 
-    /**
-     * Relación: Una reposición puede tener un proveedor (opcional).
-     */
+
     public function proveedor()
     {
         return $this->belongsTo(Proveedor::class);
@@ -67,5 +61,14 @@ class Reposicion extends Model
     public function traspasosDestino()
     {
         return $this->hasMany(Traspaso::class, 'reposicion_destino_id');
+    }
+
+    public function soplados()
+    {
+        return $this->hasMany(Soplado::class);
+    }
+    public function llenados()
+    {
+        return $this->hasMany(Llenado::class);
     }
 }

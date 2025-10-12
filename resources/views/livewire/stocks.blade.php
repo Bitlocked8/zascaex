@@ -46,8 +46,21 @@
                         {{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}
                     </span>
                 </p>
-            </div>
+                @if($repo->soplados()->exists() && $repo->comprobantes && $repo->comprobantes->count() > 0)
+                <div class="mt-4 border-t pt-2">
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($repo->comprobantes as $comprobante)
+                        <span class="inline-block bg-cyan-700 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                            {{ $comprobante->codigo }} - {{ number_format($comprobante->monto, 2, ',', '.') }} Bs
+                        </span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
 
+
+            </div>
+            @if(!$repo->soplados()->exists())
             <div class="flex flex-col items-end gap-4 col-span-3">
                 <button wire:click="abrirModal('edit', {{ $repo->id }})" class="btn-circle btn-cyan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
@@ -92,6 +105,7 @@
                         <path d="M11 15h2" />
                     </svg>
                 </button>
+
                 @if(!$repo->estado_revision)
                 <button
                     type="button"
@@ -111,19 +125,18 @@
                 </button>
                 @endif
 
+                @if($repo->cantidad === $repo->cantidad_inicial)
                 <button
                     wire:click="toggleEstado({{ $repo->id }})"
                     class="btn-circle {{ $repo->estado_revision ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
                     title="{{ $repo->estado_revision ? 'Confirmado' : 'En revisión' }}">
                     @if($repo->estado_revision)
-                    <!-- Icono confirmado -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M9 11l3 3l8 -8" />
                         <path d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9" />
                     </svg>
                     @else
-                    <!-- Icono en revisión -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M9 11l3 3l8 -8" />
@@ -131,10 +144,10 @@
                     </svg>
                     @endif
                 </button>
-
-
+                @endif
 
             </div>
+            @endif
         </div>
         @empty
         <div class="col-span-full text-center py-4 text-gray-600">
@@ -147,6 +160,8 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
+
+                <!-- Información general -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <p class="font-semibold text-sm">
                         Código: <span class="font-normal">{{ $codigo }}</span>
@@ -165,18 +180,22 @@
                         </span>
                     </p>
                 </div>
+
+                <!-- Producto -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Producto</label>
+
                         @if($accion === 'edit')
                         @php
                         $ex = $existencias->firstWhere('id', $existencia_id);
                         $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
+                        $cantidadDisponible = $ex ? $ex->reposiciones->sum('cantidad') : 0;
                         @endphp
                         <p class="flex items-center gap-2">
                             <span>{{ $tipo }}: {{ $ex->existenciable->descripcion ?? 'Existencia #' . $existencia_id }}</span>
                             <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                Disponible: {{ $ex->cantidad ?? 0 }}
+                                Disponible: {{ $cantidadDisponible }}
                             </span>
                             <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                 {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
@@ -188,18 +207,19 @@
                             @php
                             $tipo = class_basename($existencia->existenciable_type);
                             $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
+                            $cantidadDisponible = $existencia->reposiciones->sum('cantidad');
                             @endphp
                             <button
                                 type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                                       {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
-                                         {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                        {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
+                                        {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
                                 @if($disabled) disabled @endif>
                                 <span>{{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}</span>
                                 <span class="flex items-center gap-2">
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        Disponible: {{ $existencia->cantidad }}
+                                        Disponible: {{ $cantidadDisponible }}
                                     </span>
                                     <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
@@ -207,14 +227,14 @@
                                 </span>
                             </button>
                             @endforeach
-
                         </div>
                         @endif
                     </div>
+
+                    <!-- Cantidad y Observaciones -->
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm">Cantidad</label>
-
                             @if($accion === 'edit')
                             <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">{{ $cantidad }}</span>
                             @else
@@ -226,6 +246,8 @@
                             <input wire:model="observaciones" class="input-minimal">
                         </div>
                     </div>
+
+                    <!-- Proveedores -->
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm mb-2 block">Proveedor (Opcional)</label>
@@ -255,9 +277,13 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
+
+                <!-- Footer -->
                 <div class="modal-footer">
                     <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
+                        <!-- Icono guardar -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
@@ -266,6 +292,7 @@
                         </svg>
                     </button>
                     <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+                        <!-- Icono cerrar -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M10 10l4 4m0 -4l-4 4" />
@@ -273,10 +300,12 @@
                         </svg>
                     </button>
                 </div>
+
             </div>
         </div>
     </div>
     @endif
+
 
     @if($modalConfigGlobal)
     <div class="modal-overlay">
@@ -360,14 +389,21 @@
                             <p class="text-sm text-gray-600">
                                 Fecha: {{ $pago['fecha'] }}
                             </p>
-                            <button type="button" wire:click="eliminarPago({{ $index }})" class="btn-circle btn-cyan"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <button type="button" wire:click="confirmarEliminarPago({{ $index }})" class="btn-circle btn-cyan"
+                                title="Eliminar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                     <path d="M4 7l16 0" />
                                     <path d="M10 11l0 6" />
                                     <path d="M14 11l0 6" />
                                     <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                                     <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                                </svg></button>
+                                </svg>
+                            </button>
+
+
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -453,15 +489,11 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
-
-                <!-- Icono con inicial -->
                 <div class="flex justify-center items-center">
                     <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
                         {{ strtoupper(substr($reposicionSeleccionada->codigo ?? '-', 0, 1)) }}
                     </div>
                 </div>
-
-                <!-- Información de la Reposición -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -487,23 +519,17 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Detalles de la Existencia -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div class="flex flex-col gap-2">
                         <span class="label-info">Nombre:</span>
                         <span class="badge-info">{{ $reposicionSeleccionada->existencia->existenciable?->descripcion ?? '-' }}</span>
                     </div>
-
                     <div class="flex flex-col gap-2">
                         <span class="label-info">Observaciones:</span>
                         <span class="badge-info">{{ $reposicionSeleccionada->observaciones ?? '-' }}</span>
                     </div>
                 </div>
-
             </div>
-
-            <!-- Footer -->
             <div class="modal-footer mt-4">
                 <button wire:click="cerrarModalDetalleReposicion" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -551,6 +577,41 @@
         </div>
     </div>
     @endif
+    @if($confirmingDeletePagoIndex !== null)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="flex flex-col gap-4 text-center">
+                    <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
+                    <p class="text-gray-600">
+                        El comprobante de pago seleccionado se eliminará permanentemente.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" wire:click="eliminarPagoConfirmado" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
+                    </svg>
+                </button>
+
+                <!-- Botón Cancelar -->
+                <button type="button" wire:click="$set('confirmingDeletePagoIndex', null)" class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 10l4 4m0-4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+
 
 
 

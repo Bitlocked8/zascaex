@@ -41,6 +41,8 @@ class Stocks extends Component
     public $modalError = false;
     public $mensajeError = '';
     public $confirmingDeleteReposicionId = null;
+
+    public $confirmingDeletePagoIndex = null;
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
         'personal_id' => 'required|exists:personals,id',
@@ -62,42 +64,39 @@ class Stocks extends Component
             'observaciones',
             'codigo'
         ]);
-
         $this->accion = $accion;
-
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
-
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
             return;
         }
-
         $this->personal_id = $personal->id;
-
-        $queryExistencias = Existencia::with('existenciable', 'sucursal')
+        $queryExistencias = Existencia::with([
+            'existenciable',
+            'sucursal',
+            'reposiciones' => fn($q) => $q->where('estado_revision', 1)
+        ])
+            ->whereHas('reposiciones', fn($q) => $q->where('estado_revision', 1))
             ->orderBy('id');
-
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryExistencias->where('sucursal_id', $sucursal_id);
         }
-
         $this->existencias = $queryExistencias->get();
-
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
-
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
 
         $this->modal = true;
     }
+
     public function editar($id)
     {
         $reposicion = Reposicion::findOrFail($id);
@@ -295,40 +294,28 @@ class Stocks extends Component
         $personal = $usuario->personal;
         $queryExistencias = Existencia::with('existenciable')
             ->where('cantidad', '>', 0)
-            
             ->orderBy('id');
-
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()
                 ->latest('fechaInicio')
                 ->value('sucursal_id');
-
             $queryExistencias->where('sucursal_id', $sucursal_id);
         }
-
         $existencias = $queryExistencias->get();
-
-        // REPOSICIONES
         $queryReposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
             ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'));
-
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()
                 ->latest('fechaInicio')
                 ->value('sucursal_id');
-
-            // Solo filtrar por sucursal de la existencia, NO por personal_id
             $queryReposiciones->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
-
         $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')->get();
-
         $personalList = Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
             ->with(['trabajos' => fn($q) => $q->where('estado', 1)
                 ->latest('fechaInicio')
                 ->with('sucursal')])
             ->get();
-
         return view('livewire.stocks', [
             'existencias'  => $existencias,
             'reposiciones' => $reposiciones,
@@ -372,9 +359,22 @@ class Stocks extends Component
             }
             $reposicion->delete();
         });
-
         session()->flash('message', 'Reposición eliminada correctamente y asignaciones actualizadas.');
     }
+    public function confirmarEliminarPago($index)
+    {
+        $this->confirmingDeletePagoIndex = $index;
+    }
+
+    public function eliminarPagoConfirmado()
+    {
+        if ($this->confirmingDeletePagoIndex === null) return;
+
+        $this->eliminarPago($this->confirmingDeletePagoIndex);
+
+        $this->confirmingDeletePagoIndex = null;
+    }
+
     public function confirmarEliminarReposicion($id)
     {
         $this->confirmingDeleteReposicionId = $id;

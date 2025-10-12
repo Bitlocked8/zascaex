@@ -26,11 +26,32 @@
                 <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
 
                 <p><strong>Observaciones:</strong> {{ $asignado->observaciones ?? 'N/A' }}</p>
+                @php
+                $montoAsignado = 0;
+                foreach ($asignado->reposiciones as $reposicion) {
+                $cantidadUsada = $reposicion->pivot->cantidad;
+                foreach ($reposicion->comprobantes as $comprobante) {
+                $precioUnitario = $reposicion->cantidad_inicial > 0
+                ? $comprobante->monto / $reposicion->cantidad_inicial
+                : 0;
+
+                $montoAsignado += $precioUnitario * $cantidadUsada;
+                }
+                }
+                @endphp
+
+                <span class="inline-block bg-cyan-700 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    Monto: {{ number_format($montoAsignado) }} Bs
+                </span>
+
+
                 @if(isset($asignado->cantidad_original) && $asignado->cantidad_original != $asignado->cantidad)
-                <p class="text-sm text-orange-600">
-                    ⚠ Se eliminó un lote, la cantidad actual es menor que la original, se recomienda eliminar y crear uno nuevo.
-                </p>
+                <span class="inline-block bg-emerald-600 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    Fue usada en soplado
+                </span>
+
                 @endif
+
             </div>
 
             <div class="flex flex-col items-end gap-4 col-span-3">
@@ -66,8 +87,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
                     </svg>
                 </button>
-                <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-circle btn-cyan">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                @if($asignado->cantidad > 0)
+                <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})"
+                    class="btn-circle btn-cyan" title="Eliminar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M4 7l16 0" />
                         <path d="M10 11l0 6" />
@@ -76,6 +101,7 @@
                         <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
                     </svg>
                 </button>
+                @endif
 
             </div>
         </div>
@@ -250,6 +276,107 @@
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10 10l4 4m0-4l-4 4" />
                         <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+    @if($modalDetalle && $asignacionSeleccionada)
+    <div class="modal-overlay" wire:ignore.self>
+        <div class="modal-box">
+            <div class="modal-content flex flex-col gap-4">
+
+                <!-- Icono con inicial -->
+                <div class="flex justify-center items-center">
+                    <div class="w-20 h-20 rounded-full bg-cyan-600 text-white flex items-center justify-center text-2xl font-bold">
+                        {{ strtoupper(substr($asignacionSeleccionada->codigo ?? '-', 0, 1)) }}
+                    </div>
+                </div>
+
+                <!-- Información principal -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Código:</span>
+                            <span class="badge-info">{{ $asignacionSeleccionada->codigo ?? '-' }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Fecha:</span>
+                            <span class="badge-info">
+                                {{ \Carbon\Carbon::parse($asignacionSeleccionada->fecha)->format('d/m/Y H:i') ?? '-' }}
+                            </span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Motivo:</span>
+                            <span class="badge-info">{{ $asignacionSeleccionada->motivo ?? 'Sin motivo' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Responsable:</span>
+                            <span class="badge-info">{{ $asignacionSeleccionada->personal?->nombres ?? '-' }}</span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Sucursal:</span>
+                            <span class="badge-info">{{ $asignacionSeleccionada->existencia?->sucursal?->nombre ?? 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div class="flex flex-col gap-2">
+                        <span class="label-info">Cantidad original:</span>
+                        <span class="badge-info">{{ $asignacionSeleccionada->cantidad_original ?? '-' }}</span>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <span class="label-info">Cantidad actual:</span>
+                        <span class="badge-info">
+                            {{ $asignacionSeleccionada->cantidad ?? '-' }}
+                            @if($asignacionSeleccionada->cantidad < $asignacionSeleccionada->cantidad_original)
+                                <span class="text-xs text-emerald-600 font-semibold">(Usada en proceso)</span>
+                                @endif
+                        </span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div class="flex flex-col gap-2">
+                        <span class="label-info">Item asignado:</span>
+                        <span class="badge-info">
+                            {{ $asignacionSeleccionada->existencia?->existenciable?->descripcion ?? '-' }}
+                        </span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <span class="label-info">Reposiciones usadas:</span>
+                        <div class="badge-info">
+                            @forelse($asignacionSeleccionada->reposiciones as $repo)
+                            <div class="flex justify-between border-b border-gray-200 py-1">
+                                <span>{{ $repo->codigo ?? 'Sin código' }}</span>
+                                <span class="text-sm">x{{ $repo->pivot->cantidad }}</span>
+                            </div>
+                            @empty
+                            <span>Sin reposiciones</span>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2 mt-4">
+                    <span class="label-info">Observaciones:</span>
+                    <span class="badge-info">{{ $asignacionSeleccionada->observaciones ?? '-' }}</span>
+                </div>
+            </div>
+            <div class="modal-footer mt-4">
+                <button wire:click="cerrarModalDetalle" class="btn-circle btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
+                        <path d="M10 10l4 4m0 -4l-4 4" />
+                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
                     </svg>
                 </button>
             </div>

@@ -381,26 +381,26 @@
                     <div class="flex flex-wrap justify-center gap-4 mt-2">
                         <button
                             type="button"
-                            wire:click="$set('seleccion', 'Elaboracion')"
+                            wire:click="$set('seleccion', 'Soplados')"
                             class="w-24 h-24 flex flex-col items-center justify-center rounded-xl
-                                 {{ ($seleccion == 'Elaboracion') ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white hover:bg-teal-600' }}">
+                                 {{ ($seleccion == 'Soplados') ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white hover:bg-teal-600' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="mb-1">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M12 2l.642 .005l.616 .017l.299 .013l.579 .034l.553 .046c4.687 .455 6.65 2.333 7.166 6.906l.03 .29l.046 .553l.041 .727l.006 .15l.017 .617l.005 .642l-.005 .642l-.017 .616l-.013 .299l-.034 .579l-.046 .553c-4.687 4.687 -2.333 6.65 -6.906 7.166l-.29 .03l-.553 .046l-.727 .041l-.15 .006l-.617 .017l-.642 .005l-.642 -.005l-.616 -.017l-.299 -.013l-.579 -.034l-.553 -.046c-4.687 -.455 -6.65 -2.333 -7.166 -6.906l-.03 -.29l-.046 -.553l-.041 -.727l-.006 -.15l-.017 -.617l-.004 -.318v-.648l.004 -.318l.017 -.616l.013 -.299l.034 -.579l.046 -.553c.455 -4.687 2.333 -6.65 6.906 -7.166l.29 -.03l.553 -.046l.727 -.041l.15 -.006l.617 -.017c.21 -.003 .424 -.005 .642 -.005zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
                             </svg>
-                            <span class="text-sm font-semibold text-center truncate w-full">Elaboración</span>
+                            <span class="text-sm font-semibold text-center truncate w-full">Soplado</span>
                         </button>
 
                         <button
                             type="button"
-                            wire:click="$set('seleccion', 'Embotellado')"
+                            wire:click="$set('seleccion', 'L')"
                             class="w-24 h-24 flex flex-col items-center justify-center rounded-xl
-                             {{ ($seleccion == 'Embotellado') ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white hover:bg-teal-600' }}">
+                             {{ ($seleccion == 'L') ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white hover:bg-teal-600' }}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="mb-1">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M10.425 1.414a3.33 3.33 0 0 1 3.216 0l6.775 3.995c.067 .04 .127 .084 .18 .133l.008 .007l.107 .076a3.223 3.223 0 0 1 1.284 2.39l.005 .203v7.284c0 1.175 -.643 2.256 -1.623 2.793l-6.804 4.302c-.98 .538 -2.166 .538 -3.2 -.032l-6.695 -4.237a3.226 3.226 0 0 1 -1.678 -2.826v-7.285a3.21 3.21 0 0 1 1.65 -2.808zm2.575 5.586h-3l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h3v2h-2l-.15 .005a2 2 0 0 0 -1.844 1.838l-.006 .157v2l.005 .15a2 2 0 0 0 1.838 1.844l.157 .006h3l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007h-3v-2h2l.15 -.005a2 2 0 0 0 1.844 -1.838l.006 -.157v-2l-.005 -.15a2 2 0 0 0 -1.838 -1.844l-.157 -.006z" />
                             </svg>
-                            <span class="text-sm font-semibold text-center truncate w-full">Embotellado</span>
+                            <span class="text-sm font-semibold text-center truncate w-full">L</span>
                         </button>
 
                         <button
@@ -560,8 +560,8 @@
             @if ($seleccion == 'Roles')
             @livewire('roles')
             @endif
-            @if ($seleccion == 'Elaboracion')
-            @livewire('elaboracion')
+            @if ($seleccion == 'Soplados')
+            @livewire('soplados')
             @endif
             @if ($seleccion == 'Etiquetas')
             @livewire('Etiquetas')
@@ -578,8 +578,8 @@
             @if ($seleccion == 'Productos')
             @livewire('productos')
             @endif
-            @if ($seleccion == 'Embotellado')
-            @livewire('embotellado')
+            @if ($seleccion == 'Llenados')
+            @livewire('llenados')
             @endif
             @if ($seleccion == 'Etiquetado')
             @livewire('etiquetado')
