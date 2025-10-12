@@ -10,15 +10,18 @@ class Producto extends Model
 {
     use HasFactory;
 
-   protected $fillable = [
-        'nombre',
+    protected $fillable = [
         'imagen',
-        'tipoContenido',
-        'tipoProducto',
-        'capacidad',
-        'precioReferencia',
-        'descripcion',
+        'unidad',
+        'descripcion',       // nombre del producto
+        'tipoContenido',     // agua normal, con gas, etc.
+        'tipoProducto',      // botella, botellón, etc.
+        'capacidad',         // capacidad numérica
+        'precioReferencia',  // precio de referencia
+        'paquete',           // 10 unidades, etc.
+        'observaciones',     // comentarios u otros datos
         'estado',
+        'tipo',              // Plástico, Vidrio, etc.
     ];
 
     /**
@@ -36,5 +39,4 @@ class Producto extends Model
     {
         return $this->morphMany(Existencia::class, 'existenciable');
     }
-   
 }

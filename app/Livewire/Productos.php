@@ -19,12 +19,15 @@ class Productos extends Component
 
     public $imagen;
     public $imagenExistente;
-    public $nombre = '';
+    public $descripcion = '';
+    public $unidad = '';
     public $tipoContenido = '';
-    public $tipoProducto = 0;
+    public $tipoProducto = '';
     public $capacidad = '';
     public $precioReferencia = '';
-    public $descripcion = '';
+    public $paquete = '';
+    public $tipo = '';
+    public $observaciones = '';
     public $estado = 1;
     public $cantidadMinima = 0;
 
@@ -32,11 +35,11 @@ class Productos extends Component
     public $productoSeleccionado = null;
 
     protected $messages = [
-        'nombre.required' => 'El nombre es obligatorio.',
+        'descripcion.required' => 'La descripción es obligatoria.',
         'tipoContenido.required' => 'El tipo de contenido es obligatorio.',
         'tipoProducto.required' => 'El tipo de producto es obligatorio.',
         'capacidad.required' => 'La capacidad es obligatoria.',
-        'capacidad.integer' => 'La capacidad debe ser un número entero.',
+        'capacidad.numeric' => 'La capacidad debe ser un número.',
         'capacidad.min' => 'La capacidad no puede ser negativa.',
         'precioReferencia.required' => 'El precio de referencia es obligatorio.',
         'precioReferencia.numeric' => 'El precio de referencia debe ser un número.',
@@ -50,9 +53,10 @@ class Productos extends Component
         $personal = $usuario->personal;
 
         $productosQuery = Producto::query()
-            ->when($this->search, fn($q) => $q->where('nombre', 'like', "%{$this->search}%")
-            ->orWhere('descripcion', 'like', "%{$this->search}%")
-            ->orWhere('capacidad', 'like', "%{$this->search}%"));
+            ->when($this->search, fn($q) => $q
+                ->where('descripcion', 'like', "%{$this->search}%")
+                ->orWhere('capacidad', 'like', "%{$this->search}%")
+            );
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -67,10 +71,9 @@ class Productos extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'producto_id', 'nombre', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'descripcion', 'estado',
-            'imagen', 'imagenExistente', 'productoSeleccionado',
-            'cantidadMinima'
+            'producto_id', 'descripcion', 'unidad', 'tipoContenido', 'tipoProducto',
+            'capacidad', 'precioReferencia', 'paquete', 'tipo', 'observaciones', 'estado',
+            'imagen', 'imagenExistente', 'productoSeleccionado', 'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -86,12 +89,15 @@ class Productos extends Component
     {
         $producto = Producto::with('existencias')->findOrFail($id);
         $this->producto_id = $producto->id;
-        $this->nombre = $producto->nombre;
+        $this->descripcion = $producto->descripcion;
+        $this->unidad = $producto->unidad;
         $this->tipoContenido = $producto->tipoContenido;
         $this->tipoProducto = $producto->tipoProducto;
         $this->capacidad = $producto->capacidad;
         $this->precioReferencia = $producto->precioReferencia;
-        $this->descripcion = $producto->descripcion;
+        $this->paquete = $producto->paquete;
+        $this->tipo = $producto->tipo;
+        $this->observaciones = $producto->observaciones;
         $this->estado = $producto->estado;
 
         $this->imagen = null;
@@ -105,12 +111,15 @@ class Productos extends Component
     public function guardar()
     {
         $this->validate([
-            'nombre' => 'required|string|max:255',
-            'tipoContenido' => 'required|integer',
-            'tipoProducto' => 'required|boolean',
-            'capacidad' => 'required|integer|min:0',
+            'descripcion' => 'required|string|max:500',
+            'tipoContenido' => 'required|string|max:255',
+            'tipoProducto' => 'required|string|max:255',
+            'capacidad' => 'required|numeric|min:0',
             'precioReferencia' => 'required|numeric|min:0',
-            'descripcion' => 'nullable|string|max:500',
+            'unidad' => 'nullable|string|max:50',
+            'paquete' => 'nullable|string|max:50',
+            'tipo' => 'nullable|string|max:50',
+            'observaciones' => 'nullable|string|max:1000',
             'estado' => 'required|boolean',
             'cantidadMinima' => 'nullable|integer|min:0',
         ]);
@@ -125,12 +134,15 @@ class Productos extends Component
         $producto = Producto::updateOrCreate(
             ['id' => $this->producto_id],
             [
-                'nombre' => $this->nombre,
+                'descripcion' => $this->descripcion,
+                'unidad' => $this->unidad,
                 'tipoContenido' => $this->tipoContenido,
                 'tipoProducto' => $this->tipoProducto,
                 'capacidad' => $this->capacidad,
                 'precioReferencia' => $this->precioReferencia,
-                'descripcion' => $this->descripcion,
+                'paquete' => $this->paquete,
+                'tipo' => $this->tipo,
+                'observaciones' => $this->observaciones,
                 'estado' => $this->estado,
                 'imagen' => $imagenPath,
             ]
@@ -168,10 +180,9 @@ class Productos extends Component
     {
         $this->modal = false;
         $this->reset([
-            'producto_id', 'nombre', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'descripcion', 'estado',
-            'imagen', 'imagenExistente', 'productoSeleccionado',
-            'cantidadMinima'
+            'producto_id', 'descripcion', 'unidad', 'tipoContenido', 'tipoProducto',
+            'capacidad', 'precioReferencia', 'paquete', 'tipo', 'observaciones', 'estado',
+            'imagen', 'imagenExistente', 'productoSeleccionado', 'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }

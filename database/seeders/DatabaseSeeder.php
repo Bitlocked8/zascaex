@@ -88,10 +88,10 @@ class DatabaseSeeder extends Seeder
             'empresa_id' => $empresa->id,
         ]);
         $this->call(TapaSeeder::class);
-
         $this->call(EtiquetaSeeder::class);
         $this->call(PreformaSeeder::class);
         $this->call(BaseSeeder::class);
+        $this->call(ProductoSeeder::class);
         Proveedor::factory(10)->create();
 
         Coche::factory(5)->create()->each(function ($coche) {

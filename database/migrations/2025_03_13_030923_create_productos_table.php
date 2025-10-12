@@ -12,16 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('productos', function (Blueprint $table) {
-            $table->id(); // Clave primaria
-            $table->string('nombre');
+            $table->id();
             $table->string('imagen')->nullable();
-            $table->tinyInteger('tipoContenido'); // Tipo de contenido (tiny integer)
-            $table->boolean('tipoProducto'); // Tipo de producto (0: sin retorno, 1: con retorno)
-            $table->integer('capacidad'); // Capacidad del producto
+            $table->string('unidad')->nullable();
+            $table->string('descripcion'); // nombre del producto
+            $table->string('tipoContenido')->nullable(); // agua normal, con gas, etc.
+            $table->string('tipoProducto')->nullable(); // botella, botellón, etc.
+            $table->decimal('capacidad', 8, 2)->nullable(); // capacidad numérica
             $table->decimal('precioReferencia', 8, 2)->comment('Precio de referencia');
-            $table->text('descripcion')->nullable(); // Descripción opcional
-            $table->boolean('estado')->default(1); // Estado (1: activo, 0: inactivo)
-            $table->timestamps(); // Campos created_at y updated_at
+            $table->string('paquete')->nullable(); // 10 unidades, etc.
+            $table->text('observaciones')->nullable(); // comentarios u otros datos
+            $table->boolean('estado')->default(1);
+            $table->string('tipo')->nullable(); // (Plástico, Vidrio, etc.)
+            $table->timestamps();
         });
     }
 
