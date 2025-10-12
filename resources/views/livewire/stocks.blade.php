@@ -213,10 +213,14 @@
                                 type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                                        {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
-                                        {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
+                {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
+                {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
                                 @if($disabled) disabled @endif>
-                                <span>{{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}</span>
+
+                                <span>
+                                    ID: {{ $existencia->id }} | {{ $tipo }}: {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}
+                                </span>
+
                                 <span class="flex items-center gap-2">
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         Disponible: {{ $cantidadDisponible }}
@@ -228,6 +232,7 @@
                             </button>
                             @endforeach
                         </div>
+
                         @endif
                     </div>
 

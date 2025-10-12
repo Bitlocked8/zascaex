@@ -74,13 +74,17 @@ class Stocks extends Component
             return;
         }
         $this->personal_id = $personal->id;
-        $queryExistencias = Existencia::with([
-            'existenciable',
-            'sucursal',
-            'reposiciones' => fn($q) => $q->where('estado_revision', 1)
-        ])
-            ->whereHas('reposiciones', fn($q) => $q->where('estado_revision', 1))
-            ->orderBy('id');
+       $queryExistencias = Existencia::with([
+    'existenciable',
+    'sucursal',
+    'reposiciones' => fn($q) => $q->where('estado_revision', 1)
+])
+->where(function($q) {
+    $q->whereHas('reposiciones', fn($sub) => $sub->where('estado_revision', 1))
+      ->orDoesntHave('reposiciones');
+})
+->whereHas('existenciable', fn($q) => $q->where('estado', 1)) // Solo existencias activas
+->orderBy('id');
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryExistencias->where('sucursal_id', $sucursal_id);

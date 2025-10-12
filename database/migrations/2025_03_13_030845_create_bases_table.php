@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bases', function (Blueprint $table) {
-            $table->id(); // Clave primaria
+            $table->id();
             $table->string('imagen')->nullable();
             $table->string('descripcion')->nullable();
-            $table->integer('capacidad'); // Capacidad de la base
-            $table->boolean('estado')->default(1); // Estado (1: activo, 0: inactivo)
-            $table->text('observaciones')->nullable(); // Observaciones (opcional)
-            $table->timestamps(); // created_at y updated_at
+            $table->integer('capacidad');
+            $table->boolean('estado')->default(1);
+            $table->text('observaciones')->nullable();
+            $table->string('tipo');
+            $table->timestamps();
         });
     }
 

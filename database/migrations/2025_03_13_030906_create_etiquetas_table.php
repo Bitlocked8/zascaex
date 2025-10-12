@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('descripcion')->nullable();
             $table->string('capacidad');
             $table->string('unidad')->nullable(); // [L, ml, g, Kg, unidad]
-            $table->tinyInteger('estado'); 
+            $table->tinyInteger('estado'); //si esta activo el item 
+            $table->tinyInteger('tipo');
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete(); // Relación opcional con Preforma
             $table->timestamps();
         });

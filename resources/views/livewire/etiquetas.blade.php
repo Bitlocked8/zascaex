@@ -18,8 +18,17 @@
         @forelse($etiquetas as $etiqueta)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
             <div class="flex flex-col col-span-9 text-left space-y-1">
-                <p><strong>Capacidad:</strong> {{ $etiqueta->capacidad }} {{ $etiqueta->unidad ?? '' }}</p>
-                <p><strong>Descripción:</strong> {{ $etiqueta->descripcion ?? 'N/A' }}</p>
+                <p><strong>Nombre:</strong> {{ $etiqueta->descripcion ?? 'N/A' }}</p>
+                <p><strong>Capacidad:</strong> {{ $etiqueta->capacidad }}</p>
+                <p><strong>Unidad:</strong> {{ $etiqueta->unidad  }}</p>
+                <p><strong>Tipo:</strong>
+                    @if($etiqueta->tipo === 1)
+                    <span class="text-white bg-blue-600 px-2 py-1 rounded-full">Transparente</span>
+                    @elseif($etiqueta->tipo === 2)
+                    <span class="text-white bg-yellow-500 px-2 py-1 rounded-full">Brilloso</span>
+                    @endif
+                </p>
+
                 <p><strong>Estado:</strong>
                     @if($etiqueta->estado)
                     <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
@@ -31,12 +40,16 @@
                     @if($etiqueta->existencias->isEmpty())
                     N/A
                     @else
-                    @foreach($etiqueta->existencias as $existencia)
+                    @foreach($etiqueta->existencias->groupBy('sucursal_id') as $sucursalExistencias)
+                    @php
+                    $existencia = $sucursalExistencias->first(); // Tomamos solo la primera por sucursal
+                    @endphp
                     <span class="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded mr-1 mb-1">
                         {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
                         (Cantidad: {{ $existencia->cantidad }}, Mínima: {{ $existencia->cantidadMinima ?? 0 }})
                     </span>
                     @endforeach
+
                     @endif
                 </p>
 

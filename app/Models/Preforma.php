@@ -12,10 +12,17 @@ class Preforma extends Model
 
     protected $fillable = [
         'imagen',
+        'detalle',
+        'insumo',
+        'gramaje',
+        'cuello',
         'descripcion',
+        'capacidad',
+        'color',
         'estado',
         'observaciones',
     ];
+
 
     /**
      * Relación 1:N con Elaboracion.

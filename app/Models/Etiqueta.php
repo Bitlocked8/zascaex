@@ -16,8 +16,9 @@ class Etiqueta extends Model
         'estado',
         'unidad',
         'descripcion',
+        'tipo',
         'cliente_id',
-        
+
     ];
 
     /**
@@ -27,18 +28,9 @@ class Etiqueta extends Model
     {
         return $this->belongsTo(Cliente::class);
     }
-
-    /**
-     * Relación 1:N con Productos (si aplica).
-     */
-    // public function productos()
-    // {
-    //     return $this->hasMany(Producto::class);
-    // }
+  
     public function existencias(): MorphMany
     {
         return $this->morphMany(Existencia::class, 'existenciable');
     }
-
-    
 }

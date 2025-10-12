@@ -15,7 +15,7 @@ class Base extends Model
         'descripcion',
         'estado',
         'observaciones',
-        // 'preforma_id', // eliminar porque ya no existe
+        'tipo',
     ];
 
     /**
@@ -25,6 +25,4 @@ class Base extends Model
     {
         return $this->morphMany(Existencia::class, 'existenciable');
     }
-
-  
 }
