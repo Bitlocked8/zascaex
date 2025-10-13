@@ -1,6 +1,9 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Buscador y botón crear -->
+       <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
+    Productos
+</h3>
+
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input
                 type="text"
@@ -15,38 +18,45 @@
                     <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
             </button>
+
         </div>
 
-        <!-- Listado -->
         @forelse($productos as $producto)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-            <div class="flex flex-col col-span-9 text-left space-y-1">
-                <p><strong>Nombre:</strong> {{ $producto->descripcion ?? 'Sin nombre' }}</p>
-                <p><strong>Apodo:</strong> {{ $producto->nombre ?? 'N/A' }}</p>
-                <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }} ml</p>
-                <p><strong>Precio Ref.:</strong> {{ $producto->precioReferencia ?? 'N/A' }} Bs</p>
-                <p><strong>Estado:</strong>
-                    @if($producto->estado)
-                    <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
-                    @else
-                    <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
-                    @endif
+
+            <div class="flex flex-col col-span-9 items-center space-y-1 text-center">
+                <p>
+                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase {{ $producto->estado ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">
+                        {{ $producto->estado ? 'Activo' : 'Inactivo' }}
+                    </span>
                 </p>
-                <p><strong>Sucursales:</strong>
+                <p class="text-cyan-600 text-2xl font-bold uppercase">
+                    {{ $producto->descripcion ?? 'Sin nombre' }}
+                </p>
+
+                <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }}</p>
+                <p><strong>Unidad:</strong> {{ $producto->unidad ?? 'N/A' }}</p>
+
+                <span class="inline-block bg-teal-800 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    Precio Ref.: {{ $producto->precioReferencia ?? 'N/A' }} Bs
+                </span>
+
+                <p><strong>Sucursal:</strong>
                     @if($producto->existencias->isEmpty())
-                    N/A
+                    <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                        N/A
+                    </span>
                     @else
                     @foreach($producto->existencias as $existencia)
-                    <span class="inline-block bg-gray-200 text-gray-800 px-2 py-1 rounded mr-1 mb-1">
+                    <span class="inline-block bg-white text-cyan-600 px-3 py-1 rounded-full text-sm font-semibold uppercase">
                         {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
-                        (Cantidad: {{ $existencia->cantidad }}, Mínima: {{ $existencia->cantidadMinima ?? 0 }})
+                        ({{ $existencia->cantidad }} / mín: {{ $existencia->cantidadMinima ?? 0 }})
                     </span>
                     @endforeach
                     @endif
                 </p>
             </div>
 
-            <!-- Botones -->
             <div class="flex flex-col items-end gap-4 col-span-3">
                 <button wire:click="abrirModal('edit', {{ $producto->id }})" class="btn-circle btn-cyan">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,83 +103,74 @@
         <div class="modal-box">
             <div class="modal-content">
                 <div class="flex flex-col gap-4">
+
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Imagen</label>
                         <input type="file" wire:model="imagen" class="input-minimal">
                         @if($imagen || $imagenExistente)
                         <div class="mt-2 flex justify-center">
                             <img src="{{ $imagen ? $imagen->temporaryUrl() : asset('storage/'.$imagenExistente) }}"
-                                class="w-50 h-50 object-cover rounded"
+                                class="w-full max-w-xl h-auto object-contain rounded-xl shadow-md"
                                 alt="Imagen Producto">
                         </div>
                         @endif
-                        @error('imagen') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
-
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Nombre</label>
-                        <input wire:model="descripcion" class="input-minimal" placeholder="Descripción del producto"></input>
-                        @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
+                        <label class="font-semibold text-sm mb-1 block">Descripción</label>
+                        <input wire:model="descripcion" class="input-minimal" placeholder="Descripción del producto">
                     </div>
-
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Apodo producto</label>
-                        <input wire:model="nombre" class="input-minimal" placeholder="Nombre del producto" />
-                        @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
+                        <label class="font-semibold text-sm mb-1 block">Unidad</label>
+                        <input wire:model="unidad" class="input-minimal" placeholder="Ej. mls, Lts, Kgs..." />
                     </div>
-
                     <div>
                         <label class="font-semibold text-sm mb-1 block">Tipo de Contenido</label>
-                        <input wire:model="tipoContenido" class="input-minimal" placeholder="Ej. Agua, Gaseosa..." />
-                        @error('tipoContenido') <span class="error-message">{{ $message }}</span> @enderror
+                        <input wire:model="tipoContenido" class="input-minimal" placeholder="Ej. Agua, Gaseosa, Hielo..." />
                     </div>
-
-                    <div class="flex flex-wrap justify-center gap-2 mb-2">
-                        @foreach([0 => 'Sin Retorno', 1 => 'Con Retorno'] as $key => $label)
-                        <button
-                            type="button"
-                            wire:click="$set('tipoProducto', {{ $key }})"
-                            class="px-4 py-2 rounded-full text-sm
-                            {{ $tipoProducto == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
-                            {{ $label }}
-                        </button>
-                        @endforeach
-                    </div>
-
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
-                        <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
-                        @error('cantidadMinima') <span class="error-message">{{ $message }}</span> @enderror
+                        <label class="font-semibold text-sm mb-1 block">Tipo de Producto</label>
+                        <input wire:model="tipoProducto" class="input-minimal" placeholder="Ej. Botella, Botellón, Dispenser..." />
                     </div>
-
-
-
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Capacidad (ml)</label>
-                        <input type="number" wire:model="capacidad" class="input-minimal" placeholder="Ej. 500" />
-                        @error('capacidad') <span class="error-message">{{ $message }}</span> @enderror
+                        <label class="font-semibold text-sm mb-1 block">Tipo / Material</label>
+                        <input wire:model="tipo" class="input-minimal" placeholder="Ej. Plástico, Vidrio..." />
                     </div>
-
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Capacidad</label>
+                        <input type="number" wire:model="capacidad" class="input-minimal" min="0" step="0.01" placeholder="Ej. 500" />
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Paquete</label>
+                        <input wire:model="paquete" class="input-minimal" placeholder="Ej. 10 unidades, Caja, etc." />
+                    </div>
                     <div>
                         <label class="font-semibold text-sm mb-1 block">Precio de Referencia (Bs)</label>
-                        <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" placeholder="Ej. 10.50" />
-                        @error('precioReferencia') <span class="error-message">{{ $message }}</span> @enderror
+                        <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" min="0" placeholder="Ej. 10.50" />
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Observaciones</label>
+                        <textarea wire:model="observaciones" class="input-minimal" rows="2" placeholder="Comentarios o detalles adicionales"></textarea>
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Estado</label>
+                        <div class="flex flex-wrap justify-center gap-2 mt-2">
+                            @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
+                            <button
+                                type="button"
+                                wire:click="$set('estado', {{ $key }})"
+                                class="px-4 py-2 rounded-full text-sm transition-all
+                            {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                                {{ $label }}
+                            </button>
+                            @endforeach
+                        </div>
                     </div>
 
-
-
-                    <div class="flex flex-wrap justify-center gap-2 mt-2">
-                        @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
-                        <button type="button" wire:click="$set('estado', {{ $key }})"
-                            class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-                               {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
-                            {{ $label }}
-                        </button>
-                        @endforeach
-                    </div>
                 </div>
             </div>
-            <div class="modal-footer">
+
+
+            <div class="modal-footer flex justify-center gap-4 mt-4">
                 <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -178,15 +179,17 @@
                         <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                         <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                         <path d="M14 4l0 4l-6 0l0 -4" />
-                    </svg></button>
-                <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
+                    </svg>
+                </button>
+                <button type="button" wire:click="cerrarModal" class="btn-circle btn-gray" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M10 10l4 4m0 -4l-4 4" />
-                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                    </svg></button>
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -194,55 +197,89 @@
 
     @if($modalDetalle && $productoSeleccionado)
     <div class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-content flex flex-col gap-4">
+        <div class="modal-box max-w-3xl">
+            <div class="modal-content flex flex-col gap-6">
+
                 <div class="flex justify-center items-center">
                     @if($productoSeleccionado->imagen)
                     <img src="{{ asset('storage/'.$productoSeleccionado->imagen) }}"
-                        class="w-50 h-50 object-cover rounded"
+                        class="w-full max-w-xl h-auto object-contain rounded-xl shadow-md"
                         alt="Imagen Producto">
                     @else
                     <span class="badge-info">Sin imagen</span>
                     @endif
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <span class="label-info">Estado:</span>
-                            <span class="badge-info">{{ $productoSeleccionado->estado ? 'Activo' : 'Inactivo' }}</span>
+                            <span class="label-info">Descripción:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->descripcion ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Unidad:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->unidad ?? '-' }}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Tipo Contenido:</span>
                             <span class="badge-info">{{ $productoSeleccionado->tipoContenido ?? '-' }}</span>
                         </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Tipo Producto:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->tipoProducto ?? '-' }}</span>
+                        </div>
                     </div>
+
                     <div class="flex flex-col gap-3">
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Tipo / Material:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->tipo ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Capacidad:</span>
-                            <span class="badge-info">{{ $productoSeleccionado->capacidad }} ml</span>
+                            <span class="badge-info">
+                                {{ $productoSeleccionado->capacidad ? $productoSeleccionado->capacidad.' ml' : '-' }}
+                            </span>
                         </div>
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Paquete:</span>
+                            <span class="badge-info">{{ $productoSeleccionado->paquete ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Precio Referencia:</span>
-                            <span class="badge-info">{{ $productoSeleccionado->precioReferencia }} Bs</span>
-                        </div>
-                        <div class="flex flex-col sm:flex-row sm:items-start gap-2">
-                            <span class="label-info">Descripción:</span>
-                            <span class="badge-info">{{ $productoSeleccionado->descripcion ?? '-' }}</span>
+                            <span class="badge-info">{{ number_format($productoSeleccionado->precioReferencia, 2) }} Bs</span>
                         </div>
                     </div>
                 </div>
+
+                <div>
+                    <span class="label-info block mb-1">Observaciones:</span>
+                    <div class="bg-gray-100 rounded p-2 text-sm text-gray-700">
+                        {{ $productoSeleccionado->observaciones ?? 'Sin observaciones' }}
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-4">
+                    <span class="px-4 py-2 rounded-full text-sm font-medium 
+                    {{ $productoSeleccionado->estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                        {{ $productoSeleccionado->estado ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </div>
             </div>
-            <div class="modal-footer">
+
+            <div class="modal-footer mt-6 flex justify-center">
                 <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M10 10l4 4m0 -4l-4 4" />
-                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                    </svg></button>
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
     @endif
+
 </div>
