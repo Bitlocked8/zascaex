@@ -1,16 +1,19 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <!-- Título -->
     <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
       Bases
     </h3>
 
+    <!-- Buscador + botón nuevo -->
     <div class="flex items-center gap-2 mb-4 col-span-full">
       <input
         type="text"
         wire:model.live="search"
-        placeholder="Buscar por nombre o descripción..."
+        placeholder="Buscar por descripción o tipo..."
         class="input-minimal w-full" />
-      <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
+      <button wire:click="abrirModal('create')" class="btn-circle btn-cyan" title="Agregar base">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
           viewBox="0 0 24 24" fill="currentColor">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -20,23 +23,36 @@
       </button>
     </div>
 
+    <!-- Lista de bases -->
     @forelse($bases as $base)
     <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
 
-      <div class="flex flex-col col-span-9 items-center space-y-1 text-center">
+      <!-- Imagen -->
+      <div class="col-span-3 flex justify-center items-center">
+        @if($base->imagen)
+        <img src="{{ asset('storage/'.$base->imagen) }}" alt="Imagen de base"
+          class="w-20 h-20 object-cover rounded-lg border border-cyan-300">
+        @else
+        <div class="w-20 h-20 flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg text-xs">
+          Sin imagen
+        </div>
+        @endif
+      </div>
+
+      <!-- Información -->
+      <div class="flex flex-col col-span-6 items-center text-center space-y-1">
         <p>
           <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase {{ $base->estado ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">
             {{ $base->estado ? 'Activo' : 'Inactivo' }}
           </span>
         </p>
+
         <p class="text-cyan-600 text-2xl font-bold uppercase">
-          {{ $base->descripcion ?? 'Sin nombre' }}
+          {{ $base->descripcion ?? 'Sin descripción' }}
         </p>
 
-        <p><strong>Capacidad:</strong> {{ $base->capacidad ?? 'N/A' }}</p>
         <p><strong>Tipo:</strong> {{ $base->tipo ?? 'N/A' }}</p>
-
-      
+        <p><strong>Capacidad:</strong> {{ $base->capacidad ? $base->capacidad.' ml' : 'N/A' }}</p>
 
         <p><strong>Sucursal:</strong>
           @if($base->existencias->isEmpty())
@@ -54,35 +70,24 @@
         </p>
       </div>
 
+      <!-- Botones -->
       <div class="flex flex-col items-end gap-4 col-span-3">
-        <button wire:click="abrirModal('edit', {{ $base->id }})" class="btn-circle btn-cyan">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-            <path d="M6 4v4" />
-            <path d="M6 12v8" />
-            <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
-            <path d="M12 4v10" />
-            <path d="M12 18v2" />
-            <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-            <path d="M18 4v1" />
-            <path d="M18 9v2.5" />
-            <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-            <path d="M19.001 15.5v1.5" />
-            <path d="M19.001 21v1.5" />
-            <path d="M22.032 17.25l-1.299 .75" />
-            <path d="M17.27 20l-1.3 .75" />
-            <path d="M15.97 17.25l1.3 .75" />
-            <path d="M20.733 20l1.3 .75" />
+        <button wire:click="abrirModal('edit', {{ $base->id }})" class="btn-circle btn-cyan" title="Editar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </svg>
         </button>
+
         <button wire:click="modaldetalle({{ $base->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+              d="M15 12a3 3 0 1 1 -6 0a3 3 0 0 1 6 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
           </svg>
         </button>
       </div>
@@ -97,6 +102,7 @@
 
 
 
+
   @if($modal)
   <div class="modal-overlay">
     <div class="modal-box">
@@ -108,11 +114,13 @@
             <input type="file" wire:model="imagen" class="input-minimal">
             @if($imagen)
             <div class="mt-2 flex justify-center">
-              <img src="{{ is_string($imagen) ? asset('storage/'.$imagen) : $imagen->temporaryUrl() }}"
-                class="w-full h-auto max-h-60 object-cover rounded shadow-md"
+              <img
+                src="{{ is_string($imagen) ? asset('storage/'.$imagen) : $imagen->temporaryUrl() }}"
+                class="w-48 h-48 object-cover rounded shadow-md border border-cyan-300"
                 alt="Imagen Base">
             </div>
             @endif
+
           </div>
 
           <div>
@@ -178,7 +186,6 @@
   </div>
   @endif
 
-
   @if($modalDetalle && $baseSeleccionada)
   <div class="modal-overlay">
     <div class="modal-box max-w-3xl">
@@ -188,53 +195,31 @@
         <div class="flex justify-center items-center">
           @if($baseSeleccionada->imagen)
           <img src="{{ asset('storage/'.$baseSeleccionada->imagen) }}"
-            class="w-full max-w-xl h-auto object-contain rounded-xl shadow-md"
+              class="w-full max-w-xl h-auto object-contain rounded-xl shadow-md"
             alt="Imagen Base">
           @else
           <span class="badge-info">Sin imagen</span>
           @endif
         </div>
 
-        <!-- Información básica -->
+        <!-- Información -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div class="flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span class="label-info">Nombre / Descripción:</span>
+              <span class="label-info">Descripción:</span>
               <span class="badge-info">{{ $baseSeleccionada->descripcion ?? '-' }}</span>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Tipo:</span>
               <span class="badge-info">{{ $baseSeleccionada->tipo ?? '-' }}</span>
             </div>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span class="label-info">Capacidad:</span>
-              <span class="badge-info">{{ $baseSeleccionada->capacidad ?? '-' }}</span>
-            </div>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span class="label-info">Cantidad mínima:</span>
-              <span class="badge-info">
-                @if($baseSeleccionada->existencias->isNotEmpty())
-                {{ $baseSeleccionada->existencias->first()->cantidadMinima ?? '0' }}
-                @else
-                0
-                @endif
-              </span>
-            </div>
           </div>
 
           <div class="flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span class="label-info">Sucursal / Cantidad:</span>
+              <span class="label-info">Capacidad:</span>
               <span class="badge-info">
-                @if($baseSeleccionada->existencias->isEmpty())
-                N/A
-                @else
-                @foreach($baseSeleccionada->existencias as $existencia)
-                {{ $existencia->sucursal->nombre ?? '-' }}
-                ({{ $existencia->cantidad }} / mín: {{ $existencia->cantidadMinima ?? 0 }})
-                @if(!$loop->last), @endif
-                @endforeach
-                @endif
+                {{ $baseSeleccionada->capacidad ? $baseSeleccionada->capacidad.' ml' : '-' }}
               </span>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -270,5 +255,7 @@
     </div>
   </div>
   @endif
+
+
 
 </div>
