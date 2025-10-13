@@ -16,18 +16,26 @@ class Preformas extends Component
     public $modal = false;
     public $modalDetalle = false;
     public $preforma_id = null;
+    public $detalle = '';
+    public $insumo = '';
+    public $gramaje = '';
+    public $cuello = '';
     public $descripcion = '';
+    public $capacidad = '';
+    public $color = '';
     public $estado = 1;
     public $observaciones = '';
     public $imagen; 
     public $imagenExistente;
+
     public $accion = 'create';
     public $preformaSeleccionada = null;
-    
-    public $cantidadMinima = 0; // Nuevo campo
+    public $cantidadMinima = 0;
 
     protected $messages = [
         'estado.required' => 'El estado es obligatorio.',
+        'capacidad.integer' => 'La capacidad debe ser un número entero.',
+        'cantidadMinima.integer' => 'La cantidad mínima debe ser un número entero.',
     ];
 
     public function render()
@@ -37,14 +45,17 @@ class Preformas extends Component
         $personal = $usuario->personal;
 
         $preformasQuery = Preforma::query()
-            ->when($this->search, fn($q) => $q->where('descripcion', 'like', "%{$this->search}%"));
-        
+            ->when($this->search, fn($q) => $q->where('descripcion', 'like', "%{$this->search}%")
+                ->orWhere('detalle', 'like', "%{$this->search}%")
+                ->orWhere('insumo', 'like', "%{$this->search}%")
+            );
+
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $preformasQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
 
-        $preformas = $preformasQuery->with(['existencias'])->get();
+        $preformas = $preformasQuery->with('existencias')->get();
 
         return view('livewire.preformas', compact('preformas'));
     }
@@ -52,9 +63,8 @@ class Preformas extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'descripcion', 'estado', 'observaciones', 'imagen', 
-            'imagenExistente', 'preforma_id', 'preformaSeleccionada',
-            'cantidadMinima' // reset del nuevo campo
+            'preforma_id', 'detalle', 'insumo', 'gramaje', 'cuello', 'descripcion', 'capacidad', 'color',
+            'estado', 'observaciones', 'imagen', 'imagenExistente', 'preformaSeleccionada', 'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -69,31 +79,39 @@ class Preformas extends Component
     public function editar($id)
     {
         $preforma = Preforma::with('existencias')->findOrFail($id);
+
         $this->preforma_id = $preforma->id;
+        $this->detalle = $preforma->detalle;
+        $this->insumo = $preforma->insumo;
+        $this->gramaje = $preforma->gramaje;
+        $this->cuello = $preforma->cuello;
         $this->descripcion = $preforma->descripcion;
+        $this->capacidad = $preforma->capacidad;
+        $this->color = $preforma->color;
         $this->estado = $preforma->estado;
         $this->observaciones = $preforma->observaciones;
-        $this->imagen = null; 
-        $this->imagenExistente = $preforma->imagen; 
+        $this->imagen = null;
+        $this->imagenExistente = $preforma->imagen;
         $this->accion = 'edit';
         $this->preformaSeleccionada = $preforma;
 
-        // Cargar cantidadMinima si existe alguna existencia
         $this->cantidadMinima = $preforma->existencias->first()?->cantidadMinima ?? 0;
     }
 
     public function guardar()
     {
         $this->validate([
+            'detalle' => 'nullable|string|max:255',
+            'insumo' => 'nullable|string|max:255',
+            'gramaje' => 'nullable|string|max:255',
+            'cuello' => 'nullable|string|max:255',
             'descripcion' => 'nullable|string|max:255',
+            'capacidad' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:255',
             'estado' => 'required|boolean',
             'observaciones' => 'nullable|string|max:255',
-            'cantidadMinima' => 'nullable|integer|min:0', // Validación del campo
+            'cantidadMinima' => 'nullable|integer|min:0',
         ]);
-
-        $usuario = Auth::user();
-        $rol = $usuario->rol_id;
-        $personal = $usuario->personal;
 
         // Manejo de imagen
         if ($this->imagen && is_object($this->imagen)) {
@@ -106,7 +124,13 @@ class Preformas extends Component
         $preforma = Preforma::updateOrCreate(
             ['id' => $this->preforma_id],
             [
+                'detalle' => $this->detalle,
+                'insumo' => $this->insumo,
+                'gramaje' => $this->gramaje,
+                'cuello' => $this->cuello,
                 'descripcion' => $this->descripcion,
+                'capacidad' => $this->capacidad,
+                'color' => $this->color,
                 'estado' => $this->estado,
                 'observaciones' => $this->observaciones,
                 'imagen' => $imagenPath,
@@ -114,6 +138,10 @@ class Preformas extends Component
         );
 
         // Crear o actualizar existencia
+        $usuario = Auth::user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
         if (!$this->preforma_id) {
             $existenciaData = [
                 'existenciable_type' => Preforma::class,
@@ -142,9 +170,8 @@ class Preformas extends Component
     {
         $this->modal = false;
         $this->reset([
-            'descripcion', 'estado', 'observaciones', 'imagen', 
-            'imagenExistente', 'preforma_id', 'preformaSeleccionada',
-            'cantidadMinima'
+            'preforma_id', 'detalle', 'insumo', 'gramaje', 'cuello', 'descripcion', 'capacidad', 'color',
+            'estado', 'observaciones', 'imagen', 'imagenExistente', 'preformaSeleccionada', 'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }

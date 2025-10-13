@@ -1,8 +1,8 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-       <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
-    Productos
-</h3>
+        <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
+            Productos
+        </h3>
 
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input
@@ -150,6 +150,11 @@
                     <div>
                         <label class="font-semibold text-sm mb-1 block">Observaciones</label>
                         <textarea wire:model="observaciones" class="input-minimal" rows="2" placeholder="Comentarios o detalles adicionales"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
+                        <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
                     </div>
                     <div>
                         <label class="font-semibold text-sm mb-1 block">Estado</label>

@@ -18,6 +18,7 @@ class Bases extends Component
     public $imagen;
     public $imagenExistente;
     public $descripcion = '';
+    public $tipo = '';
     public $base_id = null;
     public $capacidad = '';
     public $estado = 1;
@@ -42,7 +43,8 @@ class Bases extends Component
         $basesQuery = Base::query()
             ->when($this->search, fn($q) => $q->where('capacidad', 'like', "%{$this->search}%")
                 ->orWhere('descripcion', 'like', "%{$this->search}%")
-                ->orWhere('observaciones', 'like', "%{$this->search}%"));
+                ->orWhere('observaciones', 'like', "%{$this->search}%")
+                ->orWhere('tipo', 'like', "%{$this->search}%"));
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -57,7 +59,7 @@ class Bases extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'base_id', 'capacidad', 'estado', 'descripcion', 
+            'base_id', 'capacidad', 'estado', 'descripcion', 'tipo',
             'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada', 'cantidadMinima'
         ]);
 
@@ -77,6 +79,7 @@ class Bases extends Component
         $this->capacidad = $base->capacidad;
         $this->estado = $base->estado;
         $this->descripcion = $base->descripcion;
+        $this->tipo = $base->tipo;
         $this->observaciones = $base->observaciones;
         $this->imagen = null;
         $this->imagenExistente = $base->imagen;
@@ -91,6 +94,7 @@ class Bases extends Component
             'capacidad' => 'required|integer|min:0',
             'estado' => 'required|boolean',
             'descripcion' => 'nullable|string|max:255',
+            'tipo' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string',
             'cantidadMinima' => 'nullable|integer|min:0',
         ]);
@@ -108,6 +112,7 @@ class Bases extends Component
                 'capacidad' => $this->capacidad,
                 'estado' => $this->estado,
                 'descripcion' => $this->descripcion,
+                'tipo' => $this->tipo,
                 'observaciones' => $this->observaciones,
                 'imagen' => $imagenPath,
             ]
@@ -145,7 +150,7 @@ class Bases extends Component
     {
         $this->modal = false;
         $this->reset([
-            'base_id', 'capacidad', 'estado', 'descripcion', 
+            'base_id', 'capacidad', 'estado', 'descripcion', 'tipo',
             'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada', 'cantidadMinima'
         ]);
         $this->resetErrorBag();
