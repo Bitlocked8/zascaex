@@ -15,9 +15,17 @@ class Cliente extends Model
         'empresa',
         'nitCi',
         'razonSocial',
+        'direccion',
+        'establecimiento',
+        'disponible',
+        'bot',
         'telefono',
         'celular',
         'correo',
+        'ubicacion',
+        'movil',
+        'dias',
+        'departamento_localidad',
         'latitud',
         'longitud',
         'foto',
@@ -26,6 +34,7 @@ class Cliente extends Model
         'user_id',
         'categoria',
     ];
+
 
     /**
      * Relación 1:N con Venta.
