@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string('razonSocial')->nullable();
             $table->string('direccion')->nullable();
             $table->string('establecimiento')->nullable();
-            $table->boolean('disponible')->default(1);
+            $table->string('disponible')->nullable();
             $table->string('bot')->nullable();
             $table->string('telefono', 50)->nullable();
             $table->string('celular', 50)->nullable();

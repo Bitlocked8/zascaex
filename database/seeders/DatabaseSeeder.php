@@ -32,9 +32,7 @@ class DatabaseSeeder extends Seeder
         Rol::create(['id' => 4, 'nombre' => 'Planta', 'descripcion' => 'Acceso acceso a ventas']);
         Rol::create(['id' => 5, 'nombre' => 'Cliente', 'descripcion' => 'Acceso la aplicacion móvil, catálogo y compras por internet.']);
 
-        // ---------------------------
-        // 2️⃣ Crear usuario admin
-        // ---------------------------
+
         $adminUser = User::create([
             'email' => 'admin@mail.com',
             'password' => bcrypt(12345678),
@@ -43,20 +41,8 @@ class DatabaseSeeder extends Seeder
         ]);
         Personal::factory()->create(['user_id' => $adminUser->id]);
 
-        $clientes = Cliente::factory(10)->create();
-        $promos = Promo::factory(5)->create();
 
-        $clientes->each(function ($cliente) use ($promos) {
-            $clientePromos = $promos->random(rand(1, 3));
-            foreach ($clientePromos as $promo) {
-                ItemPromo::factory()->create([
-                    'cliente_id' => $cliente->id,
-                    'promo_id' => $promo->id,
-                    'codigo' => strtoupper(uniqid('PROMO-')),
-                    'fecha_asignacion' => now(),
-                ]);
-            }
-        });
+      
         $empresa = Empresa::create([
             'id' => 1,
             'nombre' => 'Verzasca',
@@ -92,6 +78,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PreformaSeeder::class);
         $this->call(BaseSeeder::class);
         $this->call(ProductoSeeder::class);
+         $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
 
         Coche::factory(5)->create()->each(function ($coche) {
