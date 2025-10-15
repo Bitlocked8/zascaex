@@ -4,8 +4,8 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Cliente as ModeloCliente;
 use Livewire\WithFileUploads;
+use App\Models\Cliente as ModeloCliente;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,35 +13,43 @@ class Cliente extends Component
 {
     use WithFileUploads;
     use WithPagination;
-
-    public $categoria = 1;
-    public $search = '';
-    public $modal = false;
-    public $detalleModal = false;
-    public $accion = 'create';
     public $clienteId = null;
     public $nombre = '';
     public $empresa = '';
     public $razonSocial = '';
     public $nitCi = '';
     public $telefono = '';
-    public $correo = '';
+    public $celular = '';
+    public $direccion = '';
+    public $ubicacion = '';
+    public $departamento_localidad = '';
+    public $establecimiento = '';
+    public $disponible = '';
+    public $movil = '';
+    public $dias = '';
+    public $bot = '';
     public $latitud = '';
     public $longitud = '';
     public $foto = null;
     public $estado = 1;
-    public $clienteSeleccionado = null;
+    public $categoria = 1;
 
-    // User fields
+    // 🔹 Campos del usuario asociado
     public $email = '';
     public $password = '';
-    public $rol_id = '';
 
+    // 🔹 Campos auxiliares
+    public $search = '';
+    public $modal = false;
+    public $detalleModal = false;
+    public $accion = 'create';
+    public $clienteSeleccionado = null;
     public $coordenadas;
+    public $cantidad = 50;
 
-    // Alert modal
+    // 🔹 Alertas
     public $alertMessage = '';
-    public $alertType = ''; // 'success', 'error', 'warning'
+    public $alertType = '';
     public $showAlert = false;
 
     protected $listeners = ['ocultarAlerta'];
@@ -53,9 +61,10 @@ class Cliente extends Component
                 ->orWhere('empresa', 'like', '%' . $this->search . '%')
                 ->orWhere('nitCi', 'like', '%' . $this->search . '%')
                 ->orWhere('telefono', 'like', '%' . $this->search . '%')
-                ->orWhere('correo', 'like', '%' . $this->search . '%');
+                ->orWhere('celular', 'like', '%' . $this->search . '%');
         })
             ->orderBy('id', 'desc')
+            ->take($this->cantidad)
             ->get();
 
         return view('livewire.cliente', compact('clientes'));
@@ -68,22 +77,7 @@ class Cliente extends Component
 
     public function abrirModal($accion)
     {
-        $this->reset([
-            'nombre',
-            'empresa',
-            'razonSocial',
-            'nitCi',
-            'telefono',
-            'correo',
-            'latitud',
-            'longitud',
-            'foto',
-            'estado',
-            'clienteId',
-            'categoria',
-            'email',
-            'password'
-        ]);
+        $this->resetCampos();
         $this->accion = $accion;
         $this->estado = 1;
         $this->categoria = 1;
@@ -100,17 +94,25 @@ class Cliente extends Component
         $this->razonSocial = $cliente->razonSocial;
         $this->nitCi = $cliente->nitCi;
         $this->telefono = $cliente->telefono;
-        $this->correo = $cliente->correo;
+        $this->celular = $cliente->celular;
+        $this->direccion = $cliente->direccion;
+        $this->ubicacion = $cliente->ubicacion;
+        $this->departamento_localidad = $cliente->departamento_localidad;
+        $this->establecimiento = $cliente->establecimiento;
+        $this->disponible = $cliente->disponible;
+        $this->movil = $cliente->movil;
+        $this->dias = $cliente->dias;
+        $this->bot = $cliente->bot;
         $this->latitud = $cliente->latitud;
         $this->longitud = $cliente->longitud;
         $this->foto = $cliente->foto;
         $this->estado = $cliente->estado;
+        $this->categoria = $cliente->categoria;
+        $this->email = $cliente->user->email ?? '';
+        $this->password = '';
         $this->accion = 'edit';
         $this->modal = true;
         $this->detalleModal = false;
-        $this->email = $cliente->user ? $cliente->user->email : '';
-        $this->password = '';
-        $this->categoria = $cliente->categoria;
     }
 
     public function verDetalle($id)
@@ -128,7 +130,15 @@ class Cliente extends Component
             'razonSocial' => 'nullable|string|max:255',
             'nitCi' => 'nullable|string|max:50',
             'telefono' => 'nullable|string|max:20',
-            'correo' => 'nullable|email|max:255',
+            'celular' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255',
+            'ubicacion' => 'nullable|string|max:255',
+            'departamento_localidad' => 'nullable|string|max:255',
+            'establecimiento' => 'nullable|string|max:255',
+            'disponible' => 'nullable|string|max:100',
+            'movil' => 'nullable|string|max:100',
+            'dias' => 'nullable|string|max:255',
+            'bot' => 'nullable|string|max:255',
             'latitud' => 'nullable|numeric|between:-90,90',
             'longitud' => 'nullable|numeric|between:-180,180',
             'foto' => $this->accion === 'edit' && !is_object($this->foto)
@@ -139,10 +149,8 @@ class Cliente extends Component
         ];
 
         if ($this->accion === 'create') {
-            $rules = array_merge($rules, [
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:6',
-            ]);
+            $rules['email'] = 'required|email|unique:users,email';
+            $rules['password'] = 'required|string|min:6';
         }
 
         $this->validate($rules);
@@ -151,7 +159,7 @@ class Cliente extends Component
             if ($this->accion === 'edit' && $this->clienteId) {
                 $cliente = ModeloCliente::findOrFail($this->clienteId);
 
-                // Validar email para evitar duplicados
+                // ✅ Actualizar usuario asociado
                 if ($this->email && $cliente->user) {
                     $emailExiste = User::where('email', $this->email)
                         ->where('id', '!=', $cliente->user->id)
@@ -159,10 +167,7 @@ class Cliente extends Component
                     if ($emailExiste) {
                         return $this->mostrarAlerta('El email ya existe, intente con otro.', 'error');
                     }
-                }
 
-                // Actualizar usuario
-                if ($cliente->user) {
                     $userData = ['email' => $this->email];
                     if ($this->password) {
                         $userData['password'] = bcrypt($this->password);
@@ -170,7 +175,7 @@ class Cliente extends Component
                     $cliente->user->update($userData);
                 }
 
-                // Manejo de foto
+                // ✅ Manejo de imagen
                 if (is_object($this->foto)) {
                     $rutaFoto = $this->foto->store('clientes', 'public');
                     if ($cliente->foto && Storage::disk('public')->exists($cliente->foto)) {
@@ -180,14 +185,22 @@ class Cliente extends Component
                     $rutaFoto = $this->foto;
                 }
 
-                // Actualizar datos del cliente
+                // ✅ Actualizar datos
                 $cliente->update([
                     'nombre' => $this->nombre,
                     'empresa' => $this->empresa,
                     'razonSocial' => $this->razonSocial,
                     'nitCi' => $this->nitCi,
                     'telefono' => $this->telefono,
-                    'correo' => $this->correo,
+                    'celular' => $this->celular,
+                    'direccion' => $this->direccion,
+                    'ubicacion' => $this->ubicacion,
+                    'departamento_localidad' => $this->departamento_localidad,
+                    'establecimiento' => $this->establecimiento,
+                    'disponible' => $this->disponible,
+                    'movil' => $this->movil,
+                    'dias' => $this->dias,
+                    'bot' => $this->bot,
                     'latitud' => $this->latitud,
                     'longitud' => $this->longitud,
                     'foto' => $rutaFoto,
@@ -199,29 +212,13 @@ class Cliente extends Component
             }
 
             if ($this->accion === 'create') {
-                // Aquí va tu código de creación si quieres
+                // 👉 Aquí puedes agregar la lógica de creación de cliente y usuario si la usas
             }
 
             $this->cerrarModal();
+
         } catch (\Exception $e) {
             $this->mostrarAlerta('Error: ' . $e->getMessage(), 'error');
-        }
-    }
-
-    public function toggleVerificado($clienteId)
-    {
-        try {
-            $cliente = ModeloCliente::findOrFail($clienteId);
-            $nuevoEstado = !$cliente->verificado;
-            $cliente->update(['verificado' => $nuevoEstado]);
-
-            if ($nuevoEstado) {
-                $this->mostrarAlerta('Cliente verificado con éxito.', 'success');
-            } else {
-                $this->mostrarAlerta('Verificación cancelada.', 'warning');
-            }
-        } catch (\Exception $e) {
-            $this->mostrarAlerta('Error al actualizar la verificación: ' . $e->getMessage(), 'error');
         }
     }
 
@@ -240,36 +237,46 @@ class Cliente extends Component
     {
         $this->modal = false;
         $this->detalleModal = false;
+        $this->resetCampos();
+        $this->resetErrorBag();
+    }
+
+    private function resetCampos()
+    {
         $this->reset([
+            'clienteId',
             'nombre',
             'empresa',
             'razonSocial',
             'nitCi',
             'telefono',
-            'correo',
+            'celular',
+            'direccion',
+            'ubicacion',
+            'departamento_localidad',
+            'establecimiento',
+            'disponible',
+            'movil',
+            'dias',
+            'bot',
             'latitud',
             'longitud',
             'foto',
             'estado',
-            'clienteId',
-            'clienteSeleccionado',
             'categoria',
             'email',
-            'password'
+            'password',
+            'clienteSeleccionado',
         ]);
-        $this->resetErrorBag();
     }
 
-    // ✅ Nuevo método de alerta interna
-  public function mostrarAlerta($mensaje, $tipo = 'success')
-{
-    $this->alertMessage = $mensaje;
-    $this->alertType = $tipo;
-    $this->showAlert = true;
-
-    // Livewire 3 usa dispatch en lugar de dispatchBrowserEvent
-    $this->dispatch('hide-alert');
-}
+    public function mostrarAlerta($mensaje, $tipo = 'success')
+    {
+        $this->alertMessage = $mensaje;
+        $this->alertType = $tipo;
+        $this->showAlert = true;
+        $this->dispatch('hide-alert');
+    }
 
     public function ocultarAlerta()
     {

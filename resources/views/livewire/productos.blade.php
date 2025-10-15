@@ -195,8 +195,6 @@
     <div class="modal-overlay">
         <div class="modal-box max-w-3xl">
             <div class="modal-content flex flex-col gap-6">
-
-                <!-- Imagen -->
                 <div class="flex justify-center items-center">
                     @if($productoSeleccionado->imagen)
                     <img src="{{ asset('storage/'.$productoSeleccionado->imagen) }}"

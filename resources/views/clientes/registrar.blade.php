@@ -18,7 +18,7 @@
             <h1 class="text-2xl font-bold">Registro de Clientes</h1>
             <a href="{{ route('home') }}"
                 class="btn-circle btn-cyan">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M5 12h6m3 0h1.5m3 0h.5" />
                     <path d="M5 12l6 6" />
@@ -32,6 +32,8 @@
                 @csrf
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    {{-- 🗺️ MAPA --}}
                     <div class="order-1 lg:order-1 w-full shadow-md sm:rounded-lg p-6 bg-white">
                         <div id="mapa" class="w-full h-[200px] lg:h-[400px] rounded shadow-lg mb-4"></div>
 
@@ -42,6 +44,7 @@
                                 class="input-minimal">
                             @error('latitud') <span class="error-message">{{ $message }}</span> @enderror
                         </div>
+
                         <div class="mb-4">
                             <input type="text" id="longitud" name="longitud"
                                 value="{{ old('longitud', $cliente->longitud ?? '') }}"
@@ -51,9 +54,10 @@
                         </div>
                     </div>
 
+                    {{-- 🧾 DATOS DEL CLIENTE --}}
                     <div class="order-2 lg:order-2 w-full grid grid-cols-1 lg:grid-cols-1 gap-6">
-
                         <div class="shadow-md sm:rounded-lg p-6 bg-white">
+
                             <p class="mb-4 text-gray-700">
                                 Código de Cliente:
                                 <span class="font-semibold text-cyan-600">
@@ -92,7 +96,6 @@
                                     class="input-minimal">
                                 @error('nitCi') <span class="error-message">{{ $message }}</span> @enderror
                             </div>
-
                             <div class="mb-4">
                                 <input type="text" id="telefono" name="telefono"
                                     value="{{ old('telefono', $cliente->telefono ?? '') }}"
@@ -102,13 +105,80 @@
                             </div>
 
                             <div class="mb-4">
-                                <input type="email" id="correo" name="correo"
-                                    value="{{ old('correo', $cliente->correo ?? '') }}"
-                                    placeholder="Correo Empresa"
+                                <input type="text" id="celular" name="celular"
+                                    value="{{ old('celular', $cliente->celular ?? '') }}"
+                                    placeholder="Celular"
                                     class="input-minimal">
-                                @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+                                @error('celular') <span class="error-message">{{ $message }}</span> @enderror
                             </div>
 
+                            {{-- 📍 Dirección y Ubicación --}}
+                            <div class="mb-4">
+                                <input type="text" id="direccion" name="direccion"
+                                    value="{{ old('direccion', $cliente->direccion ?? '') }}"
+                                    placeholder="Dirección"
+                                    class="input-minimal">
+                                @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="text" id="ubicacion" name="ubicacion"
+                                    value="{{ old('ubicacion', $cliente->ubicacion ?? '') }}"
+                                    placeholder="Referencia / Ubicación"
+                                    class="input-minimal">
+                                @error('ubicacion') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="text" id="departamento_localidad" name="departamento_localidad"
+                                    value="{{ old('departamento_localidad', $cliente->departamento_localidad ?? '') }}"
+                                    placeholder="Departamento / Localidad"
+                                    class="input-minimal">
+                                @error('departamento_localidad') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- 🏪 Otros datos --}}
+                            <div class="mb-4">
+                                <input type="text" id="establecimiento" name="establecimiento"
+                                    value="{{ old('establecimiento', $cliente->establecimiento ?? '') }}"
+                                    placeholder="Establecimiento"
+                                    class="input-minimal">
+                                @error('establecimiento') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="text" id="disponible" name="disponible"
+                                    value="{{ old('disponible', $cliente->disponible ?? '') }}"
+                                    placeholder="Disponibilidad"
+                                    class="input-minimal">
+                                @error('disponible') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="text" id="movil" name="movil"
+                                    value="{{ old('movil', $cliente->movil ?? '') }}"
+                                    placeholder="Móvil asignado"
+                                    class="input-minimal">
+                                @error('movil') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="text" id="dias" name="dias"
+                                    value="{{ old('dias', $cliente->dias ?? '') }}"
+                                    placeholder="Días de visita / atención"
+                                    class="input-minimal">
+                                @error('dias') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <input type="text" id="bot" name="bot"
+                                    value="{{ old('bot', $cliente->bot ?? '') }}"
+                                    placeholder="Bot / Fuente (opcional)"
+                                    class="input-minimal">
+                                @error('bot') <span class="error-message">{{ $message }}</span> @enderror
+                            </div>
+
+                            {{-- 👤 Usuario asociado --}}
                             <div class="mb-4">
                                 <input type="email" id="email" name="email"
                                     value="{{ old('email') }}"
@@ -126,6 +196,7 @@
                                 @error('password') <span class="error-message">{{ $message }}</span> @enderror
                             </div>
 
+                            {{-- 🏷️ Categoría y Estado --}}
                             <div class="mb-4">
                                 <select id="categoria" name="categoria" class="input-minimal">
                                     <option value="1" {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'selected' : '' }}>Cliente Nuevo</option>
@@ -139,15 +210,14 @@
                                 <select id="estado" name="estado" class="input-minimal">
                                     <option value="0" {{ old('estado', $cliente->estado ?? 0) == 0 ? 'selected' : '' }}>Inactivo</option>
                                     <option value="1" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'selected' : '' }}>Activo</option>
-
                                 </select>
                                 @error('estado') <span class="error-message">{{ $message }}</span> @enderror
                             </div>
+
                         </div>
-
                     </div>
-
                 </div>
+
                 <div class="flex justify-center mt-6">
                     <button type="submit"
                         class="btn-circle btn-cyan">

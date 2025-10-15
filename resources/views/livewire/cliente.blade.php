@@ -126,6 +126,13 @@
             No hay clientes registrados.
         </div>
         @endforelse
+        @if($clientes->count() >= $cantidad) <!-- Solo mostrar si hay más clientes -->
+        <div class="col-span-full text-center mt-4">
+            <button wire:click="$set('cantidad', {{ $cantidad + 50 }})" class="btn-cyan px-4 py-2 rounded">
+                Cargar más
+            </button>
+        </div>
+        @endif
 
     </div>
 
@@ -177,9 +184,57 @@
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Correo Empresa</label>
-                    <input type="email" wire:model="correo" class="input-minimal" placeholder="Correo Empresa">
-                    @error('correo') <span class="error-message">{{ $message }}</span> @enderror
+                    <label class="font-semibold text-sm mb-1 block">Celular</label>
+                    <input type="text" wire:model="celular" class="input-minimal" placeholder="Celular">
+                    @error('celular') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Dirección</label>
+                    <input type="text" wire:model="direccion" class="input-minimal" placeholder="Dirección">
+                    @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Ubicación</label>
+                    <input type="text" wire:model="ubicacion" class="input-minimal" placeholder="Ubicación">
+                    @error('ubicacion') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Departamento / Localidad</label>
+                    <input type="text" wire:model="departamento_localidad" class="input-minimal" placeholder="Departamento / Localidad">
+                    @error('departamento_localidad') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Establecimiento</label>
+                    <input type="text" wire:model="establecimiento" class="input-minimal" placeholder="Establecimiento">
+                    @error('establecimiento') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Disponible</label>
+                    <input type="text" wire:model="disponible" class="input-minimal" placeholder="Disponible">
+                    @error('disponible') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Movil</label>
+                    <input type="text" wire:model="movil" class="input-minimal" placeholder="Movil">
+                    @error('movil') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">Días</label>
+                    <input type="text" wire:model="dias" class="input-minimal" placeholder="Días">
+                    @error('dias') <span class="error-message">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="font-semibold text-sm mb-1 block">BOT</label>
+                    <input type="text" wire:model="bot" class="input-minimal" placeholder="BOT">
+                    @error('bot') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
@@ -194,6 +249,7 @@
                     @error('password') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
+
                 <div class="mb-4">
                     <label class="font-semibold text-sm mb-1 block">Latitud</label>
                     <p class="px-3 py-2 bg-gray-100 rounded text-gray-700">
@@ -207,6 +263,7 @@
                         {{ $longitud ?? 'No disponible' }}
                     </p>
                 </div>
+
                 <div class="flex flex-wrap justify-center gap-2 mt-2">
                     @foreach([1 => 'Cliente Nuevo', 2 => 'Cliente Regular', 3 => 'Cliente Antiguo'] as $key => $label)
                     <button type="button" wire:click="$set('categoria', {{ $key }})"
@@ -228,9 +285,7 @@
                 </div>
 
             </div>
-
-            <!-- Footer: Guardar / Cerrar -->
-            <div class="modal-footer flex justify-center gap-4 mt-4">
+            <div class="modal-footer">
                 <button type="button" wire:click="guardarCliente" class="btn-circle btn-cyan" title="Guardar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -268,65 +323,98 @@
     </div>
     @endif
 
-
-    @if($detalleModal)
+    @if($detalleModal && $clienteSeleccionado)
     <div class="modal-overlay">
-        <div class="modal-box">
-
+        <div class="modal-box max-w-3xl">
             <div class="modal-content flex flex-col gap-6">
-
-                <!-- Foto del Cliente -->
                 <div class="flex justify-center items-center">
                     @if($clienteSeleccionado->foto)
                     <img src="{{ asset('storage/'.$clienteSeleccionado->foto) }}"
-                        class="w-50 h-50 object-cover rounded"
+                        class="w-full max-w-xs h-auto object-cover rounded-xl shadow-md"
                         alt="Foto de {{ $clienteSeleccionado->nombre }}">
                     @else
                     <span class="badge-info">Sin foto</span>
                     @endif
                 </div>
-
-                <!-- Información del Cliente -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Nombre:</span>
                             <span class="badge-info">{{ $clienteSeleccionado->nombre ?? '-' }}</span>
                         </div>
-
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Código:</span>
                             <span class="badge-info">{{ $clienteSeleccionado->codigo ?? '-' }}</span>
                         </div>
-
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Empresa:</span>
                             <span class="badge-info">{{ $clienteSeleccionado->empresa ?? '-' }}</span>
                         </div>
-
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Razón Social:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->razonSocial ?? '-' }}</span>
+                        </div>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">NIT/CI:</span>
                             <span class="badge-info">{{ $clienteSeleccionado->nitCi ?? '-' }}</span>
                         </div>
-
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Teléfono:</span>
                             <span class="badge-info">{{ $clienteSeleccionado->telefono ?? '-' }}</span>
                         </div>
-
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <span class="label-info">Correo:</span>
-                            <span class="badge-info">{{ $clienteSeleccionado->correo ?? '-' }}</span>
+                            <span class="label-info">Celular:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->celular ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Dirección:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->direccion ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Ubicación:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->ubicacion ?? '-' }}</span>
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-3">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <span class="label-info">Estado:</span>
-                            <span class="badge-info">{{ $clienteSeleccionado->estado ? 'Activo' : 'Inactivo' }}</span>
+                            <span class="label-info">Departamento / Localidad:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->departamento_localidad ?? '-' }}</span>
                         </div>
-
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Establecimiento:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->establecimiento ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Disponible:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->disponible ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Movil:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->movil ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Días:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->dias ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">BOT:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->bot ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Latitud:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->latitud ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Longitud:</span>
+                            <span class="badge-info">{{ $clienteSeleccionado->longitud ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Estado:</span>
+                            <span class="badge-info {{ $clienteSeleccionado->estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $clienteSeleccionado->estado ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </div>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Categoría:</span>
                             <span class="badge-info">
@@ -341,32 +429,30 @@
                                 @endif
                             </span>
                         </div>
-
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Verificado:</span>
-                            <span class="badge-info">
-                                {{ $clienteSeleccionado->verificado ? 'Sí' : 'No' }}
-                            </span>
+                            <span class="badge-info">{{ $clienteSeleccionado->verificado ? 'Sí' : 'No' }}</span>
                         </div>
                     </div>
-
                 </div>
+
             </div>
-            <div class="modal-footer">
+
+            <div class="modal-footer mt-6 flex justify-center">
                 <button wire:click="$set('detalleModal', false)" class="btn-circle btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M10 10l4 4m0 -4l-4 4" />
-                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                        <circle cx="12" cy="12" r="9" />
                     </svg>
                 </button>
             </div>
-
         </div>
     </div>
     @endif
+
 
 
 
