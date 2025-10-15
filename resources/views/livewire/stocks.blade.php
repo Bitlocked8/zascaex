@@ -213,8 +213,8 @@
                                 type="button"
                                 wire:click="$set('existencia_id', {{ $existencia->id }})"
                                 class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
-                {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                  {{ $existencia_id == $existencia->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}
+                                  {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
                                 @if($disabled) disabled @endif>
 
                                 <span>
@@ -282,13 +282,9 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
-
-                <!-- Footer -->
                 <div class="modal-footer">
                     <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
-                        <!-- Icono guardar -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
@@ -297,7 +293,6 @@
                         </svg>
                     </button>
                     <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
-                        <!-- Icono cerrar -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M10 10l4 4m0 -4l-4 4" />
