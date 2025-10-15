@@ -78,7 +78,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PreformaSeeder::class);
         $this->call(BaseSeeder::class);
         $this->call(ProductoSeeder::class);
-         $this->call(ClienteSeeder::class);
+        //  $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
 
         Coche::factory(5)->create()->each(function ($coche) {

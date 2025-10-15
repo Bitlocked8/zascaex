@@ -17,18 +17,12 @@ class Sucursal extends Model
         'empresa_id',
     ];
 
-    /**
-     * Relación: Una sucursal pertenece a una empresa.
-     */
     public function empresa()
     {
         return $this->belongsTo(Empresa::class);
     }
 
-    /**
-     * Relación 1:N con Stock.
-     */
-
+ 
     public function existencias()
     {
         return $this->hasMany(Existencia::class);
@@ -36,5 +30,10 @@ class Sucursal extends Model
     public function ventas()
     {
         return $this->hasMany(Venta::class);
+    }
+
+     public function pagos()
+    {
+        return $this->hasMany(SucursalPago::class);
     }
 }

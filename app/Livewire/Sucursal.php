@@ -5,9 +5,12 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Sucursal as ModelSucursal;
 use App\Models\Empresa;
+use Livewire\WithFileUploads;
 
 class Sucursal extends Component
 {
+
+    use WithFileUploads;
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
@@ -19,6 +22,9 @@ class Sucursal extends Component
     public $telefono = '';
     public $zona = '';
     public $empresa_id = '';
+    public $modalPagosSucursal = false;
+    public $sucursalParaPago; // id de la sucursal seleccionada
+    public $pagosSucursal = []; // array de pagos dinámicos
 
     public $sucursalSeleccionada = null;
 
@@ -35,7 +41,7 @@ class Sucursal extends Component
         $sucursales = ModelSucursal::with('empresa')
             ->when($this->search, function ($query) {
                 $query->where('nombre', 'like', '%' . $this->search . '%')
-                      ->orWhere('direccion', 'like', '%' . $this->search . '%');
+                    ->orWhere('direccion', 'like', '%' . $this->search . '%');
             })
             ->orderBy('id', 'desc')
             ->get();
@@ -106,5 +112,83 @@ class Sucursal extends Component
         $this->detalleModal = false;
         $this->reset(['nombre', 'direccion', 'telefono', 'zona', 'empresa_id', 'sucursalId', 'sucursalSeleccionada']);
         $this->resetErrorBag();
+    }
+
+    public function abrirModalPagosSucursal($sucursal_id)
+    {
+        $this->sucursalParaPago = $sucursal_id;
+
+        $this->pagosSucursal = \App\Models\SucursalPago::where('sucursal_id', $sucursal_id)
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'nombre' => $p->nombre,
+                'tipo' => $p->tipo,
+                'numero_cuenta' => $p->numero_cuenta,
+                'titular' => $p->titular,
+                'imagen_qr' => $p->imagen_qr,
+                'estado' => $p->estado,
+            ])->toArray();
+
+        $this->modalPagosSucursal = true;
+    }
+
+    public function eliminarPagoSucursal($index)
+    {
+        $pago = $this->pagosSucursal[$index] ?? null;
+        if ($pago && isset($pago['id']) && $pago['id']) {
+            \App\Models\SucursalPago::find($pago['id'])?->delete();
+        }
+        unset($this->pagosSucursal[$index]);
+        $this->pagosSucursal = array_values($this->pagosSucursal);
+    }
+
+    public function agregarPagoSucursal()
+    {
+        $this->pagosSucursal[] = [
+            'id' => null,
+            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(count($this->pagosSucursal) + 1, 3, '0', STR_PAD_LEFT),
+            'fecha' => now()->format('Y-m-d'),
+            'monto' => null,
+            'observaciones' => null,
+            'imagen_qr' => null, // campo de la tabla sucursal_pagos
+        ];
+    }
+
+
+    public function guardarPagosSucursal()
+    {
+        foreach ($this->pagosSucursal as $index => $pago) {
+
+            // Validar que nombre no esté vacío
+            if (empty($pago['nombre'])) {
+                $this->addError("pagosSucursal.$index.nombre", "El nombre es obligatorio");
+                continue; // No guardar este pago si falla
+            }
+
+            $imagenPath = $pago['imagen_qr'] ?? null;
+            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
+                $imagenPath = $pago['imagen_qr']->store('pagos_sucursal', 'public');
+            }
+
+            \App\Models\SucursalPago::updateOrCreate(
+                ['id' => $pago['id'] ?? 0],
+                [
+                    'sucursal_id' => $this->sucursalParaPago,
+                    'nombre' => $pago['nombre'],
+                    'tipo' => $pago['tipo'] ?? null,
+                    'numero_cuenta' => $pago['numero_cuenta'] ?? null,
+                    'titular' => $pago['titular'] ?? null,
+                    'imagen_qr' => $imagenPath,
+                    'estado' => $pago['estado'] ?? true,
+                ]
+            );
+        }
+
+        // Solo resetear si no hay errores
+        if (! $this->getErrorBag()->has('pagosSucursal')) {
+            $this->reset(['pagosSucursal']);
+            $this->modalPagosSucursal = false;
+        }
     }
 }

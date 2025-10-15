@@ -60,6 +60,18 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
           </svg>
         </button>
+        <button wire:click="abrirModalPagosSucursal({{ $sucursal->id }})" class="btn-circle btn-cyan" title="Ver/Agregar Pagos">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+            <path d="M3 10h18" />
+            <path d="M16 19h6" />
+            <path d="M19 16l3 3l-3 3" />
+            <path d="M7.005 15h.005" />
+            <path d="M11 15h2" />
+          </svg>
+        </button>
+
       </div>
     </div>
     @empty
@@ -129,6 +141,146 @@
     </div>
   </div>
   @endif
+
+  @if($modalPagosSucursal)
+  <div class="modal-overlay">
+    <div class="modal-box max-w-3xl">
+      <div class="modal-content flex flex-col gap-4">
+        <div class="space-y-4">
+          @foreach($pagosSucursal as $index => $pago)
+          <div class="border p-4 rounded flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <strong>Nombre: {{ $pago['nombre'] ?? 'Nuevo Pago' }}</strong>
+              <button type="button" wire:click="eliminarPagoSucursal({{ $index }})" class="btn-circle btn-cyan" title="Eliminar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M4 7l16 0" />
+                  <path d="M10 11l0 6" />
+                  <path d="M14 11l0 6" />
+                  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+
+              <div>
+                <label class="font-semibold text-sm">Nombre</label>
+                <input type="text" wire:model="pagosSucursal.{{ $index }}.nombre" class="input-minimal">
+              </div>
+
+              <div>
+                <label class="font-semibold text-sm">Tipo</label>
+                <input type="text" wire:model="pagosSucursal.{{ $index }}.tipo" class="input-minimal" placeholder="QR / Transferencia">
+              </div>
+
+              <div>
+                <label class="font-semibold text-sm">Número de Cuenta</label>
+                <input type="text" wire:model="pagosSucursal.{{ $index }}.numero_cuenta" class="input-minimal">
+              </div>
+
+              <div>
+                <label class="font-semibold text-sm">Titular</label>
+                <input type="text" wire:model="pagosSucursal.{{ $index }}.titular" class="input-minimal">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="font-semibold text-sm">Imagen QR</label>
+                <input type="file" wire:model="pagosSucursal.{{ $index }}.imagen_qr" class="input-minimal">
+
+                @php
+                $imagenUrl = null;
+
+                if (isset($pagosSucursal[$index]['imagen_qr'])) {
+
+                $archivo = $pagosSucursal[$index]['imagen_qr'];
+
+                if (is_string($archivo)) {
+                $imagenUrl = Storage::url($archivo);
+                } elseif ($archivo instanceof \Livewire\TemporaryUploadedFile) {
+                // Solo usar temporaryUrl() si es previewable
+                if ($archivo->isPreviewable()) {
+                $imagenUrl = $archivo->temporaryUrl();
+                } else {
+                // Si no es previewable, usar store() + Storage::url()
+                $path = $archivo->store('pagos_sucursal', 'public');
+                $imagenUrl = Storage::url($path);
+                }
+                }
+                }
+                @endphp
+
+
+                @if($imagenUrl)
+                <div class="mt-2 flex flex-col items-center space-y-2">
+                  <img src="{{ $imagenUrl }}"
+                    alt="QR"
+                    class="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg object-cover rounded-lg shadow cursor-pointer"
+                    wire:click="$set('imagenPreviewModal', '{{ $imagenUrl }}'); $set('modalImagenAbierta', true)">
+                  @if(is_string($pagosSucursal[$index]['imagen_qr']))
+                  <a href="{{ $imagenUrl }}" download class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                      <path d="M7 11l5 5l5 -5" />
+                      <path d="M12 4l0 12" />
+                    </svg>
+                  </a>
+                  @endif
+                </div>
+                @endif
+              </div>
+
+              <div>
+                <label class="font-semibold text-sm">Estado</label>
+                <select wire:model="pagosSucursal.{{ $index }}.estado" class="input-minimal">
+                  <option value="1">Activo</option>
+                  <option value="0">Inactivo</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+          @endforeach
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" wire:click="agregarPagoSucursal" class="btn-circle btn-cyan" title="Agregar Pago">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+            </svg>
+          </button>
+
+
+          <button type="button" wire:click="guardarPagosSucursal" class="btn-circle btn-cyan" title="Guardar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+              <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M14 4l0 4l-6 0l0 -4" />
+            </svg>
+          </button>
+
+          <button type="button" wire:click="$set('modalPagosSucursal', false)" class="btn-circle btn-cyan" title="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" />
+              <path d="M10 10l4 4m0 -4l-4 4" />
+              <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+            </svg>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
 
   @if($detalleModal && $sucursalSeleccionada)
   <div class="modal-overlay">
