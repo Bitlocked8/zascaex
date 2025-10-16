@@ -5,369 +5,196 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Pedido;
 use App\Models\PedidoDetalle;
-use App\Models\Existencia;
+use App\Models\Producto;
 use App\Models\Reposicion;
-use App\Models\Cliente;
-use Illuminate\Support\Facades\DB;
 
 class Pedidos extends Component
 {
-    public $modal = false;
-    public $accion = 'create';
-    public $pedido_id;
-    public $codigo;
+    public $pedido;
     public $cliente_id;
     public $personal_id;
-    public $personal_nombres;
-    public $personal_apellidos;
-    public $estado_pedido = 0;
-    public $fecha_pedido;
-    public $observaciones;
-    public $productos = [];
-    public $existencias = [];
-    public $clientes = [];
-    public $modalError = false;
-    public $mensajeError = '';
-    public $estado = 0;
-    public $confirmingDeletePedidoId = null;
-    public $modalDetalle = false;
-    public $detallePedido;
+    public $productoSeleccionado;
+    public $cantidadSeleccionada;
+    public $detalles = [];
+    public $mensaje = null;
+    public $tipoMensaje = 'success';
+    public $modalPedido = false;
 
-    protected $rules = [
-        'cliente_id' => 'required|exists:clientes,id',
-        'productos' => 'required|array|min:1',
-        'productos.*.existencia_id' => 'required|exists:existencias,id',
-        'productos.*.cantidad' => 'required|integer|min:1',
-    ];
-
-    protected $messages = [
-        'cliente_id.required' => 'Debe seleccionar un cliente.',
-        'productos.required' => 'Debe agregar al menos un producto.',
-        'productos.*.existencia_id.required' => 'Debe seleccionar un producto.',
-        'productos.*.cantidad.required' => 'Debe ingresar una cantidad válida.',
-        'productos.*.cantidad.min' => 'La cantidad debe ser mayor a 0.',
-    ];
-
-    public function mount()
+    public function mount($pedido_id = null)
     {
-        $this->recargarDatosBase();
+        $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
     }
 
-    private function recargarDatosBase()
+    public function abrirModal()
     {
-        $this->existencias = Existencia::with([
-            'existenciable',
-            'reposiciones' => fn($q) => $q->where('estado_revision', 1)
-        ])
-        ->whereHas('reposiciones', fn($q) => $q->where('estado_revision', 1))
-        ->where('cantidad', '>', 0)
-        ->get();
-
-        $this->clientes = Cliente::all();
-        $this->fecha_pedido = now()->format('Y-m-d\TH:i');
-        $this->codigo = 'PED-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+        $this->modalPedido = true;
     }
 
-    public function abrirModal($accion = 'create', $id = null)
+    public function editarPedido($pedido_id)
     {
-        $this->reset([
-            'pedido_id',
-            'codigo',
-            'cliente_id',
-            'observaciones',
-            'productos',
-            'personal_id',
-            'personal_nombres',
-            'personal_apellidos',
-            'estado'
-        ]);
+        $this->pedido = Pedido::with('detalles.existencia')->find($pedido_id);
+        $this->cliente_id = $this->pedido->cliente_id;
+        $this->personal_id = $this->pedido->personal_id;
 
-        $this->accion = $accion;
+        $this->detalles = $this->pedido->detalles->map(function ($detalle) {
+            return [
+                'id' => $detalle->id,
+                'existencia_id' => $detalle->existencia_id,
+                'reposicion_id' => $detalle->reposicion_id,
+                'cantidad' => $detalle->cantidad,
+                'nombre' => $detalle->existencia->nombre ?? 'N/A',
+            ];
+        })->toArray();
 
-        $usuario = auth()->user();
-        $personal = $usuario->personal;
-
-        if (!$personal) {
-            $this->mensajeError = "No estás asignado a ningún personal válido.";
-            $this->modalError = true;
-            return;
-        }
-
-        $this->personal_id = $personal->id;
-        $this->personal_nombres = $personal->nombres ?? $usuario->name ?? 'Sin personal';
-        $this->personal_apellidos = $personal->apellidos ?? '';
-
-        if ($accion === 'create') {
-            $this->codigo = 'PED-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-            $this->fecha_pedido = now()->format('Y-m-d\TH:i');
-            $this->estado = 0;
-        }
-
-        $queryExistencias = Existencia::with([
-            'existenciable',
-            'sucursal',
-            'reposiciones' => fn($q) => $q->where('estado_revision', 1)
-        ])
-        ->whereHas('reposiciones', fn($q) => $q->where('estado_revision', 1))
-        ->whereHas('existenciable', fn($q) => $q->where('estado', 1))
-        ->orderBy('id');
-
-        if ($usuario->rol_id === 2) {
-            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $queryExistencias->where('sucursal_id', $sucursal_id);
-        }
-
-        $this->existencias = $queryExistencias->get();
-        $this->clientes = Cliente::all();
-
-        if ($accion === 'edit' && $id) {
-            $this->editar($id);
-        }
-
-        $this->modal = true;
-    }
-
-    public function editar($id)
-    {
-        $pedido = Pedido::with('detalles')->findOrFail($id);
-        $this->pedido_id = $pedido->id;
-        $this->codigo = $pedido->codigo;
-        $this->cliente_id = $pedido->cliente_id;
-        $this->fecha_pedido = $pedido->fecha_pedido;
-        $this->estado_pedido = $pedido->estado_pedido;
-        $this->observaciones = $pedido->observaciones;
-        $this->productos = $pedido->detalles->map(fn($d) => [
-            'existencia_id' => $d->existencia_id,
-            'reposicion_id' => $d->reposicion_id,
-            'cantidad' => $d->cantidad,
-            'detalle_id' => $d->id,
-        ])->toArray();
-    }
-
-    public function agregarProducto()
-    {
-        $this->productos[] = ['existencia_id' => null, 'cantidad' => 0];
-    }
-
-    public function eliminarProducto($index)
-    {
-        $producto = $this->productos[$index] ?? null;
-        if (!$producto) return;
-
-        if (isset($producto['detalle_id'])) {
-            $detalle = PedidoDetalle::find($producto['detalle_id']);
-            if ($detalle) {
-                $reposicion = Reposicion::find($detalle->reposicion_id);
-                if ($reposicion) {
-                    $reposicion->cantidad += $detalle->cantidad;
-                    $reposicion->save();
-                }
-
-                $existencia = Existencia::find($detalle->existencia_id);
-                if ($existencia) {
-                    $existencia->cantidad += $detalle->cantidad;
-                    $existencia->save();
-                }
-
-                $detalle->delete();
-            }
-        }
-
-        unset($this->productos[$index]);
-        $this->productos = array_values($this->productos);
-    }
-
-    public function confirmarEliminarPedido($pedido_id)
-    {
-        $this->confirmingDeletePedidoId = $pedido_id;
-    }
-
-    public function eliminarPedidoConfirmado()
-    {
-        if (!$this->confirmingDeletePedidoId) return;
-
-        $pedido = Pedido::with('detalles')->find($this->confirmingDeletePedidoId);
-        if ($pedido) {
-            foreach ($pedido->detalles as $detalle) {
-                $existencia = Existencia::find($detalle->existencia_id);
-                if ($existencia) {
-                    $existencia->cantidad += $detalle->cantidad;
-                    $existencia->save();
-                }
-
-                $reposicion = Reposicion::find($detalle->reposicion_id);
-                if ($reposicion) {
-                    $reposicion->cantidad += $detalle->cantidad;
-                    $reposicion->save();
-                }
-
-                $detalle->delete();
-            }
-
-            $pedido->delete();
-        }
-
-        $this->confirmingDeletePedidoId = null;
-    }
-
-    public function eliminarProductoExistente($detalle_id)
-    {
-        $detalle = PedidoDetalle::find($detalle_id);
-        if (!$detalle) return;
-
-        $reposicion = Reposicion::find($detalle->reposicion_id);
-        if ($reposicion) {
-            $reposicion->cantidad += $detalle->cantidad;
-            $reposicion->save();
-        }
-
-        $existencia = Existencia::find($detalle->existencia_id);
-        if ($existencia) {
-            $existencia->cantidad += $detalle->cantidad;
-            $existencia->save();
-        }
-
-        $detalle->delete();
-
-        $this->productos = array_filter($this->productos, fn($p) => !isset($p['detalle_id']) || $p['detalle_id'] != $detalle_id);
-        $this->productos = array_values($this->productos);
-    }
-
-    public function guardarPedido()
-    {
-        $this->validate();
-
-        $usuario = auth()->user();
-        if (!$usuario || !$usuario->personal) {
-            $this->mensajeError = 'El usuario actual no tiene un personal asignado.';
-            $this->modalError = true;
-            return;
-        }
-
-        $this->personal_id = $usuario->personal->id;
-
-        try {
-            DB::transaction(function () {
-
-                $pedido = Pedido::updateOrCreate(
-                    ['id' => $this->pedido_id],
-                    [
-                        'codigo' => $this->codigo,
-                        'cliente_id' => $this->cliente_id,
-                        'personal_id' => $this->personal_id,
-                        'estado_pedido' => $this->estado_pedido,
-                        'fecha_pedido' => $this->fecha_pedido,
-                        'observaciones' => $this->observaciones,
-                    ]
-                );
-
-                foreach ($this->productos as $producto) {
-                    $this->procesarReposiciones($producto, $pedido->id);
-                }
-            });
-
-            $this->cerrarModal();
-            session()->flash('message', 'Pedido guardado correctamente!');
-        } catch (\Exception $e) {
-            $this->mensajeError = $e->getMessage();
-            $this->modalError = true;
-        }
-    }
-
-    private function procesarReposiciones($producto, $pedido_id)
-    {
-        if (isset($producto['detalle_id'])) {
-            $detalle = PedidoDetalle::find($producto['detalle_id']);
-            if (!$detalle) return;
-            $diferencia = $producto['cantidad'] - $detalle->cantidad;
-            if ($diferencia > 0) {
-                $restante = $diferencia;
-                $reposiciones = Reposicion::where('existencia_id', $producto['existencia_id'])
-                    ->where('cantidad', '>', 0)
-                    ->where('estado_revision', true)
-                    ->orderBy('fecha')
-                    ->get();
-
-                foreach ($reposiciones as $repo) {
-                    if ($restante <= 0) break;
-                    $usar = min($restante, $repo->cantidad);
-                    $detalle->cantidad += $usar;
-                    $detalle->save();
-                    $repo->cantidad -= $usar;
-                    $repo->save();
-                    $restante -= $usar;
-                }
-
-                if ($restante > 0) {
-                    throw new \Exception("No hay suficiente stock para el producto {$producto['existencia_id']}.");
-                }
-
-                $existencia = Existencia::find($producto['existencia_id']);
-                $existencia->cantidad -= $diferencia;
-                $existencia->save();
-            } elseif ($diferencia < 0) {
-                $existencia = Existencia::find($producto['existencia_id']);
-                $existencia->cantidad += abs($diferencia);
-                $existencia->save();
-                $detalle->cantidad = $producto['cantidad'];
-                $detalle->save();
-            }
-        } else {
-            $restante = $producto['cantidad'];
-            $reposiciones = Reposicion::where('existencia_id', $producto['existencia_id'])
-                ->where('cantidad', '>', 0)
-                ->where('estado_revision', true)
-                ->orderBy('fecha')
-                ->get();
-            foreach ($reposiciones as $repo) {
-                if ($restante <= 0) break;
-                $usar = min($restante, $repo->cantidad);
-                PedidoDetalle::create([
-                    'pedido_id' => $pedido_id,
-                    'reposicion_id' => $repo->id,
-                    'existencia_id' => $producto['existencia_id'],
-                    'cantidad' => $usar,
-                ]);
-                $repo->cantidad -= $usar;
-                $repo->save();
-                $restante -= $usar;
-            }
-
-            if ($restante > 0) {
-                throw new \Exception("No hay suficiente stock disponible para el producto {$producto['existencia_id']}.");
-            }
-            $existencia = Existencia::find($producto['existencia_id']);
-            $existencia->cantidad -= $producto['cantidad'];
-            $existencia->save();
-        }
+        $this->modalPedido = true;
     }
 
     public function cerrarModal()
     {
-        $this->modal = false;
-        $this->reset(['pedido_id', 'codigo', 'cliente_id', 'observaciones', 'productos', 'estado_pedido']);
-        $this->recargarDatosBase();
+        $this->modalPedido = false;
+        $this->detalles = [];
+        $this->productoSeleccionado = null;
+        $this->cantidadSeleccionada = null;
+        $this->cliente_id = null;
+        $this->personal_id = null;
+        $this->pedido = new Pedido();
     }
 
-    public function modaldetalle($pedido_id)
+    public function agregarProducto()
     {
-        $this->detallePedido = Pedido::with(['cliente', 'personal', 'detalles.existencia.existenciable'])
-            ->find($pedido_id);
-
-        if (!$this->detallePedido) {
-            $this->mensajeError = 'Pedido no encontrado';
-            $this->modalError = true;
+        if (!$this->productoSeleccionado || !$this->cantidadSeleccionada) {
+            $this->setMensaje('Debe seleccionar un producto y cantidad', 'error');
             return;
         }
 
-        $this->modalDetalle = true;
+        $producto = Producto::with('existencias.reposiciones')->find($this->productoSeleccionado);
+        if (!$producto) {
+            $this->setMensaje('Producto no existe', 'error');
+            return;
+        }
+
+        $cantidadRestante = $this->cantidadSeleccionada;
+        $detalleTemporal = [];
+
+        foreach ($producto->existencias as $existencia) {
+            $lotes = $existencia->reposiciones()
+                ->where('cantidad', '>', 0)
+                ->where('estado_revision', 1)
+                ->orderBy('created_at')
+                ->get();
+
+            foreach ($lotes as $lote) {
+                if ($cantidadRestante <= 0) break;
+
+                $consumir = min($cantidadRestante, $lote->cantidad);
+                $lote->cantidad -= $consumir;
+                $lote->save();
+
+                $detalleTemporal[] = [
+                    'existencia_id' => $existencia->id,
+                    'reposicion_id' => $lote->id,
+                    'cantidad' => $consumir,
+                    'nombre' => $existencia->nombre,
+                ];
+
+                $cantidadRestante -= $consumir;
+            }
+            if ($cantidadRestante <= 0) break;
+        }
+
+
+        if ($cantidadRestante > 0) {
+            $this->setMensaje('No hay suficiente stock para este producto', 'error');
+            return;
+        }
+
+        $this->detalles = array_merge($this->detalles, $detalleTemporal);
+        $this->setMensaje('Producto agregado correctamente', 'success');
+        $this->productoSeleccionado = null;
+        $this->cantidadSeleccionada = null;
     }
 
-    public function render()
+    public function eliminarDetalle($index)
     {
-        $pedidos = Pedido::with(['cliente', 'personal', 'detalles.existencia.existenciable'])
-            ->latest()->get();
+        $detalle = $this->detalles[$index];
 
-        return view('livewire.pedidos', compact('pedidos'));
+        $lote = Reposicion::find($detalle['reposicion_id']);
+        if ($lote) {
+            $lote->cantidad += $detalle['cantidad'];
+            $lote->save();
+        }
+
+        if (isset($detalle['id'])) {
+            $this->detalles[$index]['eliminar'] = true;
+        } else {
+            unset($this->detalles[$index]);
+        }
+
+        $this->detalles = array_values($this->detalles);
+        $this->setMensaje('Detalle eliminado correctamente', 'success');
     }
+
+    public function guardarPedido()
+    {
+        $this->validate([
+            'cliente_id' => 'required',
+            'personal_id' => 'required',
+        ]);
+
+        $pedido = $this->pedido;
+        $pedido->cliente_id = $this->cliente_id;
+        $pedido->personal_id = $this->personal_id;
+
+        if (!$pedido->exists) {
+            $pedido->codigo = 'R-' . now()->format('YmdHis');
+            $pedido->estado_pedido = 0;
+        }
+
+        $pedido->save();
+
+        foreach ($this->detalles as $detalle) {
+            if (isset($detalle['id']) && isset($detalle['eliminar']) && $detalle['eliminar']) {
+                PedidoDetalle::find($detalle['id'])->delete();
+            }
+        }
+
+        foreach ($this->detalles as $detalle) {
+            if (!isset($detalle['id'])) {
+                PedidoDetalle::create([
+                    'pedido_id' => $pedido->id,
+                    'existencia_id' => $detalle['existencia_id'],
+                    'reposicion_id' => $detalle['reposicion_id'],
+                    'cantidad' => $detalle['cantidad'],
+                ]);
+            }
+        }
+
+        $this->setMensaje('Pedido guardado correctamente', 'success');
+        $this->cerrarModal();
+    }
+
+    private function setMensaje($texto, $tipo = 'success')
+    {
+        $this->mensaje = $texto;
+        $this->tipoMensaje = $tipo;
+    }
+
+ public function render()
+{
+    // Traemos solo productos que tengan al menos una reposición activa con cantidad > 0
+    $productos = Producto::whereHas('existencias.reposiciones', function($query) {
+        $query->where('estado_revision', 1)
+              ->where('cantidad', '>', 0);
+    })->with(['existencias.reposiciones' => function($query) {
+        $query->where('estado_revision', 1)
+              ->where('cantidad', '>', 0);
+    }])->get();
+
+    return view('livewire.pedidos', [
+        'pedidos' => Pedido::with(['cliente', 'personal', 'detalles'])->latest()->get(),
+        'productos' => $productos,
+        'detalles' => $this->detalles,
+    ]);
+}
+
 }
