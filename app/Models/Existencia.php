@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Existencia extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExistenciaFactory> */
+ 
     use HasFactory;
 
     protected $fillable = [
@@ -19,17 +19,11 @@ class Existencia extends Model
         'sucursal_id',
     ];
 
-    /**
-     * Relación polimórfica para asociar la existencia con diferentes tipos de artículos.
-     */
     public function existenciable(): MorphTo
     {
         return $this->morphTo();
     }
 
-    /**
-     * Relación con la Sucursal.
-     */
     public function sucursal()
     {
         return $this->belongsTo(Sucursal::class);

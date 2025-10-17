@@ -7,6 +7,7 @@ use App\Models\Pedido;
 use App\Models\PedidoDetalle;
 use App\Models\Producto;
 use App\Models\Reposicion;
+use Illuminate\Support\Facades\Auth;
 
 class Pedidos extends Component
 {
@@ -23,6 +24,9 @@ class Pedidos extends Component
     public function mount($pedido_id = null)
     {
         $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
+        if (!$pedido_id) {
+            $this->personal_id = Auth::id();
+        }
     }
 
     public function abrirModal()
@@ -32,24 +36,29 @@ class Pedidos extends Component
 
     public function editarPedido($pedido_id)
     {
-        $this->pedido = Pedido::with('detalles.existencia')->find($pedido_id);
+        $this->pedido = Pedido::with('detalles.existencia.sucursal')->find($pedido_id);
         $this->cliente_id = $this->pedido->cliente_id;
         $this->personal_id = $this->pedido->personal_id;
         $this->estado_pedido = $this->pedido->estado_pedido;
 
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
             $producto = $detalle->existencia->existenciable ?? null;
+            $sucursal = $detalle->existencia->sucursal ?? null;
+
             return [
                 'id' => $detalle->id,
                 'existencia_id' => $detalle->existencia_id,
                 'reposicion_id' => $detalle->reposicion_id,
                 'cantidad' => $detalle->cantidad,
                 'nombre' => $producto->descripcion ?? 'Sin nombre',
+                'sucursal_id' => $sucursal->id ?? null,
+                'sucursal_nombre' => $sucursal->nombre ?? 'Sin sucursal',
             ];
         })->toArray();
 
         $this->modalPedido = true;
     }
+
 
     public function cerrarModal()
     {
@@ -146,7 +155,7 @@ class Pedidos extends Component
 
         $pedido = $this->pedido;
         $pedido->cliente_id = $this->cliente_id;
-        $pedido->personal_id = $this->personal_id;
+        $pedido->personal_id = $this->personal_id ?? Auth::id();
         $pedido->estado_pedido = $this->estado_pedido;
 
         if (!$pedido->exists) {
@@ -185,7 +194,6 @@ class Pedidos extends Component
 
     public function render()
     {
-        // Traemos solo productos que tengan al menos una reposición activa con cantidad > 0
         $productos = Producto::whereHas('existencias.reposiciones', function ($query) {
             $query->where('estado_revision', 1)
                 ->where('cantidad', '>', 0);

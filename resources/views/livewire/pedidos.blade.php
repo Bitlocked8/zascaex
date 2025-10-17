@@ -74,6 +74,13 @@
     <div class="modal-box">
       <div class="modal-content flex flex-col gap-4">
         <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+          <div class="flex justify-center mt-2">
+            <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
+              Personal de atención: {{ $pedido->personal->nombres ?? 'Sin asignar' }}
+            </span>
+          </div>
+
+
           <div>
             <label class="font-semibold text-sm mb-1 block">Estado del Pedido</label>
             <div class="flex flex-wrap justify-center gap-2 mt-2">
@@ -84,26 +91,24 @@
               ] as $key => $label)
               <button type="button" wire:click="$set('estado_pedido', {{ $key }})"
                 class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-        {{ $estado_pedido == $key ? 
-          ($key == 1 ? 'bg-emerald-600 text-white' : ($key == 2 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-white')) : 
-          'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+               {{ $estado_pedido == $key ? 
+                 ($key == 1 ? 'bg-emerald-600 text-white' : ($key == 2 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-white')) : 
+                  'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
                 {{ $label }}
               </button>
               @endforeach
             </div>
           </div>
-
           <div class="grid grid-cols-1 gap-2 mt-2">
             <div>
               <label class="font-semibold text-sm mb-2 block">Cliente</label>
               <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
 
-              
                 @foreach(\App\Models\Cliente::all() as $cliente)
                 <button type="button"
                   wire:click="$set('cliente_id', {{ $cliente->id }})"
                   class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-          {{ $cliente_id == $cliente->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                   {{ $cliente_id == $cliente->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-teal-100' }}">
                   {{ $cliente->nombre }}
                 </button>
                 @endforeach
@@ -111,17 +116,6 @@
               </div>
               @error('cliente_id') <span class="error-message">{{ $message }}</span> @enderror
             </div>
-          </div>
-
-
-          <div>
-            <label class="font-semibold text-sm mb-1 block">Personal</label>
-            <select wire:model="personal_id" class="input-minimal w-full">
-              <option value="">-- Seleccionar Personal --</option>
-              @foreach(\App\Models\Personal::all() as $personal)
-              <option value="{{ $personal->id }}">{{ $personal->nombres }}</option>
-              @endforeach
-            </select>
           </div>
         </div>
 
@@ -134,10 +128,12 @@
 
                   @foreach($productos as $producto)
                   @php
-                  $cantidadDisponible = 0;
+                  $cantidadesPorSucursal = [];
                   foreach ($producto->existencias as $existencia) {
-                  foreach ($existencia->reposiciones as $reposicion) {
-                  $cantidadDisponible += $reposicion->cantidad;
+                  $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                  if ($totalExistencia > 0) {
+                  $sucursalNombre = $existencia->sucursal->nombre ?? 'Sin sucursal';
+                  $cantidadesPorSucursal[$sucursalNombre] = ($cantidadesPorSucursal[$sucursalNombre] ?? 0) + $totalExistencia;
                   }
                   }
                   @endphp
@@ -145,20 +141,26 @@
                   <button type="button"
                     wire:click="$set('productoSeleccionado', {{ $producto->id }})"
                     class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                      {{ $productoSeleccionado == $producto->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                    <span>{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                    {{ $productoSeleccionado == $producto->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                    <div class="flex flex-col">
+                      <span>{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                      @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                      <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                        {{ $sucursal }}: {{ $cantidad }} uds
+                      </span>
+                      @endforeach
+                    </div>
                     <span class="flex items-center gap-2 uppercase">
                       <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                        {{ $producto->codigo ?? 'Sin código' }}
-                      </span>
-                      <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                        {{ $cantidadDisponible }} uds
+                        {{ $producto->precioReferencia ?? 'sin precio' }} BS
                       </span>
                     </span>
                   </button>
                   @endforeach
+
                 </div>
               </div>
+
             </div>
 
 
