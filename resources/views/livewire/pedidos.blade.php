@@ -78,6 +78,10 @@
             <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
               Personal de atención: {{ $pedido->personal->nombres ?? 'Sin asignar' }}
             </span>
+
+            <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
+              {{ $fecha_pedido->format('d/m/Y H:i') }}
+            </span>
           </div>
 
 

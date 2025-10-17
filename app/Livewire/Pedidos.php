@@ -21,13 +21,15 @@ class Pedidos extends Component
     public $tipoMensaje = 'success';
     public $modalPedido = false;
     public $estado_pedido = 0;
+    public $fecha_pedido;
+
     public function mount($pedido_id = null)
     {
         $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
-        if (!$pedido_id) {
-            $this->personal_id = Auth::id();
-        }
+        $this->personal_id = $this->pedido->personal_id ?? Auth::id();
+        $this->fecha_pedido = $this->pedido->fecha_pedido ?? now();
     }
+
 
     public function abrirModal()
     {
@@ -82,6 +84,19 @@ class Pedidos extends Component
         $producto = Producto::with('existencias.reposiciones')->find($this->productoSeleccionado);
         if (!$producto) {
             $this->setMensaje('Producto no existe', 'error');
+            return;
+        }
+        $cantidadDisponible = 0;
+        foreach ($producto->existencias as $existencia) {
+            foreach ($existencia->reposiciones as $reposicion) {
+                if ($reposicion->estado_revision == 1 && $reposicion->cantidad > 0) {
+                    $cantidadDisponible += $reposicion->cantidad;
+                }
+            }
+        }
+
+        if ($this->cantidadSeleccionada > $cantidadDisponible) {
+            $this->setMensaje('No hay suficiente stock para este producto', 'error');
             return;
         }
 
@@ -157,6 +172,7 @@ class Pedidos extends Component
         $pedido->cliente_id = $this->cliente_id;
         $pedido->personal_id = $this->personal_id ?? Auth::id();
         $pedido->estado_pedido = $this->estado_pedido;
+        $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
 
         if (!$pedido->exists) {
             $pedido->codigo = 'R-' . now()->format('YmdHis');
@@ -185,6 +201,7 @@ class Pedidos extends Component
         $this->setMensaje('Pedido guardado correctamente', 'success');
         $this->cerrarModal();
     }
+
 
     private function setMensaje($texto, $tipo = 'success')
     {
