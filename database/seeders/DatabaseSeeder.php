@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
         Personal::factory()->create(['user_id' => $adminUser->id]);
 
 
-      
+
         $empresa = Empresa::create([
             'id' => 1,
             'nombre' => 'Verzasca',
@@ -80,7 +80,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductoSeeder::class);
         //  $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
-
+        $this->call(PersonalSeeder::class);
         Coche::factory(5)->create()->each(function ($coche) {
             $asignacion = Asignacion::create([
                 'fechaInicio' => now(),

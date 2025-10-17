@@ -1,6 +1,5 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    <!-- Barra de búsqueda y botón para crear proveedor -->
     <div class="flex items-center gap-2 mb-4 col-span-full">
       <input
         type="text"
@@ -18,7 +17,6 @@
 
     @forelse($proveedores as $proveedor)
     <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-      <!-- Información del proveedor -->
       <div class="flex flex-col col-span-9 text-left space-y-1">
         <p><strong>Razón Social:</strong> {{ $proveedor->razonSocial }}</p>
         <p><strong>Contacto:</strong> {{ $proveedor->nombreContacto ?? 'N/A' }}</p>
@@ -34,8 +32,6 @@
           @endif
         </p>
       </div>
-
-      <!-- Botones de acción -->
       <div class="flex flex-col items-end gap-4 col-span-3">
         <button wire:click="editarProveedor({{ $proveedor->id }})" class="btn-circle btn-cyan" title="Editar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -57,8 +53,6 @@
     </div>
     @endforelse
   </div>
-
-  <!-- Modal Crear / Editar Proveedor -->
   @if($modal)
   <div class="modal-overlay">
     <div class="modal-box">
@@ -137,7 +131,7 @@
             @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
             <button type="button" wire:click="$set('estado', {{ $key }})"
               class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-                        {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+               {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
               {{ $label }}
             </button>
             @endforeach

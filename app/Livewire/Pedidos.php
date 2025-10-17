@@ -19,7 +19,7 @@ class Pedidos extends Component
     public $mensaje = null;
     public $tipoMensaje = 'success';
     public $modalPedido = false;
-
+    public $estado_pedido = 0;
     public function mount($pedido_id = null)
     {
         $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
@@ -35,14 +35,16 @@ class Pedidos extends Component
         $this->pedido = Pedido::with('detalles.existencia')->find($pedido_id);
         $this->cliente_id = $this->pedido->cliente_id;
         $this->personal_id = $this->pedido->personal_id;
+        $this->estado_pedido = $this->pedido->estado_pedido;
 
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
+            $producto = $detalle->existencia->existenciable ?? null;
             return [
                 'id' => $detalle->id,
                 'existencia_id' => $detalle->existencia_id,
                 'reposicion_id' => $detalle->reposicion_id,
                 'cantidad' => $detalle->cantidad,
-                'nombre' => $detalle->existencia->nombre ?? 'N/A',
+                'nombre' => $producto->descripcion ?? 'Sin nombre',
             ];
         })->toArray();
 
@@ -57,6 +59,7 @@ class Pedidos extends Component
         $this->cantidadSeleccionada = null;
         $this->cliente_id = null;
         $this->personal_id = null;
+        $this->estado_pedido = 0;
         $this->pedido = new Pedido();
     }
 
@@ -94,7 +97,7 @@ class Pedidos extends Component
                     'existencia_id' => $existencia->id,
                     'reposicion_id' => $lote->id,
                     'cantidad' => $consumir,
-                    'nombre' => $existencia->nombre,
+                    'nombre' => $producto->descripcion ?? 'Sin nombre',
                 ];
 
                 $cantidadRestante -= $consumir;
@@ -144,6 +147,7 @@ class Pedidos extends Component
         $pedido = $this->pedido;
         $pedido->cliente_id = $this->cliente_id;
         $pedido->personal_id = $this->personal_id;
+        $pedido->estado_pedido = $this->estado_pedido;
 
         if (!$pedido->exists) {
             $pedido->codigo = 'R-' . now()->format('YmdHis');
@@ -179,22 +183,21 @@ class Pedidos extends Component
         $this->tipoMensaje = $tipo;
     }
 
- public function render()
-{
-    // Traemos solo productos que tengan al menos una reposición activa con cantidad > 0
-    $productos = Producto::whereHas('existencias.reposiciones', function($query) {
-        $query->where('estado_revision', 1)
-              ->where('cantidad', '>', 0);
-    })->with(['existencias.reposiciones' => function($query) {
-        $query->where('estado_revision', 1)
-              ->where('cantidad', '>', 0);
-    }])->get();
+    public function render()
+    {
+        // Traemos solo productos que tengan al menos una reposición activa con cantidad > 0
+        $productos = Producto::whereHas('existencias.reposiciones', function ($query) {
+            $query->where('estado_revision', 1)
+                ->where('cantidad', '>', 0);
+        })->with(['existencias.reposiciones' => function ($query) {
+            $query->where('estado_revision', 1)
+                ->where('cantidad', '>', 0);
+        }])->get();
 
-    return view('livewire.pedidos', [
-        'pedidos' => Pedido::with(['cliente', 'personal', 'detalles'])->latest()->get(),
-        'productos' => $productos,
-        'detalles' => $this->detalles,
-    ]);
-}
-
+        return view('livewire.pedidos', [
+            'pedidos' => Pedido::with(['cliente', 'personal', 'detalles'])->latest()->get(),
+            'productos' => $productos,
+            'detalles' => $this->detalles,
+        ]);
+    }
 }
