@@ -160,8 +160,6 @@
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
-
-                <!-- Información general -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <p class="font-semibold text-sm">
                         Código: <span class="font-normal">{{ $codigo }}</span>
@@ -180,8 +178,6 @@
                         </span>
                     </p>
                 </div>
-
-                <!-- Producto -->
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Producto</label>
@@ -235,8 +231,6 @@
 
                         @endif
                     </div>
-
-                    <!-- Cantidad y Observaciones -->
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm">Cantidad</label>
@@ -251,8 +245,6 @@
                             <input wire:model="observaciones" class="input-minimal">
                         </div>
                     </div>
-
-                    <!-- Proveedores -->
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm mb-2 block">Proveedor (Opcional)</label>

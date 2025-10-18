@@ -2,15 +2,23 @@
 
 namespace App\Livewire;
 
+use App\Models\PagoPedido;
 use Livewire\Component;
 use App\Models\Pedido;
 use App\Models\PedidoDetalle;
 use App\Models\Producto;
 use App\Models\Reposicion;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Livewire\WithFileUploads;
 
 class Pedidos extends Component
 {
+    use WithFileUploads;
+    public $modalDetallePedido = false;
+    public $pedidoDetalle;
+
+
     public $pedido;
     public $cliente_id;
     public $personal_id;
@@ -23,11 +31,15 @@ class Pedidos extends Component
     public $estado_pedido = 0;
     public $fecha_pedido;
 
+    public $pedidoParaPago;
+    public $pagos = [];
+    public $modalPagos = false;
+
     public function mount($pedido_id = null)
     {
         $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
         $this->personal_id = $this->pedido->personal_id ?? Auth::id();
-        $this->fecha_pedido = $this->pedido->fecha_pedido ?? now();
+  $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
     }
 
 
@@ -42,6 +54,7 @@ class Pedidos extends Component
         $this->cliente_id = $this->pedido->cliente_id;
         $this->personal_id = $this->pedido->personal_id;
         $this->estado_pedido = $this->pedido->estado_pedido;
+         $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
 
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
             $producto = $detalle->existencia->existenciable ?? null;
@@ -224,5 +237,84 @@ class Pedidos extends Component
             'productos' => $productos,
             'detalles' => $this->detalles,
         ]);
+    }
+
+    public function abrirModalPagosPedido($pedido_id)
+    {
+        $this->pedidoParaPago = $pedido_id;
+        $this->pagos = PagoPedido::where('pedido_id', $pedido_id)
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'codigo' => $p->codigo ?? 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                'fecha_pago' => $p->fecha_pago ? Carbon::parse($p->fecha_pago)->format('Y-m-d') : now()->format('Y-m-d'),
+                'monto' => $p->monto,
+                'observaciones' => $p->observaciones,
+                'imagen_comprobante' => $p->imagen_comprobante,
+                'metodo' => $p->metodo,
+                'referencia' => $p->referencia,
+            ])->toArray();
+
+        $this->modalPagos = true;
+    }
+
+    public function agregarPagoPedido()
+    {
+        $this->pagos[] = [
+            'id' => null,
+            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(count($this->pagos) + 1, 3, '0', STR_PAD_LEFT),
+            'fecha_pago' => now()->format('Y-m-d'),
+            'monto' => null,
+            'observaciones' => null,
+            'imagen_comprobante' => null,
+            'metodo' => null,
+            'referencia' => null,
+        ];
+    }
+
+    public function eliminarPagoPedido($index)
+    {
+        $pago = $this->pagos[$index] ?? null;
+        if ($pago && isset($pago['id']) && $pago['id']) {
+            PagoPedido::find($pago['id'])?->delete();
+        }
+        unset($this->pagos[$index]);
+        $this->pagos = array_values($this->pagos);
+    }
+
+    public function guardarPagosPedido()
+    {
+        foreach ($this->pagos as $index => $pago) {
+            $imagenPath = $pago['imagen_comprobante'];
+            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
+                $imagenPath = $pago['imagen_comprobante']->store('pagos_pedido', 'public');
+            }
+
+            PagoPedido::updateOrCreate(
+                ['id' => $pago['id'] ?? 0],
+                [
+                    'pedido_id' => $this->pedidoParaPago,
+                    'codigo' => $pago['codigo'],
+                    'monto' => $pago['monto'],
+                    'fecha_pago' => $pago['fecha_pago'] ?? now()->format('Y-m-d'),
+                    'observaciones' => $pago['observaciones'] ?? null,
+                    'imagen_comprobante' => $imagenPath,
+                    'metodo' => $pago['metodo'] ?? null,
+                    'referencia' => $pago['referencia'] ?? null,
+                    'estado' => 0,
+                ]
+            );
+        }
+
+        $this->reset(['pagos']);
+        $this->modalPagos = false;
+    }
+
+    public function abrirModalDetallePedido($pedido_id)
+    {
+        $this->pedidoDetalle = Pedido::with(['cliente', 'personal', 'detalles.existencia.existenciable', 'detalles.existencia.sucursal'])
+            ->find($pedido_id);
+
+        $this->modalDetallePedido = true;
     }
 }

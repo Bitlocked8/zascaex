@@ -25,10 +25,10 @@
       <div class="col-span-8 flex flex-col gap-1">
         <p><strong>Código:</strong> {{ $pedido->codigo }}</p>
         <p><strong>Cliente:</strong> {{ $pedido->cliente->nombre ?? 'N/A' }}</p>
-        <p><strong>Personal:</strong> {{ $pedido->personal->nombre ?? 'N/A' }}</p>
+        <p><strong>Personal:</strong> {{ $pedido->personal->nombres ?? 'N/A' }}</p>
         <p><strong>Estado:</strong>
           <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
-            {{ $pedido->estado_pedido == 0 ? 'bg-yellow-400 text-white' : ($pedido->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
+            {{ $pedido->estado_pedido == 0 ? 'bg-cyan-600 text-white' : ($pedido->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
             {{ $pedido->estado_pedido == 0 ? 'Pendiente' : ($pedido->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
           </span>
         </p>
@@ -57,6 +57,28 @@
             <path d="M20.733 20l1.3 .75" />
           </svg>
         </button>
+        <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-circle btn-cyan" title="Ver pagos">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+            <path d="M3 10h18" />
+            <path d="M16 19h6" />
+            <path d="M19 16l3 3l-3 3" />
+            <path d="M7.005 15h.005" />
+            <path d="M11 15h2" />
+          </svg>
+        </button>
+        <button wire:click="abrirModalDetallePedido({{ $pedido->id }})"
+          class="btn-circle btn-cyan"
+          title="Ver Detalle del Pedido">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+          </svg>
+        </button>
       </div>
     </div>
     @empty
@@ -67,8 +89,6 @@
 
   </div>
 
-
-
   @if($modalPedido)
   <div class="modal-overlay">
     <div class="modal-box">
@@ -78,13 +98,10 @@
             <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
               Personal de atención: {{ $pedido->personal->nombres ?? 'Sin asignar' }}
             </span>
-
             <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
-              {{ $fecha_pedido->format('d/m/Y H:i') }}
+              {{ \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') }}
             </span>
           </div>
-
-
           <div>
             <label class="font-semibold text-sm mb-1 block">Estado del Pedido</label>
             <div class="flex flex-wrap justify-center gap-2 mt-2">
@@ -253,7 +270,234 @@
   </div>
   @endif
 
+  @if($modalPagos)
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-content flex flex-col gap-4">
+        <div class="space-y-4">
+          @foreach($pagos as $index => $pago)
+          <div class="border p-4 rounded flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+              <strong>Código: {{ $pago['codigo'] }}</strong>
+              <p class="text-sm text-gray-600">
+                Fecha: {{ $pago['fecha_pago'] }}
+              </p>
+              <button type="button" wire:click="eliminarPagoPedido({{ $index }})" class="btn-circle btn-cyan"
+                title="Eliminar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M4 7l16 0" />
+                  <path d="M10 11l0 6" />
+                  <path d="M14 11l0 6" />
+                  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                </svg>
+              </button>
+            </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+              <div class="sm:col-span-2">
+                <label class="font-semibold text-sm">Monto</label>
+                <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="font-semibold text-sm">Método</label>
+                <input type="text" wire:model="pagos.{{ $index }}.metodo" class="input-minimal">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="font-semibold text-sm">Referencia</label>
+                <input type="text" wire:model="pagos.{{ $index }}.referencia" class="input-minimal">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="font-semibold text-sm">Observaciones</label>
+                <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="font-semibold text-sm">Imagen</label>
+                <input type="file" wire:model="pagos.{{ $index }}.imagen_comprobante" class="input-minimal">
+
+                @php
+                $imagenUrl = null;
+                if (isset($pagos[$index]['imagen_comprobante'])) {
+                $imagenUrl = is_string($pagos[$index]['imagen_comprobante'])
+                ? Storage::url($pagos[$index]['imagen_comprobante'])
+                : $pagos[$index]['imagen_comprobante']->temporaryUrl();
+                }
+                @endphp
+
+                @if($imagenUrl)
+                <div class="mt-2 flex flex-col items-center space-y-2">
+                  <img src="{{ $imagenUrl }}"
+                    alt="Imagen"
+                    class="w-80 h-80 object-cover rounded-lg shadow cursor-pointer"
+                    wire:click="$set('imagenPreviewModal', '{{ $imagenUrl }}'); $set('modalImagenAbierta', true)">
+                  @if(is_string($pagos[$index]['imagen_comprobante']))
+                  <a href="{{ $imagenUrl }}" download class="btn-circle btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                      <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                      <path d="M7 11l5 5l5 -5" />
+                      <path d="M12 4l0 12" />
+                    </svg>
+                  </a>
+                  @endif
+                </div>
+                @endif
+              </div>
+            </div>
+          </div>
+          @endforeach
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" wire:click="agregarPagoPedido" class="btn-circle btn-cyan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+              <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+            </svg></button>
+
+          <button type="button" wire:click="guardarPagosPedido" class="btn-circle btn-cyan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+              <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M14 4l0 4l-6 0l0 -4" />
+            </svg></button>
+          <button type="button" wire:click="$set('modalPagos', false)" class="btn-circle btn-cyan" title="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" />
+              <path d="M10 10l4 4m0 -4l-4 4" />
+              <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+            </svg></button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  @endif
+
+  @if($modalDetallePedido && $pedidoDetalle)
+  <div class="modal-overlay">
+    <div class="modal-box max-w-3xl">
+      <div class="modal-content flex flex-col gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Código:</span>
+              <span class="badge-info">{{ $pedidoDetalle->codigo }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Empresa:</span>
+              <span class="badge-info">{{ $pedidoDetalle->cliente->empresa ?? '-' }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Cliente:</span>
+              <span class="badge-info">{{ $pedidoDetalle->cliente->nombre ?? '-' }}</span>
+            </div>
+             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Direccion:</span>
+              <span class="badge-info">{{ $pedidoDetalle->cliente->direccion ?? '-' }}</span>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Departamento:</span>
+              <span class="badge-info">{{ $pedidoDetalle->cliente->departamento_localidad ?? '-' }}</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Personal de atencion:</span>
+              <span class="badge-info">{{ $pedidoDetalle->personal->nombres ?? '-' }}</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <span class="badge-info">
+              {{ \Carbon\Carbon::parse($pedidoDetalle->fecha_pedido)->format('d M Y, H:i') }}
+            </span>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Estado:</span>
+              <span class="badge-info {{ $pedidoDetalle->estado_pedido ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                {{ $pedidoDetalle->estado_pedido ? 'Confirmado' : 'Pendiente' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <hr class="my-2">
+        <h3 class="font-semibold text-lg">Productos Seleccionados:</h3>
+
+        @php
+        $totalGeneral = 0;
+        @endphp
+
+        <div class="divide-y divide-gray-200">
+          @foreach($pedidoDetalle->detalles as $detalle)
+          @php
+          $producto = $detalle->existencia->existenciable ?? null;
+          $sucursal = $detalle->existencia->sucursal ?? null;
+          $precioUnitario = $producto->precioReferencia ?? 0;
+          $totalProducto = $precioUnitario * $detalle->cantidad;
+
+          // Sumamos al total general
+          $totalGeneral += $totalProducto;
+          @endphp
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center py-2">
+            <div class="flex flex-col gap-1">
+              <span class="font-medium">{{ $producto->descripcion ?? 'Sin nombre' }}</span>
+              <span class="font-medium">Precio unitario: {{ number_format($precioUnitario, 2) }} BS</span>
+              <span class="font-medium">Total: {{ number_format($totalProducto, 2) }} BS</span>
+              <span class="text-sm text-gray-500">Sucursal: {{ $sucursal->nombre ?? 'N/A' }}</span>
+              @if(isset($producto->imagen))
+              <img src="{{ asset('storage/'.$producto->imagen) }}" class="w-12 h-12 object-cover rounded shadow" alt="Imagen Producto">
+              @endif
+            </div>
+            <div class="mt-2 md:mt-0">
+              <span class="badge-info">Cantidad: {{ $detalle->cantidad }}</span>
+            </div>
+          </div>
+          @endforeach
+        </div>
+
+        {{-- Total general del pedido --}}
+        <div class="mt-4 flex justify-end gap-2">
+          <span class="font-semibold text-lg">Precio a pagar:</span>
+          <span class="font-semibold text-lg">{{ number_format($totalGeneral) }} BS</span>
+        </div>
+
+
+        <div>
+          <span class="label-info block mb-1">Observaciones:</span>
+          <div class="bg-gray-100 rounded p-2 text-sm text-gray-700">
+            {{ $pedidoDetalle->observaciones ?? 'Sin observaciones' }}
+          </div>
+        </div>
+
+      </div>
+
+      {{-- Footer --}}
+      <div class="modal-footer mt-6 flex justify-center">
+        <button wire:click="$set('modalDetallePedido', false)" class="btn-circle btn-cyan" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" />
+            <path d="M10 10l4 4m0 -4l-4 4" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+  @endif
 
 </div>
 </div>
