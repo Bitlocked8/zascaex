@@ -403,7 +403,7 @@
               <span class="label-info">Cliente:</span>
               <span class="badge-info">{{ $pedidoDetalle->cliente->nombre ?? '-' }}</span>
             </div>
-             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Direccion:</span>
               <span class="badge-info">{{ $pedidoDetalle->cliente->direccion ?? '-' }}</span>
             </div>
@@ -425,10 +425,20 @@
 
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Estado:</span>
-              <span class="badge-info {{ $pedidoDetalle->estado_pedido ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                {{ $pedidoDetalle->estado_pedido ? 'Confirmado' : 'Pendiente' }}
+              <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
+    {{ $pedidoDetalle->estado_pedido == 0 
+        ? 'bg-cyan-600 text-white' 
+        : ($pedidoDetalle->estado_pedido == 1 
+            ? 'bg-emerald-600 text-white' 
+            : 'bg-red-600 text-white') }}">
+                {{ $pedidoDetalle->estado_pedido == 0 
+        ? 'Pendiente' 
+        : ($pedidoDetalle->estado_pedido == 1 
+            ? 'Entregado' 
+            : 'Cancelado') }}
               </span>
             </div>
+
           </div>
         </div>
         <hr class="my-2">
@@ -465,12 +475,54 @@
           </div>
           @endforeach
         </div>
-
-        {{-- Total general del pedido --}}
         <div class="mt-4 flex justify-end gap-2">
           <span class="font-semibold text-lg">Precio a pagar:</span>
           <span class="font-semibold text-lg">{{ number_format($totalGeneral) }} BS</span>
         </div>
+
+        @php
+        $pagoPedidos = $pedidoDetalle->pagoPedidos ?? collect();
+        $montoTotalPagado = $pagoPedidos->sum('monto');
+        $faltante = $totalGeneral - $montoTotalPagado;
+        @endphp
+
+        @if($pagoPedidos->count())
+        <div class="mt-6 border-t pt-4">
+          <h3 class="font-semibold text-lg mb-2">Pagos Registrados</h3>
+
+          @foreach($pagoPedidos as $pago)
+          <div class="border border-gray-200 rounded-lg p-3 mb-3 bg-gray-50">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+              <div><strong>Código:</strong> {{ $pago->codigo ?? 'N/A' }}</div>
+              <div><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y H:i') }}</div>
+              <div><strong>Monto:</strong> {{ number_format($pago->monto, 2) }} BS</div>
+              <div><strong>Método:</strong> {{ ucfirst($pago->metodo ?? '-') }}</div>
+              <div><strong>Referencia:</strong> {{ $pago->referencia ?? '-' }}</div>
+              <div><strong>Observaciones:</strong> {{ $pago->observaciones ?? '-' }}</div>
+            </div>
+
+            @if($pago->imagen_comprobante)
+            <div class="mt-2">
+              <strong>Comprobante:</strong><br>
+              <img src="{{ asset('storage/'.$pago->imagen_comprobante) }}"
+                class="w-32 h-32 object-cover rounded-lg border shadow">
+            </div>
+            @endif
+          </div>
+          @endforeach
+
+          <div class="mt-4 border-t pt-3">
+            <div class="flex justify-between font-semibold text-lg">
+              <span>Total Pagado:</span>
+              <span>{{ number_format($montoTotalPagado, 2) }} BS</span>
+            </div>
+            <div class="flex justify-between font-semibold text-lg text-red-600">
+              <span>Faltante:</span>
+              <span>{{ number_format($faltante, 2) }} BS</span>
+            </div>
+          </div>
+        </div>
+        @endif
 
 
         <div>
@@ -482,8 +534,7 @@
 
       </div>
 
-      {{-- Footer --}}
-      <div class="modal-footer mt-6 flex justify-center">
+      <div class="modal-footer">
         <button wire:click="$set('modalDetallePedido', false)" class="btn-circle btn-cyan" title="Cerrar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
             fill="none" viewBox="0 0 24 24" stroke="currentColor"
