@@ -11,33 +11,28 @@ class Distribucion extends Model
     use HasFactory;
 
     protected $fillable = [
-        'fecha',
+        'codigo',
+        'fecha_asignacion',
+        'fecha_entrega',
         'estado',
         'observaciones',
-        'asignacion_id',
+        'coche_id',
+        'personal_id',
     ];
 
-    /**
-     * Relación: Una distribución pertenece a una asignación.
-     */
-    public function asignacion()
+    public function pedidos()
     {
-        return $this->belongsTo(Asignacion::class);
+        return $this->belongsToMany(Pedido::class, 'distribucion_pedidos')
+            ->withTimestamps();
     }
 
-    /**
-     * Relación 0:1 con Retorno.
-     */
-    public function retorno()
+    public function coche()
     {
-        return $this->hasOne(Retorno::class);
+        return $this->belongsTo(Coche::class);
     }
-    public function stocks(): HasMany
+
+    public function personal()
     {
-        return $this->hasMany(Retorno::class);
-    }
-    public function itemdistribucions(): HasMany
-    {
-        return $this->hasMany(Itemdistribucion::class);
+        return $this->belongsTo(Personal::class);
     }
 }

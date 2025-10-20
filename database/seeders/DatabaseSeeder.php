@@ -81,21 +81,6 @@ class DatabaseSeeder extends Seeder
         //  $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
         $this->call(PersonalSeeder::class);
-        Coche::factory(5)->create()->each(function ($coche) {
-            $asignacion = Asignacion::create([
-                'fechaInicio' => now(),
-                'fechaFinal' => now()->addMonths(6),
-                'estado' => 1,
-                'coche_id' => $coche->id,
-                'personal_id' => Personal::inRandomOrder()->first()->id,
-            ]);
-
-            Distribucion::factory()->create([
-                'asignacion_id' => $asignacion->id,
-                'fecha' => now(),
-                'estado' => 1,
-                'observaciones' => "Distribución generada automáticamente.",
-            ]);
-        });
+      
     }
 }

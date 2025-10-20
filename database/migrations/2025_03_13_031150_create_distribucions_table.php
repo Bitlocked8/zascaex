@@ -6,24 +6,21 @@ use Illuminate\Database\Migrations\Migration;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('distribucions', function (Blueprint $table) {
-            $table->id(); // Clave primaria
-            $table->date('fecha'); // Fecha de la distribución
-            $table->tinyInteger('estado'); // 1) En distribucion, 2) concluido
-            $table->text('observaciones')->nullable(); // Observaciones (opcional)
-            $table->foreignId('asignacion_id')->constrained('asignacions')->onDelete('cascade'); // Relación con Asignación
-            $table->timestamps(); // Campos created_at y updated_at
+            $table->id();
+            $table->string('codigo')->unique();
+            $table->dateTime('fecha_asignacion')->nullable();
+            $table->dateTime('fecha_entrega')->nullable();
+            $table->foreignId('coche_id')->nullable()->constrained('coches')->nullOnDelete();
+            $table->foreignId('personal_id')->nullable()->constrained('personals')->nullOnDelete();
+            $table->tinyInteger('estado')->default(1);
+            $table->text('observaciones')->nullable();
+            $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('distribucions');

@@ -18,8 +18,6 @@ class Pedido extends Model
         'observaciones',
         'fecha_pedido',
     ];
-
-    // 🔗 Relaciones
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
@@ -38,5 +36,11 @@ class Pedido extends Model
     public function pagoPedidos()
     {
         return $this->hasMany(PagoPedido::class, 'pedido_id');
+    }
+
+    public function distribuciones()
+    {
+        return $this->belongsToMany(Distribucion::class, 'distribucion_pedidos')
+            ->withTimestamps();
     }
 }

@@ -10,6 +10,7 @@ class Coche extends Model
     use HasFactory;
 
     protected $fillable = [
+        'movil',
         'marca',
         'modelo',
         'anio',
@@ -26,4 +27,3 @@ class Coche extends Model
         return $this->hasMany(Asignacion::class);
     }
 }
-
