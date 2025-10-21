@@ -22,32 +22,36 @@
     </div>
 
     @forelse($pedidos as $pedido)
-    <div class="card-teal">
-      <div class="col-span-8 flex flex-col gap-1">
-        <p><strong>Código:</strong> {{ $pedido->codigo }}</p>
+    <div class="card-teal flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <p class="text-u"> {{ $pedido->codigo }}</p>
         <p><strong>Cliente:</strong> {{ $pedido->cliente->nombre ?? 'N/A' }}</p>
         <p><strong>Personal:</strong> {{ $pedido->personal->nombres ?? 'N/A' }}</p>
         <p><strong>Estado:</strong>
-          <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
-            {{ $pedido->estado_pedido == 0 ? 'bg-cyan-600 text-white' : ($pedido->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
+          <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
+        {{ $pedido->estado_pedido == 0 ? 'bg-cyan-600 text-white' : ($pedido->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
             {{ $pedido->estado_pedido == 0 ? 'Pendiente' : ($pedido->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
           </span>
         </p>
-        <p><strong>Productos:</strong> {{ $pedido->detalles->count() }}</p>
+        <p><strong>Productos añadidos:</strong> {{ $pedido->detalles->count() }}</p>
       </div>
-
-      <div class="flex flex-col gap-3 w-auto items-start">
-        <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan" title="Editar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-200 pt-3 pb-1 justify-start md:justify-between">
+        <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
             <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
             <path d="M16 5l3 3" />
           </svg>
-          editar
+          Editar
         </button>
-        <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-cyan" title="Ver pagos">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+        <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver pagos">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
             <path d="M3 10h18" />
@@ -56,19 +60,21 @@
             <path d="M7.005 15h.005" />
             <path d="M11 15h2" />
           </svg>
-          pagos
+          Pagos
         </button>
-        <button wire:click="abrirModalDetallePedido({{ $pedido->id }})"
-          class="btn-cyan" title="Ver Detalle del Pedido">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+
+        <button wire:click="abrirModalDetallePedido({{ $pedido->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Detalle del Pedido">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+            viewBox="0 0 24 24">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M12 2l.117 .007a1 1 0 0 1 .876 .876l.007 .117v4l.005 .15a2 2 0 0 0 1.838 1.844l.157 .006h4l.117 .007a1 1 0 0 1 .876 .876l.007 .117v9a3 3 0 0 1 -2.824 2.995l-.176 .005h-10a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-14a3 3 0 0 1 2.824 -2.995l.176 -.005zm3 14h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2" />
             <path d="M19 7h-4l-.001 -4.001z" />
           </svg>
-          detalle
+          Detalles
         </button>
       </div>
     </div>
+
     @empty
     <div class="col-span-full text-center py-4 text-gray-600">
       No hay pedidos registrados.
@@ -94,7 +100,8 @@
           </div>
           <div class="text-center">
             <label class="font-semibold text-sm mb-2 block">Estado del Pedido</label>
-            <div class="flex justify-center gap-3">
+
+            <div class="flex justify-center flex-wrap gap-3">
               <button
                 type="button"
                 wire:click="$set('estado_pedido', 0)"
@@ -107,6 +114,7 @@
                 </svg>
                 Pendiente
               </button>
+
               <button
                 type="button"
                 wire:click="$set('estado_pedido', 1)"
@@ -118,6 +126,7 @@
                 </svg>
                 Entregado
               </button>
+
               <button
                 type="button"
                 wire:click="$set('estado_pedido', 2)"
@@ -132,24 +141,25 @@
               </button>
             </div>
           </div>
-
-
           <div class="grid grid-cols-1 gap-2 mt-2">
             <div>
-              <label class="font-semibold text-sm mb-2 block">Cliente</label>
-              <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
-
-                @foreach(\App\Models\Cliente::all() as $cliente)
+              <label class="font-semibold text-sm mb-2 block">Cliente (requerido)</label>
+              <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
+                @foreach($clientes as $cliente)
                 <button type="button"
                   wire:click="$set('cliente_id', {{ $cliente->id }})"
-                  class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                   {{ $cliente_id == $cliente->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-teal-100' }}">
-                  {{ $cliente->nombre }}
+                  class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
+            {{ $cliente_id == $cliente->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}
+            bg-white">
+                  <span class="font-semibold text-u">{{ $cliente->nombre }}</span>
+                  <span class="text-xs text-gray-500">Código: {{ $cliente->codigo }}</span>
+                  @if($cliente->direccion)
+                  <span class="text-u">Dirección: {{ $cliente->direccion }}</span>
+                  @endif
                 </button>
                 @endforeach
-
               </div>
-              @error('cliente_id') <span class="error-message">{{ $message }}</span> @enderror
+
             </div>
           </div>
         </div>
@@ -158,8 +168,8 @@
           <div>
             <div class="grid grid-cols-1 gap-2 mt-2">
               <div>
-                <label class="font-semibold text-sm mb-2 block">Producto</label>
-                <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+                <label class="font-semibold text-sm mb-2 block">Producto(requerido)</label>
+                <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
 
                   @foreach($productos as $producto)
                   @php
@@ -175,92 +185,87 @@
 
                   <button type="button"
                     wire:click="$set('productoSeleccionado', {{ $producto->id }})"
-                    class="w-full px-3 py-2 rounded-md border text-sm text-left flex justify-between items-center transition
-                    {{ $productoSeleccionado == $producto->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                    <div class="flex flex-col">
-                      <span>{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
+                       {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}
+                     bg-white">
+                    <span class="text-u">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                    <div class="flex flex-wrap justify-center gap-3 mt-2">
                       @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
-                      <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                        {{ $sucursal }}: {{ $cantidad }} uds
-                      </span>
+                      <div class="flex flex-col items-center gap-1">
+                        <span class="text-xs font-medium text-gray-600">{{ $sucursal }}</span>
+                        <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                          {{ $cantidad }} Disponibles
+                        </span>
+                      </div>
                       @endforeach
                     </div>
-                    <span class="flex items-center gap-2 uppercase">
-                      <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                        {{ $producto->precioReferencia ?? 'sin precio' }} BS
-                      </span>
+                    <span class="text-u">
+                      {{ $producto->precioReferencia ?? 'sin precio' }} BS
                     </span>
                   </button>
+
                   @endforeach
 
                 </div>
               </div>
-
             </div>
-
-
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label class="font-semibold text-sm mb-1 block">Cantidad</label>
-            <input type="number" wire:model="cantidadSeleccionada" class="input-minimal w-full" min="1" />
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-6 w-full">
+          <div class="flex items-center gap-2">
+            <label class="font-semibold text-sm">Cantidad (Requerido)</label>
+            <input type="number" wire:model="cantidadSeleccionada" class="input-minimal text-center" min="1" placeholder="Cantidad" />
           </div>
-
-          <div class="flex items-end">
-            <button wire:click="agregarProducto" class="btn-circle btn-cyan w-full">
-              Agregar
-            </button>
-          </div>
+          <button wire:click="agregarProducto" class="btn-cyan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+              <path d="M9 12h6" />
+              <path d="M12 9v6" />
+            </svg>
+            Añadir
+          </button>
         </div>
-
         <div class="mb-6">
           <h4 class="font-semibold mb-2">Productos agregados</h4>
 
           @if(count($detalles))
-          <div class="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden">
-            <div class="grid grid-cols-3 bg-cyan-600 text-white font-semibold text-sm px-4 py-2">
-              <span>Nombre</span>
-              <span class="text-center">Cantidad</span>
-              <span class="text-right">Acción</span>
-            </div>
-
-            <div class="max-h-64 overflow-y-auto divide-y divide-gray-200">
-              @foreach($detalles as $index => $detalle)
-              @if(!isset($detalle['eliminar']))
-              <div class="grid grid-cols-3 items-center px-4 py-2 text-sm bg-gray-50 hover:bg-gray-100 transition">
-                <span class="truncate font-medium text-gray-800">{{ $detalle['nombre'] }}</span>
-                <span class="text-center text-gray-700">
-                  {{ fmod($detalle['cantidad'], 1) == 0 ? intval($detalle['cantidad']) : number_format($detalle['cantidad'], 2) }}
-                </span>
-
-                <div class="text-right">
-                  <button wire:click="eliminarDetalle({{ $index }})"
-                    class="p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow transition"
-                    title="Eliminar">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M4 7h16" />
-                      <path d="M10 11v6" />
-                      <path d="M14 11v6" />
-                      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                      <path d="M9 7V4a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+          <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+            @foreach($detalles as $index => $detalle)
+            @if(!isset($detalle['eliminar']))
+            <div
+              class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center bg-white hover:border-cyan-600 hover:text-cyan-600 border-gray-300 shadow-sm relative">
+              <span class="text-u">{{ $detalle['nombre'] }}</span>
+              <span class="mt-2 bg-teal-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
+                {{ fmod($detalle['cantidad'], 1) == 0 ? intval($detalle['cantidad']) : number_format($detalle['cantidad'], 2) }} Unidad(es)
+              </span>
+              {{-- Sucursal (si existe) --}}
+              @if(!empty($detalle['sucursal_nombre']))
+              <span class="text-xs text-gray-500 mt-1">
+                Sucursal: {{ $detalle['sucursal_nombre'] }}
+              </span>
               @endif
-              @endforeach
+
+              {{-- Botón eliminar --}}
+              <button wire:click="eliminarDetalle({{ $index }})"
+                class="absolute top-2 right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow transition"
+                title="Eliminar">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              </button>
             </div>
+            @endif
+            @endforeach
           </div>
+
           @else
           <p class="text-gray-500 text-sm italic">No hay productos agregados.</p>
           @endif
         </div>
-
-
-
         <div class="modal-footer">
           <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

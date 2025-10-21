@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Cliente;
 use App\Models\PagoPedido;
 use Livewire\Component;
 use App\Models\Pedido;
@@ -9,6 +10,7 @@ use App\Models\PedidoDetalle;
 use App\Models\Producto;
 use App\Models\Reposicion;
 use Carbon\Carbon;
+
 use Illuminate\Support\Facades\Auth;
 use Livewire\WithFileUploads;
 
@@ -17,7 +19,8 @@ class Pedidos extends Component
     use WithFileUploads;
     public $modalDetallePedido = false;
     public $pedidoDetalle;
-
+    public $clientes;
+    public $searchCliente = '';
 
     public $pedido;
     public $cliente_id;
@@ -39,7 +42,9 @@ class Pedidos extends Component
     {
         $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
         $this->personal_id = $this->pedido->personal_id ?? Auth::id();
-  $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
+        $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
+
+        $this->clientes = Cliente::orderBy('nombre')->get();
     }
 
 
@@ -54,7 +59,7 @@ class Pedidos extends Component
         $this->cliente_id = $this->pedido->cliente_id;
         $this->personal_id = $this->pedido->personal_id;
         $this->estado_pedido = $this->pedido->estado_pedido;
-         $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
+        $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
 
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
             $producto = $detalle->existencia->existenciable ?? null;
@@ -99,6 +104,7 @@ class Pedidos extends Component
             $this->setMensaje('Producto no existe', 'error');
             return;
         }
+
         $cantidadDisponible = 0;
         foreach ($producto->existencias as $existencia) {
             foreach ($existencia->reposiciones as $reposicion) {
@@ -127,25 +133,18 @@ class Pedidos extends Component
                 if ($cantidadRestante <= 0) break;
 
                 $consumir = min($cantidadRestante, $lote->cantidad);
-                $lote->cantidad -= $consumir;
-                $lote->save();
 
                 $detalleTemporal[] = [
                     'existencia_id' => $existencia->id,
                     'reposicion_id' => $lote->id,
                     'cantidad' => $consumir,
                     'nombre' => $producto->descripcion ?? 'Sin nombre',
+                    'nuevo' => true,
                 ];
 
                 $cantidadRestante -= $consumir;
             }
             if ($cantidadRestante <= 0) break;
-        }
-
-
-        if ($cantidadRestante > 0) {
-            $this->setMensaje('No hay suficiente stock para este producto', 'error');
-            return;
         }
 
         $this->detalles = array_merge($this->detalles, $detalleTemporal);
@@ -156,15 +155,9 @@ class Pedidos extends Component
 
     public function eliminarDetalle($index)
     {
-        $detalle = $this->detalles[$index];
+        $pd = $this->detalles[$index];
 
-        $lote = Reposicion::find($detalle['reposicion_id']);
-        if ($lote) {
-            $lote->cantidad += $detalle['cantidad'];
-            $lote->save();
-        }
-
-        if (isset($detalle['id'])) {
+        if (isset($pd['id'])) {
             $this->detalles[$index]['eliminar'] = true;
         } else {
             unset($this->detalles[$index]);
@@ -194,26 +187,44 @@ class Pedidos extends Component
 
         $pedido->save();
 
-        foreach ($this->detalles as $detalle) {
-            if (isset($detalle['id']) && isset($detalle['eliminar']) && $detalle['eliminar']) {
-                PedidoDetalle::find($detalle['id'])->delete();
+        foreach ($this->detalles as $index => $pd) {
+            if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
+                $detalle = PedidoDetalle::find($pd['id']);
+                if ($detalle) {
+                    $lote = Reposicion::find($detalle->reposicion_id);
+                    if ($lote) {
+                        $lote->cantidad += $detalle->cantidad;
+                        $lote->save();
+                    }
+                    $detalle->delete();
+                }
+                unset($this->detalles[$index]);
             }
         }
 
-        foreach ($this->detalles as $detalle) {
-            if (!isset($detalle['id'])) {
-                PedidoDetalle::create([
+        foreach ($this->detalles as $pd) {
+            if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
+                $detalle = PedidoDetalle::create([
                     'pedido_id' => $pedido->id,
-                    'existencia_id' => $detalle['existencia_id'],
-                    'reposicion_id' => $detalle['reposicion_id'],
-                    'cantidad' => $detalle['cantidad'],
+                    'existencia_id' => $pd['existencia_id'],
+                    'reposicion_id' => $pd['reposicion_id'],
+                    'cantidad' => $pd['cantidad'],
                 ]);
+
+                $lote = Reposicion::find($pd['reposicion_id']);
+                if ($lote) {
+                    $lote->cantidad -= $pd['cantidad'];
+                    $lote->save();
+                }
             }
         }
 
         $this->setMensaje('Pedido guardado correctamente', 'success');
         $this->cerrarModal();
     }
+
+
+
 
 
     private function setMensaje($texto, $tipo = 'success')

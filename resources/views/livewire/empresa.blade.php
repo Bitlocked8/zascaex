@@ -5,28 +5,21 @@
     </h3>
 
     @if ($empresa)
-    <!-- Nombre -->
     <div>
       <label class="p-text">Nombre</label>
       <input type="text" wire:model.defer="nombre" class="input-minimal w-full" placeholder="Nombre de la empresa">
       @error('nombre') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
     </div>
-
-    <!-- Slogan -->
     <div>
       <label class="p-text">Slogan</label>
       <input type="text" wire:model.defer="slogan" class="input-minimal w-full" placeholder="Slogan">
       @error('slogan') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
     </div>
-
-    <!-- Número de Contacto -->
     <div>
       <label class="p-text">Número de Contacto</label>
       <input type="text" wire:model.defer="nroContacto" class="input-minimal w-full" placeholder="Ej: +591 77777777">
       @error('nroContacto') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
     </div>
-
-    <!-- Facebook -->
     <div>
       <label class="p-text">Facebook</label>
       <input type="text" wire:model.defer="facebook" class="input-minimal w-full" placeholder="URL de Facebook">
