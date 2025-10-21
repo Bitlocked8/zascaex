@@ -1,7 +1,5 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-    <!-- Título -->
     <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
       Información de la Empresa
     </h3>

@@ -1,7 +1,7 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-    <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
+    <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
       Pedidos
     </h3>
 
@@ -11,17 +11,18 @@
         wire:model.live="search"
         placeholder="Buscar por código, cliente o personal..."
         class="input-minimal w-full" />
-      <button wire:click="$set('modalPedido', true)" class="btn-circle btn-cyan">
+      <button wire:click="$set('modalPedido', true)" class="btn-cyan">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
           <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
         </svg>
+        añadir
       </button>
     </div>
 
     @forelse($pedidos as $pedido)
-    <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
+    <div class="card-teal">
       <div class="col-span-8 flex flex-col gap-1">
         <p><strong>Código:</strong> {{ $pedido->codigo }}</p>
         <p><strong>Cliente:</strong> {{ $pedido->cliente->nombre ?? 'N/A' }}</p>
@@ -35,29 +36,17 @@
         <p><strong>Productos:</strong> {{ $pedido->detalles->count() }}</p>
       </div>
 
-      <div class="flex flex-col items-end gap-4 col-span-3">
-        <button wire:click="editarPedido({{ $pedido->id }})" class="btn-circle btn-cyan">
+      <div class="flex flex-col gap-3 w-auto items-start">
+        <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan" title="Editar">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-            <path d="M6 4v4" />
-            <path d="M6 12v8" />
-            <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
-            <path d="M12 4v10" />
-            <path d="M12 18v2" />
-            <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-            <path d="M18 4v1" />
-            <path d="M18 9v2.5" />
-            <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-            <path d="M19.001 15.5v1.5" />
-            <path d="M19.001 21v1.5" />
-            <path d="M22.032 17.25l-1.299 .75" />
-            <path d="M17.27 20l-1.3 .75" />
-            <path d="M15.97 17.25l1.3 .75" />
-            <path d="M20.733 20l1.3 .75" />
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+            <path d="M16 5l3 3" />
           </svg>
+          editar
         </button>
-        <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-circle btn-cyan" title="Ver pagos">
+        <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-cyan" title="Ver pagos">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
@@ -67,17 +56,16 @@
             <path d="M7.005 15h.005" />
             <path d="M11 15h2" />
           </svg>
+          pagos
         </button>
         <button wire:click="abrirModalDetallePedido({{ $pedido->id }})"
-          class="btn-circle btn-cyan"
-          title="Ver Detalle del Pedido">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+          class="btn-cyan" title="Ver Detalle del Pedido">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 2l.117 .007a1 1 0 0 1 .876 .876l.007 .117v4l.005 .15a2 2 0 0 0 1.838 1.844l.157 .006h4l.117 .007a1 1 0 0 1 .876 .876l.007 .117v9a3 3 0 0 1 -2.824 2.995l-.176 .005h-10a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-14a3 3 0 0 1 2.824 -2.995l.176 -.005zm3 14h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2" />
+            <path d="M19 7h-4l-.001 -4.001z" />
           </svg>
+          detalle
         </button>
       </div>
     </div>
@@ -93,33 +81,59 @@
   <div class="modal-overlay">
     <div class="modal-box">
       <div class="modal-content flex flex-col gap-4">
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-          <div class="flex justify-center mt-2">
-            <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
+          <div>
+            <span class="text-u">
               Personal de atención: {{ $pedido->personal->nombres ?? 'Sin asignar' }}
-            </span>
-            <span class="bg-teal-600 text-white text-sm px-3 py-2 rounded-full font-semibold">
-              {{ \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') }}
             </span>
           </div>
           <div>
-            <label class="font-semibold text-sm mb-1 block">Estado del Pedido</label>
-            <div class="flex flex-wrap justify-center gap-2 mt-2">
-              @foreach([
-              0 => 'Pendiente',
-              1 => 'Entregado',
-              2 => 'Cancelado'
-              ] as $key => $label)
-              <button type="button" wire:click="$set('estado_pedido', {{ $key }})"
-                class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-               {{ $estado_pedido == $key ? 
-                 ($key == 1 ? 'bg-emerald-600 text-white' : ($key == 2 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-white')) : 
-                  'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
-                {{ $label }}
+            <span class="text-u">
+              Fecha del pedido: {{ \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') }}
+            </span>
+          </div>
+          <div class="text-center">
+            <label class="font-semibold text-sm mb-2 block">Estado del Pedido</label>
+            <div class="flex justify-center gap-3">
+              <button
+                type="button"
+                wire:click="$set('estado_pedido', 0)"
+                class="btn-cyan flex items-center gap-1 {{ $estado_pedido == 0 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                  fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Pendiente
               </button>
-              @endforeach
+              <button
+                type="button"
+                wire:click="$set('estado_pedido', 1)"
+                class="btn-cyan flex items-center gap-1 {{ $estado_pedido == 1 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                  fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                Entregado
+              </button>
+              <button
+                type="button"
+                wire:click="$set('estado_pedido', 2)"
+                class="btn-cyan flex items-center gap-1 {{ $estado_pedido == 2 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                  fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+                Cancelado
+              </button>
             </div>
           </div>
+
+
           <div class="grid grid-cols-1 gap-2 mt-2">
             <div>
               <label class="font-semibold text-sm mb-2 block">Cliente</label>
@@ -248,21 +262,23 @@
 
 
         <div class="modal-footer">
-          <button wire:click="guardarPedido" class="btn-circle btn-cyan" title="Guardar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M10 10l4 4m0 -4l-4 4" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+            CERRAR
+          </button>
+          <button wire:click="guardarPedido" class="btn-cyan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" />
               <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
               <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
               <path d="M14 4l0 4l-6 0l0 -4" />
             </svg>
+            Guardar
           </button>
-          <button wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M10 10l4 4m0 -4l-4 4" />
-              <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-            </svg>
-          </button>
+
         </div>
 
       </div>
@@ -535,14 +551,12 @@
       </div>
 
       <div class="modal-footer">
-        <button wire:click="$set('modalDetallePedido', false)" class="btn-circle btn-cyan" title="Cerrar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" />
+        <button wire:click="$set('modalDetallePedido', false)" class="btn-cyan" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M10 10l4 4m0 -4l-4 4" />
             <circle cx="12" cy="12" r="9" />
           </svg>
+          CERRAR
         </button>
       </div>
 

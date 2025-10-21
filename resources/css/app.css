@@ -7,22 +7,13 @@
 @layer components {
 
   .input-minimal {
-    @apply w-full px-3 py-2 text-sm text-gray-800 bg-gray-50 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 transition-all duration-200 ease-in-out focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200;
+    @apply w-full px-3 py-2 text-sm text-gray-800 bg-gray-50 border-t-2 border-t-teal-600 rounded-lg shadow-sm placeholder-gray-400 ease-in-out focus:outline-none;
   }
 
-  /* Cuando el input ya tiene contenido */
   .input-minimal:not(:placeholder-shown) {
-    @apply border-cyan-600 bg-white;
+    @apply border-teal-600 bg-white;
   }
 
-  /* Variante de error */
-  .input-error {
-    @apply border-red-500 focus:border-red-600 focus:ring-red-200;
-  }
-
-  .error-message {
-    @apply text-red-600 text-xs mt-1;
-  }
 
 
   @layer components {
@@ -55,7 +46,15 @@
     }
 
     .btn-cyan {
-      @apply bg-cyan-600 hover:bg-cyan-700 text-white;
+      @apply flex items-center gap-2 px-3 py-2 bg-teal-600 hover:bg-cyan-700 text-white rounded-full shadow-md transition uppercase font-semibold;
+    }
+
+    .card-teal {
+      @apply bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center border-b-4 border-teal-500 mb-4;
+    }
+
+    .text-u {
+      @apply text-cyan-600 text-lg font-bold uppercase;
     }
 
   }
