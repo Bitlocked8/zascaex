@@ -30,7 +30,15 @@
     }
 
     .modal-footer {
-      @apply absolute bottom-0 left-0 w-full bg-white flex justify-center md:justify-center gap-4 p-4 border-t shadow-md z-10;
+      @apply absolute bottom-0 left-0 w-full bg-white flex flex-wrap justify-center md:justify-center gap-3 p-4 border-t shadow-md z-10;
+    }
+
+    .modal-footer button {
+      @apply flex items-center justify-center gap-2 text-sm px-3 py-2 rounded-lg font-semibold uppercase shadow-md transition;
+    }
+
+    .modal-footer svg {
+      @apply w-5 h-5;
     }
 
     .badge-info {

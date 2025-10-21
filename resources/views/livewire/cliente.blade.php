@@ -1,81 +1,85 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
+            Clientes
+        </h3>
+
         <div class="flex items-center gap-2 mb-4 col-span-full">
-            <input type="text" wire:model.live="search"
-                placeholder="Buscar por cliente..." class="input-minimal w-full" />
-            <a href="{{ route('cliente.registrar') }}" class="btn-circle btn-cyan">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Buscar por nombre o empresa..."
+                class="input-minimal w-full" />
+
+            <a href="{{ route('cliente.registrar') }}" class="btn-cyan flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
                     <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
+                Añadir
             </a>
         </div>
+
         @forelse($clientes as $cliente)
-        <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-            <div class="flex flex-col col-span-9 text-left space-y-1">
-                <p><strong>Código:</strong> <span class="font-mono text-cyan-600">{{ $cliente->codigo ?? 'N/A' }}</span></p>
+        <div class="card-teal flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+                <p class="text-u">{{ $cliente->codigo ?? 'N/A' }}</p>
                 <p><strong>Nombre:</strong> {{ $cliente->nombre }}</p>
                 <p><strong>Empresa:</strong> {{ $cliente->empresa ?? 'N/A' }}</p>
+                <p><strong>Dirección:</strong> {{ $cliente->direccion ?? 'N/A' }}</p>
+
                 <p><strong>Categoría:</strong>
-                    @if($cliente->categoria == 1)
-                    <span class="text-white bg-cyan-600 px-2 py-1 rounded-full">Cliente Nuevo</span>
-                    @elseif($cliente->categoria == 2)
-                    <span class="text-white bg-indigo-600 px-2 py-1 rounded-full">Cliente Regular</span>
-                    @elseif($cliente->categoria == 3)
-                    <span class="text-white bg-purple-600 px-2 py-1 rounded-full">Cliente VIP</span>
-                    @else
-                    <span class="text-gray-700 bg-gray-200 px-2 py-1 rounded-full">N/A</span>
-                    @endif
+                    <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
+          {{ $cliente->categoria == 1 ? 'bg-cyan-600 text-white' : ($cliente->categoria == 2 ? 'bg-indigo-600 text-white' : ($cliente->categoria == 3 ? 'bg-purple-600 text-white' : 'bg-gray-300 text-gray-800')) }}">
+                        {{ $cliente->categoria == 1 ? 'Cliente Nuevo' : ($cliente->categoria == 2 ? 'Cliente Regular' : ($cliente->categoria == 3 ? 'Cliente VIP' : 'N/A')) }}
+                    </span>
                 </p>
+
                 <p><strong>Estado:</strong>
-                    @if($cliente->estado == 1)
-                    <span class="text-white bg-green-600 px-2 py-1 rounded-full">Activo</span>
-                    @else
-                    <span class="text-white bg-red-600 px-2 py-1 rounded-full">Inactivo</span>
-                    @endif
+                    <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
+          {{ $cliente->estado == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">
+                        {{ $cliente->estado == 1 ? 'Activo' : 'Inactivo' }}
+                    </span>
                 </p>
+
                 <p><strong>Verificado:</strong>
-                    @if($cliente->verificado)
-                    <span class="text-white bg-cyan-600 px-2 py-1 rounded-full">Sí</span>
-                    @else
-                    <span class="text-cyan-950 bg-cyan-200 px-2 py-1 rounded-full">No</span>
-                    @endif
+                    <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
+          {{ $cliente->verificado ? 'bg-cyan-600 text-white' : 'bg-cyan-200 text-cyan-900' }}">
+                        {{ $cliente->verificado ? 'Sí' : 'No' }}
+                    </span>
                 </p>
             </div>
-            <div class="flex flex-col items-end gap-4 col-span-3">
-                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-circle btn-cyan">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+            <div class="flex flex-wrap justify-center md:justify-between gap-2 border-t border-gray-200 pt-3 pb-2">
+
+                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                        <path d="M6 4v4" />
-                        <path d="M6 12v8" />
-                        <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
-                        <path d="M12 4v10" />
-                        <path d="M12 18v2" />
-                        <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                        <path d="M18 4v1" />
-                        <path d="M18 9v2.5" />
-                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                        <path d="M19.001 15.5v1.5" />
-                        <path d="M19.001 21v1.5" />
-                        <path d="M22.032 17.25l-1.299 .75" />
-                        <path d="M17.27 20l-1.3 .75" />
-                        <path d="M15.97 17.25l1.3 .75" />
-                        <path d="M20.733 20l1.3 .75" />
+                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                        <path d="M16 5l3 3" />
                     </svg>
+                    Editar
                 </button>
-                <button wire:click="verDetalle({{ $cliente->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+                <button wire:click="verDetalle({{ $cliente->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Detalle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 20l9 -16h-18z" />
+                        <path d="M12 9v4" />
+                        <path d="M12 17h.01" />
                     </svg>
+                    Detalle
                 </button>
-                <a href="{{ route('clientes.map', $cliente->id) }}" class="btn-circle btn-cyan" title="Ver Mapa">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <a href="{{ route('clientes.map', $cliente->id) }}" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Mapa">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v7.5" />
                         <path d="M9 4v13" />
@@ -83,50 +87,51 @@
                         <path d="M21.121 20.121a3 3 0 1 0 -4.242 0c.418 .419 1.125 1.045 2.121 1.879c1.051 -.89 1.759 -1.516 2.121 -1.879z" />
                         <path d="M19 18v.01" />
                     </svg>
+                    Mapa
                 </a>
-
-                <a href="{{ route('clientes.editar', $cliente->id) }}"
-                    class="btn-circle btn-cyan"
-                    title="Editar Coordenadas">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <a href="{{ route('clientes.editar', $cliente->id) }}" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar Coordenadas">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v8" />
                         <path d="M9 4v13" />
                         <path d="M15 7v6.5" />
-                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                        <path d="M19.001 15.5v1.5" />
-                        <path d="M19.001 21v1.5" />
-                        <path d="M22.032 17.25l-1.299 .75" />
-                        <path d="M17.27 20l-1.3 .75" />
-                        <path d="M15.97 17.25l1.3 .75" />
-                        <path d="M20.733 20l1.3 .75" />
                     </svg>
+                    Coordenadas
                 </a>
                 <button wire:click="toggleVerificado({{ $cliente->id }})"
-                    class="{{ $cliente->verificado ? 'bg-cyan-600 text-white' : ' bg-white text-cyan-600' }} btn-circle" title="Toggle Verificado">
+                    class="btn-cyan flex items-center gap-1 flex-shrink-0 {{ $cliente->verificado ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
+                    title="Cambiar verificación">
                     @if($cliente->verificado)
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checks">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M7 12l5 5l10 -10" />
-                        <path d="M2 12l5 5m5 -5l5 -5" />
+                        <path d="M5 12l5 5l10 -10" />
                     </svg>
+                    Verificado
                     @else
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-checks">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M7 12l5 5l10 -10" />
-                        <path d="M2 12l5 5m5 -5l5 -5" />
+                        <path d="M18 6l-12 12" />
+                        <path d="M6 6l12 12" />
                     </svg>
+                    No Verificado
                     @endif
                 </button>
-
             </div>
         </div>
+
         @empty
         <div class="col-span-full text-center py-4 text-gray-600">
             No hay clientes registrados.
         </div>
         @endforelse
-        @if($clientes->count() >= $cantidad) <!-- Solo mostrar si hay más clientes -->
+
+        @if($clientes->count() >= $cantidad)
         <div class="col-span-full text-center mt-4">
             <button wire:click="$set('cantidad', {{ $cantidad + 50 }})" class="btn-cyan px-4 py-2 rounded">
                 Cargar más
@@ -138,12 +143,13 @@
 
 
 
+
     @if($modal)
     <div class="modal-overlay">
         <div class="modal-box">
             <div class="modal-content flex flex-col gap-4">
                 <div>
-                    <label class="font-semibold text-sm mb-2 block">Imagen</label>
+                    <label class="font-semibold text-sm mb-2 block">Imagen (Opcional)</label>
                     <input type="file" wire:model="foto" class="input-minimal">
                     @if($foto)
                     <div class="mt-2 flex justify-center">
@@ -151,94 +157,93 @@
                             class="w-50 h-50 object-cover rounded" alt="Imagen Cliente">
                     </div>
                     @endif
-                    @error('foto') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Nombre</label>
+                    <label class="font-semibold text-sm mb-1 block">Nombre (requerido)</label>
                     <input type="text" wire:model="nombre" class="input-minimal" placeholder="Nombre">
                     @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Empresa</label>
+                    <label class="font-semibold text-sm mb-1 block">Empresa (Opcional)</label>
                     <input type="text" wire:model="empresa" class="input-minimal" placeholder="Empresa">
                     @error('empresa') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Razón Social</label>
+                    <label class="font-semibold text-sm mb-1 block">Razón Social (Opcional)</label>
                     <input type="text" wire:model="razonSocial" class="input-minimal" placeholder="Razón Social">
                     @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">NIT/CI</label>
+                    <label class="font-semibold text-sm mb-1 block">NIT/CI (Opcional)</label>
                     <input type="text" wire:model="nitCi" class="input-minimal" placeholder="NIT/CI">
                     @error('nitCi') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Teléfono</label>
+                    <label class="font-semibold text-sm mb-1 block">Teléfono (Opcional)</label>
                     <input type="text" wire:model="telefono" class="input-minimal" placeholder="Teléfono">
                     @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Celular</label>
+                    <label class="font-semibold text-sm mb-1 block">Celular (Opcional)</label>
                     <input type="text" wire:model="celular" class="input-minimal" placeholder="Celular">
                     @error('celular') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Dirección</label>
+                    <label class="font-semibold text-sm mb-1 block">Dirección (Opcional)</label>
                     <input type="text" wire:model="direccion" class="input-minimal" placeholder="Dirección">
                     @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Ubicación</label>
+                    <label class="font-semibold text-sm mb-1 block">Ubicación (Opcional)</label>
                     <input type="text" wire:model="ubicacion" class="input-minimal" placeholder="Ubicación">
                     @error('ubicacion') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Departamento / Localidad</label>
+                    <label class="font-semibold text-sm mb-1 block">Departamento / Localidad (Opcional)</label>
                     <input type="text" wire:model="departamento_localidad" class="input-minimal" placeholder="Departamento / Localidad">
                     @error('departamento_localidad') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Establecimiento</label>
+                    <label class="font-semibold text-sm mb-1 block">Establecimiento (Opcional)</label>
                     <input type="text" wire:model="establecimiento" class="input-minimal" placeholder="Establecimiento">
                     @error('establecimiento') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Disponible</label>
-                    <input type="text" wire:model="disponible" class="input-minimal" placeholder="Disponible">
+                    <label class="font-semibold text-sm mb-1 block">Disponible (Opcional)</label>
+                    <input type="text" wire:model="disponible" class="input-minimal" placeholder="Cliente esta con tiempo">
                     @error('disponible') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Movil</label>
-                    <input type="text" wire:model="movil" class="input-minimal" placeholder="Movil">
+                    <label class="font-semibold text-sm mb-1 block">Movil (Opcional)</label>
+                    <input type="text" wire:model="movil" class="input-minimal" placeholder="Movil del envio">
                     @error('movil') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Días</label>
-                    <input type="text" wire:model="dias" class="input-minimal" placeholder="Días">
+                    <label class="font-semibold text-sm mb-1 block">Días (Opcional)</label>
+                    <input type="text" wire:model="dias" class="input-minimal" placeholder="Días disponibles de atecnion">
                     @error('dias') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">BOT</label>
+                    <label class="font-semibold text-sm mb-1 block">BOT (Opcional)</label>
                     <input type="text" wire:model="bot" class="input-minimal" placeholder="BOT">
                     @error('bot') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Correo de acceso</label>
+                    <label class="font-semibold text-sm mb-1 block">Correo de acceso (opcional)</label>
                     <input type="email" wire:model="email" class="input-minimal" placeholder="Correo de acceso">
 
                 </div>
@@ -286,22 +291,22 @@
 
             </div>
             <div class="modal-footer">
-                <button type="button" wire:click="guardarCliente" class="btn-circle btn-cyan" title="Guardar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+                <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M10 10l4 4m0 -4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                    CERRAR
+                </button>
+                <button type="button" wire:click="guardarCliente" class="btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                         <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                         <path d="M14 4l0 4l-6 0l0 -4" />
                     </svg>
-                </button>
-                <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" />
-                        <path d="M10 10l4 4m0 -4l-4 4" />
-                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                    </svg>
+                    Guardar
                 </button>
             </div>
             @if($showAlert)

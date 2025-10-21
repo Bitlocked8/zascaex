@@ -22,6 +22,17 @@
     </div>
 
     @forelse($pedidos as $pedido)
+    @php
+    $totalGeneral = 0;
+    foreach ($pedido->detalles as $detalle) {
+    $producto = $detalle->existencia->existenciable ?? null;
+    $precioUnitario = $producto->precioReferencia ?? 0;
+    $totalGeneral += $precioUnitario * $detalle->cantidad;
+    }
+    $pagoPedidos = $pedido->pagoPedidos ?? collect();
+    $montoTotalPagado = $pagoPedidos->sum('monto');
+    $faltante = $totalGeneral - $montoTotalPagado;
+    @endphp
     <div class="card-teal flex flex-col gap-4">
       <div class="flex flex-col gap-1">
         <p class="text-u"> {{ $pedido->codigo }}</p>
@@ -34,6 +45,20 @@
           </span>
         </p>
         <p><strong>Productos añadidos:</strong> {{ $pedido->detalles->count() }}</p>
+        <div class="mt-2 border-t border-gray-200 pt-2 text-sm">
+          <div class="flex justify-between font-semibold">
+            <span>Total:</span>
+            <span>{{ number_format($totalGeneral, 2) }} BS</span>
+          </div>
+          <div class="flex justify-between text-emerald-600 font-semibold">
+            <span>Pagado:</span>
+            <span>{{ number_format($montoTotalPagado, 2) }} BS</span>
+          </div>
+          <div class="flex justify-between text-red-600 font-semibold">
+            <span>Faltante:</span>
+            <span>{{ number_format($faltante, 2) }} BS</span>
+          </div>
+        </div>
       </div>
       <div class="flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-200 pt-3 pb-1 justify-start md:justify-between">
         <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
@@ -141,6 +166,7 @@
               </button>
             </div>
           </div>
+          
           <div class="grid grid-cols-1 gap-2 mt-2">
             <div>
               <label class="font-semibold text-sm mb-2 block">Cliente (requerido)</label>
@@ -320,27 +346,27 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
               <div class="sm:col-span-2">
-                <label class="font-semibold text-sm">Monto</label>
+                <label class="font-semibold text-sm">Monto (Requerido)</label>
                 <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
               </div>
 
               <div class="sm:col-span-2">
-                <label class="font-semibold text-sm">Método</label>
+                <label class="font-semibold text-sm">Método (Opcional)</label>
                 <input type="text" wire:model="pagos.{{ $index }}.metodo" class="input-minimal">
               </div>
 
               <div class="sm:col-span-2">
-                <label class="font-semibold text-sm">Referencia</label>
+                <label class="font-semibold text-sm">Referencia (Opcional)</label>
                 <input type="text" wire:model="pagos.{{ $index }}.referencia" class="input-minimal">
               </div>
 
               <div class="sm:col-span-2">
-                <label class="font-semibold text-sm">Observaciones</label>
+                <label class="font-semibold text-sm">Observaciones (Opcional)</label>
                 <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal">
               </div>
 
               <div class="sm:col-span-2">
-                <label class="font-semibold text-sm">Imagen</label>
+                <label class="font-semibold text-sm">Imagen (Opcional)</label>
                 <input type="file" wire:model="pagos.{{ $index }}.imagen_comprobante" class="input-minimal">
 
                 @php
@@ -377,28 +403,34 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" wire:click="agregarPagoPedido" class="btn-circle btn-cyan">
+          <button type="button" wire:click="agregarPagoPedido" class="btn-cyan">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
               <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-            </svg></button>
+            </svg>
+            añadir pago
+          </button>
 
-          <button type="button" wire:click="guardarPagosPedido" class="btn-circle btn-cyan">
+          <button type="button" wire:click="guardarPagosPedido" class="btn-cyan">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
               <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
               <path d="M14 4l0 4l-6 0l0 -4" />
-            </svg></button>
-          <button type="button" wire:click="$set('modalPagos', false)" class="btn-circle btn-cyan" title="Cerrar">
+            </svg>
+            guardar pago
+          </button>
+          <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
               fill="none" viewBox="0 0 24 24" stroke="currentColor"
               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" />
               <path d="M10 10l4 4m0 -4l-4 4" />
               <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-            </svg></button>
+            </svg>
+            cerrar
+          </button>
         </div>
 
       </div>

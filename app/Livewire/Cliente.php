@@ -216,7 +216,6 @@ class Cliente extends Component
             }
 
             $this->cerrarModal();
-
         } catch (\Exception $e) {
             $this->mostrarAlerta('Error: ' . $e->getMessage(), 'error');
         }
@@ -240,6 +239,19 @@ class Cliente extends Component
         $this->resetCampos();
         $this->resetErrorBag();
     }
+
+    public function toggleVerificado($clienteId)
+    {
+        $cliente = ModeloCliente::findOrFail($clienteId);
+        $cliente->verificado = !$cliente->verificado; // alterna true/false
+        $cliente->save();
+
+        $this->mostrarAlerta(
+            'Cliente ' . $cliente->nombre . ' ' . ($cliente->verificado ? 'verificado' : 'no verificado'),
+            'success'
+        );
+    }
+
 
     private function resetCampos()
     {

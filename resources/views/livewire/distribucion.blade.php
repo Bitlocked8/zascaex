@@ -27,12 +27,12 @@
             <div class="flex flex-col gap-1">
                 <p class="text-u">{{ $dist->codigo }}</p>
                 <p><strong>Personal:</strong> {{ $dist->personal->nombres ?? 'N/A' }}</p>
-                <p><strong>Coche:</strong> {{ $dist->coche->placa ?? 'N/A' }} — {{ $dist->coche->marca ?? '' }} {{ $dist->coche->modelo ?? '' }}</p>
+                <p><strong>Coche:</strong> {{ $dist->coche->placa ?? 'N/A' }} {{ $dist->coche->marca ?? '' }} {{ $dist->coche->modelo ?? '' }}</p>
                 <p><strong>Pedidos asignados:</strong> {{ $dist->pedidos->count() }}</p>
                 <p><strong>Estado:</strong>
                     <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-          {{ $dist->estado == 1 ? 'bg-emerald-600 text-white' : 'bg-gray-400 text-white' }}">
-                        {{ $dist->estado == 1 ? 'Activa' : 'Finalizada' }}
+          {{ $dist->estado == 1 ? 'bg-yellow-600 text-white' : 'bg-emerald-400 text-white' }}">
+                        {{ $dist->estado == 1 ? 'En entrega' : 'Finalizada' }}
                     </span>
                 </p>
             </div>

@@ -48,7 +48,7 @@ class Distribucion extends Component
 
     private function loadPedidosDisponibles($distribucion_id = null)
     {
-        $query = Pedido::where('estado_pedido', 0)
+        $query = Pedido::where('estado_pedido', '!=', 2)
             ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
                 $subquery->where('distribucions.estado', 1);
                 if ($distribucion_id) {
@@ -58,12 +58,14 @@ class Distribucion extends Component
 
         if ($distribucion_id) {
             $query = $query->orWhereHas('distribuciones', function ($q) use ($distribucion_id) {
-                $q->where('distribucions.id', $distribucion_id);
+                $q->where('distribucions.id', $distribucion_id)
+                    ->where('pedidos.estado_pedido', '!=', 2);
             });
         }
 
         $this->pedidos = $query->get();
     }
+
 
     private function loadDistribucionData()
     {

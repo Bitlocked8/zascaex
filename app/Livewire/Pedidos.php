@@ -21,7 +21,7 @@ class Pedidos extends Component
     public $pedidoDetalle;
     public $clientes;
     public $searchCliente = '';
-
+    public $imagenPreviewModal = null;
     public $pedido;
     public $cliente_id;
     public $personal_id;
