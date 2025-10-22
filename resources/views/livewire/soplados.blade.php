@@ -142,8 +142,51 @@
 
                 <div class="grid grid-cols-1 gap-2 mt-2">
                     <span class="text-u">{{ $codigo }}</span>
-
                     <span class="text-u"> fecha soplado: {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
+                    <div class="mb-4 space-y-3">
+                        <div>
+                            <label class="block text-sm font-semibold mb-1">Sucursal del elemento</label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($sucursales as $sucursal)
+                                <button
+                                    type="button"
+                                    wire:click="filtrarSucursalElemento({{ $sucursal->id }})"
+                                    class="px-3 py-1 rounded-lg border-2 transition
+                        {{ $filtroSucursalElemento == $sucursal->id 
+                            ? 'bg-cyan-600 text-white border-cyan-600' 
+                            : 'border-gray-300 text-gray-700 hover:border-cyan-600 hover:text-cyan-600' }}">
+                                    {{ $sucursal->nombre }}
+                                </button>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                            <div class="flex-1">
+                                <label for="busquedaAsignacion" class="block text-sm font-medium text-gray-700">
+                                    Buscar Asignación
+                                </label>
+                                <input
+                                    id="busquedaAsignacion"
+                                    type="search"
+                                    wire:model.live="busquedaAsignacion"
+                                    class="input-minimal"
+                                    placeholder="Buscar preforma..." />
+                            </div>
+                            <div class="flex-1">
+                                <label for="busquedaDestino" class="block text-sm font-medium text-gray-700">
+                                    Buscar Destino
+                                </label>
+                                <input
+                                    id="busquedaDestino"
+                                    type="search"
+                                    wire:model.live="busquedaDestino"
+                                    class="input-minimal"
+                                    placeholder="Buscar base..." />
+                            </div>
+                        </div>
+
+
+                    </div>
 
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Asignación (Preforma)</label>
@@ -366,9 +409,9 @@
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span class="label-info">Estado:</span>
                             <span class="px-2 py-1 rounded-full font-semibold text-sm
-        {{ $sopladoSeleccionado->estado == 0 ? 'bg-yellow-600 text-white' : '' }}
-        {{ $sopladoSeleccionado->estado == 1 ? 'bg-blue-600 text-white' : '' }}
-        {{ $sopladoSeleccionado->estado == 2 ? 'bg-green-600 text-white' : '' }}">
+                                  {{ $sopladoSeleccionado->estado == 0 ? 'bg-yellow-600 text-white' : '' }}
+                                  {{ $sopladoSeleccionado->estado == 1 ? 'bg-blue-600 text-white' : '' }}
+                                  {{ $sopladoSeleccionado->estado == 2 ? 'bg-green-600 text-white' : '' }}">
                                 {{ $sopladoSeleccionado->estado == 0 ? 'Pendiente' : ($sopladoSeleccionado->estado == 1 ? 'En proceso' : 'Finalizado') }}
                             </span>
                         </div>
@@ -387,8 +430,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Cantidades y Asignación/Destino -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div class="flex flex-col gap-2">
                         <span class="label-info">Cantidad:</span>

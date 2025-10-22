@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class Soplados extends Component
 {
-    public $search = '';
+
     public $modal = false;
     public $modalDetalle = false;
     public $soplado_id = null;
@@ -28,6 +28,14 @@ class Soplados extends Component
     public $accion = 'create';
     public $sopladoSeleccionado = null;
     public $existenciaSeleccionada = null;
+
+    public $search = '';
+    public $busquedaAsignacion = '';
+    public $busquedaDestino = '';
+    public $sucursalSeleccionada;
+    public $filtroSucursalElemento;
+
+
     protected $rules = [
         'asignado_id' => 'required|exists:asignados,id',
         'existencia_destino_id' => 'required|exists:existencias,id',
@@ -39,24 +47,62 @@ class Soplados extends Component
     public function render()
     {
         $soplados = Soplado::with(['asignado', 'reposicion', 'existencia'])
-            ->when(
-                $this->search,
-                fn($q) =>
+            ->when($this->search, function ($q) {
                 $q->where('codigo', 'like', "%{$this->search}%")
-                    ->orWhereHas('asignado', fn($q) => $q->where('codigo', 'like', "%{$this->search}%"))
-            )->get();
-
-        $asignaciones = Asignado::with('existencia.existenciable')
+                    ->orWhereHas('asignado', fn($q) => $q->where('codigo', 'like', "%{$this->search}%"));
+            })
+            ->get();
+        $sucursales = \App\Models\Sucursal::all();
+        $asignaciones = Asignado::with('existencia.existenciable', 'existencia.sucursal')
             ->where('cantidad', '>', 0)
-            ->whereHas('existencia', fn($q) => $q->where('existenciable_type', \App\Models\Preforma::class))
+            ->whereHas('existencia', function ($q) {
+                $q->where('existenciable_type', \App\Models\Preforma::class);
+                if ($this->sucursalSeleccionada) {
+                    $q->where('sucursal_id', $this->sucursalSeleccionada);
+                }
+            })
+            ->when($this->filtroSucursalElemento, function ($q) {
+                $q->whereHas(
+                    'existencia',
+                    fn($sub) =>
+                    $sub->where('sucursal_id', $this->filtroSucursalElemento)
+                );
+            })
+            ->when($this->busquedaAsignacion, function ($q) {
+                $q->whereHas('existencia.existenciable', function ($sub) {
+                    $sub->where('descripcion', 'like', "%{$this->busquedaAsignacion}%");
+                });
+            })
             ->get();
-
-        $existenciasDestino = Existencia::with('existenciable')
+        $existenciasDestino = Existencia::with('existenciable', 'sucursal')
             ->where('existenciable_type', \App\Models\Base::class)
+            ->when($this->sucursalSeleccionada, function ($q) {
+                $q->where('sucursal_id', $this->sucursalSeleccionada);
+            })
+            ->when($this->filtroSucursalElemento, function ($q) {
+                $q->where('sucursal_id', $this->filtroSucursalElemento);
+            })
+            ->when($this->busquedaDestino, function ($q) {
+                $q->whereHas('existenciable', function ($sub) {
+                    $sub->where('descripcion', 'like', "%{$this->busquedaDestino}%");
+                });
+            })
             ->get();
 
-        return view('livewire.soplados', compact('soplados', 'asignaciones', 'existenciasDestino'));
+        return view('livewire.soplados', compact('soplados', 'asignaciones', 'existenciasDestino', 'sucursales'));
     }
+
+    public function seleccionarSucursal($id)
+    {
+        $this->sucursalSeleccionada = $id;
+    }
+
+    public function filtrarSucursalElemento($id)
+    {
+        $this->filtroSucursalElemento = $id;
+    }
+
+
 
     public function abrirModal($accion = 'create', $id = null)
     {
@@ -129,8 +175,6 @@ class Soplados extends Component
         $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
         $cantidad = $this->cantidad ?? 0;
         $merma = $cantidad > 0 ? max(0, $asignado->cantidad - $cantidad) : 0;
-
-        // Verificar cantidad disponible
         $asignadoDisponible = $asignado->cantidad;
         if ($this->accion === 'edit' && $this->soplado_id) {
             $sopladoAnterior = Soplado::find($this->soplado_id);
@@ -149,14 +193,10 @@ class Soplados extends Component
                 $soplado = Soplado::findOrFail($this->soplado_id);
                 $reposicion = $soplado->reposicion ?? $this->crearReposicion($existenciaDestino, $personalId);
                 $estadoAnterior = $soplado->estado;
-
-                // 🔹 Siempre eliminar comprobante si no está confirmado
                 if ($this->estado != 2) {
                     ComprobantePago::where('reposicion_id', $reposicion->id)->delete();
                     $reposicion->update(['monto_usado' => 0]);
                 }
-
-                // 🔹 Si estaba confirmado y ahora NO → revertir movimientos
                 if ($estadoAnterior == 2 && $this->estado != 2) {
                     $asignado->cantidad += ($soplado->cantidad + $soplado->merma);
                     $existenciaDestino->cantidad -= $soplado->cantidad;
