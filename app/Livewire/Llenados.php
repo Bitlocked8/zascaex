@@ -42,32 +42,41 @@ class Llenados extends Component
 
     public function render()
     {
+
         $llenados = Llenado::with(['asignadoBase', 'asignadoTapa', 'existencia', 'reposicion'])
             ->when(
                 $this->search,
                 fn($q) =>
                 $q->where('codigo', 'like', "%{$this->search}%")
-                    ->orWhereHas('existencia.existenciable', fn($q) => $q->where('nombre', 'like', "%{$this->search}%"))
+                    ->orWhereHas(
+                        'existencia.existenciable',
+                        fn($q) =>
+                        $q->where('nombre', 'like', "%{$this->search}%")
+                    )
             )->get();
-
-        // Asignaciones base (botellas)
+        $asignacionesUsadasBase = Llenado::pluck('asignado_base_id')->toArray();
+        $asignacionesUsadasTapa = Llenado::pluck('asignado_tapa_id')->toArray();
+        if ($this->llenado_id) {
+            $llenadoActual = Llenado::find($this->llenado_id);
+            if ($llenadoActual) {
+                $asignacionesUsadasBase = array_diff($asignacionesUsadasBase, [$llenadoActual->asignado_base_id]);
+                $asignacionesUsadasTapa = array_diff($asignacionesUsadasTapa, [$llenadoActual->asignado_tapa_id]);
+            }
+        }
         $asignacionesBase = Asignado::with('existencia.existenciable')
             ->whereHas('existencia', fn($q) => $q->where('existenciable_type', \App\Models\Base::class))
             ->where('cantidad', '>', 0)
+            ->whereNotIn('id', $asignacionesUsadasBase)
             ->get();
-
-        // Asignaciones tapa
         $asignacionesTapa = Asignado::with('existencia.existenciable')
             ->whereHas('existencia', fn($q) => $q->where('existenciable_type', \App\Models\Tapa::class))
             ->where('cantidad', '>', 0)
+            ->whereNotIn('id', $asignacionesUsadasTapa)
             ->get();
-
-        // Existencias destino → Producto final
         $existenciasDestino = Existencia::with('existenciable')
             ->where('existenciable_type', \App\Models\Producto::class)
             ->get();
 
-        // Personal
         $personales = \App\Models\Personal::orderBy('nombres')->get();
 
         return view('livewire.llenados', compact(
@@ -75,7 +84,7 @@ class Llenados extends Component
             'asignacionesBase',
             'asignacionesTapa',
             'existenciasDestino',
-            'personales' // ✅ corregido
+            'personales'
         ));
     }
 
@@ -107,17 +116,30 @@ class Llenados extends Component
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
-
         $this->modal = true;
     }
 
     protected function generarCodigo($prefijo)
     {
         $fechaHoy = now()->format('Ymd');
-        $ultimo = Llenado::whereDate('created_at', now()->toDateString())->latest('id')->first();
-        $contador = $ultimo ? intval(substr($ultimo->codigo, -3)) + 1 : 1;
-        return $prefijo . '-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
+        $ultimoCodigo = Llenado::whereDate('created_at', now()->toDateString())
+            ->latest('id')
+            ->value('codigo');
+        $contador = 1;
+        if ($ultimoCodigo) {
+            $partes = explode('-', $ultimoCodigo);
+            $ultimoContador = intval(end($partes));
+            $contador = $ultimoContador + 1;
+        }
+        $codigo = $prefijo . '-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
+        while (Llenado::where('codigo', $codigo)->exists()) {
+            $contador++;
+            $codigo = $prefijo . '-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
+        }
+
+        return $codigo;
     }
+
 
     public function editar($id)
     {
@@ -146,56 +168,89 @@ class Llenados extends Component
             $this->addError('personal_id', 'El usuario no tiene personal asignado.');
             return;
         }
+
         $personalId = $usuario->personal->id;
+        $cantidad = $this->cantidad ?? 0;
 
         $asignadoBase = Asignado::findOrFail($this->asignado_base_id);
         $asignadoTapa = Asignado::findOrFail($this->asignado_tapa_id);
         $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
 
-        $cantidad = $this->cantidad ?? 0;
-
         DB::transaction(function () use ($asignadoBase, $asignadoTapa, $existenciaDestino, $personalId, $cantidad) {
+            $this->merma_base = max($asignadoBase->cantidad - $cantidad, 0);
+            $this->merma_tapa = max($asignadoTapa->cantidad - $cantidad, 0);
+            if ($this->estado == 2 && $cantidad > min($asignadoBase->cantidad, $asignadoTapa->cantidad)) {
+                throw new \Exception("La cantidad producida no puede ser mayor que las asignadas.");
+            }
 
-            $reposicionDestino = $this->crearReposicion($existenciaDestino, $personalId);
+            if ($this->accion === 'create') {
+                $reposicionDestino = $this->crearReposicion($existenciaDestino, $personalId);
 
-            $llenado = Llenado::create([
-                'codigo' => $this->codigo ?? $this->generarCodigo('L'),
-                'asignado_base_id' => $asignadoBase->id,
-                'asignado_tapa_id' => $asignadoTapa->id,
-                'existencia_id' => $existenciaDestino->id,
-                'cantidad' => $cantidad,
-                'merma_base' => $this->merma_base,
-                'merma_tapa' => $this->merma_tapa,
-                'estado' => $this->estado,
-                'observaciones' => $this->observaciones,
-                'fecha' => now(),
-                'personal_id' => $personalId,
-                'reposicion_id' => $reposicionDestino->id,
-            ]);
-
+                $llenado = Llenado::create([
+                    'codigo' => $this->codigo ?? $this->generarCodigo('L'),
+                    'asignado_base_id' => $asignadoBase->id,
+                    'asignado_tapa_id' => $asignadoTapa->id,
+                    'existencia_id' => $existenciaDestino->id,
+                    'cantidad' => $cantidad,
+                    'merma_base' => $this->merma_base,
+                    'merma_tapa' => $this->merma_tapa,
+                    'estado' => $this->estado,
+                    'observaciones' => $this->observaciones,
+                    'fecha' => now(),
+                    'personal_id' => $personalId,
+                    'reposicion_id' => $reposicionDestino->id,
+                ]);
+            }
+            else {
+                $llenado = Llenado::findOrFail($this->llenado_id);
+                $reposicionDestino = $llenado->reposicion;
+                if ($llenado->estado == 2) {
+                    $llenado->asignadoBase->cantidad += ($llenado->cantidad + $llenado->merma_base);
+                    $llenado->asignadoTapa->cantidad += ($llenado->cantidad + $llenado->merma_tapa);
+                    $llenado->existencia->cantidad -= $llenado->cantidad;
+                    $llenado->asignadoBase->save();
+                    $llenado->asignadoTapa->save();
+                    $llenado->existencia->save();
+                }
+                $llenado->update([
+                    'asignado_base_id' => $asignadoBase->id,
+                    'asignado_tapa_id' => $asignadoTapa->id,
+                    'existencia_id' => $existenciaDestino->id,
+                    'cantidad' => $cantidad,
+                    'merma_base' => $this->merma_base,
+                    'merma_tapa' => $this->merma_tapa,
+                    'estado' => $this->estado,
+                    'observaciones' => $this->observaciones,
+                    'fecha' => now(),
+                ]);
+            }
             if ($this->estado == 2 && $cantidad > 0) {
                 $asignadoBase->cantidad -= ($cantidad + $this->merma_base);
                 $asignadoTapa->cantidad -= ($cantidad + $this->merma_tapa);
-                $existenciaDestino->cantidad += $cantidad;
-
                 $asignadoBase->save();
                 $asignadoTapa->save();
+                $existenciaDestino->cantidad += $cantidad;
                 $existenciaDestino->save();
-
                 $reposicionDestino->update([
                     'cantidad' => $cantidad,
                     'cantidad_inicial' => $cantidad,
                     'estado_revision' => true,
                 ]);
-
                 $this->crearComprobante($reposicionDestino, $asignadoBase, $cantidad);
+            }
+            if ($this->estado != 2) {
+                $reposicionDestino->update([
+                    'cantidad' => 0,
+                    'cantidad_inicial' => 0,
+                    'estado_revision' => false,
+                ]);
             }
         });
 
         $this->cerrarModal();
         session()->flash('mensaje', 'Llenado guardado correctamente.');
     }
-
+    
     private function crearReposicion($existenciaDestino, $personalId)
     {
         $codigoReposicion = 'R-' . now()->format('Ymd') . '-' . str_pad(

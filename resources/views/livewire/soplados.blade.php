@@ -160,36 +160,20 @@
                                 @endforeach
                             </div>
                         </div>
-                        <div class="flex flex-col sm:flex-row gap-4 mb-4">
-                            <div class="flex-1">
-                                <label for="busquedaAsignacion" class="block text-sm font-medium text-gray-700">
-                                    Buscar Asignación
-                                </label>
-                                <input
-                                    id="busquedaAsignacion"
-                                    type="search"
-                                    wire:model.live="busquedaAsignacion"
-                                    class="input-minimal"
-                                    placeholder="Buscar preforma..." />
-                            </div>
-                            <div class="flex-1">
-                                <label for="busquedaDestino" class="block text-sm font-medium text-gray-700">
-                                    Buscar Destino
-                                </label>
-                                <input
-                                    id="busquedaDestino"
-                                    type="search"
-                                    wire:model.live="busquedaDestino"
-                                    class="input-minimal"
-                                    placeholder="Buscar base..." />
-                            </div>
-                        </div>
-
-
                     </div>
-
                     <div>
-                        <label class="font-semibold text-sm mb-2 block">Asignación (Preforma)</label>
+                        <label class="font-semibold text-sm mb-2 block">Preforma (Requerido)</label>
+                        <div class="flex-1">
+                            <label for="busquedaAsignacion" class="block text-sm font-medium text-gray-700">
+                                Buscar Preforma
+                            </label>
+                            <input
+                                id="busquedaAsignacion"
+                                type="search"
+                                wire:model.live="busquedaAsignacion"
+                                class="input-minimal"
+                                placeholder="Buscar preforma..." />
+                        </div>
 
                         @if($accion === 'edit')
                         @php
@@ -243,7 +227,18 @@
 
                     </div>
                     <div>
-                        <label class="font-semibold text-sm mb-2 block">Destino (Existencia)</label>
+                        <label class="font-semibold text-sm mb-2 block">Base (Requerido)</label>
+                        <div class="flex-1">
+                            <label for="busquedaDestino" class="block text-sm font-medium text-gray-700">
+                                Buscar Base
+                            </label>
+                            <input
+                                id="busquedaDestino"
+                                type="search"
+                                wire:model.live="busquedaDestino"
+                                class="input-minimal"
+                                placeholder="Buscar base..." />
+                        </div>
 
                         @if($accion === 'edit')
                         @php
@@ -301,16 +296,16 @@
                         @enderror
                     </div>
                     <div>
-                        <label class="font-semibold text-sm">Cantidad a producir</label>
+                        <label class="font-semibold text-sm">Cantidad a producir (Requerido)</label>
                         <input type="number" wire:model="cantidad" class="input-minimal" placeholder="ingrese la cantidad que se obtuvo">
                     </div>
                     <div>
-                        <label class="font-semibold text-sm">Merma</label>
+                        <label class="font-semibold text-sm">Merma (Se genera automatico)</label>
                         <input type="number" wire:model="merma" class="input-minimal" placeholder="se genera automaticamente">
 
                     </div>
                     <div>
-                        <label class="font-semibold text-sm">Observaciones</label>
+                        <label class="font-semibold text-sm">Observaciones (Opcional)</label>
                         <input type="text" wire:model="observaciones" class="input-minimal" placeholder="Observaciones">
                     </div>
                     <div class="text-center">
@@ -358,22 +353,24 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M10 10l4 4m0 -4l-4 4" />
+                            <circle cx="12" cy="12" r="9" />
+                        </svg>
+                        CERRAR
+                    </button>
+                    <button type="button" wire:click="guardar" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                             <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                             <path d="M14 4l0 4l-6 0l0 -4" />
                         </svg>
+                        Guardar
                     </button>
 
-                    <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path d="M10 10l4 4m0 -4l-4 4" />
-                            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                        </svg>
-                    </button>
+
                 </div>
 
             </div>
