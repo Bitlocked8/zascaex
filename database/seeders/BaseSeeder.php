@@ -33,6 +33,8 @@ class BaseSeeder extends Seeder
             ['descripcion' => '', 'capacidad' => 20, 'tipo' => 'Normal'],
         ];
 
+        
+
         foreach ($bases as $data) {
             foreach ([1, 2] as $sucursal_id) {
                 $base = Base::create([
