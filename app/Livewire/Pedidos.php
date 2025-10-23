@@ -170,8 +170,8 @@ class Pedidos extends Component
     public function guardarPedido()
     {
         $this->validate([
-            'cliente_id' => 'required',
-            'personal_id' => 'required',
+            'cliente_id' => 'nullable',
+            'personal_id' => 'nullable',
         ]);
 
         $pedido = $this->pedido;

@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('pedidos', function (Blueprint $table) {
             $table->id();
             $table->string('codigo')->unique();
-            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
-            $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade');
-            $table->tinyInteger('estado_pedido')->default(0); // 0: pendiente, 1: entregado, 2: cancelado
+            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
+            $table->foreignId('personal_id')->nullable()->constrained('personals')->onDelete('cascade');
+
+            $table->tinyInteger('estado_pedido')->default(0);
             $table->text('observaciones')->nullable();
             $table->dateTime('fecha_pedido')->nullable();
             $table->timestamps();
