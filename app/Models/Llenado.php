@@ -43,4 +43,9 @@ class Llenado extends Model
     {
         return $this->belongsTo(Reposicion::class);
     }
+
+    public function existenciaDestino()
+{
+    return $this->belongsTo(Existencia::class, 'existencia_id');
+}
 }

@@ -43,17 +43,24 @@ class Llenados extends Component
     public function render()
     {
 
-        $llenados = Llenado::with(['asignadoBase', 'asignadoTapa', 'existencia', 'reposicion'])
+        $llenados = Llenado::with([
+            'asignadoBase.existencia.existenciable',
+            'asignadoTapa.existencia.existenciable',
+            'existenciaDestino.existenciable',
+            'reposicion'
+        ])
             ->when(
                 $this->search,
                 fn($q) =>
                 $q->where('codigo', 'like', "%{$this->search}%")
                     ->orWhereHas(
-                        'existencia.existenciable',
+                        'existenciaDestino.existenciable',
                         fn($q) =>
                         $q->where('nombre', 'like', "%{$this->search}%")
                     )
-            )->get();
+            )
+            ->get();
+
         $asignacionesUsadasBase = Llenado::pluck('asignado_base_id')->toArray();
         $asignacionesUsadasTapa = Llenado::pluck('asignado_tapa_id')->toArray();
         if ($this->llenado_id) {
@@ -200,8 +207,7 @@ class Llenados extends Component
                     'personal_id' => $personalId,
                     'reposicion_id' => $reposicionDestino->id,
                 ]);
-            }
-            else {
+            } else {
                 $llenado = Llenado::findOrFail($this->llenado_id);
                 $reposicionDestino = $llenado->reposicion;
                 if ($llenado->estado == 2) {
@@ -250,7 +256,7 @@ class Llenados extends Component
         $this->cerrarModal();
         session()->flash('mensaje', 'Llenado guardado correctamente.');
     }
-    
+
     private function crearReposicion($existenciaDestino, $personalId)
     {
         $codigoReposicion = 'R-' . now()->format('Ymd') . '-' . str_pad(
@@ -342,5 +348,17 @@ class Llenados extends Component
         });
 
         session()->flash('mensaje', 'Llenado eliminado correctamente.');
+    }
+
+    public function verDetalleLlenado($id)
+    {
+        $this->llenadoSeleccionado = Llenado::with([
+            'asignadoBase.existencia.existenciable',
+            'asignadoTapa.existencia.existenciable',
+            'existenciaDestino.existenciable',
+            'reposicion'
+        ])->findOrFail($id);
+
+        $this->modalDetalle = true;
     }
 }

@@ -19,16 +19,11 @@
         <div class="card-teal flex flex-col gap-4">
             <div class="flex flex-col gap-1">
                 <p class="text-u">{{ $llenado->codigo }}</p>
-                <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($llenado->fecha)->format('d/m/Y H:i') }}</p>
-
-                <p><strong>Base:</strong> {{ $llenado->asignadoBase->existencia->existenciable->descripcion ?? 'N/A' }}</p>
-                <p><strong>Tapa:</strong> {{ $llenado->asignadoTapa->existencia->existenciable->descripcion ?? 'N/A' }}</p>
-                <p><strong>Destino:</strong> {{ $llenado->existenciaDestino->existenciable->descripcion ?? 'N/A' }}</p>
-
+                <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($llenado->fecha)->format('d/m/Y H:i') }}</p>         
                 <p><strong>Cantidad:</strong> {{ $llenado->cantidad }}</p>
                 <p><strong>Merma Base:</strong> {{ $llenado->merma_base ?? 0 }}</p>
                 <p><strong>Merma Tapa:</strong> {{ $llenado->merma_tapa ?? 0 }}</p>
-                <p><strong>Personal:</strong> {{ $llenado->personal->nombre ?? 'N/A' }}</p>
+                <p><strong>Personal:</strong> {{ $llenado->personal->nombres ?? 'N/A' }}</p>
                 <p><strong>Observaciones:</strong> {{ $llenado->observaciones ?? 'N/A' }}</p>
 
                 <p><strong>Estado:</strong>
@@ -85,9 +80,6 @@
         </div>
         @endforelse
     </div>
-
-
-
 
     @if($modal)
     <div class="modal-overlay">
@@ -350,8 +342,6 @@
                         <label class="font-semibold text-sm">Observaciones</label>
                         <input type="text" wire:model="observaciones" class="input-minimal">
                     </div>
-
-                    {{-- Estado --}}
                     <div>
                         <label class="font-semibold text-sm">Estado</label>
                         <select wire:model="estado" class="input-minimal w-full">
@@ -361,14 +351,111 @@
                         </select>
                     </div>
                 </div>
-
-                {{-- BOTONES --}}
                 <div class="modal-footer">
-                    <button wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">💾</button>
-                    <button wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">❌</button>
+                    <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path d="M10 10l4 4m0 -4l-4 4" />
+                            <circle cx="12" cy="12" r="9" />
+                        </svg>
+                        CERRAR</button>
+                    <button wire:click="guardar" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                            <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                            <path d="M14 4l0 4l-6 0l0 -4" />
+                        </svg>
+                        Guardar</button>
+
                 </div>
             </div>
         </div>
     </div>
     @endif
+
+    @if($modalDetalle && $llenadoSeleccionado)
+    <div class="modal-overlay">
+        <div class="modal-box max-w-3xl">
+            <div class="modal-content flex flex-col gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Código:</span>
+                            <span class="badge-info">{{ $llenadoSeleccionado->codigo }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Personal:</span>
+                            <span class="badge-info">{{ $llenadoSeleccionado->personal->nombres ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Fecha:</span>
+                            <span class="badge-info">{{ \Carbon\Carbon::parse($llenadoSeleccionado->fecha)->format('d M Y, H:i') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="label-info">Estado:</span>
+                            <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
+                            {{ $llenadoSeleccionado->estado == 0 
+                                ? 'bg-cyan-600 text-white' 
+                                : ($llenadoSeleccionado->estado == 1 
+                                    ? 'bg-emerald-600 text-white' 
+                                    : 'bg-red-600 text-white') }}">
+                                {{ $llenadoSeleccionado->estado == 0 
+                                ? 'Pendiente' 
+                                : ($llenadoSeleccionado->estado == 1 
+                                    ? 'En proceso' 
+                                    : 'Completado') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-2">
+
+                <h3 class="font-semibold text-lg">Detalle de materiales:</h3>
+                <div class="divide-y divide-gray-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center py-2">
+                        <div class="flex flex-col gap-1">
+                            <span class="font-medium">Base: {{ $llenadoSeleccionado->asignadoBase->existencia->existenciable->descripcion ?? '-' }}</span>
+                            <span class="font-medium">Cantidad usada: {{ $llenadoSeleccionado->cantidad }}</span>
+                            <span class="font-medium">Merma base: {{ $llenadoSeleccionado->merma_base }}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="font-medium">Tapa: {{ $llenadoSeleccionado->asignadoTapa->existencia->existenciable->descripcion ?? '-' }}</span>
+                            <span class="font-medium">Cantidad usada: {{ $llenadoSeleccionado->cantidad }}</span>
+                            <span class="font-medium">Merma tapa: {{ $llenadoSeleccionado->merma_tapa }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="font-semibold text-lg mt-4">Destino / Producto final:</h3>
+                <div class="flex flex-col gap-2">
+                    <span class="font-medium">Producto: {{ $llenadoSeleccionado->existenciaDestino->existenciable->descripcion ?? '-' }}</span>
+                    <span class="font-medium">Cantidad final: {{ $llenadoSeleccionado->cantidad }}</span>
+                    <span class="font-medium">Reposición asociada: {{ $llenadoSeleccionado->reposicion->codigo ?? '-' }}</span>
+                </div>
+
+                <div class="mt-4">
+                    <span class="label-info block mb-1">Observaciones:</span>
+                    <div class="bg-gray-100 rounded p-2 text-sm text-gray-700">
+                        {{ $llenadoSeleccionado->observaciones ?? 'Sin observaciones' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer mt-4">
+                <button wire:click="$set('modalDetalle', false)" class="btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M10 10l4 4m0-4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                    CERRAR
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
