@@ -16,7 +16,6 @@ class Stocks extends Component
 {
     use WithFileUploads;
     public $estado_revision = 0;
-
     public $searchCodigo = '';
     public $ultimaReposicion = null;
     public $modal = false;
@@ -43,6 +42,12 @@ class Stocks extends Component
     public $confirmingDeleteReposicionId = null;
 
     public $confirmingDeletePagoIndex = null;
+
+    public $filtroSucursalModal = null;
+    public $filtroSucursal = null;
+
+    public $searchExistencia = '';
+
     protected $rules = [
         'existencia_id' => 'required|exists:existencias,id',
         'personal_id' => 'required|exists:personals,id',
@@ -51,6 +56,43 @@ class Stocks extends Component
         'fecha' => 'required|date',
         'observaciones' => 'nullable|string|max:500',
     ];
+
+    public function cargarExistencias()
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        $queryExistencias = Existencia::with([
+            'existenciable',
+            'sucursal',
+            'reposiciones' => fn($q) => $q->where('estado_revision', 1)
+        ])
+            ->where(function ($q) {
+                $q->whereHas('reposiciones', fn($sub) => $sub->where('estado_revision', 1))
+                    ->orDoesntHave('reposiciones');
+            })
+            ->whereHas('existenciable', fn($q) => $q->where('estado', 1));
+
+        // Filtrar por sucursal
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $queryExistencias->where('sucursal_id', $sucursal_id);
+        }
+
+        if ($this->filtroSucursalModal) {
+            $queryExistencias->where('sucursal_id', $this->filtroSucursalModal);
+        }
+
+        // Filtrar por búsqueda de descripción
+        if ($this->searchExistencia) {
+            $queryExistencias->whereHas('existenciable', function ($q) {
+                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%');
+            });
+        }
+
+        $this->existencias = $queryExistencias->orderBy('id')->get();
+    }
 
     public function abrirModal($accion = 'create', $id = null)
     {
@@ -64,42 +106,45 @@ class Stocks extends Component
             'observaciones',
             'codigo'
         ]);
+
         $this->accion = $accion;
         $usuario = auth()->user();
-        $rol = $usuario->rol_id;
         $personal = $usuario->personal;
+
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
             return;
         }
+
         $this->personal_id = $personal->id;
-       $queryExistencias = Existencia::with([
-    'existenciable',
-    'sucursal',
-    'reposiciones' => fn($q) => $q->where('estado_revision', 1)
-])
-->where(function($q) {
-    $q->whereHas('reposiciones', fn($sub) => $sub->where('estado_revision', 1))
-      ->orDoesntHave('reposiciones');
-})
-->whereHas('existenciable', fn($q) => $q->where('estado', 1)) // Solo existencias activas
-->orderBy('id');
-        if ($rol === 2) {
-            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $queryExistencias->where('sucursal_id', $sucursal_id);
-        }
-        $this->existencias = $queryExistencias->get();
+
+        $this->cargarExistencias();
+
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         }
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
 
         $this->modal = true;
     }
+
+    public function updatingSearchExistencia()
+    {
+        $this->cargarExistencias();
+    }
+
+    public function filtrarSucursalModal($id)
+    {
+        $this->filtroSucursalModal = $id;
+        $this->cargarExistencias();
+    }
+
+
 
     public function editar($id)
     {
@@ -296,30 +341,40 @@ class Stocks extends Component
         $usuario  = auth()->user();
         $rol      = $usuario->rol_id;
         $personal = $usuario->personal;
+
         $queryExistencias = Existencia::with('existenciable')
             ->where('cantidad', '>', 0)
+            ->when($this->filtroSucursal, fn($q) => $q->where('sucursal_id', $this->filtroSucursal))
             ->orderBy('id');
+
         if ($rol === 2 && $personal) {
-            $sucursal_id = $personal->trabajos()
-                ->latest('fechaInicio')
-                ->value('sucursal_id');
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryExistencias->where('sucursal_id', $sucursal_id);
         }
+
         $existencias = $queryExistencias->get();
+
         $queryReposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
-            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'));
+            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
+            ->when(
+                $this->filtroSucursal,
+                fn($q) =>
+                $q->whereHas('existencia', fn($sub) => $sub->where('sucursal_id', $this->filtroSucursal))
+            );
+
         if ($rol === 2 && $personal) {
-            $sucursal_id = $personal->trabajos()
-                ->latest('fechaInicio')
-                ->value('sucursal_id');
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryReposiciones->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
+
         $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')->get();
+
         $personalList = Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
             ->with(['trabajos' => fn($q) => $q->where('estado', 1)
                 ->latest('fechaInicio')
                 ->with('sucursal')])
             ->get();
+
         return view('livewire.stocks', [
             'existencias'  => $existencias,
             'reposiciones' => $reposiciones,
@@ -328,6 +383,7 @@ class Stocks extends Component
             'sucursales'   => Sucursal::all(),
         ]);
     }
+
 
 
     public function eliminarReposicion($id)

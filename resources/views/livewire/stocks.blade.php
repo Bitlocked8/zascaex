@@ -164,6 +164,7 @@
                     </p>
                 </div>
                 <div class="grid grid-cols-1 gap-2 mt-2">
+
                     <div>
                         <label class="font-semibold text-sm mb-2 block">Producto (Requerido)</label>
 
@@ -189,31 +190,36 @@
                         </p>
                         @else
 
-                        <div class="flex-1">
-                            <label for="busquedaProducto" class="block text-sm font-medium text-gray-700">
-                                Buscar producto
-                            </label>
-                            <div class="flex gap-4 mb-4 col-span-full">
-                                <!-- Filtro por Sucursal -->
-                                <select wire:model="filtroSucursal" class="input-minimal">
-                                    <option value="">Todas las sucursales</option>
-                                    @foreach($sucursales as $sucursal)
-                                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                                    @endforeach
-                                </select>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Sucursal</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="filtrarSucursalModal(null)"
+                                    class="px-3 py-1 rounded-full text-sm font-medium border 
+                {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                    Todas
+                                </button>
 
-                                <!-- Filtro por Tipo -->
-                                <select wire:model="filtroTipo" class="input-minimal">
-                                    <option value="">Todos los tipos</option>
-                                    <option value="Base">Base</option>
-                                    <option value="Producto">Producto</option>
-                                    <option value="Etiqueta">Etiqueta</option>
-                                    <option value="Tapa">Tapa</option>
-                                    <option value="Preforma">Preforma</option>
-                                </select>
+                                @foreach($sucursales as $sucursal)
+                                <button
+                                    type="button"
+                                    wire:click="filtrarSucursalModal({{ $sucursal->id }})"
+                                    class="px-3 py-1 rounded-full text-sm font-medium border 
+                {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                    {{ $sucursal->nombre }}
+                                </button>
+                                @endforeach
                             </div>
-
                         </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar producto</label>
+                            <input type="text" wire:model.live="searchExistencia"
+                                class="input-minimal w-full" placeholder="Escribe la descripción..." />
+                        </div>
+
+
 
                         <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
                             @forelse($existencias as $existencia)
