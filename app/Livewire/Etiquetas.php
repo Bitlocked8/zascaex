@@ -13,6 +13,7 @@ class Etiquetas extends Component
 {
     use WithFileUploads;
 
+    public $tipo = '';
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
@@ -31,11 +32,12 @@ class Etiquetas extends Component
 
     protected $rules = [
         'capacidad' => 'required|string|max:255',
-        'unidad' => 'nullable|in:L,ml,g,Kg,unidad',
+        'unidad' => 'nullable|string|max:10', // <-- corregido
         'descripcion' => 'nullable|string|max:255',
         'estado' => 'required|boolean',
         'cliente_id' => 'nullable|exists:clientes,id',
         'cantidadMinima' => 'nullable|integer|min:0',
+        'tipo' => 'required|in:1,2',
     ];
 
     protected $messages = [
@@ -56,7 +58,7 @@ class Etiquetas extends Component
 
         $etiquetasQuery = Etiqueta::query()->with('existencias')
             ->when($this->search, fn($q) => $q->where('capacidad', 'like', "%{$this->search}%")
-            ->orWhere('descripcion', 'like', "%{$this->search}%"));
+                ->orWhere('descripcion', 'like', "%{$this->search}%"));
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -71,9 +73,17 @@ class Etiquetas extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'imagen', 'imagenExistente', 'capacidad', 'unidad', 'estado',
-            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada',
-            'cantidadMinima'
+            'imagen',
+            'imagenExistente',
+            'capacidad',
+            'unidad',
+            'estado',
+            'cliente_id',
+            'descripcion',
+            'etiqueta_id',
+            'etiquetaSeleccionada',
+            'cantidadMinima',
+            'tipo'
         ]);
 
         $this->accion = $accion;
@@ -88,9 +98,10 @@ class Etiquetas extends Component
     public function editar($id)
     {
         $etiqueta = Etiqueta::with('existencias')->findOrFail($id);
+
         $this->etiqueta_id = $etiqueta->id;
         $this->capacidad = $etiqueta->capacidad;
-        $this->unidad = $etiqueta->unidad;
+        $this->unidad = $etiqueta->unidad ?: '';
         $this->estado = $etiqueta->estado;
         $this->descripcion = $etiqueta->descripcion;
         $this->cliente_id = $etiqueta->cliente_id;
@@ -98,6 +109,7 @@ class Etiquetas extends Component
         $this->imagenExistente = $etiqueta->imagen;
         $this->accion = 'edit';
         $this->etiquetaSeleccionada = $etiqueta;
+        $this->tipo = $etiqueta->tipo;
         $this->cantidadMinima = $etiqueta->existencias->first()?->cantidadMinima ?? 0;
     }
 
@@ -105,6 +117,7 @@ class Etiquetas extends Component
     {
         $this->validate();
 
+        // Guardar imagen
         if ($this->imagen && is_object($this->imagen)) {
             $this->validate(['imagen' => 'image|max:5120']);
             $imagenPath = $this->imagen->store('etiquetas', 'public');
@@ -117,13 +130,15 @@ class Etiquetas extends Component
             [
                 'imagen' => $imagenPath,
                 'capacidad' => $this->capacidad,
-                'unidad' => $this->unidad,
+                'unidad' => $this->unidad ?: null,
                 'estado' => $this->estado,
                 'descripcion' => $this->descripcion,
                 'cliente_id' => $this->cliente_id ?: null,
+                'tipo' => $this->tipo,
             ]
         );
 
+        // Crear o actualizar existencia
         $usuario = Auth::user();
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
@@ -156,9 +171,17 @@ class Etiquetas extends Component
     {
         $this->modal = false;
         $this->reset([
-            'imagen', 'imagenExistente', 'capacidad', 'unidad', 'estado',
-            'cliente_id', 'descripcion', 'etiqueta_id', 'etiquetaSeleccionada',
-            'cantidadMinima'
+            'imagen',
+            'imagenExistente',
+            'capacidad',
+            'unidad',
+            'estado',
+            'cliente_id',
+            'descripcion',
+            'etiqueta_id',
+            'etiquetaSeleccionada',
+            'cantidadMinima',
+            'tipo'
         ]);
         $this->resetErrorBag();
     }

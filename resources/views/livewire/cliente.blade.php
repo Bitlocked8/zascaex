@@ -52,7 +52,7 @@
                 </p>
             </div>
 
-            <div class="flex flex-wrap justify-center md:justify-between gap-2 border-t border-gray-200 pt-3 pb-2">
+            <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
 
                 <button wire:click="editarCliente({{ $cliente->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"

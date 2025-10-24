@@ -63,8 +63,7 @@
                 @endif
             </div>
 
-            <div class="flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-200 pt-3 pb-1 justify-start md:justify-between">
-                <button wire:click="abrirModal('edit', {{ $repo->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
+            <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2"> <button wire:click="abrirModal('edit', {{ $repo->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke="none" d="M0 0h24v24H0z" />
