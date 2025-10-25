@@ -105,27 +105,27 @@
           </div>
 
           <div>
-            <label class="font-semibold text-sm mb-1 block">Nombre</label>
+            <label class="text-u">Nombre (Requerido)</label>
             <input wire:model="descripcion" class="input-minimal" placeholder="Descripción">
           </div>
 
           <div>
-            <label class="font-semibold text-sm mb-1 block">Tipo</label>
+            <label class="font-semibold text-sm mb-1 block">Tipo (Opcional)</label>
             <input wire:model="tipo" class="input-minimal" placeholder="Tipo de base">
           </div>
 
           <div>
-            <label class="font-semibold text-sm mb-1 block">Capacidad</label>
-            <input type="number" wire:model="capacidad" class="input-minimal" min="0">
+            <label class="text-u">Capacidad (Requerido)</label>
+            <input type="number" wire:model="capacidad" class="input-minimal" min="0" placeholder="Capacidad en ml o l">
           </div>
 
           <div>
-            <label class="font-semibold text-sm mb-1 block">Observaciones</label>
+            <label class="font-semibold text-sm mb-1 block">Observaciones (Opcional)</label>
             <textarea wire:model="observaciones" class="input-minimal" placeholder="Observaciones"></textarea>
           </div>
 
           <div>
-            <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
+            <label class="font-semibold text-sm mb-1 block">Cantidad Mínima  (Opcional)</label>
             <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
           </div>
 

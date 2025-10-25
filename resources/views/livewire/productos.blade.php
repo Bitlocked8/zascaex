@@ -90,15 +90,10 @@
         @endforelse
     </div>
 
-
-
-
     @if($modal)
     <div class="modal-overlay">
         <div class="modal-box max-w-3xl">
             <div class="modal-content flex flex-col gap-4">
-
-                <!-- Imagen -->
                 <div>
                     <label class="font-semibold text-sm mb-2 block">Imagen</label>
                     <input type="file" wire:model="imagen" class="input-minimal">
@@ -109,54 +104,50 @@
                             alt="Imagen Producto">
                     </div>
                     @endif
-                    @error('imagen') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- Datos básicos -->
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Descripción</label>
+                    <label class="text-u">Nombre (Requerido)</label>
                     <input wire:model="descripcion" class="input-minimal" placeholder="Descripción del producto">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Unidad</label>
-                    <input wire:model="unidad" class="input-minimal" placeholder="Ej. mls, Lts, Kgs...">
+                    <label class="font-semibold text-sm mb-1 block">Unidad (Opcional)</label>
+                    <input wire:model="unidad" class="input-minimal" placeholder="unidad Litros,ml ,etc">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Tipo de Contenido</label>
-                    <input wire:model="tipoContenido" class="input-minimal" placeholder="Ej. Agua, Gaseosa, Hielo...">
+                    <label class="font-semibold text-sm mb-1 block">Tipo de Contenido (Opcional)</label>
+                    <input wire:model="tipoContenido" class="input-minimal" placeholder="Contenido del producto">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Tipo de Producto</label>
-                    <input wire:model="tipoProducto" class="input-minimal" placeholder="Ej. Botella, Botellón, Dispenser...">
+                    <label class="font-semibold text-sm mb-1 block">Tipo de Producto (Opcional)</label>
+                    <input wire:model="tipoProducto" class="input-minimal" placeholder="tipo de prodcuot botella de plastico,botellon , etc">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Tipo / Material</label>
-                    <input wire:model="tipo" class="input-minimal" placeholder="Ej. Plástico, Vidrio...">
+                    <label class="font-semibold text-sm mb-1 block">Tipo / Material (Opcional)</label>
+                    <input wire:model="tipo" class="input-minimal" placeholder=" Material del producto">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Capacidad</label>
-                    <input type="number" wire:model="capacidad" class="input-minimal" min="0" step="0.01" placeholder="Ej. 500">
+                    <label class="font-semibold text-sm mb-1 block">Capacidad (Opcional)</label>
+                    <input type="number" wire:model="capacidad" class="input-minimal" min="0" step="0.01" placeholder="Capacidad en litros">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Paquete</label>
-                    <input wire:model="paquete" class="input-minimal" placeholder="Ej. 10 unidades, Caja, etc.">
+                    <label class="font-semibold text-sm mb-1 block">Paquete (Opcional) </label>
+                    <input wire:model="paquete" class="input-minimal" placeholder="Paquete(s)">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Precio de Referencia (Bs)</label>
-                    <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" min="0" placeholder="Ej. 10.50">
+                    <label class="font-semibold text-sm mb-1 block">Precio de Referencia (Bs) (Opcional)</label>
+                    <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" min="0" placeholder="Precio bs">
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Observaciones</label>
+                    <label class="font-semibold text-sm mb-1 block">Observaciones (Opcional)</label>
                     <textarea wire:model="observaciones" class="input-minimal" rows="2" placeholder="Comentarios o detalles adicionales"></textarea>
                 </div>
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Cantidad Mínima</label>
+                    <label class="font-semibold text-sm mb-1 block">Cantidad Mínima (Opcional)</label>
                     <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0" placeholder="Cantidad mínima">
                 </div>
-
-                <!-- Estado -->
                 <div>
-                    <label class="font-semibold text-sm mb-1 block">Estado</label>
+                    <label class="font-semibold text-sm mb-1 block">Estado (Automatico)</label>
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
                         @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
                         <button type="button"
@@ -170,28 +161,24 @@
                 </div>
 
             </div>
-
-            <!-- Botones inferiores -->
-            <div class="modal-footer mt-6 flex justify-center gap-2">
-                <button type="button" wire:click="guardar" class="btn-circle btn-cyan" title="Guardar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <div class="modal-footer">
+                <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path d="M10 10l4 4m0 -4l-4 4" />
+                        <circle cx="12" cy="12" r="9" />
+                    </svg>
+                    CERRAR
+                </button>
+                <button type="button" wire:click="guardar" class="btn-cyan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" />
                         <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                         <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                        <path d="M14 4v4h-6v-4" />
+                        <path d="M14 4l0 4l-6 0l0 -4" />
                     </svg>
+                    Guardar
                 </button>
-                <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan" title="Cerrar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" />
-                        <path d="M10 10l4 4m0 -4l-4 4" />
-                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                    </svg>
-                </button>
+
             </div>
         </div>
     </div>
@@ -211,8 +198,6 @@
                     <span class="badge-info">Sin imagen</span>
                     @endif
                 </div>
-
-                <!-- Datos principales -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
 
                     <div class="flex flex-col gap-3">
@@ -256,37 +241,27 @@
                             <span class="badge-info">{{ $productoSeleccionado->tipo ?? '-' }}</span>
                         </div>
                     </div>
-
                 </div>
-
-                <!-- Estado -->
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
                     <span class="label-info">Estado:</span>
                     <span class="badge-info {{ $productoSeleccionado->estado ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                         {{ $productoSeleccionado->estado ? 'Activo' : 'Inactivo' }}
                     </span>
                 </div>
-
-                <!-- Observaciones -->
                 <div>
                     <span class="label-info block mb-1">Observaciones:</span>
                     <div class="bg-gray-100 rounded p-2 text-sm text-gray-700">
                         {{ $productoSeleccionado->observaciones ?? 'Sin observaciones' }}
                     </div>
                 </div>
-
             </div>
-
-            <!-- Botón cerrar -->
-            <div class="modal-footer mt-6 flex justify-center">
-                <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" />
+            <div class="modal-footer">
+                <button wire:click="$set('modalDetalle', false)" class="btn-cyan" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path d="M10 10l4 4m0 -4l-4 4" />
                         <circle cx="12" cy="12" r="9" />
                     </svg>
+                    CERRAR
                 </button>
             </div>
 

@@ -47,7 +47,7 @@
 
                 @endforeach
                 @endif
-                </p>
+               
             </div>
             <div class="flex justify-center items-center mt-2">
                 @if($etiqueta->imagen)
