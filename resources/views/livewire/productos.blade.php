@@ -1,80 +1,85 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Título -->
-        <h3 class="col-span-full text-center bg-cyan-700 text-white px-6 py-3 rounded-full text-3xl font-bold uppercase shadow-md">
+        <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
             Productos
         </h3>
 
-        <!-- Barra de búsqueda + Agregar -->
         <div class="flex items-center gap-2 mb-4 col-span-full">
-            <input type="text" wire:model.live="search" placeholder="Buscar por nombre o descripción..." class="input-minimal w-full" />
-            <button wire:click="abrirModal('create')" class="btn-circle btn-cyan" title="Agregar producto">
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Buscar por nombre o descripción..."
+                class="input-minimal w-full" />
+            <button wire:click="abrirModal('create')" class="btn-cyan" title="Agregar producto">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
                     <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
+                Añadir
             </button>
         </div>
 
-        <!-- Cards de productos -->
         @forelse($productos as $producto)
-        <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-            <!-- Imagen -->
-            <div class="col-span-3 flex justify-center items-center">
-                @if($producto->imagen)
-                <img src="{{ asset('storage/'.$producto->imagen) }}" alt="Imagen de producto" class="w-20 h-20 object-cover rounded-lg border border-cyan-300">
+        <div class="card-teal flex flex-col gap-4 p-4 shadow rounded-lg">
+            <div class="flex flex-col gap-2">
+                <p class="text-u">
+                    {{ $producto->descripcion ?? 'Sin descripción' }}
+                </p>
+                <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase
+                    {{ $producto->estado ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">
+                    {{ $producto->estado ? 'Activo' : 'Inactivo' }}
+                </span>
+                <p><strong>Unidad:</strong> {{ $producto->unidad ?? 'N/A' }}</p>
+                <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }}</p>
+                <p><strong>Precio Ref.:</strong> {{ $producto->precioReferencia ?? 'N/A' }} Bs</p>
+
+                @if($producto->existencias->isEmpty())
+                <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    Sin existencias
+                </span>
                 @else
-                <div class="w-20 h-20 flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg text-xs">
+                @foreach($producto->existencias as $existencia)
+                <span class="inline-block bg-cyan-600 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                    {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
+                    ({{ $existencia->cantidad }} / mín: {{ $existencia->cantidadMinima ?? 0 }})
+                </span>
+                @endforeach
+                @endif
+            </div>
+
+            <div class="flex justify-center items-center mt-2">
+                @if($producto->imagen)
+                <img src="{{ asset('storage/'.$producto->imagen) }}" alt="Imagen de producto"
+                    class="w-24 h-24 object-cover rounded-lg border border-cyan-300">
+                @else
+                <div class="w-24 h-24 flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg text-xs">
                     Sin imagen
                 </div>
                 @endif
             </div>
 
-            <!-- Información -->
-            <div class="flex flex-col col-span-6 items-center text-center space-y-1">
-                <p>
-                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase {{ $producto->estado ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">
-                        {{ $producto->estado ? 'Activo' : 'Inactivo' }}
-                    </span>
-                </p>
-                <p class="text-cyan-600 text-2xl font-bold uppercase">
-                    {{ $producto->descripcion ?? 'Sin descripción' }}
-                </p>
-                <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }}</p>
-                <p><strong>Unidad:</strong> {{ $producto->unidad ?? 'N/A' }}</p>
-                <span class="inline-block bg-teal-800 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
-                    Precio Ref.: {{ $producto->precioReferencia ?? 'N/A' }} Bs
-                </span>
-                <p><strong>Sucursal:</strong>
-                    @if($producto->existencias->isEmpty())
-                    <span class="inline-block bg-gray-400 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">N/A</span>
-                    @else
-                    @foreach($producto->existencias as $existencia)
-                    <span class="inline-block bg-white text-cyan-600 px-3 py-1 rounded-full text-sm font-semibold uppercase">
-                        {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }} ({{ $existencia->cantidad }} / mín: {{ $existencia->cantidadMinima ?? 0 }})
-                    </span>
-                    @endforeach
-                    @endif
-                </p>
-            </div>
-
-            <!-- Botones -->
-            <div class="flex flex-col items-end gap-4 col-span-3">
-                <button wire:click="abrirModal('edit', {{ $producto->id }})" class="btn-circle btn-cyan" title="Editar">
-                    <!-- Icono lápiz -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            <div class="flex gap-2 overflow-x-auto no-scrollbar pt-2 justify-start md:justify-end">
+                <button wire:click="abrirModal('edit', {{ $producto->id }})" class="btn-cyan" title="Editar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                        <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                        <path d="M16 5l3 3" />
                     </svg>
+                    Editar
                 </button>
 
-                <button wire:click="modaldetalle({{ $producto->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
-                    <!-- Icono ojo -->
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <button wire:click="modaldetalle({{ $producto->id }})" class="btn-cyan" title="Ver Detalle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 2l.117 .007a1 1 0 0 1 .876 .876l.007 .117v4l.005 .15a2 2 0 0 0 1.838 1.844l.157 .006h4l.117 .007a1 1 0 0 1 .876 .876l.007 .117v9a3 3 0 0 1 -2.824 2.995l-.176 .005h-10a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-14a3 3 0 0 1 2.824 -2.995l.176 -.005zm3 14h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2" />
+                        <path d="M19 7h-4l-.001 -4.001z" />
                     </svg>
+                    Detalles
                 </button>
             </div>
         </div>
@@ -84,6 +89,8 @@
         </div>
         @endforelse
     </div>
+
+
 
 
     @if($modal)
