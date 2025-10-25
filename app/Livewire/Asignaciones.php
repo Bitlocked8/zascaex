@@ -8,6 +8,7 @@ use App\Models\Existencia;
 use App\Models\Reposicion;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Models\Sucursal;
 
 class Asignaciones extends Component
 {
@@ -29,6 +30,49 @@ class Asignaciones extends Component
     public $confirmingDeleteAsignacionId = null;
     public $modalDetalle = false;
     public $asignacionSeleccionada;
+    public $sucursales;
+    public $filtroSucursalModal = null;
+    public $searchExistencia = '';
+
+
+    public function cargarExistencias()
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        $query = Existencia::with(['existenciable', 'sucursal'])
+            ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)->where('estado_revision', true))
+            ->where('existenciable_type', '!=', \App\Models\Producto::class);
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            if ($sucursal_id) {
+                $query->where('sucursal_id', $sucursal_id);
+            }
+        }
+        if ($this->filtroSucursalModal) {
+            $query->where('sucursal_id', $this->filtroSucursalModal);
+        }
+        if ($this->searchExistencia) {
+            $query->whereHas('existenciable', function ($q) {
+                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%');
+            });
+        }
+
+        $this->existencias = $query->orderBy('id')->get();
+    }
+
+    public function updatingSearchExistencia()
+    {
+        $this->cargarExistencias();
+    }
+
+    public function filtrarSucursalModal($id)
+    {
+        $this->filtroSucursalModal = $id;
+        $this->cargarExistencias();
+    }
+
 
     public function abrirModal($accion = 'create', $id = null)
     {
@@ -49,6 +93,7 @@ class Asignaciones extends Component
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
         $personal = $usuario->personal;
+        $this->cargarExistencias();
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
@@ -72,7 +117,11 @@ class Asignaciones extends Component
                 $query->orWhere('id', $asignado->existencia_id);
             }
         }
-        $this->existencias = $query->orderBy('id')->get();
+        $this->existencias = $query
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
+            ->orderBy('id')
+            ->get();
+
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
@@ -255,6 +304,8 @@ class Asignaciones extends Component
             ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
             ->latest()
             ->get();
+
+        $this->sucursales = Sucursal::all(); // asigna a la propiedad pública
 
         return view('livewire.asignaciones', compact('asignaciones'));
     }

@@ -148,16 +148,16 @@
                     <p class="text-u">
                         Código: <span>{{ $codigo }}</span>
                     </p>
-                    <p class="text-u">
-                        Fecha: <span>{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
+                  <p class="font-semibold text-sm">
+                        Fecha:       <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
                     </p>
-                    <p class="text-u">
-                        Personal: <span>
+                   <p class="font-semibold text-sm">
+                        Personal:       <span class="font-normal">
                             {{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}
                         </span>
                     </p>
-                    <p class="text-u">
-                        Sucursal: <span>
+                     <p class="font-semibold text-sm">
+                        Sucursal:       <span class="font-normal">
                             {{ optional($existencias->firstWhere('id', $existencia_id))->sucursal->nombre ?? 'Sin sucursal' }}
                         </span>
                     </p>
@@ -165,7 +165,7 @@
                 <div class="grid grid-cols-1 gap-2 mt-2">
 
                     <div>
-                        <label class="font-semibold text-sm mb-2 block">Producto (Requerido)</label>
+                        <label class="text-u">Producto (Requerido)</label>
 
                         @if($accion === 'edit')
                         @php
@@ -196,7 +196,7 @@
                                     type="button"
                                     wire:click="filtrarSucursalModal(null)"
                                     class="px-3 py-1 rounded-full text-sm font-medium border 
-                {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                               {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
                                     Todas
                                 </button>
 
@@ -205,7 +205,7 @@
                                     type="button"
                                     wire:click="filtrarSucursalModal({{ $sucursal->id }})"
                                     class="px-3 py-1 rounded-full text-sm font-medium border 
-                {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                    {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
                                     {{ $sucursal->nombre }}
                                 </button>
                                 @endforeach
@@ -262,7 +262,7 @@
 
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
-                            <label class="font-semibold text-sm">Cantidad (Requerido)</label>
+                            <label class="text-u">Cantidad (Requerido)</label>
                             @if($accion === 'edit')
                             <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">{{ $cantidad }}</span>
                             @else
@@ -436,7 +436,7 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                             <div class="sm:col-span-2">
-                                <label class="font-semibold text-sm">Monto (Requerido)</label>
+                                <label class="text-u">Monto (Requerido)</label>
                                 <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
                             </div>
 
