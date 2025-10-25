@@ -305,7 +305,7 @@ class Asignaciones extends Component
             ->latest()
             ->get();
 
-        $this->sucursales = Sucursal::all(); // asigna a la propiedad pública
+        $this->sucursales = Sucursal::all(); 
 
         return view('livewire.asignaciones', compact('asignaciones'));
     }

@@ -12,17 +12,17 @@
                 placeholder="Buscar por código..."
                 class="input-minimal w-full" />
 
-            <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <button wire:click="abrirModal('create')" class="btn-cyan" title="Agregar preforma">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
                 Añadir
             </button>
-
             @php $usuario = auth()->user(); @endphp
             @if($usuario && $usuario->rol_id === 1)
-            <button wire:click="abrirModalConfigGlobal" class="btn-cyan flex items-center gap-1" title="Config. Global">
+            <button wire:click="abrirModalConfigGlobal" class="btn-cyan" title="Config. Global">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M4 6l16 0" />
@@ -32,6 +32,17 @@
                 Config
             </button>
             @endif
+
+            <button wire:click="abrirModalNotificaciones" class="btn-cyan" title="Agregar preforma">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+                </svg>
+                bajo stock
+            </button>
+
+
         </div>
 
         @forelse($reposiciones as $repo)
@@ -148,16 +159,16 @@
                     <p class="text-u">
                         Código: <span>{{ $codigo }}</span>
                     </p>
-                  <p class="font-semibold text-sm">
-                        Fecha:       <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
+                    <p class="font-semibold text-sm">
+                        Fecha: <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
                     </p>
-                   <p class="font-semibold text-sm">
-                        Personal:       <span class="font-normal">
+                    <p class="font-semibold text-sm">
+                        Personal: <span class="font-normal">
                             {{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}
                         </span>
                     </p>
-                     <p class="font-semibold text-sm">
-                        Sucursal:       <span class="font-normal">
+                    <p class="font-semibold text-sm">
+                        Sucursal: <span class="font-normal">
                             {{ optional($existencias->firstWhere('id', $existencia_id))->sucursal->nombre ?? 'Sin sucursal' }}
                         </span>
                     </p>
@@ -638,6 +649,57 @@
                         <circle cx="12" cy="12" r="9" />
                     </svg>
                 </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($modalNotificaciones)
+    <div class="modal-overlay">
+        <div class="modal-box max-w-lg">
+            <div class="modal-content flex flex-col gap-4">
+                <!-- Encabezado del modal -->
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center text-3xl font-bold mb-3">
+                        !
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-800">Productos con Stock Bajo</h2>
+                    <p class="text-sm text-gray-500">Estos productos están en o por debajo de su cantidad mínima.</p>
+                </div>
+
+                <!-- Lista de alertas -->
+                <div class="max-h-80 overflow-y-auto mt-2">
+                    @foreach($alertasBajoStock as $item)
+                    <div class="flex justify-between items-center border-b border-gray-200 py-2">
+                        <div>
+                            <p class="font-semibold text-gray-800">
+                                {{ $item->existenciable->descripcion ?? 'Sin descripción' }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                {{ $item->sucursal->nombre ?? 'Sin sucursal' }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-red-600">
+                                Stock: {{ $item->cantidad_total ?? $item->cantidad }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                Mínimo: {{ $item->cantidadMinima }}
+                            </p>
+                        </div>
+                    </div>
+                    @endforeach
+                    @if($alertasBajoStock->isEmpty())
+                    <p class="text-center text-gray-500 py-4">No hay productos con stock bajo.</p>
+                    @endif
+                </div>
+
+                <!-- Botón cerrar -->
+                <div class="modal-footer mt-4 flex justify-center">
+                    <button wire:click="cerrarModalNotificaciones" class="btn-cyan px-4 py-2">
+                        Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     </div>

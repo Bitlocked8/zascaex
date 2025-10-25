@@ -12,9 +12,13 @@ use Carbon\Carbon;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 
+
 class Stocks extends Component
 {
     use WithFileUploads;
+
+    public $modalNotificaciones = false;
+    public $alertasBajoStock;
     public $estado_revision = 0;
     public $searchCodigo = '';
     public $ultimaReposicion = null;
@@ -73,8 +77,6 @@ class Stocks extends Component
                     ->orDoesntHave('reposiciones');
             })
             ->whereHas('existenciable', fn($q) => $q->where('estado', 1));
-
-        // Filtrar por sucursal
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryExistencias->where('sucursal_id', $sucursal_id);
@@ -83,8 +85,6 @@ class Stocks extends Component
         if ($this->filtroSucursalModal) {
             $queryExistencias->where('sucursal_id', $this->filtroSucursalModal);
         }
-
-        // Filtrar por búsqueda de descripción
         if ($this->searchExistencia) {
             $queryExistencias->whereHas('existenciable', function ($q) {
                 $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%');
@@ -383,9 +383,6 @@ class Stocks extends Component
             'sucursales'   => Sucursal::all(),
         ]);
     }
-
-
-
     public function eliminarReposicion($id)
     {
         $reposicion = Reposicion::with('existencia', 'asignados')->find($id);
@@ -448,6 +445,7 @@ class Stocks extends Component
 
         $this->confirmingDeleteReposicionId = null;
     }
+
     public function toggleEstado($id)
     {
         $reposicion = Reposicion::find($id);
@@ -459,5 +457,36 @@ class Stocks extends Component
             $this->mensajeError = "La reposición no existe.";
             $this->modalError = true;
         }
+    }
+    public function verificarAlertasStock()
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+        $query = Existencia::with(['existenciable', 'sucursal'])
+            ->whereHas('existenciable', fn($q) => $q->where('estado', 1));
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $query->where('sucursal_id', $sucursal_id);
+        }
+        $existencias = $query->get();
+        $this->alertasBajoStock = $existencias
+            ->filter(fn($ex) => $ex->cantidad <= $ex->cantidadMinima)
+            ->sortByDesc('cantidad') 
+            ->values();
+    }
+
+    public function abrirModalNotificaciones()
+    {
+        $this->verificarAlertasStock();
+
+        if ($this->alertasBajoStock->isNotEmpty()) {
+            $this->modalNotificaciones = true;
+        }
+    }
+
+    public function cerrarModalNotificaciones()
+    {
+        $this->modalNotificaciones = false;
     }
 }
