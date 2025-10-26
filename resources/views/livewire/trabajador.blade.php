@@ -6,25 +6,27 @@
         wire:model.live="search"
         placeholder="Buscar por sucursal o personal..."
         class="input-minimal w-full" />
-      <button wire:click="abrirModal('create')" class="btn-circle btn-cyan">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+      <button wire:click="abrirModal('create')" class="btn-cyan">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
           <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
         </svg>
+        Añadir
       </button>
-      <button wire:click="abrirModalLabores" class="btn-circle btn-cyan">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button wire:click="abrirModalLabores" class="btn-cyan">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path d="M3 9a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9z" />
-          <path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
+          <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+          <path d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
         </svg>
+        Labores
       </button>
     </div>
 
     @forelse($trabajos as $trabajo)
-    <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-      <div class="flex flex-col col-span-9 text-left space-y-1">
+    <div class="card-teal flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
         <p><strong>Fecha Inicio:</strong> {{ $trabajo->fechaInicio }}</p>
         <p><strong>Fecha Final:</strong> {{ $trabajo->fechaFinal ?? 'N/A' }}</p>
         <p><strong>Sucursal:</strong> {{ $trabajo->sucursal->nombre ?? 'N/A' }}</p>
@@ -38,40 +40,31 @@
         </p>
       </div>
 
-      <!-- Botones de acción -->
-      <div class="flex flex-col items-end gap-4 col-span-3">
-        <button wire:click="abrirModal('edit', {{ $trabajo->id }})" class="btn-circle btn-cyan">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-            <path d="M6 4v4" />
-            <path d="M6 12v8" />
-            <path d="M13.199 14.399a2 2 0 1 0 -1.199 3.601" />
-            <path d="M12 4v10" />
-            <path d="M12 18v2" />
-            <path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-            <path d="M18 4v1" />
-            <path d="M18 9v2.5" />
-            <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-            <path d="M19.001 15.5v1.5" />
-            <path d="M19.001 21v1.5" />
-            <path d="M22.032 17.25l-1.299 .75" />
-            <path d="M17.27 20l-1.3 .75" />
-            <path d="M15.97 17.25l1.3 .75" />
-            <path d="M20.733 20l1.3 .75" />
+      <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
+        <button wire:click="abrirModal('edit', {{ $trabajo->id }})" class="btn-cyan " title="Editar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+            <path d="M16 5l3 3" />
           </svg>
+          Editar
         </button>
-        <button wire:click="modaldetalle({{ $trabajo->id }})" class="btn-circle btn-cyan" title="Ver Detalle">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+        <button wire:click="modaldetalle({{ $trabajo->id }})" class="btn-cyan " title="Ver Detalle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M12 20l9 -16h-18z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
           </svg>
+          Detalle
         </button>
 
-        
+
       </div>
     </div>
 
@@ -86,8 +79,6 @@
   <div class="modal-overlay">
     <div class="modal-box">
       <div class="modal-content flex flex-col gap-4">
-
-        <!-- Fechas -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <p class="font-semibold text-sm">
@@ -100,9 +91,6 @@
             @error('fechaFinal') <span class="error-message">{{ $message }}</span> @enderror
           </div>
         </div>
-
-
-        <!-- Estado -->
         <div>
           <label class="font-semibold text-sm">Estado</label>
           <div class="flex flex-wrap gap-2 mt-2">
@@ -117,8 +105,6 @@
           </div>
           @error('estado') <span class="error-message">{{ $message }}</span> @enderror
         </div>
-
-        <!-- Sucursal -->
         <div>
           <label class="font-semibold text-sm mb-2 block">Sucursal</label>
           <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
@@ -132,8 +118,6 @@
           </div>
           @error('sucursal_id') <span class="error-message">{{ $message }}</span> @enderror
         </div>
-
-        <!-- Personal -->
         <div>
           <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
           <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
@@ -164,21 +148,23 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" wire:click="guardar" class="btn-circle btn-cyan">
+        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M10 10l4 4m0 -4l-4 4" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+          CERRAR
+        </button>
+        <button type="button" wire:click="guardar" class="btn-cyan">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path stroke="none" d="M0 0h24v24H0z" />
             <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
             <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
             <path d="M14 4l0 4l-6 0l0 -4" />
           </svg>
+          Guardar
         </button>
-        <button type="button" wire:click="cerrarModal" class="btn-circle btn-cyan">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <path d="M10 10l4 4m0 -4l-4 4" />
-            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-          </svg>
-        </button>
+
       </div>
     </div>
   </div>
@@ -295,14 +281,12 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button wire:click="$set('modalDetalle', false)" class="btn-circle btn-cyan" title="Cerrar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" />
+        <button wire:click="$set('modalDetalle', false)" lass="btn-cyan" title="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path d="M10 10l4 4m0 -4l-4 4" />
-            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+            <circle cx="12" cy="12" r="9" />
           </svg>
+          CERRAR
         </button>
       </div>
     </div>

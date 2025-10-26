@@ -12,7 +12,7 @@
                 placeholder="Buscar por nombre o empresa..."
                 class="input-minimal w-full" />
 
-            <a href="{{ route('cliente.registrar') }}" class="btn-cyan flex items-center gap-1">
+            <a href="{{ route('cliente.registrar') }}" class="btn-cyan">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
@@ -54,7 +54,7 @@
 
             <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
 
-                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
+                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-cyan " title="Editar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
@@ -65,7 +65,7 @@
                     </svg>
                     Editar
                 </button>
-                <button wire:click="verDetalle({{ $cliente->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Detalle">
+                <button wire:click="verDetalle({{ $cliente->id }})" class="btn-cyan " title="Ver Detalle">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
