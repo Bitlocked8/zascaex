@@ -14,14 +14,38 @@ class PreformaSeeder extends Seeder
     public function run(): void
     {
         $preformas = [
-            ['detalle' => 'mls', 'insumo' => 'botella', 'gramaje' => '250 - 330', 'cuello' => 'corto', 'descripcion' => 'normal', 'capacidad' => 5000, 'color' => 'transparente'],
-            ['detalle' => 'mls', 'insumo' => 'botella', 'gramaje' => '250', 'cuello' => 'largo', 'descripcion' => 'normal', 'capacidad' => 5000, 'color' => 'transparente'],
-            ['detalle' => 'mls', 'insumo' => 'botella', 'gramaje' => '500-600-750', 'cuello' => 'corto', 'descripcion' => 'normal, con gas, tornado bicentenario, everest', 'capacidad' => 5000, 'color' => 'transparente'],
-            ['detalle' => 'mls', 'insumo' => 'botella', 'gramaje' => '500-600-750', 'cuello' => 'corto', 'descripcion' => 'normal, con gas, tornado bicentenario, everest', 'capacidad' => 5000, 'color' => 'azul'],
-            ['detalle' => 'Lts', 'insumo' => 'botella', 'gramaje' => '1 - 1,5', 'cuello' => '', 'descripcion' => 'normal', 'capacidad' => 5000, 'color' => 'transparente'],
-            ['detalle' => 'Lts', 'insumo' => 'botella', 'gramaje' => '1 - 1,5', 'cuello' => '', 'descripcion' => 'normal', 'capacidad' => 5000, 'color' => 'azul'],
-            ['detalle' => 'Lts', 'insumo' => 'botellon', 'gramaje' => '20', 'cuello' => '', 'descripcion' => 'normal', 'capacidad' => 300, 'color' => 'azul'],
-            ['detalle' => 'mls', 'insumo' => 'botella', 'gramaje' => '400', 'cuello' => '', 'descripcion' => 'normal', 'capacidad' => 5000, 'color' => 'transparente'],
+            // Preformas para 250 ml (normal)
+            ['detalle' => '250 ml', 'insumo' => 'botella', 'gramaje' => '17,6', 'cuello' => 'corto', 'descripcion' => 'Preforsa 17,6', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 250 ml (alto)
+            ['detalle' => '250 ml', 'insumo' => 'botella', 'gramaje' => '16', 'cuello' => 'largo', 'descripcion' => 'Pet Preform 16 gr', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 330 ml
+            ['detalle' => '330 ml', 'insumo' => 'botella', 'gramaje' => '17,6', 'cuello' => 'corto', 'descripcion' => 'Preforsa 17,6', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 400 ml
+            ['detalle' => '400 ml', 'insumo' => 'botella', 'gramaje' => '42', 'cuello' => 'corto', 'descripcion' => 'Pet Preform 42 gr', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 500 ml
+            ['detalle' => '500 ml', 'insumo' => 'botella', 'gramaje' => '20,1', 'cuello' => 'corto', 'descripcion' => 'Preforsa 20,1', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 530 ml
+            ['detalle' => '530 ml', 'insumo' => 'botella', 'gramaje' => '20,1', 'cuello' => 'corto', 'descripcion' => 'Preforsa 20,1', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 600 ml (normal y alcalina)
+            ['detalle' => '600 ml', 'insumo' => 'botella', 'gramaje' => '20,1', 'cuello' => 'corto', 'descripcion' => 'Preforsa 20,1', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 600 ml Bic.
+            ['detalle' => '600 ml', 'insumo' => 'botella', 'gramaje' => '20,1', 'cuello' => 'corto', 'descripcion' => 'Tornado Bicentenario', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 750 ml
+            ['detalle' => '750 ml', 'insumo' => 'botella', 'gramaje' => '20,1', 'cuello' => 'corto', 'descripcion' => 'Preforsa 20,1', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 1L (normal y alcalina)
+            ['detalle' => '1L', 'insumo' => 'botella', 'gramaje' => '35,5', 'cuello' => 'corto', 'descripcion' => 'Marecbol 35,5', 'capacidad' => 5000, 'color' => 'transparente'],
+            
+            // Preformas para 1,5L
+            ['detalle' => '1,5L', 'insumo' => 'botella', 'gramaje' => '35,5', 'cuello' => 'corto', 'descripcion' => 'Marecbol 35,5', 'capacidad' => 5000, 'color' => 'transparente'],
         ];
 
         foreach ($preformas as $data) {

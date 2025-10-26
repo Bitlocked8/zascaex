@@ -19,21 +19,16 @@ class BaseSeeder extends Seeder
             ['descripcion' => 'cuello corto', 'capacidad' => 330, 'tipo' => 'Normal'],
             ['descripcion' => '', 'capacidad' => 400, 'tipo' => 'Normal'],
             ['descripcion' => 'cuello corto', 'capacidad' => 500, 'tipo' => 'Normal'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 530, 'tipo' => 'Con gas'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 500, 'tipo' => 'Normal'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 530, 'tipo' => 'Con gas'],
-            ['descripcion' => '', 'capacidad' => 600, 'tipo' => 'Normal'],
+            ['descripcion' => 'cuello corto', 'capacidad' => 530, 'tipo' => 'Normal'],
+            ['descripcion' => 'cuello corto', 'capacidad' => 600, 'tipo' => 'Normal'],
+            ['descripcion' => 'cuello corto', 'capacidad' => 600, 'tipo' => 'Bic.'],
+            ['descripcion' => 'cuello corto', 'capacidad' => 750, 'tipo' => 'Normal'],
+            ['descripcion' => '', 'capacidad' => 400, 'tipo' => 'Santa Cruz'],
+            ['descripcion' => '', 'capacidad' => 1000, 'tipo' => 'Normal'],
+            ['descripcion' => '', 'capacidad' => 1000, 'tipo' => 'Alcalina'],
+            ['descripcion' => '', 'capacidad' => 1500, 'tipo' => 'Normal'],
             ['descripcion' => '', 'capacidad' => 600, 'tipo' => 'Alcalina'],
-            ['descripcion' => '', 'capacidad' => 750, 'tipo' => 'Normal'],
-            ['descripcion' => '', 'capacidad' => 750, 'tipo' => 'Alcalina'],
-            ['descripcion' => '', 'capacidad' => 1, 'tipo' => 'Normal'],
-            ['descripcion' => '', 'capacidad' => 1, 'tipo' => 'Alcalina'],
-            ['descripcion' => '', 'capacidad' => 1.5, 'tipo' => 'Normal'],
-            ['descripcion' => '', 'capacidad' => 1.5, 'tipo' => 'Alcalina'],
-            ['descripcion' => '', 'capacidad' => 20, 'tipo' => 'Normal'],
         ];
-
-        
 
         foreach ($bases as $data) {
             foreach ([1, 2] as $sucursal_id) {

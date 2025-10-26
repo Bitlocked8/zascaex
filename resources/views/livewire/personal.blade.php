@@ -76,7 +76,7 @@
             <div class="modal-content">
                 <div class="flex flex-col gap-4">
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Nombres (Requerido)</label>
+                        <label class="text-u">Nombres (Requerido)</label>
                         <input wire:model="nombres" class="input-minimal" placeholder="Ej. Juan" />
                         @error('nombres') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
@@ -96,35 +96,49 @@
                         @error('celular') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Correo (Requerido)</label>
+                        <label class="text-u">Correo (Requerido)</label>
                         <input type="email" wire:model="email" class="input-minimal" placeholder="Ej. correo@ejemplo.com" />
                         @error('email') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
                     <div>
-                        <label class="font-semibold text-sm mb-1 block">Contraseña (Requerido)</label>
+                        <label class="text-u">Contraseña (Requerido)</label>
                         <input type="password" wire:model="password" class="input-minimal" placeholder="********" />
                         @error('password') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm mb-2 block">Rol (Requerido)</label>
-                            <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
+                            <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
 
-
-
-                                @foreach($roles as $rol)
-                                <button type="button"
+                                @forelse($roles as $rol)
+                                <button
+                                    type="button"
                                     wire:click="$set('rol_id', {{ $rol->id }})"
-                                    class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                      {{ $rol_id == $rol->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                    {{ $rol->nombre }}
+                                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
+                                       {{ $rol_id == $rol->id
+                                           ? 'border-cyan-600 text-cyan-600 bg-cyan-50'
+                                         : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }}">
+
+                                    <span class="text-u font-medium">
+                                        {{ $rol->nombre }}
+                                    </span>
+
+                                    <span class="inline-block bg-cyan-700 text-white px-3 py-1 rounded-full text-sm font-semibold uppercase">
+                                        {{ $rol->descripcion }}
+                                    </span>
+
                                 </button>
-                                @endforeach
+                                @empty
+                                <p class="text-gray-500 text-sm text-center py-2 col-span-full">
+                                    No hay roles disponibles
+                                </p>
+                                @endforelse
 
                             </div>
-
                         </div>
                     </div>
+
+
 
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
                         @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
