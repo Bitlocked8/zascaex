@@ -38,10 +38,10 @@ class ProductoSeeder extends Seeder
             ['descripcion' => 'Botellon 20 lts', 'tipoContenido' => null, 'tipoProducto' => 'botellon', 'capacidad' => 20, 'unidad' => 'Lts', 'precioReferencia' => 0, 'paquete' => null, 'tipo' => 'Plastico', 'observaciones' => 'prestamo contrato'],
         ];
 
-       foreach ($productos as $data) {
+        foreach ($productos as $data) {
             foreach ([1, 2] as $sucursal_id) {
                 $producto = Producto::create([
-                    'imagen' => null,
+                    'imagen' => 'productos/bot1.jpg',
                     'unidad' => $data['unidad'],
                     'descripcion' => $data['descripcion'],
                     'tipoContenido' => $data['tipoContenido'],
