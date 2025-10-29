@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Pedido extends Model
 {
     use HasFactory;
-
-    // Campos que se pueden asignar masivamente
     protected $fillable = [
         'codigo',
         'cliente_id',
@@ -43,4 +41,10 @@ class Pedido extends Model
         return $this->belongsToMany(Distribucion::class, 'distribucion_pedidos')
             ->withTimestamps();
     }
+     public function adornados()
+    {
+        return $this->hasMany(Adornado::class);
+    }
+
+    
 }

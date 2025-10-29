@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Existencia extends Model
 {
- 
+
     use HasFactory;
 
     protected $fillable = [
@@ -34,7 +34,7 @@ class Existencia extends Model
         return $this->belongsTo(Elaboracion::class);
     }
 
-     public function reposiciones()
+    public function reposiciones()
     {
         return $this->hasMany(Reposicion::class);
     }

@@ -54,7 +54,7 @@
                                     <div class="mb-2">
                                         <span class="font-semibold block">Estado:</span>
                                         <span class="{{ $asignacion->estado ? 'bg-green-900 text-white' : 'bg-red-900 text-white' }} 
-                                             px-3 py-1 rounded-full text-sm font-medium cursor-default inline-block">
+                                                 px-3 py-1 rounded-full text-sm font-medium cursor-default inline-block">
                                             {{ $asignacion->estado ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </div>
