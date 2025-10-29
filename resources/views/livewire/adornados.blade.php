@@ -38,9 +38,15 @@
                 </div>
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="abrirModal('edit', {{ $adornado->id }})" class="btn-cyan flex items-center gap-1"
-                        title="Editar">
-                        ✏️ Editar
+                    <button wire:click="abrirModal('edit', {{ $adornado->id }})" class="btn-cyan" title="Editar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                            <path d="M16 5l3 3" />
+                        </svg>
+                        Editar
                     </button>
 
                     <button wire:click="modaldetalle({{ $adornado->id }})" class="btn-cyan flex items-center gap-1"
@@ -81,11 +87,11 @@
 
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <p class="font-semibold text-sm">
-                            Código: <span class="text-u">{{ $codigo }}</span>
+                            <span class="text-u">{{ $codigo }}</span>
                         </p>
 
                         <div>
-                            <label class="font-semibold text-sm">Pedido (Requerido)</label>
+                            <label class="text-u">Pedido (Requerido)</label>
                             <select wire:model="pedido_id" class="input-minimal w-full">
                                 <option value="">Selecciona un pedido...</option>
                                 @foreach($pedidos as $pedido)
@@ -149,11 +155,25 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer mt-4 flex justify-end gap-2">
-                        <button type="button" wire:click="cerrarModal"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition">Cerrar</button>
-                        <button type="button" wire:click="guardar"
-                            class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-md transition">Guardar</button>
+                    <div class="modal-footer">
+                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M10 10l4 4m0 -4l-4 4" />
+                                <circle cx="12" cy="12" r="9" />
+                            </svg>
+                            CERRAR
+                        </button>
+                        <button type="button" wire:click="guardar" class="btn-cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Guardar
+                        </button>
                     </div>
 
                 </div>

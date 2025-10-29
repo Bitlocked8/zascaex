@@ -14,7 +14,6 @@ class Adornados extends Component
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
-
     public $adornado_id = null;
     public $pedido_id;
     public $codigo;
@@ -40,7 +39,7 @@ class Adornados extends Component
         if ($this->accion === 'edit' && $this->adornado_id) {
             $pedidosQuery->where(function ($q) {
                 $q->whereDoesntHave('adornados')
-                  ->orWhere('id', $this->pedido_id);
+                    ->orWhere('id', $this->pedido_id);
             });
         } else {
             $pedidosQuery->whereDoesntHave('adornados');
@@ -55,7 +54,7 @@ class Adornados extends Component
             $reposicionIdsAsignadas = array_keys($this->reposicionesSeleccionadas);
             $reposicionesQuery->where(function ($q) use ($reposicionIdsAsignadas) {
                 $q->where('cantidad', '>', 0)
-                  ->orWhereIn('id', $reposicionIdsAsignadas);
+                    ->orWhereIn('id', $reposicionIdsAsignadas);
             });
         } else {
             $reposicionesQuery->where('cantidad', '>', 0);
@@ -68,10 +67,12 @@ class Adornados extends Component
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['adornado_id','pedido_id','codigo','observaciones','reposicionesSeleccionadas','accion']);
+        $this->reset(['adornado_id', 'pedido_id', 'codigo', 'observaciones', 'reposicionesSeleccionadas', 'accion']);
         $this->accion = $accion;
-        if ($accion === 'create') $this->codigo = $this->generarCodigo('AD');
-        if ($accion === 'edit' && $id) $this->editar($id);
+        if ($accion === 'create')
+            $this->codigo = $this->generarCodigo('AD');
+        if ($accion === 'edit' && $id)
+            $this->editar($id);
         $this->modal = true;
     }
 
@@ -97,28 +98,31 @@ class Adornados extends Component
         $this->observaciones = $adornado->observaciones;
 
         $this->reposicionesSeleccionadas = $adornado->reposiciones
-            ->mapWithKeys(fn($r) => [
-                $r->id => [
-                    'cantidad_usada' => $r->pivot->cantidad_usada ?? 0,
-                    'merma' => $r->pivot->merma ?? 0,
-                    'cantidad_disponible' => $r->cantidad + ($r->pivot->cantidad_usada ?? 0) + ($r->pivot->merma ?? 0)
-                ]
-            ])->toArray();
+            ->mapWithKeys(function ($reposicion) {
+                return [
+                    $reposicion->id => [
+                        'cantidad_usada' => $reposicion->pivot->cantidad_usada ?? 0,
+                        'merma' => $reposicion->pivot->merma ?? 0,
+                        'cantidad_disponible' => $reposicion->cantidad + ($reposicion->pivot->cantidad_usada ?? 0)
+                    ]
+                ];
+            })->toArray();
     }
+
 
     public function toggleReposicion($reposicionId)
     {
         if (isset($this->reposicionesSeleccionadas[$reposicionId])) {
             unset($this->reposicionesSeleccionadas[$reposicionId]);
         } else {
-            $this->reposicionesSeleccionadas[$reposicionId] = ['cantidad_usada'=>0,'merma'=>0];
+            $this->reposicionesSeleccionadas[$reposicionId] = ['cantidad_usada' => 0, 'merma' => 0];
         }
     }
 
     public function actualizarCantidad($reposicionId, $campo, $valor)
     {
         if (isset($this->reposicionesSeleccionadas[$reposicionId])) {
-            $this->reposicionesSeleccionadas[$reposicionId][$campo] = max(0, (float)$valor);
+            $this->reposicionesSeleccionadas[$reposicionId][$campo] = max(0, (float) $valor);
         }
     }
 
@@ -130,16 +134,16 @@ class Adornados extends Component
         ]);
 
         if ($this->accion === 'create' && Adornado::where('pedido_id', $this->pedido_id)->exists()) {
-            $this->addError('pedido_id','Este pedido ya tiene un adornado asociado.');
+            $this->addError('pedido_id', 'Este pedido ya tiene un adornado asociado.');
             return;
         }
 
         DB::transaction(function () {
             if ($this->accion === 'create') {
                 $adornado = Adornado::create([
-                    'codigo'=>$this->codigo,
-                    'pedido_id'=>$this->pedido_id,
-                    'observaciones'=>$this->observaciones
+                    'codigo' => $this->codigo,
+                    'pedido_id' => $this->pedido_id,
+                    'observaciones' => $this->observaciones
                 ]);
             } else {
                 $adornado = Adornado::with('reposiciones')->findOrFail($this->adornado_id);
@@ -148,9 +152,9 @@ class Adornados extends Component
                     $r->save();
                 }
                 $adornado->update([
-                    'pedido_id'=>$this->pedido_id,
-                    'codigo'=>$this->codigo,
-                    'observaciones'=>$this->observaciones
+                    'pedido_id' => $this->pedido_id,
+                    'codigo' => $this->codigo,
+                    'observaciones' => $this->observaciones
                 ]);
             }
 
@@ -158,42 +162,59 @@ class Adornados extends Component
             foreach ($this->reposicionesSeleccionadas as $id => $data) {
                 $cantidad = $data['cantidad_usada'] ?? 0;
                 $merma = $data['merma'] ?? 0;
+
                 $reposicion = Reposicion::find($id);
-                if (!$reposicion) continue;
-                $reposicion->cantidad -= ($cantidad);
-                if ($reposicion->cantidad < 0) $reposicion->cantidad = 0;
+                if (!$reposicion)
+                    continue;
+
+                if (($cantidad + $merma) > $reposicion->cantidad) {
+                    $nombre = optional(optional($reposicion->existencia)->existenciable)->nombre ?? "ID {$reposicion->id}";
+                    session()->flash('error', "La reposición '{$nombre}' no tiene suficiente cantidad disponible.");
+                    $this->dispatch('alertaError');
+                    return;
+                }
+
+                $reposicion->cantidad -= ($cantidad + $merma);
                 $reposicion->save();
+
                 if ($cantidad > 0 || $merma > 0) {
-                    $syncData[$id] = ['cantidad_usada'=>$cantidad,'merma'=>$merma];
+                    $syncData[$id] = ['cantidad_usada' => $cantidad, 'merma' => $merma];
                 }
             }
 
             $adornado->reposiciones()->sync($syncData);
         });
 
-        session()->flash('mensaje','Adornado guardado correctamente.');
+
+        session()->flash('mensaje', 'Adornado guardado correctamente.');
         $this->cerrarModal();
     }
 
     public function eliminar($id)
     {
         $adornado = Adornado::with('reposiciones')->findOrFail($id);
+
         DB::transaction(function () use ($adornado) {
-            foreach ($adornado->reposiciones as $r) {
-                $r->cantidad += ($r->pivot->cantidad_usada ?? 0) + ($r->pivot->merma ?? 0);
-                $r->save();
+            foreach ($adornado->reposiciones as $reposicion) {
+                $cantidadRestaurar = ($reposicion->pivot->cantidad_usada ?? 0) + ($reposicion->pivot->merma ?? 0);
+                if ($cantidadRestaurar > 0) {
+                    $reposicion->cantidad += $cantidadRestaurar;
+                    $reposicion->save();
+                }
             }
+
             $adornado->reposiciones()->detach();
             $adornado->delete();
         });
-        session()->flash('mensaje','Adornado eliminado correctamente.');
+
+        session()->flash('mensaje', 'Adornado eliminado correctamente.');
     }
 
     public function cerrarModal()
     {
         $this->modal = false;
         $this->modalDetalle = false;
-        $this->reset(['adornado_id','pedido_id','codigo','observaciones','reposicionesSeleccionadas','accion']);
+        $this->reset(['adornado_id', 'pedido_id', 'codigo', 'observaciones', 'reposicionesSeleccionadas', 'accion']);
         $this->resetErrorBag();
         $this->resetValidation();
     }
