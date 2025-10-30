@@ -74,7 +74,7 @@ class Reposicion extends Model
 
     public function adornados()
     {
-        return $this->belongsToMany(Adornado::class, 'adornado_reposicion')
+        return $this->belongsToMany(Adornado::class, 'adornado_reposicions')
             ->withPivot('cantidad_usada')
             ->withTimestamps();
     }

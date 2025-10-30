@@ -37,4 +37,5 @@ class Asignado extends Model
             ->withPivot('cantidad')
             ->withTimestamps();
     }
+    
 }
