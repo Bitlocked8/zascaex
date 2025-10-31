@@ -152,7 +152,9 @@ class Distribucion extends Component
             'personal_id' => 'required',
             'pedidos_seleccionados' => 'nullable|array',
         ]);
-
+        if (!$this->distribucionModel instanceof DistribucionModel) {
+            $this->distribucionModel = new DistribucionModel();
+        }
         $dist = $this->distribucionModel;
         if (!$dist->exists || !$dist->codigo) {
             $dist->codigo = 'DIS-' . mt_rand(1000000000, 9999999999);
@@ -161,19 +163,18 @@ class Distribucion extends Component
             $dist->fecha_asignacion = now();
         }
         $dist->fecha_entrega = $this->fecha_entrega
-            ? \Carbon\Carbon::parse($this->fecha_entrega)
+            ? Carbon::parse($this->fecha_entrega)
             : null;
-
         $dist->coche_id = $this->coche_id;
         $dist->personal_id = $this->personal_id;
         $dist->observaciones = $this->observaciones;
         $dist->estado = $this->estado;
         $dist->save();
         $dist->pedidos()->sync($this->pedidos_seleccionados ?? []);
-
         session()->flash('message', 'Distribución guardada correctamente.');
         $this->cerrarModal();
     }
+
 
     public function editarDistribucion($id)
     {
