@@ -1,7 +1,5 @@
 <div class="p-4 mt-16 bg-white rounded-xl shadow-md">
     <h3 class="text-xl font-bold text-cyan-700 mb-4">Reporte de Pedidos</h3>
-
-    {{-- FILTROS --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div>
             <label class="font-semibold text-sm">Código</label>
@@ -61,9 +59,14 @@
                     class="w-full border rounded-md px-3 py-2 focus:ring focus:ring-blue-300">
             </div>
         </div>
-    </div>
+        <div class="flex justify-end mb-4">
+    <button wire:click="generarPDF"
+        class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg shadow">
+        📄 Generar PDF
+    </button>
+</div>
 
-    {{-- TABLA --}}
+    </div>
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
         <thead class="bg-cyan-700 text-white">
             <tr>
@@ -85,6 +88,12 @@
                 $totalGeneralMonto = 0;
                 $totalGeneralPagado = 0;
                 $totalGeneralPendiente = 0;
+                $totalesPorPago = [
+                    '1' => ['nombre' => 'QR', 'monto' => 0, 'pedidos' => 0],
+                    '2' => ['nombre' => 'Efectivo', 'monto' => 0, 'pedidos' => 0],
+                    '3' => ['nombre' => 'Crédito', 'monto' => 0, 'pedidos' => 0],
+                    '0' => ['nombre' => 'Sin pago', 'monto' => 0, 'pedidos' => 0],
+                ];
             @endphp
 
             @forelse($pedidos as $pedido)
@@ -96,9 +105,11 @@
 
                     $totalGeneralPagado += $montoPagado;
                     $totalGeneralPendiente += $montoPendiente;
-                @endphp
 
-                {{-- DETALLES DE PRODUCTOS --}}
+                    $tipoPago = $pago->estado ?? 0;
+                    $totalesPorPago[$tipoPago]['monto'] += $montoPagado;
+                    $totalesPorPago[$tipoPago]['pedidos']++;
+                @endphp
                 @foreach($pedido->detalles as $detalle)
                     @php
                         $producto = $detalle->existencia->existenciable ?? null;
@@ -116,8 +127,6 @@
                         <td class="px-3 py-2 text-right text-cyan-700 font-semibold">{{ number_format($detalle->cantidad, 2, ',', '.') }}</td>
                         <td class="px-3 py-2 text-right">{{ number_format($precio, 2, ',', '.') }}</td>
                         <td class="px-3 py-2 text-right font-bold text-emerald-700">{{ number_format($subtotal, 2, ',', '.') }}</td>
-
-                        {{-- Estado Pedido --}}
                         <td class="px-3 py-2">
                             @if($pedido->estado_pedido == 0)
                                 <span class="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs">Pendiente</span>
@@ -127,8 +136,6 @@
                                 <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs">Cancelado</span>
                             @endif
                         </td>
-
-                        {{-- Tipo de pago --}}
                         <td class="px-3 py-2">
                             @if(!$pago)
                                 <span class="bg-gray-400 text-white px-2 py-1 rounded-full text-xs">Sin pago</span>
@@ -142,23 +149,6 @@
                         </td>
                     </tr>
                 @endforeach
-
-                {{-- RESUMEN POR PEDIDO --}}
-                <tr class="bg-gray-50 font-semibold text-sm text-right">
-                    <td colspan="7"></td>
-                    <td colspan="2" class="px-3 py-2 text-cyan-700">Total Pedido:</td>
-                    <td class="px-3 py-2 text-emerald-700">{{ number_format($montoPedido, 2, ',', '.') }} Bs</td>
-                </tr>
-                <tr class="bg-gray-50 font-semibold text-sm text-right">
-                    <td colspan="7"></td>
-                    <td colspan="2" class="px-3 py-2 text-cyan-700">Monto Pagado:</td>
-                    <td class="px-3 py-2 text-blue-700">{{ number_format($montoPagado, 2, ',', '.') }} Bs</td>
-                </tr>
-                <tr class="bg-gray-50 font-semibold text-sm text-right border-b-4 border-cyan-700">
-                    <td colspan="7"></td>
-                    <td colspan="2" class="px-3 py-2 text-cyan-700">Saldo Pendiente:</td>
-                    <td class="px-3 py-2 text-red-600">{{ number_format($montoPendiente, 2, ',', '.') }} Bs</td>
-                </tr>
             @empty
                 <tr>
                     <td colspan="10" class="text-center py-3 text-gray-500">
@@ -168,12 +158,22 @@
             @endforelse
         </tbody>
     </table>
-
-    {{-- TOTALES GENERALES --}}
-    <div class="mt-4 text-right font-bold text-cyan-700 space-y-1">
+    <div class="mt-6 text-right font-bold text-cyan-700 space-y-1">
         <p>Total general: {{ number_format($totalGeneralCantidad, 2, ',', '.') }} unidades</p>
         <p>Total general en Bs.: {{ number_format($totalGeneralMonto, 2, ',', '.') }}</p>
         <p>Total pagado: <span class="text-blue-700">{{ number_format($totalGeneralPagado, 2, ',', '.') }} Bs</span></p>
         <p>Saldo pendiente: <span class="text-red-600">{{ number_format($totalGeneralPendiente, 2, ',', '.') }} Bs</span></p>
+    </div>
+    <div class="mt-6 border-t pt-4">
+        <h4 class="text-lg font-bold text-cyan-700 mb-2">Totales por tipo de pago</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            @foreach($totalesPorPago as $tipo)
+                <div class="p-3 bg-gray-100 rounded-lg shadow-sm text-center">
+                    <p class="text-sm font-semibold text-gray-600">{{ $tipo['nombre'] }}</p>
+                    <p class="text-lg font-bold text-cyan-700">{{ number_format($tipo['monto'], 2, ',', '.') }} Bs</p>
+                    <p class="text-xs text-gray-500">({{ $tipo['pedidos'] }} pedidos)</p>
+                </div>
+            @endforeach
+        </div>
     </div>
 </div>
