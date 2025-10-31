@@ -130,7 +130,8 @@ class Pedidos extends Component
                 ->get();
 
             foreach ($lotes as $lote) {
-                if ($cantidadRestante <= 0) break;
+                if ($cantidadRestante <= 0)
+                    break;
 
                 $consumir = min($cantidadRestante, $lote->cantidad);
 
@@ -144,7 +145,8 @@ class Pedidos extends Component
 
                 $cantidadRestante -= $consumir;
             }
-            if ($cantidadRestante <= 0) break;
+            if ($cantidadRestante <= 0)
+                break;
         }
 
         $this->detalles = array_merge($this->detalles, $detalleTemporal);
@@ -238,10 +240,12 @@ class Pedidos extends Component
         $productos = Producto::whereHas('existencias.reposiciones', function ($query) {
             $query->where('estado_revision', 1)
                 ->where('cantidad', '>', 0);
-        })->with(['existencias.reposiciones' => function ($query) {
-            $query->where('estado_revision', 1)
-                ->where('cantidad', '>', 0);
-        }])->get();
+        })->with([
+                    'existencias.reposiciones' => function ($query) {
+                        $query->where('estado_revision', 1)
+                            ->where('cantidad', '>', 0);
+                    }
+                ])->get();
 
         return view('livewire.pedidos', [
             'pedidos' => Pedido::with(['cliente', 'personal', 'detalles'])->latest()->get(),
@@ -264,6 +268,7 @@ class Pedidos extends Component
                 'imagen_comprobante' => $p->imagen_comprobante,
                 'metodo' => $p->metodo,
                 'referencia' => $p->referencia,
+                'estado' => $p->estado,
             ])->toArray();
 
         $this->modalPagos = true;
@@ -280,6 +285,7 @@ class Pedidos extends Component
             'imagen_comprobante' => null,
             'metodo' => null,
             'referencia' => null,
+            'estado' => 0,
         ];
     }
 
@@ -312,7 +318,8 @@ class Pedidos extends Component
                     'imagen_comprobante' => $imagenPath,
                     'metodo' => $pago['metodo'] ?? null,
                     'referencia' => $pago['referencia'] ?? null,
-                    'estado' => 0,
+                    'estado' => $pago['estado'] ?? 0,
+
                 ]
             );
         }

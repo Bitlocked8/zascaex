@@ -3,8 +3,6 @@
         class="bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 bg-opacity-95 backdrop-blur-md rounded-full px-6 py-2 shadow-xl w-[95%] max-w-[1700px] mx-auto fixed top-3 left-0 right-0 z-20 transition-all duration-300">
 
         <div class="flex justify-between items-center">
-
-            <!-- Botón menú -->
             <button id="menu-toggle"
                 class="text-white transition-transform duration-300 hover:scale-110 focus:outline-none rounded-full p-2 md:p-3 shadow-md hover:shadow-lg"
                 title="Menú">
@@ -123,10 +121,10 @@
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">Personal empresa</span>
                                 </button>
-                                <button type="button" wire:click="$set('seleccion', 'trabajador')"
-                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'trabajador' ? 'border-cyan-600 shadow-lg text-cyan-700' : 'border-gray-200 text-gray-700 hover:border-cyan-600 hover:text-cyan-600 hover:shadow-md' }}">
+                                <button type="button" wire:click="$set('seleccion', 'Trabajador')"
+                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Trabajador' ? 'border-cyan-600 shadow-lg text-cyan-700' : 'border-gray-200 text-gray-700 hover:border-cyan-600 hover:text-cyan-600 hover:shadow-md' }}">
                                     <div
-                                        class="p-3 rounded-full{{ $seleccion == 'trabajador' ? 'bg-cyan-100 text-cyan-700' : 'bg-gray-100 text-gray-700' }}">
+                                        class="p-3 rounded-full{{ $seleccion == 'Trabajador' ? 'bg-cyan-100 text-cyan-700' : 'bg-gray-100 text-gray-700' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                             stroke-linejoin="round">
@@ -547,9 +545,6 @@
             @endif
             @if ($seleccion == 'Reporteventa')
                 @livewire('reporteventa')
-            @endif
-            @if ($seleccion == 'Reportecompra')
-                @livewire('reportecompra')
             @endif
             @if ($seleccion == 'Reportestock')
                 @livewire('reportestock')
