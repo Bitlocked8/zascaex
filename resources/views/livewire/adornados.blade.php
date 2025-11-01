@@ -92,13 +92,74 @@
 
                         <div>
                             <label class="text-u">Pedido (Requerido)</label>
-                            <select wire:model="pedido_id" class="input-minimal w-full">
-                                <option value="">Selecciona un pedido...</option>
-                                @foreach($pedidos as $pedido)
-                                    <option value="{{ $pedido->id }}">{{ $pedido->codigo }}</option>
-                                @endforeach
-                            </select>
+
+                            @if($accion === 'edit')
+                                @php
+                                    $pedidoActual = $pedidos->firstWhere('id', $pedido_id);
+                                @endphp
+
+                                <p
+                                    class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800 text-center">
+                                    <span class="font-medium">
+                                        {{ $pedidoActual->codigo ?? ('Pedido #' . $pedido_id) }}
+                                    </span>
+
+                                    <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        Cliente: {{ $pedidoActual->cliente->nombre ?? 'Sin cliente' }}
+                                    </span>
+
+                                    <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                        Estado:
+                                        {{ $pedidoActual->estado_pedido == 0 ? 'Pendiente' : ($pedidoActual->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
+                                    </span>
+                                </p>
+                            @else
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar pedido</label>
+                                    <input type="text" wire:model.live="searchPedido" class="input-minimal w-full"
+                                        placeholder="Escribe el código o cliente..." />
+                                </div>
+
+                                <div
+                                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 sm:grid-cols-2 gap-2 overflow-y-auto max-h-[300px]">
+                                    @forelse($pedidos as $pedido)
+                                        @php
+                                            $estadoColor = match ($pedido->estado_pedido) {
+                                                0 => 'bg-yellow-500 text-white',
+                                                1 => 'bg-emerald-600 text-white',
+                                                2 => 'bg-red-600 text-white',
+                                                default => 'bg-gray-400 text-white',
+                                            };
+                                        @endphp
+
+                                        <button type="button" wire:click="$set('pedido_id', {{ $pedido->id }})"
+                                            class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center 
+                                                                {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                            <span class="text-u font-medium">
+                                                {{ $pedido->codigo }}
+                                            </span>
+
+                                            <span class="text-sm font-semibold">
+                                                Cliente: {{ $pedido->cliente->nombre ?? 'N/A' }}
+                                            </span>
+
+                                            <span class="text-sm font-semibold">
+                                                Personal: {{ $pedido->personal->nombres ?? 'N/A' }}
+                                            </span>
+
+                                            <span class="mt-2 px-2 py-1 rounded-full text-xs font-semibold {{ $estadoColor }}">
+                                                {{ $pedido->estado_pedido == 0 ? 'Pendiente' : ($pedido->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
+                                            </span>
+                                        </button>
+                                    @empty
+                                        <p class="text-gray-500 text-sm text-center py-2 col-span-full">
+                                            No hay pedidos disponibles
+                                        </p>
+                                    @endforelse
+                                </div>
+                            @endif
                         </div>
+
 
                         <div>
                             <label class="font-semibold text-sm">Observaciones (Opcional)</label>
@@ -108,51 +169,62 @@
 
                         <div class="mt-2">
                             <label class="font-semibold text-sm">Reposiciones de Etiquetas disponibles</label>
+
                             <div
-                                class="grid grid-cols-1 gap-2 mt-1 max-h-[250px] overflow-y-auto p-2 border border-gray-300 rounded-lg bg-white">
+                                class="grid grid-cols-1 gap-2 mt-1 max-h-[250px] overflow-y-auto p-2 border border-gray-300 rounded-xl bg-gray-50 shadow-inner">
 
                                 @forelse($reposiciones as $repo)
                                     @php
                                         $seleccionado = isset($reposicionesSeleccionadas[$repo->id]);
                                     @endphp
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-2">
+
+                                    <div
+                                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white border border-cyan-300 rounded-xl p-3 shadow-sm hover:shadow-md transition">
+
                                         <div class="flex-1">
-                                            <p class="text-sm font-medium text-gray-700">
+                                            <p class="text-sm font-semibold text-cyan-800">
                                                 {{ $repo->existencia->existenciable->descripcion ?? 'Reposición #' . $repo->id }}
                                             </p>
                                             <p class="text-xs text-gray-500">
-                                                Cant. disponible: {{ $repo->cantidad }}
+                                                Cant. disponible: <span class="font-semibold">{{ $repo->cantidad }}</span>
                                             </p>
                                         </div>
 
-                                        <div class="flex items-center gap-2 mt-2 sm:mt-0">
+                                        <div class="flex flex-wrap items-center gap-2">
                                             @if($seleccionado)
-                                                <input type="number" min="0"
-                                                    wire:model.lazy="reposicionesSeleccionadas.{{ $repo->id }}.cantidad_usada"
-                                                    class="w-20 border rounded px-2 py-1 text-sm" placeholder="Usada" />
+                                                <div class="flex items-center gap-2">
+                                                    <input type="number" min="0"
+                                                        wire:model.lazy="reposicionesSeleccionadas.{{ $repo->id }}.cantidad_usada"
+                                                        class="w-20 border border-cyan-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-cyan-500"
+                                                        placeholder="Usada" />
 
-                                                <input type="number" min="0"
-                                                    wire:model.lazy="reposicionesSeleccionadas.{{ $repo->id }}.merma"
-                                                    class="w-20 border rounded px-2 py-1 text-sm" placeholder="Merma" />
+                                                    <input type="number" min="0"
+                                                        wire:model.lazy="reposicionesSeleccionadas.{{ $repo->id }}.merma"
+                                                        class="w-20 border border-red-300 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-red-400"
+                                                        placeholder="Merma" />
 
-                                                <button type="button" wire:click="toggleReposicion({{ $repo->id }})"
-                                                    class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600 transition">
-                                                    Quitar
-                                                </button>
+                                                    <button type="button" wire:click="toggleReposicion({{ $repo->id }})"
+                                                        class="bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600 shadow-sm transition">
+                                                        Quitar
+                                                    </button>
+                                                </div>
                                             @else
                                                 <button type="button" wire:click="toggleReposicion({{ $repo->id }})"
-                                                    class="bg-cyan-600 text-white px-2 py-1 rounded text-xs hover:bg-cyan-700 transition">
+                                                    class="bg-cyan-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-cyan-700 shadow-sm transition">
                                                     Seleccionar
                                                 </button>
                                             @endif
                                         </div>
                                     </div>
                                 @empty
-                                    <p class="text-gray-500 text-sm">No hay reposiciones revisadas de etiquetas disponibles.</p>
+                                    <p class="text-gray-500 text-sm text-center py-2">
+                                        No hay reposiciones revisadas de etiquetas disponibles.
+                                    </p>
                                 @endforelse
 
                             </div>
                         </div>
+
                     </div>
 
                     <div class="modal-footer">
