@@ -13,17 +13,18 @@ class Reporteventa extends Component
 {
     public $fechaInicio;
     public $fechaFin;
-    public $cliente_id = '';
-    public $personal_id = '';
+    public $cliente_id = null;
+    public $personal_id = null;
     public $codigo = '';
-    public $estado_pedido = '';
-    public $estado_pago = '';
+    public $estado_pedido = null;
+    public $estado_pago = null;
 
     public $totalCantidad = 0;
     public $totalMonto = 0;
 
     public function mount()
     {
+        // Inicializamos con rango del mes actual
         $this->fechaInicio = Carbon::now()->startOfMonth()->format('Y-m-d\TH:i');
         $this->fechaFin = Carbon::now()->endOfMonth()->format('Y-m-d\TH:i');
     }
@@ -37,51 +38,42 @@ class Reporteventa extends Component
             'pagoPedidos'
         ])->orderBy('fecha_pedido', 'desc');
 
-        // 🔹 Filtros dinámicos
-        if (!empty($this->codigo)) {
+        if ($this->codigo !== '') {
             $query->where('codigo', 'like', "%{$this->codigo}%");
         }
 
-        if (!empty($this->cliente_id)) {
+        if (!is_null($this->cliente_id)) {
             $query->where('cliente_id', $this->cliente_id);
         }
 
-        if (!empty($this->personal_id)) {
+        if (!is_null($this->personal_id)) {
             $query->where('personal_id', $this->personal_id);
         }
 
-        if ($this->estado_pedido !== '') {
-            $query->where('estado_pedido', (int) $this->estado_pedido);
+        if (!is_null($this->estado_pedido)) {
+            $query->where('estado_pedido', (int)$this->estado_pedido);
         }
 
-        if ($this->estado_pago !== '') {
+        if (!is_null($this->estado_pago)) {
             $query->whereHas('pagoPedidos', function ($q) {
-                $q->where('estado', (int) $this->estado_pago);
+                $q->where('estado', (int)$this->estado_pago);
             });
         }
 
-        // 🔹 Filtro por rango de fecha y hora
         if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
-            $inicio = Carbon::parse($this->fechaInicio);
-            $fin = Carbon::parse($this->fechaFin);
-
-            $query->whereBetween('fecha_pedido', [$inicio, $fin]);
+            try {
+                $inicio = Carbon::createFromFormat('Y-m-d\TH:i', $this->fechaInicio);
+                $fin = Carbon::createFromFormat('Y-m-d\TH:i', $this->fechaFin);
+                $query->whereBetween('fecha_pedido', [$inicio, $fin]);
+            } catch (\Exception $e) {
+                // No hacemos filtro si hay error en el formato
+            }
         }
 
-        // 🔹 Obtener pedidos
         $pedidos = $query->get();
 
-        // 🔹 Calcular totales
-        $this->totalCantidad = $pedidos->sum(function ($pedido) {
-            return $pedido->detalles->sum('cantidad');
-        });
-
-        $this->totalMonto = $pedidos->sum(function ($pedido) {
-            return $pedido->detalles->sum(function ($detalle) {
-                $precio = $detalle->existencia->existenciable->precioReferencia ?? 0;
-                return $detalle->cantidad * $precio;
-            });
-        });
+        $this->totalCantidad = $pedidos->sum(fn($pedido) => $pedido->detalles->sum('cantidad'));
+        $this->totalMonto = $pedidos->sum(fn($pedido) => $pedido->detalles->sum(fn($detalle) => ($detalle->existencia->existenciable->precioReferencia ?? 0) * $detalle->cantidad));
 
         return view('livewire.reporteventa', [
             'pedidos' => $pedidos,
@@ -91,6 +83,7 @@ class Reporteventa extends Component
             'totalMonto' => $this->totalMonto,
         ]);
     }
+
     public function generarPDF()
     {
         $query = Pedido::with([
@@ -100,32 +93,24 @@ class Reporteventa extends Component
             'pagoPedidos'
         ])->orderBy('fecha_pedido', 'desc');
 
-        if (!empty($this->codigo)) {
-            $query->where('codigo', 'like', "%{$this->codigo}%");
-        }
-        if (!empty($this->cliente_id)) {
-            $query->where('cliente_id', $this->cliente_id);
-        }
-        if (!empty($this->personal_id)) {
-            $query->where('personal_id', $this->personal_id);
-        }
-        if ($this->estado_pedido !== '') {
-            $query->where('estado_pedido', (int) $this->estado_pedido);
-        }
-        if ($this->estado_pago !== '') {
-            $query->whereHas('pagoPedidos', function ($q) {
-                $q->where('estado', (int) $this->estado_pago);
-            });
-        }
+        if ($this->codigo !== '') $query->where('codigo', 'like', "%{$this->codigo}%");
+        if (!is_null($this->cliente_id)) $query->where('cliente_id', $this->cliente_id);
+        if (!is_null($this->personal_id)) $query->where('personal_id', $this->personal_id);
+        if (!is_null($this->estado_pedido)) $query->where('estado_pedido', (int)$this->estado_pedido);
+        if (!is_null($this->estado_pago)) $query->whereHas('pagoPedidos', fn($q) => $q->where('estado', (int)$this->estado_pago));
+
         if (!empty($this->fechaInicio) && !empty($this->fechaFin)) {
-            $inicio = Carbon::parse($this->fechaInicio);
-            $fin = Carbon::parse($this->fechaFin);
-            $query->whereBetween('fecha_pedido', [$inicio, $fin]);
+            try {
+                $inicio = Carbon::createFromFormat('Y-m-d\TH:i', $this->fechaInicio);
+                $fin = Carbon::createFromFormat('Y-m-d\TH:i', $this->fechaFin);
+                $query->whereBetween('fecha_pedido', [$inicio, $fin]);
+            } catch (\Exception $e) {
+                // No filtramos
+            }
         }
 
         $pedidos = $query->get();
 
-        // 🔹 Calcular totales
         $totalGeneralCantidad = 0;
         $totalGeneralMonto = 0;
         $totalGeneralPagado = 0;
@@ -138,7 +123,7 @@ class Reporteventa extends Component
         ];
 
         foreach ($pedidos as $pedido) {
-            $montoPedido = $pedido->detalles->sum(fn($d) => $d->cantidad * ($d->existencia->existenciable->precioReferencia ?? 0));
+            $montoPedido = $pedido->detalles->sum(fn($d) => ($d->existencia->existenciable->precioReferencia ?? 0) * $d->cantidad);
             $pago = $pedido->pagoPedidos->first();
             $montoPagado = $pago->monto ?? 0;
             $montoPendiente = max($montoPedido - $montoPagado, 0);
@@ -169,14 +154,6 @@ class Reporteventa extends Component
             'totalesPorPago' => $totalesPorPago,
         ])->setPaper('a4', 'landscape');
 
-        return response()->streamDownload(
-            function () use ($pdf) {
-                echo $pdf->output();
-            },
-            'reporte_pedidos_' . now()->format('Ymd_His') . '.pdf'
-        );
+        return response()->streamDownload(fn() => print($pdf->output()), 'reporte_pedidos_' . now()->format('Ymd_His') . '.pdf');
     }
-
-
-
 }

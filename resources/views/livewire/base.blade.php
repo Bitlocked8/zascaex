@@ -311,21 +311,6 @@
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">Llenados y envasado</span>
                                 </button>
-                                <button type="button" wire:click="$set('seleccion', 'Adornados')"
-                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Adornados' ? 'border-indigo-600 shadow-lg text-indigo-700' : 'border-gray-200 text-gray-700 hover:border-indigo-600 hover:text-indigo-600 hover:shadow-md' }}">
-                                    <div
-                                        class="p-3 rounded-full{{ $seleccion == 'Adornados' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path
-                                                d="M13.163 2.168l8.021 5.828c.694 .504 .984 1.397 .719 2.212l-3.064 9.43a1.978 1.978 0 0 1 -1.881 1.367h-9.916a1.978 1.978 0 0 1 -1.881 -1.367l-3.064 -9.43a1.978 1.978 0 0 1 .719 -2.212l8.021 -5.828a1.978 1.978 0 0 1 2.326 0z" />
-                                            <path d="M10 15a1 1 0 0 0 1 1h2a1 1 0 0 0 1 -1v-2a1 1 0 0 0 -1 -1h-3v-4h4" />
-                                        </svg>
-                                    </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Etiqeutado y plastificado</span>
-                                </button>
                             </div>
                         </div>
                         <div
@@ -389,6 +374,22 @@
                                         </svg>
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">Pedidos de clientes</span>
+                                </button>
+                                <button type="button" wire:click="$set('seleccion', 'Adornados')"
+                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Adornados' ? 'border-red-600 shadow-lg text-red-700' : 'border-gray-200 text-gray-700 hover:border-red-600 hover:text-red-600 hover:shadow-md' }}">
+                                    <div
+                                        class="p-3 rounded-full{{ $seleccion == 'Adornados' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path
+                                                d="M19.875 6.27a2.225 2.225 0 0 1 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
+                                            <path
+                                                d="M10 9a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2h2a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1" />
+                                        </svg>
+                                    </div>
+                                    <span class="mt-2 text-sm font-semibold text-center">Etiqeutado y plastificado</span>
                                 </button>
                             </div>
                         </div>
@@ -500,9 +501,6 @@
             @endif
             @if ($seleccion == 'Llenados')
                 @livewire('llenados')
-            @endif
-            @if ($seleccion == 'Etiquetado')
-                @livewire('etiquetado')
             @endif
             @if ($seleccion == 'Traspaso')
                 @livewire('traspaso')
