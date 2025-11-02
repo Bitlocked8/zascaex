@@ -2,7 +2,7 @@
 
     <h3 class="text-xl font-bold text-cyan-700 mb-4">Reporte de Pedidos</h3>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div>
             <label class="font-semibold text-sm">Código</label>
             <input type="text" wire:model.live="codigo" placeholder="Ej: PED-001" class="input-minimal w-full">
@@ -20,7 +20,7 @@
                     @foreach($clientes as $c)
                         <button type="button" wire:click="$set('cliente_id', {{ $c->id }})"
                             class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                    {{ $cliente_id == $c->id ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
+                                                                {{ $cliente_id == $c->id ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
                             <span class="font-medium">{{ $c->nombre }}</span>
                             @if(!empty($c->tipo))
                                 <span
@@ -48,7 +48,7 @@
                     @foreach($personales as $p)
                         <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
                             class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                        {{ $personal_id == $p->id ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
+                                                                    {{ $personal_id == $p->id ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
                             <span class="font-medium">{{ $p->nombres }}</span>
                             @if(!empty($p->cargo))
                                 <span
@@ -66,18 +66,15 @@
 
         <div class="grid grid-cols-1 gap-2 mt-2">
             <div>
-                <label class="font-semibold text-sm mb-2 block">Estado Pedido</label>
+                <label class="text-u">Estado Pedido</label>
 
                 <div
                     class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
-
-                    <!-- Botón Todos -->
                     <button type="button" wire:click="$set('estado_pedido', null)"
                         class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
                     {{ is_null($estado_pedido) ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
                         <span class="font-medium">Todos</span>
                     </button>
-
                     @php
                         $estados = [
                             0 => ['nombre' => 'Pendiente', 'color' => 'bg-yellow-500 text-white'],
@@ -89,7 +86,7 @@
                     @foreach($estados as $key => $estado)
                         <button type="button" wire:click="$set('estado_pedido', {{ $key }})"
                             class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                            {{ $estado_pedido === $key ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
+                                                        {{ $estado_pedido === $key ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
                             <span class="font-medium">{{ $estado['nombre'] }}</span>
                             <span
                                 class="{{ $estado['color'] }} text-xs px-2 py-0.5 rounded-full font-semibold uppercase mt-2">
@@ -121,7 +118,7 @@
                     @foreach($tiposPago as $key => $tipo)
                         <button type="button" wire:click="$set('estado_pago', {{ $key }})"
                             class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                                {{ $estado_pago == $key ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
+                                                                            {{ $estado_pago == $key ? 'border-cyan-600 text-cyan-600 bg-white' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 bg-white' }}">
                             <span class="font-medium">{{ $tipo['nombre'] }}</span>
                             <span
                                 class="{{ $tipo['color'] }} text-xs px-2 py-0.5 rounded-full font-semibold uppercase mt-2">
@@ -134,22 +131,51 @@
             </div>
         </div>
 
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-full">
+        <div class="grid grid-cols-1 gap-2 mt-2">
             <div>
-                <label class="font-semibold text-sm">Fecha y hora inicio</label>
-                <input type="datetime-local" wire:model="fechaInicio"
-                    class="w-full border rounded-md px-3 py-2 focus:ring focus:ring-blue-300">
+                <label class="font-semibold text-sm mb-1 block">Fecha y hora inicio</label>
+                <div class="flex gap-1">
+                    <input type="text" maxlength="2" wire:model.live="inicioDia" class="input-minimal" placeholder="Dia"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="2" wire:model.live="inicioMes" class="input-minimal" placeholder="Mes"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="4" wire:model.live="inicioAnio" class="input-minimal"
+                        placeholder="Año"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="2" wire:model.live="inicioHora" class="input-minimal"
+                        placeholder="Hora"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="2" wire:model.live="inicioMin" class="input-minimal"
+                        placeholder="Min">
+                </div>
             </div>
-
+            <br>
             <div>
-                <label class="font-semibold text-sm">Fecha y hora fin</label>
-                <input type="datetime-local" wire:model="fechaFin"
-                    class="w-full border rounded-md px-3 py-2 focus:ring focus:ring-blue-300">
+                <label class="font-semibold text-sm mb-1 block">Fecha y hora fin</label>
+                <div class="flex gap-1">
+                    <input type="text" maxlength="2" wire:model.live="finDia" class="input-minimal" placeholder="Dia"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="2" wire:model.live="finMes" class="input-minimal" placeholder="MM"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="4" wire:model.live="finAnio" class="input-minimal" placeholder="Año"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="2" wire:model.live="finHora" class="input-minimal" placeholder="Hora"
+                        oninput="if(this.value.length==this.maxLength) this.nextElementSibling.focus()">
+
+                    <input type="text" maxlength="2" wire:model.live="finMin" class="input-minimal" placeholder="Min">
+                </div>
             </div>
         </div>
 
-        <div class="flex justify-end mb-4 col-span-full">
+
+        <div class="flex justify-center mb-4 col-span-full">
             <button wire:click="generarPDF"
                 class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg shadow">
                 📄 Generar PDF
