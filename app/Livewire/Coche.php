@@ -31,7 +31,7 @@ class Coche extends Component
             'modelo' => 'nullable|string|max:100',
             'anio' => 'nullable|string|max:10',
             'color' => 'nullable|string|max:50',
-            'placa' => 'nullable|string|max:20|unique:coches,placa,' . ($this->cocheId ?? 'NULL'),
+            'placa' => 'nullable|string|max:20|unique:coches,placa,' . ($this->cocheId ?? 'NULL') . ',id',
             'estado' => 'required|boolean',
         ];
     }
@@ -47,8 +47,8 @@ class Coche extends Component
     {
         $coches = ModeloCoche::when($this->search, function ($query) {
             $query->where('marca', 'like', '%' . $this->search . '%')
-                ->orWhere('modelo', 'like', '%' . $this->search . '%')
-                ->orWhere('placa', 'like', '%' . $this->search . '%');
+                  ->orWhere('modelo', 'like', '%' . $this->search . '%')
+                  ->orWhere('placa', 'like', '%' . $this->search . '%');
         })->latest()->get();
 
         return view('livewire.coche', compact('coches'));
@@ -59,10 +59,10 @@ class Coche extends Component
         $this->resetPage();
     }
 
-    public function abrirModal($accion)
+    public function abrirModal()
     {
         $this->reset(['movil', 'marca', 'modelo', 'anio', 'color', 'placa', 'estado', 'cocheId', 'cocheSeleccionado']);
-        $this->accion = $accion;
+        $this->accion = 'create';
         $this->estado = 1;
         $this->modal = true;
         $this->detalleModal = false;
@@ -98,7 +98,7 @@ class Coche extends Component
         $this->validate();
 
         if (!$this->movil) {
-            $this->movil = 'M-' . mt_rand(1000, 9999); // Generar móvil automáticamente si está vacío
+            $this->movil = 'M-' . mt_rand(1000, 9999);
         }
 
         if ($this->accion === 'edit' && $this->cocheId) {

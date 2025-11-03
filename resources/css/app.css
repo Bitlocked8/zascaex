@@ -7,12 +7,17 @@
 @layer components {
 
   .input-minimal {
-    @apply w-full px-3 py-2 text-sm text-gray-800 bg-gray-50 border-t-2 border-t-teal-600 rounded-lg shadow-sm placeholder-gray-400 ease-in-out focus:outline-none;
+    @apply w-full px-2.5 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 transition duration-200 ease-in-out placeholder-gray-400;
+  }
+
+  .input-minimal:disabled {
+    @apply bg-gray-100 text-gray-400 cursor-not-allowed;
   }
 
   .input-minimal:not(:placeholder-shown) {
-    @apply border-teal-600 bg-white;
+    @apply border-cyan-500 bg-white;
   }
+
 
 
 
@@ -49,13 +54,11 @@
       @apply font-semibold w-32;
     }
 
-    .btn-circle {
-      @apply rounded-xl p-2 w-12 h-12 flex items-center justify-center shadow-md;
-    }
 
     .btn-cyan {
-      @apply flex items-center gap-2 px-3 py-2 bg-teal-600 hover:bg-cyan-700 text-white rounded-full shadow-md transition uppercase font-semibold;
+      @apply flex items-center justify-center gap-2 px-4 py-2 bg-slate-600 text-white font-medium rounded-md shadow-sm hover:bg-slate-700 active:scale-95 transition-all duration-150 ease-in-out focus:outline-none;
     }
+
 
     .card-teal {
       @apply bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center border-b-4 border-teal-500 mb-4;

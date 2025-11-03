@@ -55,6 +55,7 @@ class Soplados extends Component
         $sucursales = \App\Models\Sucursal::all();
         $asignaciones = Asignado::with('existencia.existenciable', 'existencia.sucursal')
             ->where('cantidad', '>', 0)
+            ->whereDoesntHave('soplados')
             ->whereHas('existencia', function ($q) {
                 $q->where('existenciable_type', \App\Models\Preforma::class);
                 if ($this->sucursalSeleccionada) {
@@ -360,7 +361,8 @@ class Soplados extends Component
 
     public function eliminarSopladoConfirmado()
     {
-        if (!$this->confirmingDeleteSopladoId) return;
+        if (!$this->confirmingDeleteSopladoId)
+            return;
 
         $this->eliminar($this->confirmingDeleteSopladoId);
         $this->confirmingDeleteSopladoId = null;

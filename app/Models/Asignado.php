@@ -37,5 +37,10 @@ class Asignado extends Model
             ->withPivot('cantidad')
             ->withTimestamps();
     }
-    
+
+    public function soplados()
+    {
+        return $this->hasMany(Soplado::class);
+    }
+
 }
