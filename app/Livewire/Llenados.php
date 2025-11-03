@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class Llenados extends Component
 {
+    public $filtroSucursalElemento = null;
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
@@ -30,6 +31,10 @@ class Llenados extends Component
     public $accion = 'create';
     public $confirmingDeleteLlenadoId = null;
     public $llenadoSeleccionado = null;
+    public function filtrarSucursalElemento($sucursalId)
+    {
+        $this->filtroSucursalElemento = $sucursalId;
+    }
 
     protected $rules = [
         'asignado_base_id' => 'required|exists:asignados,id',
@@ -70,19 +75,34 @@ class Llenados extends Component
                 $asignacionesUsadasTapa = array_diff($asignacionesUsadasTapa, [$llenadoActual->asignado_tapa_id]);
             }
         }
-        $asignacionesBase = Asignado::with('existencia.existenciable')
-            ->whereHas('existencia', fn($q) => $q->where('existenciable_type', \App\Models\Base::class))
-            ->where('cantidad', '>', 0)
+        $asignacionesBase = Asignado::with('existencia.existenciable', 'existencia.sucursal')
+            ->whereHas('existencia', function ($q) {
+                $q->where('existenciable_type', \App\Models\Base::class);
+                if ($this->filtroSucursalElemento) {
+                    $q->where('sucursal_id', $this->filtroSucursalElemento);
+                }
+            })
             ->whereNotIn('id', $asignacionesUsadasBase)
             ->get();
-        $asignacionesTapa = Asignado::with('existencia.existenciable')
-            ->whereHas('existencia', fn($q) => $q->where('existenciable_type', \App\Models\Tapa::class))
-            ->where('cantidad', '>', 0)
+
+        $asignacionesTapa = Asignado::with('existencia.existenciable', 'existencia.sucursal')
+            ->whereHas('existencia', function ($q) {
+                $q->where('existenciable_type', \App\Models\Tapa::class);
+                if ($this->filtroSucursalElemento) {
+                    $q->where('sucursal_id', $this->filtroSucursalElemento);
+                }
+            })
             ->whereNotIn('id', $asignacionesUsadasTapa)
             ->get();
-        $existenciasDestino = Existencia::with('existenciable')
+
+
+
+        $existenciasDestino = Existencia::with('existenciable', 'sucursal')
             ->where('existenciable_type', \App\Models\Producto::class)
+            ->when($this->filtroSucursalElemento, fn($q) => $q->where('sucursal_id', $this->filtroSucursalElemento))
             ->get();
+        $sucursales = \App\Models\Sucursal::orderBy('nombre')->get();
+
 
         $personales = \App\Models\Personal::orderBy('nombres')->get();
 
@@ -91,7 +111,8 @@ class Llenados extends Component
             'asignacionesBase',
             'asignacionesTapa',
             'existenciasDestino',
-            'personales'
+            'personales',
+            'sucursales',
         ));
     }
 
@@ -311,7 +332,8 @@ class Llenados extends Component
 
     public function eliminarLlenadoConfirmado()
     {
-        if (!$this->confirmingDeleteLlenadoId) return;
+        if (!$this->confirmingDeleteLlenadoId)
+            return;
 
         $this->eliminar($this->confirmingDeleteLlenadoId);
         $this->confirmingDeleteLlenadoId = null;
@@ -341,7 +363,8 @@ class Llenados extends Component
 
             if ($llenado->reposicion_id) {
                 $reposicion = Reposicion::find($llenado->reposicion_id);
-                if ($reposicion) $reposicion->delete();
+                if ($reposicion)
+                    $reposicion->delete();
             }
 
             $llenado->delete();

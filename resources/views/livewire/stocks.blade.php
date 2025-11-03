@@ -1,8 +1,9 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
-            Reposiciones
+        <h3
+            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
+            Reposición de materiales
         </h3>
 
         <div class="flex items-center gap-2 mb-4 col-span-full">
@@ -51,7 +52,6 @@
         @forelse($reposiciones as $repo)
             <div class="card-teal flex flex-col gap-4">
                 @php
-                    // Determinar tipo de modelo
                     $tipoModelo = $repo->existencia->existenciable_type ?? null;
                     if ($tipoModelo) {
                         $tipoModelo = explode('\\', $tipoModelo);
@@ -59,8 +59,6 @@
                     } else {
                         $tipoModelo = 'N/A';
                     }
-
-                    // Calcular Monto Usado solo de soplados
                     $montoUsado = 0;
                     if ($repo->soplados()->exists()) {
                         foreach ($repo->soplados as $soplado) {
@@ -76,33 +74,49 @@
                     }
                 @endphp
 
-                <div class="flex flex-col gap-1">
-                    <p class="text-u"> {{ $repo->codigo ?? 'N/A' }}</p>
-                    <p class="text-u">{{ ucfirst($tipoModelo) }}</p>
-                    <p class="text-u"> {{ optional($repo->existencia->sucursal)->nombre ?? 'N/A' }}</p>
-                    <p><strong>Nombre:</strong> {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}</p>
-                    <p><strong>Capacidad:</strong> {{ $repo->existencia->existenciable->capacidad ?? 'N/A' }}
-                        {{ $repo->existencia->existenciable->unidad ?? '' }}
+                <div class="flex flex-col gap-2">
+
+                    <p class="text-emerald-600 uppercase font-semibold">
+                        {{ ucfirst($tipoModelo) }}: {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}
                     </p>
+
+                    <p class="text-slate-600">{{ $repo->codigo ?? 'N/A' }}</p>
+                    <p><strong>Sucursal:</strong> {{ optional($repo->existencia->sucursal)->nombre ?? 'N/A' }}</p>
+                    <p><strong>Capacidad:</strong> {{ $repo->existencia->existenciable->capacidad ?? 'N/A' }}
+                        {{ $repo->existencia->existenciable->unidad ?? '' }}</p>
                     <p><strong>Cantidad inicial:</strong> {{ $repo->cantidad_inicial }}</p>
                     <p><strong>Cantidad disponible:</strong> {{ $repo->cantidad }}</p>
                     <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
                     <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
-                    <p><strong>Estado:</strong>
-                        <span
-                            class="inline-block px-2 py-1 rounded-full text-sm font-semibold {{ $repo->estado_revision ? 'bg-emerald-600 text-white' : 'bg-yellow-500 text-white' }}">
+
+                    <p class="mt-1 text-sm font-semibold">
+                        <span class="{{ $repo->estado_revision ? 'text-green-600' : 'text-yellow-600' }}">
                             {{ $repo->estado_revision ? 'Confirmado' : 'En Revisión' }}
                         </span>
                     </p>
-                    @if($montoUsado > 0)
-                        <div class="mt-3 border-t border-gray-200 pt-2">
-                            <div class="flex justify-between font-semibold text-cyan-700">
-                                <span>Monto usado:</span>
-                                <span>{{ number_format($montoUsado, 2, ',', '.') }} Bs</span>
-                            </div>
+
+                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div
+                            class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+                            <span class="text-sm font-medium text-gray-700">Monto usado:</span>
+                            <span class="text-sm font-semibold text-gray-900">
+                                {{ $montoUsado > 0 ? number_format($montoUsado, 2, ',', '.') . ' Bs' : '—' }}
+                            </span>
                         </div>
-                    @endif
+
+                        @if(isset($montoMermaTotal) && $montoMermaTotal > 0)
+                            <div
+                                class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm">
+                                <span class="text-sm font-medium text-red-700">Monto merma total:</span>
+                                <span class="text-sm font-semibold text-red-900">
+                                    {{ number_format($montoMermaTotal, 2, ',', '.') . ' Bs' }}
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+
                 </div>
+
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
                     <button wire:click="verDetalleReposicion({{ $repo->id }})"

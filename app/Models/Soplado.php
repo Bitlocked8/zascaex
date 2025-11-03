@@ -40,4 +40,9 @@ class Soplado extends Model
     {
         return $this->belongsTo(Personal::class);
     }
+    
+    public function existenciaDestino()
+{
+    return $this->belongsTo(Existencia::class, 'existencia_id');
+}
 }

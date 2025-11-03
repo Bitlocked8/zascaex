@@ -277,12 +277,6 @@ class Soplados extends Component
             'monto_usado' => $comprobante->monto,
         ]);
     }
-
-
-
-
-
-
     private function crearReposicion($existenciaDestino, $personalId)
     {
         $codigoReposicion = 'R-' . now()->format('Ymd') . '-' . str_pad(
