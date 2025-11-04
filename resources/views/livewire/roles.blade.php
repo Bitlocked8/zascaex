@@ -1,28 +1,27 @@
-<div class="p-2 mt-10 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
+        <h3
+            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
+            Roles
+        </h3>
+
         @forelse ($roles as $rol)
-        <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-
-            <!-- Columna Izquierda: Info del rol -->
-            <div class="flex flex-col items-center md:items-start text-center md:text-left col-span-8">
-                <h3 class="text-lg font-semibold uppercase text-cyan-600">
-                    {{ $rol->nombre }}
-                </h3>
-                <p class="text-cyan-950">
-                    <strong>Descripción:</strong> {{ $rol->descripcion ?? 'Sin descripción' }}
-                </p>
-
-              
+            <div class="card-teal flex flex-col gap-3">
+                <div class="flex flex-col gap-2">
+                    <p class="text-teal-700 uppercase font-semibold">
+                        {{ $rol->nombre }}
+                    </p>
+                    <p class="text-gray-600">
+                        <strong>Descripción:</strong> {{ $rol->descripcion ?? 'Sin descripción' }}
+                    </p>
+                </div>
             </div>
-
-     
-           
-        </div>
         @empty
-        <div class="col-span-full text-center py-4 text-gray-600">
-            No hay roles registrados.
-        </div>
+            <div class="col-span-full text-center py-4 text-gray-600">
+                No hay roles registrados.
+            </div>
         @endforelse
+
     </div>
 </div>

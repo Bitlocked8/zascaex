@@ -76,7 +76,8 @@ class Stocks extends Component
                 $q->whereHas('reposiciones', fn($sub) => $sub->where('estado_revision', 1))
                     ->orDoesntHave('reposiciones');
             })
-            ->whereHas('existenciable', fn($q) => $q->where('estado', 1));
+            ->whereHas('existenciable', fn($q) => $q->where('estado', 1))
+            ->where('existenciable_type', '!=', \App\Models\Producto::class);
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $queryExistencias->where('sucursal_id', $sucursal_id);
@@ -344,6 +345,7 @@ class Stocks extends Component
 
         $queryExistencias = Existencia::with('existenciable')
             ->where('cantidad', '>', 0)
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
             ->when($this->filtroSucursal, fn($q) => $q->where('sucursal_id', $this->filtroSucursal))
             ->orderBy('id');
 

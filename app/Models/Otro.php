@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class Producto extends Model
+class Otro extends Model
 {
     use HasFactory;
 
@@ -24,12 +24,9 @@ class Producto extends Model
         'tipo',
     ];
 
-
-    public function enbotellado()
-    {
-        return $this->belongsTo(Embotellado::class);
-    }
-
+    /**
+     * Relación 1:N polimórfica con Existencia.
+     */
     public function existencias(): MorphMany
     {
         return $this->morphMany(Existencia::class, 'existenciable');

@@ -19,7 +19,7 @@ class ProductoFactory extends Factory
      */
     public function definition(): array
     {
-      return [
+        return [
             'nombre' => $this->faker->word,
             'tipoContenido' => $this->faker->numberBetween(1, 5),
             'tipoProducto' => $this->faker->boolean,

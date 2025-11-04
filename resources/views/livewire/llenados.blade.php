@@ -143,13 +143,10 @@
                                 @if($sucursales->count() > 0)
                                     <div class="flex flex-wrap gap-3">
                                         @foreach($sucursales as $sucursal)
-                                                    <button type="button" wire:click="filtrarSucursalElemento({{ $sucursal->id }})"
-                                                        class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-                                                                                                                                                                                                    {{ $filtroSucursalElemento == $sucursal->id
-                                            ? 'bg-cyan-600 text-white shadow-lg border-cyan-600'
-                                            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
-                                                        {{ $sucursal->nombre }}
-                                                    </button>
+                                            <button type="button" wire:click="filtrarSucursalElemento({{ $sucursal->id }})"
+                                                class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition{{ $filtroSucursalElemento == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border-cyan-600' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
+                                                {{ $sucursal->nombre }}
+                                            </button>
                                         @endforeach
                                     </div>
                                 @else
@@ -306,10 +303,6 @@
                                 </div>
                             @endif
                         </div>
-
-
-
-
                         <div>
                             <label class="font-semibold text-sm mb-2 block">Destino (Producto lleno)</label>
                             @if($accion === 'edit')
@@ -401,8 +394,7 @@
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
                             <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
                                 <button type="button" wire:click="$set('estado', 0)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition
-                                                                                                    {{ $estado == 0 ? 'bg-yellow-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-yellow-400' }}">
+                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition{{ $estado == 0 ? 'bg-yellow-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-yellow-400' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round" class="inline mr-1">
@@ -413,8 +405,7 @@
                                 </button>
 
                                 <button type="button" wire:click="$set('estado', 1)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition
-                                                                                                    {{ $estado == 1 ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-blue-400' }}">
+                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition{{ $estado == 1 ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-blue-400' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round" class="inline mr-1">
@@ -424,8 +415,7 @@
                                 </button>
 
                                 <button type="button" wire:click="$set('estado', 2)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition
-                                                                                                    {{ $estado == 2 ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-green-400' }}">
+                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition{{ $estado == 2 ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-green-400' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round" class="inline mr-1">
@@ -528,7 +518,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                                 <span class="label-info">Estado:</span>
                                 <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
-                                                                                                                    {{ $llenadoSeleccionado->estado == 0
+                                                                                                                                {{ $llenadoSeleccionado->estado == 0
             ? 'bg-cyan-600 text-white'
             : ($llenadoSeleccionado->estado == 1
                 ? 'bg-emerald-600 text-white'

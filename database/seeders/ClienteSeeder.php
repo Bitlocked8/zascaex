@@ -48798,7 +48798,7 @@ class ClienteSeeder extends Seeder
     'establecimiento' => 'Edificio',
     'disponible' => '1',
     'bot' => '1',
-    'telefono' => '5491130000000', // Convertido 5,49113E+12 a número completo
+    'telefono' => '5491130000000',
     'celular' => null,
     'ubicacion' => '-17.364769, -66.164512',
     'movil' => 'Movil 1',

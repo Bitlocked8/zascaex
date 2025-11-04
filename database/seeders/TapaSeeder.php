@@ -8,34 +8,31 @@ use App\Models\Existencia;
 
 class TapaSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+   
     public function run(): void
     {
-        $tapas = [
-            ['imagen' => null, 'descripcion' => '', 'color' => 'transparente', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'blanco', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'verde', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'rosado', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'rojo', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'azul', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'negro', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'rojo', 'tipo' => 'deportivas'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'azul', 'tipo' => 'deportivas'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'negro', 'tipo' => 'deportivas'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'transparente', 'tipo' => 'deportivas'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'blanco', 'tipo' => 'deportivas'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'azul', 'tipo' => 'push up'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'rojo', 'tipo' => 'push up'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'azul', 'tipo' => 'rosca'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'blanco', 'tipo' => 'rosca'],
-            ['imagen' => null, 'descripcion' => '', 'color' => 'negro', 'tipo' => 'rosca'],
-            ['imagen' => null, 'descripcion' => 'cuello largo', 'color' => 'transparente', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => 'cuello largo', 'color' => 'blanco', 'tipo' => 'normal'],
-            ['imagen' => null, 'descripcion' => 'cuello largo', 'color' => 'negro', 'tipo' => 'normal'],
-        ];
-
+      $tapas = [
+    ['imagen' => null, 'descripcion' => 'normal - transparente', 'color' => 'transparente', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'normal - blanco', 'color' => 'blanco', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'normal - verde', 'color' => 'verde', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'normal - rosado', 'color' => 'rosado', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'normal - rojo', 'color' => 'rojo', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'normal - azul', 'color' => 'azul', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'normal - negro', 'color' => 'negro', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'deportivas - rojo', 'color' => 'rojo', 'tipo' => 'deportivas'],
+    ['imagen' => null, 'descripcion' => 'deportivas - azul', 'color' => 'azul', 'tipo' => 'deportivas'],
+    ['imagen' => null, 'descripcion' => 'deportivas - negro', 'color' => 'negro', 'tipo' => 'deportivas'],
+    ['imagen' => null, 'descripcion' => 'deportivas - transparente', 'color' => 'transparente', 'tipo' => 'deportivas'],
+    ['imagen' => null, 'descripcion' => 'deportivas - blanco', 'color' => 'blanco', 'tipo' => 'deportivas'],
+    ['imagen' => null, 'descripcion' => 'push up - azul', 'color' => 'azul', 'tipo' => 'push up'],
+    ['imagen' => null, 'descripcion' => 'push up - rojo', 'color' => 'rojo', 'tipo' => 'push up'],
+    ['imagen' => null, 'descripcion' => 'rosca - azul', 'color' => 'azul', 'tipo' => 'rosca'],
+    ['imagen' => null, 'descripcion' => 'rosca - blanco', 'color' => 'blanco', 'tipo' => 'rosca'],
+    ['imagen' => null, 'descripcion' => 'rosca - negro', 'color' => 'negro', 'tipo' => 'rosca'],
+    ['imagen' => null, 'descripcion' => 'cuello largo - transparente', 'color' => 'transparente', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'cuello largo - blanco', 'color' => 'blanco', 'tipo' => 'normal'],
+    ['imagen' => null, 'descripcion' => 'cuello largo - negro', 'color' => 'negro', 'tipo' => 'normal'],
+];
        foreach ($tapas as $data) {
             foreach ([1, 2] as $sucursal_id) {
                 $tapa = Tapa::create([

@@ -77,18 +77,16 @@
                 <div class="flex flex-col gap-2">
 
                     <p class="text-emerald-600 uppercase font-semibold">
-                        {{ ucfirst($tipoModelo) }}: {{ $repo->existencia->existenciable->descripcion ?? 'N/A' }}
+                        {{ ucfirst($tipoModelo) }}: {{ $repo->existencia->existenciable->descripcion ?? 'sin descripcion' }}
                     </p>
 
                     <p class="text-slate-600">{{ $repo->codigo ?? 'N/A' }}</p>
-                    <p><strong>Sucursal:</strong> {{ optional($repo->existencia->sucursal)->nombre ?? 'N/A' }}</p>
-                    <p><strong>Capacidad:</strong> {{ $repo->existencia->existenciable->capacidad ?? 'N/A' }}
-                        {{ $repo->existencia->existenciable->unidad ?? '' }}</p>
+                    <p><strong>Capacidad:</strong> {{ $repo->existencia->existenciable->capacidad ?? 'no tiene' }}
+                        {{ $repo->existencia->existenciable->unidad ?? '' }}
+                    </p>
                     <p><strong>Cantidad inicial:</strong> {{ $repo->cantidad_inicial }}</p>
                     <p><strong>Cantidad disponible:</strong> {{ $repo->cantidad }}</p>
                     <p><strong>Proveedor:</strong> {{ $repo->proveedor->razonSocial ?? 'Sin proveedor' }}</p>
-                    <p><strong>Observaciones:</strong> {{ $repo->observaciones ?? 'N/A' }}</p>
-
                     <p class="mt-1 text-sm font-semibold">
                         <span class="{{ $repo->estado_revision ? 'text-green-600' : 'text-yellow-600' }}">
                             {{ $repo->estado_revision ? 'Confirmado' : 'En Revisión' }}
@@ -103,32 +101,21 @@
                                 {{ $montoUsado > 0 ? number_format($montoUsado, 2, ',', '.') . ' Bs' : '—' }}
                             </span>
                         </div>
-
-                        @if(isset($montoMermaTotal) && $montoMermaTotal > 0)
-                            <div
-                                class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm">
-                                <span class="text-sm font-medium text-red-700">Monto merma total:</span>
-                                <span class="text-sm font-semibold text-red-900">
-                                    {{ number_format($montoMermaTotal, 2, ',', '.') . ' Bs' }}
-                                </span>
-                            </div>
-                        @endif
                     </div>
-
                 </div>
 
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="verDetalleReposicion({{ $repo->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Detalle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+                    <button wire:click="verDetalleReposicion({{ $repo->id }})" class="btn-cyan" title="Ver detalle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                            <path d="M8 12l0 .01" />
+                            <path d="M12 12l0 .01" />
+                            <path d="M16 12l0 .01" />
                         </svg>
-                        Detalles
+                        Ver mas
                     </button>
                     @if(
                             !$repo->soplados()->exists() &&
@@ -258,20 +245,18 @@
                             @else
 
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Sucursal</label>
-                                    <div class="flex flex-wrap gap-2">
-                                        <button type="button" wire:click="filtrarSucursalModal(null)"
-                                            class="px-3 py-1 rounded-full text-sm font-medium border {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
-                                            Todas
-                                        </button>
+                                    <label class="block text-sm font-semibold mb-2">Filtrar por Sucursal</label>
+                                    <div class="flex flex-wrap gap-3">
+
                                         @foreach($sucursales as $sucursal)
                                             <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                                                class="px-3 py-1 rounded-full text-sm font-medium border{{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                                class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $filtroSucursalModal == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
                                                 {{ $sucursal->nombre }}
                                             </button>
                                         @endforeach
                                     </div>
                                 </div>
+
 
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Buscar producto</label>
@@ -389,12 +374,14 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="M10 10l4 4m0 -4l-4 4" />
-                                <circle cx="12" cy="12" r="9" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                             </svg>
-                            CERRAR</button>
+                            CERRAR
+                        </button>
                         <button type="button" wire:click="guardar" class="btn-cyan">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -469,13 +456,14 @@
                             <path d="M14 4l0 4l-6 0l0 -4" />
                         </svg>
                     </button>
-                    <button wire:click="$set('modalConfigGlobal', false)" class="btn-circle btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                    <button wire:click="$set('modalConfigGlobal', false)" class="btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path d="M10 10l4 4m0 -4l-4 4" />
-                            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                         </svg>
+                        CERRAR
                     </button>
                 </div>
             </div>
@@ -583,14 +571,14 @@
                             </svg>
                             guardar pago
                         </button>
-                        <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                        <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" />
-                                <path d="M10 10l4 4m0 -4l-4 4" />
-                                <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                             </svg>
-                            cerrar
+                            CERRAR
                         </button>
 
                     </div>
@@ -647,12 +635,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer mt-4">
+                <div class="modal-footer">
                     <button wire:click="cerrarModalDetalleReposicion" class="btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M10 10l4 4m0 -4l-4 4" />
-                            <circle cx="12" cy="12" r="9" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                         </svg>
                         CERRAR
                     </button>
@@ -716,8 +705,6 @@
                                 d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
                         </svg>
                     </button>
-
-                    <!-- Botón Cancelar -->
                     <button type="button" wire:click="$set('confirmingDeletePagoIndex', null)" class="btn-circle btn-cyan">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -770,9 +757,15 @@
                             <p class="text-center text-gray-500 py-4">No hay productos con stock bajo.</p>
                         @endif
                     </div>
-                    <div class="modal-footer mt-4 flex justify-center">
-                        <button wire:click="cerrarModalNotificaciones" class="btn-cyan px-4 py-2">
-                            Cerrar
+                    <div class="modal-footer">
+                        <button wire:click="cerrarModalNotificaciones" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
                         </button>
                     </div>
                 </div>
