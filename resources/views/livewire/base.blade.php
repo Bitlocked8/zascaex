@@ -461,10 +461,10 @@
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">Reporte de de Ventas</span>
                                 </button>
-                                <button type="button" wire:click="$set('seleccion', 'Reportecredito')"
-                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Reportecredito' ? 'border-red-600 shadow-lg text-red-700' : 'border-gray-200 text-gray-700 hover:border-red-600 hover:text-red-600 hover:shadow-md' }}">
+                                <button type="button" wire:click="$set('seleccion', 'Reportecompra')"
+                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Reportecompra' ? 'border-red-600 shadow-lg text-red-700' : 'border-gray-200 text-gray-700 hover:border-red-600 hover:text-red-600 hover:shadow-md' }}">
                                     <div
-                                        class="p-3 rounded-full{{ $seleccion == 'Reportecredito' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700' }}">
+                                        class="p-3 rounded-full{{ $seleccion == 'Reportecompra' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                             fill="currentColor">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -565,6 +565,9 @@
             @endif
             @if ($seleccion == 'Reportecredito')
                 @livewire('reportecredito')
+            @endif
+            @if ($seleccion == 'Reportecompra')
+                @livewire('reportecompra')
             @endif
             @if ($seleccion == 'Pruebaestilo')
                 @livewire('pruebaestilo')

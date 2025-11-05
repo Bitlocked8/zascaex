@@ -153,7 +153,7 @@
               <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
                 <button type="button" wire:click="$set('estado_pedido', 0)"
                   class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-        {{ $estado_pedido == 0 ? 'bg-teal-400 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-600' }}">
+              {{ $estado_pedido == 0 ? 'bg-teal-400 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-600' }}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
                     <circle cx="10" cy="10" r="9" />
@@ -164,7 +164,7 @@
 
                 <button type="button" wire:click="$set('estado_pedido', 1)"
                   class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-        {{ $estado_pedido == 1 ? 'bg-cyan-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-600' }}">
+              {{ $estado_pedido == 1 ? 'bg-cyan-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-600' }}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
                     <path d="M4 12l4 4L18 6" />
@@ -174,7 +174,7 @@
 
                 <button type="button" wire:click="$set('estado_pedido', 2)"
                   class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-        {{ $estado_pedido == 2 ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-rose-100 hover:text-rose-600' }}">
+              {{ $estado_pedido == 2 ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-rose-100 hover:text-rose-600' }}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
                     <path d="M16 4L4 16" />
@@ -208,42 +208,54 @@
           </div>
           <div class="grid grid-cols-1 gap-4 mb-4">
             <div>
-              <label class="font-semibold text-sm mb-2 block">Tipo de Item</label>
-              <div class="mb-4">
+              <!-- FILTRO POR SUCURSAL -->
+              <div class="mb-6">
                 <label class="block text-sm font-semibold mb-2 text-gray-700">Filtrar por Sucursal</label>
 
                 <div class="flex flex-wrap gap-3">
                   @foreach($sucursales as $sucursal)
-                    <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                      class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition{{ $sucursal_id == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
-                      {{ $sucursal->nombre }}
-                    </button>
+                              <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
+                                class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition
+                        {{ $sucursal_id == $sucursal->id
+                    ? 'bg-cyan-500 text-white shadow-lg border border-cyan-500'
+                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-400' }}">
+                                {{ $sucursal->nombre }}
+                              </button>
                   @endforeach
                 </div>
               </div>
 
+              <!-- TIPO DE ITEM -->
+              <div class="text-center">
+                <label class="font-semibold text-sm mb-3 block text-gray-700">Tipo de Ítem</label>
 
-              <div class="flex gap-4">
-                <button type="button" wire:click="$set('tipoProducto', 'producto')"
-                  class="flex-1 p-3 rounded-lg border-2 transition flex flex-col items-center text-center{{ $tipoProducto == 'producto' ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                    stroke-width="2" class="mb-1">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                  <span class="font-semibold">Productos</span>
-                </button>
+                <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
+                  <button type="button" wire:click="$set('tipoProducto', 'producto')" class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2
+          {{ $tipoProducto == 'producto'
+      ? 'bg-teal-500 text-white shadow-lg'
+      : 'bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                    Productos
+                  </button>
 
-                <button type="button" wire:click="$set('tipoProducto', 'otro')"
-                  class="flex-1 p-3 rounded-lg border-2 transition flex flex-col items-center text-center {{ $tipoProducto == 'otro' ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }} bg-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                    stroke-width="2" class="mb-1">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-                  </svg>
-                  <span class="font-semibold">Otros Items</span>
-                </button>
+                  <button type="button" wire:click="$set('tipoProducto', 'otro')" class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2
+          {{ $tipoProducto == 'otro'
+      ? 'bg-emerald-500 text-white shadow-lg'
+      : 'bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                    </svg>
+                    Otros Ítems
+                  </button>
+                </div>
               </div>
             </div>
+
           </div>
           <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
             <div>
@@ -608,7 +620,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                 <span class="label-info">Estado:</span>
                 <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
-                                                    {{ $pedidoDetalle->estado_pedido == 0
+                                                          {{ $pedidoDetalle->estado_pedido == 0
       ? 'bg-cyan-600 text-white'
       : ($pedidoDetalle->estado_pedido == 1
         ? 'bg-emerald-600 text-white'
