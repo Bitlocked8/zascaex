@@ -8,6 +8,7 @@ use Livewire\Component;
 use App\Models\Pedido;
 use App\Models\PedidoDetalle;
 use App\Models\Producto;
+use App\Models\Otro;
 use App\Models\Reposicion;
 use Carbon\Carbon;
 
@@ -17,6 +18,8 @@ use Livewire\WithFileUploads;
 class Pedidos extends Component
 {
     use WithFileUploads;
+    public $sucursal_id = null;
+
     public $modalDetallePedido = false;
     public $pedidoDetalle;
     public $clientes;
@@ -26,6 +29,8 @@ class Pedidos extends Component
     public $cliente_id;
     public $personal_id;
     public $productoSeleccionado;
+    public $otroSeleccionado;
+    public $tipoProducto = 'producto';
     public $cantidadSeleccionada;
     public $detalles = [];
     public $mensaje = null;
@@ -47,7 +52,6 @@ class Pedidos extends Component
         $this->clientes = Cliente::orderBy('nombre')->get();
     }
 
-
     public function abrirModal()
     {
         $this->modalPedido = true;
@@ -55,22 +59,24 @@ class Pedidos extends Component
 
     public function editarPedido($pedido_id)
     {
-        $this->pedido = Pedido::with('detalles.existencia.sucursal')->find($pedido_id);
+        $this->pedido = Pedido::with(['detalles.existencia.existenciable', 'detalles.existencia.sucursal'])->find($pedido_id);
         $this->cliente_id = $this->pedido->cliente_id;
         $this->personal_id = $this->pedido->personal_id;
         $this->estado_pedido = $this->pedido->estado_pedido;
         $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
 
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
-            $producto = $detalle->existencia->existenciable ?? null;
+            $existenciable = $detalle->existencia->existenciable ?? null;
             $sucursal = $detalle->existencia->sucursal ?? null;
+            $tipo = $existenciable instanceof Producto ? 'producto' : 'otro';
 
             return [
                 'id' => $detalle->id,
                 'existencia_id' => $detalle->existencia_id,
                 'reposicion_id' => $detalle->reposicion_id,
                 'cantidad' => $detalle->cantidad,
-                'nombre' => $producto->descripcion ?? 'Sin nombre',
+                'nombre' => $existenciable->descripcion ?? 'Sin nombre',
+                'tipo' => $tipo,
                 'sucursal_id' => $sucursal->id ?? null,
                 'sucursal_nombre' => $sucursal->nombre ?? 'Sin sucursal',
             ];
@@ -94,19 +100,38 @@ class Pedidos extends Component
 
     public function agregarProducto()
     {
-        if (!$this->productoSeleccionado || !$this->cantidadSeleccionada) {
-            $this->setMensaje('Debe seleccionar un producto y cantidad', 'error');
+        if (!$this->cantidadSeleccionada) {
+            $this->setMensaje('Debe seleccionar una cantidad', 'error');
+            return;
+        }
+        if ($this->tipoProducto === 'producto' && !$this->productoSeleccionado) {
+            $this->setMensaje('Debe seleccionar un producto', 'error');
             return;
         }
 
-        $producto = Producto::with('existencias.reposiciones')->find($this->productoSeleccionado);
-        if (!$producto) {
-            $this->setMensaje('Producto no existe', 'error');
+        if ($this->tipoProducto === 'otro' && !$this->otroSeleccionado) {
+            $this->setMensaje('Debe seleccionar un item', 'error');
+            return;
+        }
+
+        $modelo = null;
+        $descripcion = '';
+
+        if ($this->tipoProducto === 'producto') {
+            $modelo = Producto::with('existencias.reposiciones')->find($this->productoSeleccionado);
+            $descripcion = $modelo->descripcion ?? 'Sin nombre';
+        } else {
+            $modelo = Otro::with('existencias.reposiciones')->find($this->otroSeleccionado);
+            $descripcion = $modelo->descripcion ?? 'Sin nombre';
+        }
+
+        if (!$modelo) {
+            $this->setMensaje('Item no existe', 'error');
             return;
         }
 
         $cantidadDisponible = 0;
-        foreach ($producto->existencias as $existencia) {
+        foreach ($modelo->existencias as $existencia) {
             foreach ($existencia->reposiciones as $reposicion) {
                 if ($reposicion->estado_revision == 1 && $reposicion->cantidad > 0) {
                     $cantidadDisponible += $reposicion->cantidad;
@@ -115,14 +140,14 @@ class Pedidos extends Component
         }
 
         if ($this->cantidadSeleccionada > $cantidadDisponible) {
-            $this->setMensaje('No hay suficiente stock para este producto', 'error');
+            $this->setMensaje('No hay suficiente stock para este item', 'error');
             return;
         }
 
         $cantidadRestante = $this->cantidadSeleccionada;
         $detalleTemporal = [];
 
-        foreach ($producto->existencias as $existencia) {
+        foreach ($modelo->existencias as $existencia) {
             $lotes = $existencia->reposiciones()
                 ->where('cantidad', '>', 0)
                 ->where('estado_revision', 1)
@@ -139,7 +164,8 @@ class Pedidos extends Component
                     'existencia_id' => $existencia->id,
                     'reposicion_id' => $lote->id,
                     'cantidad' => $consumir,
-                    'nombre' => $producto->descripcion ?? 'Sin nombre',
+                    'nombre' => $descripcion,
+                    'tipo' => $this->tipoProducto,
                     'nuevo' => true,
                 ];
 
@@ -150,11 +176,12 @@ class Pedidos extends Component
         }
 
         $this->detalles = array_merge($this->detalles, $detalleTemporal);
-        $this->setMensaje('Producto agregado correctamente', 'success');
+        $this->setMensaje('Item agregado correctamente', 'success');
         $this->productoSeleccionado = null;
+        $this->otroSeleccionado = null;
         $this->cantidadSeleccionada = null;
+        $this->tipoProducto = 'producto';
     }
-
     public function eliminarDetalle($index)
     {
         $pd = $this->detalles[$index];
@@ -224,11 +251,6 @@ class Pedidos extends Component
         $this->setMensaje('Pedido guardado correctamente', 'success');
         $this->cerrarModal();
     }
-
-
-
-
-
     private function setMensaje($texto, $tipo = 'success')
     {
         $this->mensaje = $texto;
@@ -237,9 +259,29 @@ class Pedidos extends Component
 
     public function render()
     {
-        $productos = Producto::whereHas('existencias.reposiciones', function ($query) {
-            $query->where('estado_revision', 1)
-                ->where('cantidad', '>', 0);
+        $productos = Producto::whereHas('existencias', function ($q) {
+            if ($this->sucursal_id) {
+                $q->where('sucursal_id', $this->sucursal_id);
+            }
+            $q->whereHas('reposiciones', function ($query) {
+                $query->where('estado_revision', 1)
+                    ->where('cantidad', '>', 0);
+            });
+        })->with([
+                    'existencias.reposiciones' => function ($query) {
+                        $query->where('estado_revision', 1)
+                            ->where('cantidad', '>', 0);
+                    }
+                ])->get();
+
+        $otros = Otro::whereHas('existencias', function ($q) {
+            if ($this->sucursal_id) {
+                $q->where('sucursal_id', $this->sucursal_id);
+            }
+            $q->whereHas('reposiciones', function ($query) {
+                $query->where('estado_revision', 1)
+                    ->where('cantidad', '>', 0);
+            });
         })->with([
                     'existencias.reposiciones' => function ($query) {
                         $query->where('estado_revision', 1)
@@ -250,9 +292,17 @@ class Pedidos extends Component
         return view('livewire.pedidos', [
             'pedidos' => Pedido::with(['cliente', 'personal', 'detalles'])->latest()->get(),
             'productos' => $productos,
+            'otros' => $otros,
             'detalles' => $this->detalles,
+            'sucursales' => \App\Models\Sucursal::orderBy('nombre')->get(),
         ]);
     }
+
+    public function filtrarSucursalModal($id = null)
+    {
+        $this->sucursal_id = $id;
+    }
+
 
     public function abrirModalPagosPedido($pedido_id)
     {

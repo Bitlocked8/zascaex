@@ -151,7 +151,7 @@
 
                         @if(!$repo->estado_revision)
                             <button wire:click="confirmarEliminarReposicion({{ $repo->id }})"
-                                class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Eliminar">
+                                class="btn-cyan" title="Eliminar">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="2">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -447,14 +447,15 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button wire:click="guardarConfigGlobal" class="btn-circle btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <button wire:click="guardarConfigGlobal" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                             <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                             <path d="M14 4l0 4l-6 0l0 -4" />
                         </svg>
+                        Guardar
                     </button>
                     <button wire:click="$set('modalConfigGlobal', false)" class="btn-cyan" title="Cerrar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -721,7 +722,6 @@
         <div class="modal-overlay">
             <div class="modal-box max-w-lg">
                 <div class="modal-content flex flex-col gap-4">
-                    <!-- Encabezado del modal -->
                     <div class="flex flex-col items-center justify-center text-center">
                         <div
                             class="w-16 h-16 rounded-full bg-red-600 text-white flex items-center justify-center text-3xl font-bold mb-3">
@@ -730,8 +730,6 @@
                         <h2 class="text-lg font-bold text-gray-800">Productos con Stock Bajo</h2>
                         <p class="text-sm text-gray-500">Estos productos están en o por debajo de su cantidad mínima.</p>
                     </div>
-
-                    <!-- Lista de alertas -->
                     <div class="max-h-80 overflow-y-auto mt-2">
                         @foreach($alertasBajoStock as $item)
                             <div class="flex justify-between items-center border-b border-gray-200 py-2">

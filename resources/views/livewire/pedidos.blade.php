@@ -1,7 +1,8 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-    <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
+    <h3
+      class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
       Pedidos
     </h3>
 
@@ -32,19 +33,23 @@
         $montoTotalPagado = $pagoPedidos->sum('monto');
         $faltante = $totalGeneral - $montoTotalPagado;
       @endphp
+
       <div class="card-teal flex flex-col gap-4">
-        <div class="flex flex-col gap-1">
-          <p class="text-u"> {{ $pedido->codigo }}</p>
-          <p><strong>Cliente:</strong> {{ $pedido->cliente->nombre ?? 'N/A' }}</p>
-          <p><strong>Personal:</strong> {{ $pedido->personal->nombres ?? 'N/A' }}</p>
-          <p><strong>Estado:</strong>
+
+        <div class="flex flex-col gap-2">
+          <p class="text-emerald-600 uppercase font-semibold"> {{ $pedido->cliente->nombre ?? 'N/A' }}</p>
+          <p class="text-slate-600">{{ $pedido->codigo }}</p>
+
+          <p><strong>Persona de atencion:</strong> {{ $pedido->personal->nombres ?? 'N/A' }}</p>
+
+          <p class="mt-1 text-sm font-semibold">
             <span
-              class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-              {{ $pedido->estado_pedido == 0 ? 'bg-cyan-600 text-white' : ($pedido->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
+              class="{{ $pedido->estado_pedido == 0 ? 'text-yellow-600' : ($pedido->estado_pedido == 1 ? 'text-blue-600' : 'text-red-600') }}">
               {{ $pedido->estado_pedido == 0 ? 'Pendiente' : ($pedido->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
             </span>
           </p>
-          <p>
+
+          <p class="mt-1 text-sm font-semibold">
             @if($pedido->adornados->count())
               <span class="inline-block px-2 py-1 rounded-full bg-cyan-600 text-white text-sm font-semibold">
                 Etiquetado y Empaquetado
@@ -56,25 +61,28 @@
             @endif
           </p>
 
-
           <p><strong>Productos añadidos:</strong> {{ $pedido->detalles->count() }}</p>
-          <div class="mt-2 border-t border-gray-200 pt-2 text-sm">
-            <div class="flex justify-between font-semibold">
-              <span>Total:</span>
-              <span>{{ number_format($totalGeneral, 2) }} BS</span>
+
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div
+              class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+              <span class="text-sm font-medium text-gray-700">Total:</span>
+              <span class="text-sm font-semibold text-gray-900">{{ number_format($totalGeneral, 2, ',', '.') }} Bs</span>
             </div>
-            <div class="flex justify-between text-emerald-600 font-semibold">
-              <span>Pagado:</span>
-              <span>{{ number_format($montoTotalPagado, 2) }} BS</span>
+            <div
+              class="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2 shadow-sm">
+              <span class="text-sm font-medium text-emerald-700">Pagado:</span>
+              <span class="text-sm font-semibold text-emerald-900">{{ number_format($montoTotalPagado, 2, ',', '.') }}
+                Bs</span>
             </div>
-            <div class="flex justify-between text-red-600 font-semibold">
-              <span>Faltante:</span>
-              <span>{{ number_format($faltante, 2) }} BS</span>
+            <div class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm">
+              <span class="text-sm font-medium text-red-700">Faltante:</span>
+              <span class="text-sm font-semibold text-red-900">{{ number_format($faltante, 2, ',', '.') }} Bs</span>
             </div>
           </div>
         </div>
-        <div
-          class="flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-200 pt-3 pb-1 justify-start md:justify-between">
+
+        <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
           <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0"
             title="Editar">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
@@ -86,11 +94,10 @@
             </svg>
             Editar
           </button>
-
           <button wire:click="abrirModalPagosPedido({{ $pedido->id }})"
-            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver pagos">
+            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Pagos">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              stroke="currentColor" stroke-width="2">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
               <path d="M3 10h18" />
@@ -101,18 +108,19 @@
             </svg>
             Pagos
           </button>
-
-          <button wire:click="abrirModalDetallePedido({{ $pedido->id }})"
-            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Detalle del Pedido">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+          <button wire:click="abrirModalDetallePedido({{ $pedido->id }})" class="btn-cyan" title="Ver detalle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path
-                d="M12 2l.117 .007a1 1 0 0 1 .876 .876l.007 .117v4l.005 .15a2 2 0 0 0 1.838 1.844l.157 .006h4l.117 .007a1 1 0 0 1 .876 .876l.007 .117v9a3 3 0 0 1 -2.824 2.995l-.176 .005h-10a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-14a3 3 0 0 1 2.824 -2.995l.176 -.005zm3 14h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2m0 -4h-6a1 1 0 0 0 0 2h6a1 1 0 0 0 0 -2" />
-              <path d="M19 7h-4l-.001 -4.001z" />
+              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+              <path d="M8 12l0 .01" />
+              <path d="M12 12l0 .01" />
+              <path d="M16 12l0 .01" />
             </svg>
-            Ver
+            Ver mas
           </button>
         </div>
+
       </div>
 
     @empty
@@ -120,6 +128,7 @@
         No hay pedidos registrados.
       </div>
     @endforelse
+
 
   </div>
 
@@ -129,49 +138,54 @@
         <div class="modal-content flex flex-col gap-4">
           <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
             <div>
-              <span class="text-u">
+              <span class="text-emerald-600 uppercase font-semibold">
                 Personal de atención: {{ $pedido->personal->nombres ?? 'Sin asignar' }}
               </span>
             </div>
             <div>
-              <span class="text-u">
+              <span class="text-slate-600">
                 Fecha del pedido: {{ \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') }}
               </span>
             </div>
             <div class="text-center">
-              <label class="font-semibold text-sm mb-2 block">Estado del Pedido</label>
+              <label class="font-semibold text-sm mb-2 block text-gray-700">Estado del Pedido</label>
 
-              <div class="flex justify-center flex-wrap gap-3">
+              <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
                 <button type="button" wire:click="$set('estado_pedido', 0)"
-                  class="btn-cyan flex items-center gap-1 {{ $estado_pedido == 0 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
+                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
+        {{ $estado_pedido == 0 ? 'bg-teal-400 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-600' }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                    <circle cx="10" cy="10" r="9" />
+                    <polyline points="10 5 10 10 13 12" />
                   </svg>
                   Pendiente
                 </button>
 
                 <button type="button" wire:click="$set('estado_pedido', 1)"
-                  class="btn-cyan flex items-center gap-1 {{ $estado_pedido == 1 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                    <path d="M5 13l4 4L19 7" />
+                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
+        {{ $estado_pedido == 1 ? 'bg-cyan-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-600' }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                    <path d="M4 12l4 4L18 6" />
                   </svg>
                   Entregado
                 </button>
 
                 <button type="button" wire:click="$set('estado_pedido', 2)"
-                  class="btn-cyan flex items-center gap-1 {{ $estado_pedido == 2 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                    <path d="M18 6L6 18" />
-                    <path d="M6 6l12 12" />
+                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
+        {{ $estado_pedido == 2 ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-rose-100 hover:text-rose-600' }}">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                    <path d="M16 4L4 16" />
+                    <path d="M4 4l12 12" />
                   </svg>
                   Cancelado
                 </button>
               </div>
             </div>
+
+
 
             <div class="grid grid-cols-1 gap-2 mt-2">
               <div>
@@ -179,9 +193,8 @@
                 <div
                   class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
                   @foreach($clientes as $cliente)
-                    <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})" class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                            {{ $cliente_id == $cliente->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}
-                            bg-white">
+                    <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})"
+                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center{{ $cliente_id == $cliente->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}                                                                            bg-white">
                       <span class="font-semibold text-u">{{ $cliente->nombre }}</span>
                       <span class="text-xs text-gray-500">Código: {{ $cliente->codigo }}</span>
                       @if($cliente->direccion)
@@ -190,50 +203,137 @@
                     </button>
                   @endforeach
                 </div>
-
               </div>
             </div>
           </div>
+          <div class="grid grid-cols-1 gap-4 mb-4">
+            <div>
+              <label class="font-semibold text-sm mb-2 block">Tipo de Item</label>
+              <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Filtrar por Sucursal</label>
 
+                <div class="flex flex-wrap gap-3">
+                  @foreach($sucursales as $sucursal)
+                    <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
+                      class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition{{ $sucursal_id == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
+                      {{ $sucursal->nombre }}
+                    </button>
+                  @endforeach
+                </div>
+              </div>
+
+
+              <div class="flex gap-4">
+                <button type="button" wire:click="$set('tipoProducto', 'producto')"
+                  class="flex-1 p-3 rounded-lg border-2 transition flex flex-col items-center text-center{{ $tipoProducto == 'producto' ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="mb-1">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                  <span class="font-semibold">Productos</span>
+                </button>
+
+                <button type="button" wire:click="$set('tipoProducto', 'otro')"
+                  class="flex-1 p-3 rounded-lg border-2 transition flex flex-col items-center text-center {{ $tipoProducto == 'otro' ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }} bg-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="mb-1">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                  </svg>
+                  <span class="font-semibold">Otros Items</span>
+                </button>
+              </div>
+            </div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
             <div>
               <div class="grid grid-cols-1 gap-2 mt-2">
                 <div>
-                  <label class="font-semibold text-sm mb-2 block">Producto(requerido)</label>
+                  <label class="font-semibold text-sm mb-2 block">
+                    @if($tipoProducto === 'producto')
+                      Producto (requerido)
+                    @else
+                      Otro Item (requerido)
+                    @endif
+                  </label>
                   <div
                     class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
-
-                    @foreach($productos as $producto)
-                      @php
-                        $cantidadesPorSucursal = [];
-                        foreach ($producto->existencias as $existencia) {
-                          $totalExistencia = $existencia->reposiciones->sum('cantidad');
-                          if ($totalExistencia > 0) {
-                            $sucursalNombre = $existencia->sucursal->nombre ?? 'Sin sucursal';
-                            $cantidadesPorSucursal[$sucursalNombre] = ($cantidadesPorSucursal[$sucursalNombre] ?? 0) + $totalExistencia;
+                    @if($tipoProducto === 'producto')
+                      @foreach($productos as $producto)
+                        @php
+                          $cantidadesPorSucursal = [];
+                          foreach ($producto->existencias as $existencia) {
+                            $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                            if ($totalExistencia > 0) {
+                              $sucursalNombre = $existencia->sucursal->nombre ?? 'Sin sucursal';
+                              $cantidadesPorSucursal[$sucursalNombre] = ($cantidadesPorSucursal[$sucursalNombre] ?? 0) + $totalExistencia;
+                            }
                           }
-                        }
-                      @endphp
+                        @endphp
 
-                      <button type="button" wire:click="$set('productoSeleccionado', {{ $producto->id }})"
-                        class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}bg-white">
-                        <span class="text-u">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
-                        <div class="flex flex-wrap justify-center gap-3 mt-2">
-                          @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
-                            <div class="flex flex-col items-center gap-1">
-                              <span class="text-xs font-medium text-gray-600">{{ $sucursal }}</span>
-                              <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                {{ $cantidad }} Disponibles
+                        <button type="button" wire:click="$set('productoSeleccionado', {{ $producto->id }})"
+                          class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                          <span
+                            class="text-u font-semibold">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                          <div class="flex flex-wrap justify-center gap-3 mt-2">
+                            @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                              <div class="flex flex-col items-center gap-1">
+                                <span class="text-xs font-medium text-gray-600">{{ $sucursal }}</span>
+                                <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                  {{ $cantidad }} Disponibles
+                                </span>
+                              </div>
+                            @endforeach
+                          </div>
+                          <span class="text-u text-sm mt-1">
+                            {{ $producto->precioReferencia ?? 'sin precio' }} BS
+                          </span>
+                        </button>
+                      @endforeach
+                    @else
+                      @foreach($otros as $otro)
+                        @php
+                          $cantidadesPorSucursal = [];
+                          foreach ($otro->existencias as $existencia) {
+                            $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                            if ($totalExistencia > 0) {
+                              $sucursalNombre = $existencia->sucursal->nombre ?? 'Sin sucursal';
+                              $cantidadesPorSucursal[$sucursalNombre] = ($cantidadesPorSucursal[$sucursalNombre] ?? 0) + $totalExistencia;
+                            }
+                          }
+                        @endphp
+
+                        <button type="button" wire:click="$set('otroSeleccionado', {{ $otro->id }})"
+                          class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $otroSeleccionado == $otro->id ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }} bg-white">
+                          <span class="text-u font-semibold">{{ $otro->descripcion ?? 'Item #' . $otro->id }}</span>
+                          <div class="flex flex-wrap justify-center gap-3 mt-2">
+                            @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                              <div class="flex flex-col items-center gap-1">
+                                <span class="text-xs font-medium text-gray-600">{{ $sucursal }}</span>
+                                <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                  {{ $cantidad }} Disponibles
+                                </span>
+                              </div>
+                            @endforeach
+                          </div>
+                          <div class="flex flex-wrap justify-center gap-2 mt-1">
+                            @if($otro->unidad)
+                              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                {{ $otro->unidad }}
                               </span>
-                            </div>
-                          @endforeach
-                        </div>
-                        <span class="text-u">
-                          {{ $producto->precioReferencia ?? 'sin precio' }} BS
-                        </span>
-                      </button>
-
-                    @endforeach
+                            @endif
+                            @if($otro->tipoProducto)
+                              <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                                {{ $otro->tipoProducto }}
+                              </span>
+                            @endif
+                          </div>
+                          <span class="text-u text-sm mt-1">
+                            {{ $otro->precioReferencia ?? 'sin precio' }} BS
+                          </span>
+                        </button>
+                      @endforeach
+                    @endif
 
                   </div>
                 </div>
@@ -254,56 +354,60 @@
                 <path d="M9 12h6" />
                 <path d="M12 9v6" />
               </svg>
-              Añadir
+              Añadir Item
             </button>
           </div>
           <div class="mb-6">
-            <h4 class="font-semibold mb-2">Productos agregados</h4>
+            <h4 class="font-semibold mb-2">Items agregados</h4>
 
             @if(count($detalles))
               <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
                 @foreach($detalles as $index => $detalle)
                   @if(!isset($detalle['eliminar']))
                     <div
-                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center bg-white hover:border-cyan-600 hover:text-cyan-600 border-gray-300 shadow-sm relative">
-                      <span class="text-u">{{ $detalle['nombre'] }}</span>
+                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center bg-white hover:border-cyan-600 hover:text-cyan-600 border-gray-300 shadow-sm relative{{ $detalle['tipo'] === 'producto' ? 'border-l-4 border-l-cyan-500' : 'border-l-4 border-l-green-500' }}">
+                      <span
+                        class="top-2 left-2 text-xs px-2 py-0.5 rounded-full font-semibold {{ $detalle['tipo'] === 'producto' ? 'bg-cyan-100 text-cyan-800' : 'bg-green-100 text-green-800' }}">
+                        {{ $detalle['tipo'] === 'producto' ? 'Producto' : 'Otro' }}
+                      </span>
+
+                      <span class="text-u font-semibold mt-4">{{ $detalle['nombre'] }}</span>
                       <span class="mt-2 bg-teal-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
                         {{ fmod($detalle['cantidad'], 1) == 0 ? intval($detalle['cantidad']) : number_format($detalle['cantidad'], 2) }}
                         Unidad(es)
                       </span>
-                      {{-- Sucursal (si existe) --}}
                       @if(!empty($detalle['sucursal_nombre']))
                         <span class="text-xs text-gray-500 mt-1">
                           Sucursal: {{ $detalle['sucursal_nombre'] }}
                         </span>
                       @endif
-
-                      {{-- Botón eliminar --}}
-                      <button wire:click="eliminarDetalle({{ $index }})"
-                        class="absolute top-2 right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow transition"
-                        title="Eliminar">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <button wire:click="eliminarDetalle({{ $index }})" class="btn-cyan" title="Eliminar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor" stroke-width="2">
                           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M18 6L6 18" />
-                          <path d="M6 6l12 12" />
+                          <path d="M4 7l16 0" />
+                          <path d="M10 11l0 6" />
+                          <path d="M14 11l0 6" />
+                          <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                          <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
                         </svg>
+                        Eliminar
                       </button>
                     </div>
                   @endif
                 @endforeach
               </div>
-
             @else
-              <p class="text-gray-500 text-sm italic">No hay productos agregados.</p>
+              <p class="text-gray-500 text-sm italic">No hay items agregados.</p>
             @endif
           </div>
           <div class="modal-footer">
             <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path d="M10 10l4 4m0 -4l-4 4" />
-                <circle cx="12" cy="12" r="9" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
               </svg>
               CERRAR
             </button>
@@ -315,11 +419,9 @@
                 <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                 <path d="M14 4l0 4l-6 0l0 -4" />
               </svg>
-              Guardar
+              Guardar Pedido
             </button>
-
           </div>
-
         </div>
       </div>
     </div>
@@ -449,14 +551,14 @@
               </svg>
               guardar pago
             </button>
-            <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+            <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan" title="Cerrar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" />
-                <path d="M10 10l4 4m0 -4l-4 4" />
-                <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
               </svg>
-              cerrar
+              CERRAR
             </button>
           </div>
 
@@ -506,7 +608,7 @@
               <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                 <span class="label-info">Estado:</span>
                 <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
-          {{ $pedidoDetalle->estado_pedido == 0
+                                                    {{ $pedidoDetalle->estado_pedido == 0
       ? 'bg-cyan-600 text-white'
       : ($pedidoDetalle->estado_pedido == 1
         ? 'bg-emerald-600 text-white'
@@ -617,10 +719,11 @@
 
         <div class="modal-footer">
           <button wire:click="$set('modalDetallePedido', false)" class="btn-cyan" title="Cerrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path d="M10 10l4 4m0 -4l-4 4" />
-              <circle cx="12" cy="12" r="9" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+              <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
             </svg>
             CERRAR
           </button>
