@@ -1,10 +1,9 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
+        <h3
+            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
             Coches
         </h3>
-
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input type="text" wire:model.live="search" placeholder="Buscar por marca, modelo o placa..."
                 class="input-minimal w-full" />
@@ -19,42 +18,42 @@
                 Añadir
             </button>
         </div>
-
         @forelse($coches as $coche)
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-1">
-                    <p class="text-u">{{ $coche->movil }}</p>
-                    <p><strong>Marca:</strong> {{ $coche->marca }}</p>
-                    <p><strong>Modelo:</strong> {{ $coche->modelo }}</p>
-                    <p><strong>Placa:</strong> {{ $coche->placa }}</p>
-                    <p><strong>Estado:</strong>
-                        <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-                            {{ $coche->estado ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">
-                            {{ $coche->estado ? 'Activo' : 'Inactivo' }}
+                    <p class="text-emerald-600 uppercase font-semibold">
+                        {{ $coche->movil ?? 'Vehículo' }}
+                    </p>
+                    <p class="text-slate-600"><strong>Marca:</strong> {{ $coche->marca ?? 'N/A' }}</p>
+                    <p><strong>Modelo:</strong> {{ $coche->modelo ?? 'N/A' }}</p>
+                    <p><strong>Placa:</strong> {{ $coche->placa ?? 'N/A' }}</p>
+                    <p class="mt-2 text-sm font-semibold">
+                        <span class="{{ $coche->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
+                            {{ $coche->estado == 0 ? 'Inactivo' : 'Activo' }}
                         </span>
                     </p>
                 </div>
-                <div
-                    class="flex gap-2 overflow-x-auto no-scrollbar border-t border-gray-200 pt-3 pb-1 justify-start md:justify-between">
-                    <button wire:click="editarCoche({{ $coche->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
+                <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
+                    <button wire:click="editarCoche({{ $coche->id }})" class="btn-cyan flex items-center gap-1"
+                        title="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                             <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
                             <path d="M16 5l3 3" />
                         </svg>
                         Editar
                     </button>
-                    <button wire:click="verDetalle({{ $coche->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0"
-                        title="Ver Detalle">
+
+                    <button wire:click="verDetalle({{ $coche->id }})" class="btn-cyan flex items-center gap-1"
+                        title="Ver Detalles">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M19.875 6.27c.7 .398 1.13 1.143 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9h.01" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 12h1v4h1" />
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <circle cx="12" cy="12" r="9" />
+                            <line x1="12" y1="16" x2="12" y2="16" />
+                            <line x1="12" y1="12" x2="12" y2="8" />
                         </svg>
                         Detalles
                     </button>
@@ -66,6 +65,8 @@
             </div>
         @endforelse
     </div>
+
+
 
     @if($modal)
         <div class="modal-overlay">
@@ -100,7 +101,7 @@
                             @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
                                 <button type="button" wire:click="$set('estado', {{ $key }})"
                                     class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-                                            {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                                                                    {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
                                     {{ $label }}
                                 </button>
                             @endforeach
@@ -108,8 +109,25 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" wire:click="cerrarModal" class="btn-cyan">Cerrar</button>
-                    <button type="button" wire:click="guardarCoche" class="btn-cyan">Guardar</button>
+                    <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                        </svg>
+                        CERRAR
+                    </button>
+                    <button type="button" wire:click="guardarCoche" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                            <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                            <path d="M14 4l0 4l-6 0l0 -4" />
+                        </svg>
+                        Guardar
+                    </button>
                 </div>
             </div>
         </div>
@@ -158,10 +176,11 @@
                 </div>
                 <div class="modal-footer">
                     <button wire:click="$set('detalleModal', false)" class="btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M10 10l4 4m0 -4l-4 4" />
-                            <circle cx="12" cy="12" r="9" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                         </svg>
                         CERRAR
                     </button>

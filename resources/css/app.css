@@ -65,7 +65,7 @@
     }
 
     .text-u {
-      @apply text-cyan-600 text-lg font-bold uppercase;
+      @apply text-teal-600 text-sm font-semibold uppercase;
     }
 
   }

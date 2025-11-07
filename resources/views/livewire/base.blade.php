@@ -148,7 +148,7 @@
                         <div
                             class="flex flex-wrap items-center justify-between gap-4 mt-2 bg-white/60 border-2 border-indigo-500 rounded-xl p-4 backdrop-blur-sm shadow-md">
                             <h3 class="text-indigo-600 text-lg font-semibold uppercase text-center sm:text-left">
-                                Items de Almacen
+                                Prodcutos del Almacen
                             </h3>
                             <div class="flex flex-wrap justify-center gap-4">
                                 <button type="button" wire:click="$set('seleccion', 'Bases')"
@@ -238,6 +238,21 @@
                                 Almacen
                             </h3>
                             <div class="flex flex-wrap justify-center gap-4">
+                                <button type="button" wire:click="$set('seleccion', 'Proveedores')"
+                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Proveedores' ? 'border-indigo-600 shadow-lg text-indigo-700' : 'border-gray-200 text-gray-700 hover:border-indigo-600 hover:text-indigo-600 hover:shadow-md' }}">
+                                    <div
+                                        class="p-3 rounded-full{{ $seleccion == 'Proveedores' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path
+                                                d="M10 8h3a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3" />
+                                            <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                                        </svg>
+                                    </div>
+                                    <span class="mt-2 text-sm font-semibold text-center">Proovedores</span>
+                                </button>
                                 <button type="button" wire:click="$set('seleccion', 'Stocks')"
                                     class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Stocks' ? 'border-indigo-600 shadow-lg text-indigo-700' : 'border-gray-200 text-gray-700 hover:border-indigo-600 hover:text-indigo-600 hover:shadow-md' }}">
                                     <div
@@ -402,7 +417,7 @@
                                                 d="M10 9a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2h2a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Etiqeutado y plastificado</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Etiquetado y plastificado</span>
                                 </button>
                             </div>
                         </div>

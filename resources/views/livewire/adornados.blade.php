@@ -1,47 +1,59 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <h3 class="inline-block bg-teal-700 text-white px-5 py-2 rounded-full text-xl font-bold uppercase shadow-md">
+        <h3
+            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
             Adornados
         </h3>
-
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input type="text" wire:model.live="search" placeholder="Buscar por código o pedido..."
                 class="input-minimal w-full" />
-            <button wire:click="abrirModal" class="btn-cyan flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor">
-                    <path d="M12 5v14m7-7H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path
+                        d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path
+                        d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
                 Añadir
             </button>
         </div>
-
         @forelse($adornados as $adornado)
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-1">
-                    <p class="text-u">{{ $adornado->codigo ?? 'N/A' }}</p>
-                    <p><strong>Pedido:</strong> {{ $adornado->pedido->codigo ?? 'N/A' }}</p>
+                    <p class="text-emerald-600 uppercase font-semibold">
+                        Adornado: {{ $adornado->codigo ?? 'N/A' }}
+                    </p>
+                    <p class="text-slate-600"><strong>Pedido:</strong> {{ $adornado->pedido->codigo ?? 'N/A' }}</p>
                     <p><strong>Observaciones:</strong> {{ $adornado->observaciones ?? 'N/A' }}</p>
-
-                    <div class="mt-2">
-                        <p class="font-semibold text-sm mb-1">Reposiciones usadas:</p>
+                    <div class="mt-4">
+                        <p class="font-semibold text-sm mb-1 text-gray-700">Reposiciones usadas:</p>
                         @forelse($adornado->reposiciones as $repo)
                             <div
-                                class="bg-cyan-50 border border-cyan-300 rounded-lg px-3 py-1 mb-1 flex justify-between text-sm">
-                                <span>{{ $repo->existencia->existenciable->descripcion ?? 'Reposición #' . $repo->id }}</span>
-                                <span class="text-cyan-700 font-semibold">{{ $repo->pivot->cantidad_usada ?? 0 }}</span>
+                                class="flex justify-between items-center bg-cyan-50 border border-cyan-200 rounded-lg px-4 py-2 shadow-sm mb-1">
+                                <span class="text-sm text-gray-700">
+                                    {{ $repo->existencia->existenciable->descripcion ?? 'Reposición #' . $repo->id }}
+                                </span>
+                                <span class="text-sm font-semibold text-cyan-700">
+                                    {{ $repo->pivot->cantidad_usada ?? 0 }}
+                                </span>
                             </div>
                         @empty
                             <p class="text-gray-500 text-sm">No se usaron reposiciones</p>
                         @endforelse
                     </div>
+                    <p class="mt-2 text-sm font-semibold">
+                        <span
+                            class="{{ $adornado->estado == 0 ? 'text-yellow-600' : '' }} {{ $adornado->estado == 1 ? 'text-blue-600' : '' }} {{ $adornado->estado == 2 ? 'text-green-600' : '' }}">
+                            {{ $adornado->estado == 0 ? 'Pendiente' : ($adornado->estado == 1 ? 'En Proceso' : 'Finalizado') }}
+                        </span>
+                    </p>
                 </div>
-
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
                     <button wire:click="abrirModal('edit', {{ $adornado->id }})" class="btn-cyan" title="Editar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                             <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
                             <path d="M16 5l3 3" />
@@ -51,12 +63,28 @@
 
                     <button wire:click="modaldetalle({{ $adornado->id }})" class="btn-cyan flex items-center gap-1"
                         title="Ver detalles">
-                        👁️ Detalles
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <circle cx="12" cy="12" r="9" />
+                            <line x1="12" y1="16" x2="12" y2="16" />
+                            <line x1="12" y1="12" x2="12" y2="8" />
+                        </svg>
+                        Detalles
                     </button>
 
                     <button wire:click="eliminar({{ $adornado->id }})" class="btn-cyan flex items-center gap-1"
                         title="Eliminar">
-                        🗑️ Eliminar
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M4 7h16" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                        </svg>
+                        Eliminar
                     </button>
                 </div>
             </div>
@@ -65,8 +93,9 @@
                 No hay adornados registrados.
             </div>
         @endforelse
-
     </div>
+
+
 
     @if($modal)
         <div class="modal-overlay">
@@ -134,7 +163,7 @@
 
                                         <button type="button" wire:click="$set('pedido_id', {{ $pedido->id }})"
                                             class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center 
-                                                                {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                            {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
                                             <span class="text-u font-medium">
                                                 {{ $pedido->codigo }}
                                             </span>
@@ -229,10 +258,11 @@
 
                     <div class="modal-footer">
                         <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="M10 10l4 4m0 -4l-4 4" />
-                                <circle cx="12" cy="12" r="9" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                             </svg>
                             CERRAR
                         </button>
