@@ -3,105 +3,95 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\Asignado;
 use App\Models\Reposicion;
-use App\Models\Existencia;
+use App\Models\Asignado;
 
-class Reportestock extends Component
+class ReporteStock extends Component
 {
-    public $asignados;
-    public $reposicions;
-    public $tablaActiva = null;
-
-    public $fechaInicio;
-    public $fechaFin;
-    public $existenciableId;
-
-    public $ocultarMontos = false;
-    public $ocultarCantidades = false;
-
-    public $existenciables; // lista de existencias con reposiciones
-
-    public function mount()
-    {
-        // Inicializar reposiciones y asignados sin filtros
-        $this->asignados = Asignado::with(['reposiciones.comprobantes', 'personal'])->get();
-        $this->reposicions = Reposicion::with('comprobantes', 'personal', 'proveedor', 'asignados', 'existencia')->get();
-
-        // Existencias que ya tienen reposiciones
-        $this->existenciables = Existencia::whereIn(
-            'id',
-            Reposicion::pluck('existencia_id')->unique()
-        )->get();
-    }
-
-    public function mostrarTabla($tabla)
-    {
-        $this->tablaActiva = $tabla;
-    }
-
-    public function aplicarFiltros()
-    {
-        // Filtrar asignados
-        $this->asignados = Asignado::with(['reposiciones.comprobantes', 'personal'])
-            ->when($this->fechaInicio, function ($q) {
-                $q->whereDate('fecha', '>=', $this->fechaInicio);
-            })
-            ->when($this->fechaFin, function ($q) {
-                $q->whereDate('fecha', '<=', $this->fechaFin);
-            })
-            ->when($this->existenciableId, function ($q) {
-                $q->whereHas('reposiciones.existencia', function ($qr) {
-                    $qr->where('id', $this->existenciableId);
-                });
-            })
-            ->get();
-
-        // Filtrar reposiciones
-        $this->reposicions = Reposicion::with('comprobantes', 'personal', 'proveedor', 'asignados', 'existencia')
-            ->when($this->fechaInicio, function ($q) {
-                $q->whereDate('fecha', '>=', $this->fechaInicio);
-            })
-            ->when($this->fechaFin, function ($q) {
-                $q->whereDate('fecha', '<=', $this->fechaFin);
-            })
-            ->when($this->existenciableId, function ($q) {
-                $q->where('existencia_id', $this->existenciableId);
-            })
-            ->get();
-    }
-
-    public function limpiarFiltros()
-    {
-        $this->fechaInicio = null;
-        $this->fechaFin = null;
-        $this->existenciableId = null;
-
-        $this->mount(); // recargar sin filtros
-    }
-
     public function render()
     {
-        return view('livewire.reportestock', [
-            'asignados' => $this->asignados,
-            'reposicions' => $this->reposicions,
-            'tablaActiva' => $this->tablaActiva,
-            'existenciables' => $this->existenciables,
-        ]);
-    }
+        $reposiciones = Reposicion::with([
+            'personal',
+            'proveedor',
+            'existencia.sucursal',
+            'existencia.existenciable',
+            'comprobantes'
+        ])->orderBy('fecha')->get();
 
-    public function deseleccionarTabla()
-    {
-        $this->tablaActiva = null;
-    }
+        $stock = [];
+        $movimientos = collect();
 
-    public function toggleCantidades()
-    {
-        $this->ocultarCantidades = !$this->ocultarCantidades;
-    }
+        foreach ($reposiciones as $r) {
+            $monto_total = $r->comprobantes->sum('monto');
+            $precio_unitario = $r->cantidad_inicial > 0 ? $monto_total / $r->cantidad_inicial : 0;
 
-    public function toggleMontos()
-    {
-        $this->ocultarMontos = !$this->ocultarMontos;
+            $stock[] = [
+                'reposicion_id' => $r->id,
+                'fecha' => $r->fecha,
+                'restante' => $r->cantidad,
+                'precio_unitario' => $precio_unitario,
+            ];
+
+            $movimientos->push([
+                'tipo' => 'Entrada',
+                'codigo' => $r->codigo,
+                'fecha' => $r->fecha,
+                'cantidad_inicial' => $r->cantidad_inicial,
+                'cantidad' => $r->cantidad,
+                'nombre' => $r->existencia->existenciable->descripcion ?? '-',
+                'existencia_type' => class_basename($r->existencia->existenciable ?? '-'), 
+                'personal' => $r->personal->nombres ?? 'Sin personal',
+                'proveedor' => $r->proveedor->nombre ?? 'Sin proveedor',
+                'sucursal' => $r->existencia->sucursal->nombre ?? 'Sin sucursal',
+                'monto_total' => $monto_total,
+                'precio_unitario' => $precio_unitario,
+                'es_asignacion' => false,
+            ]);
+        }
+
+        $asignaciones = Asignado::with([
+            'personal',
+            'existencia.sucursal',
+            'existencia.existenciable'
+        ])->orderBy('fecha')->get();
+
+        foreach ($asignaciones as $a) {
+            $cantidad_pendiente = $a->cantidad;
+            $total_costo = 0;
+
+            foreach ($stock as &$lote) {
+                if ($cantidad_pendiente <= 0)
+                    break;
+                if ($lote['restante'] <= 0)
+                    continue;
+
+                $usar = min($cantidad_pendiente, $lote['restante']);
+                $total_costo += $usar * $lote['precio_unitario'];
+                $lote['restante'] -= $usar;
+                $cantidad_pendiente -= $usar;
+            }
+
+            $precio_unitario = $a->cantidad > 0 ? $total_costo / $a->cantidad : 0;
+
+            $movimientos->push([
+                'tipo' => 'Salida',
+                'codigo' => $a->codigo,
+                'fecha' => $a->fecha,
+                'cantidad_inicial' => $a->cantidad_original,
+                'cantidad' => $a->cantidad,
+                'nombre' => $a->existencia->existenciable->descripcion ?? '-',
+                'existencia_type' => class_basename($a->existencia->existenciable ?? '-'), // <-- aquí
+                'personal' => $a->personal->nombres ?? 'Sin personal',
+                'proveedor' => '-',
+                'sucursal' => $a->existencia->sucursal->nombre ?? 'Sin sucursal',
+                'monto_total' => $total_costo,
+                'precio_unitario' => $precio_unitario,
+                'es_asignacion' => true,
+            ]);
+        }
+
+        $movimientos = $movimientos->sortBy('fecha')->values();
+
+        return view('livewire.reportestock', compact('movimientos'));
     }
 }

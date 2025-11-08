@@ -40,10 +40,17 @@ class Asignaciones extends Component
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
-
         $query = Existencia::with(['existenciable', 'sucursal'])
-            ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)->where('estado_revision', true))
-            ->where('existenciable_type', '!=', \App\Models\Producto::class);
+            ->whereHas(
+                'reposiciones',
+                fn($q) =>
+                $q->where('cantidad', '>', 0)
+                    ->where('estado_revision', true)
+            )
+            ->whereNotIn('existenciable_type', [
+                \App\Models\Producto::class,
+                \App\Models\Otro::class,
+            ]);
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             if ($sucursal_id) {
@@ -58,9 +65,9 @@ class Asignaciones extends Component
                 $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%');
             });
         }
-
         $this->existencias = $query->orderBy('id')->get();
     }
+
 
     public function updatingSearchExistencia()
     {
@@ -86,22 +93,34 @@ class Asignaciones extends Component
             'motivo',
             'codigo',
         ]);
+
         $this->accion = $accion;
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
         if (!in_array($rol, [1, 2])) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
+
         $personal = $usuario->personal;
         $this->cargarExistencias();
+
         if (!$personal) {
             $this->mensajeError = "No estás asignado a ningún personal válido.";
             $this->modalError = true;
             return;
         }
+
         $this->personal_id = $personal->id;
         $query = Existencia::with('existenciable', 'sucursal')
-            ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)->where('estado_revision', true));
+            ->whereHas(
+                'reposiciones',
+                fn($q) =>
+                $q->where('cantidad', '>', 0)->where('estado_revision', true)
+            )
+            ->whereNotIn('existenciable_type', [
+                \App\Models\Producto::class,
+                \App\Models\Otro::class,
+            ]);
         if ($rol === 2) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             if ($sucursal_id) {
@@ -117,11 +136,8 @@ class Asignaciones extends Component
                 $query->orWhere('id', $asignado->existencia_id);
             }
         }
-        $this->existencias = $query
-            ->where('existenciable_type', '!=', \App\Models\Producto::class)
-            ->orderBy('id')
-            ->get();
 
+        $this->existencias = $query->orderBy('id')->get();
         if ($accion === 'create') {
             $this->fecha = now()->format('Y-m-d\TH:i');
             $this->codigo = 'A-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
@@ -132,6 +148,7 @@ class Asignaciones extends Component
 
         $this->modal = true;
     }
+
 
     public function editar($id)
     {
@@ -231,7 +248,8 @@ class Asignaciones extends Component
                 ->get();
 
             foreach ($lotes as $lote) {
-                if ($restante <= 0) break;
+                if ($restante <= 0)
+                    break;
 
                 $usar = min($restante, $lote->cantidad);
                 $asignado->reposiciones()->attach($lote->id, ['cantidad' => $usar]);
@@ -305,7 +323,7 @@ class Asignaciones extends Component
             ->latest()
             ->get();
 
-        $this->sucursales = Sucursal::all(); 
+        $this->sucursales = Sucursal::all();
 
         return view('livewire.asignaciones', compact('asignaciones'));
     }
@@ -317,7 +335,8 @@ class Asignaciones extends Component
 
     public function eliminarAsignacionConfirmado()
     {
-        if (!$this->confirmingDeleteAsignacionId) return;
+        if (!$this->confirmingDeleteAsignacionId)
+            return;
         $this->eliminarAsignacion($this->confirmingDeleteAsignacionId);
         $this->confirmingDeleteAsignacionId = null;
     }

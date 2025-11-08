@@ -101,16 +101,12 @@
                             Editar
                         </button>
 
-                        <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})"
-                            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Eliminar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M4 7h16" />
-                                <path d="M10 11v6" />
-                                <path d="M14 11v6" />
-                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                <path d="M9 7V4a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                             </svg>
                             Eliminar
                         </button>
@@ -199,13 +195,13 @@
                                         <div class="flex flex-wrap gap-2">
                                             <button type="button" wire:click="filtrarSucursalModal(null)"
                                                 class="px-3 py-1 rounded-full text-sm font-medium border 
-                                                                                    {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                                                                                            {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
                                                 Todas
                                             </button>
                                             @foreach($sucursales as $sucursal)
                                                 <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
                                                     class="px-3 py-1 rounded-full text-sm font-medium border 
-                                                                                                                                    {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                                                                                                                                                        {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
                                                     {{ $sucursal->nombre }}
                                                 </button>
                                             @endforeach
@@ -228,10 +224,10 @@
 
                                                             <button type="button" wire:click="$set('existencia_id', {{ $existencia->id }})"
                                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                                                                                                                                                                                                                            {{ $existencia_id == $existencia->id
+                                                                                                                                                                                                                                                                                                                                {{ $existencia_id == $existencia->id
                                             ? 'border-cyan-600 text-cyan-600'
                                             : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}
-                                                                                                                                                                                                                                            bg-white">
+                                                                                                                                                                                                                                                                                                                                bg-white">
 
                                                                 <span class="text-u">
                                                                     {{ $tipo }}:
@@ -288,10 +284,11 @@
 
                     <div class="modal-footer">
                         <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="M10 10l4 4m0 -4l-4 4" />
-                                <circle cx="12" cy="12" r="9" />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                             </svg>
                             CERRAR
                         </button>
@@ -336,13 +333,14 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" wire:click="eliminarAsignacionConfirmado" class="btn-circle btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="currentColor">
+                    <button type="button" wire:click="eliminarAsignacionConfirmado" class="btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path
-                                d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                         </svg>
+                        Eliminar
                     </button>
 
                     <button type="button" wire:click="$set('confirmingDeleteAsignacionId', null)"
@@ -448,10 +446,11 @@
                 </div>
                 <div class="modal-footer mt-4">
                     <button wire:click="cerrarModalDetalle" class="btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path d="M10 10l4 4m0 -4l-4 4" />
-                            <circle cx="12" cy="12" r="9" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                         </svg>
                         CERRAR
                     </button>
