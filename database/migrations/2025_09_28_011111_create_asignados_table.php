@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('asignados', function (Blueprint $table) {
             $table->id();
             $table->string('codigo')->unique();
-            $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade');
             $table->integer('cantidad');
             $table->integer('cantidad_original');

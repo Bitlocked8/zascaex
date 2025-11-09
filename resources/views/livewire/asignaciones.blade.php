@@ -9,7 +9,6 @@
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input type="text" wire:model.live="searchCodigo" placeholder="Buscar por código..."
                 class="input-minimal w-full" />
-
             <button wire:click="abrirModal" class="btn-cyan flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor">
                     <path
@@ -24,34 +23,23 @@
                 $montoAsignado = 0;
                 foreach ($asignado->reposiciones as $reposicion) {
                     $cantidadUsada = $reposicion->pivot->cantidad;
-                    foreach ($reposicion->comprobantes as $comprobante) {
-                        $precioUnitario = $reposicion->cantidad_inicial > 0
-                            ? $comprobante->monto / $reposicion->cantidad_inicial
-                            : 0;
-                        $montoAsignado += $precioUnitario * $cantidadUsada;
-                    }
+                    $descripcion = $reposicion->existencia->existenciable->descripcion ?? 'N/A';
+                    $montoAsignado += $cantidadUsada;
                 }
-                $diferencia = $asignado->cantidad_original - $asignado->cantidad;
-                $tipoAccion = null;
-                $claseColor = '';
-
-                if ($diferencia > 0) {
-                    $tipoAccion = $asignado->soplados()->sum('cantidad') > 0 ? 'Soplado' : 'Llenado';
-                    $claseColor = $tipoAccion === 'Soplado'
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                        : 'bg-blue-50 border-blue-200 text-blue-700';
-                }
+                $tipoAccion = $asignado->soplados()->sum('cantidad') > 0 ? 'Soplado' : null;
+                $claseColor = $tipoAccion === 'Soplado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : '';
             @endphp
 
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
+                    <p class="text-emerald-600 uppercase font-semibold">{{ $asignado->codigo ?? 'N/A' }}</p>
+                    @foreach($asignado->reposiciones as $reposicion)
+                        <p class="text-slate-600">
+                            {{ class_basename($reposicion->existencia->existenciable ?? '') }}:
+                            {{ $reposicion->existencia->existenciable->descripcion ?? 'N/A' }}
+                        </p>
+                    @endforeach
 
-                    <p class="text-emerald-600 uppercase font-semibold">
-                        {{ class_basename($asignado->existencia->existenciable ?? '') }}:
-                        {{ $asignado->existencia->existenciable->descripcion ?? 'N/A' }}
-                    </p>
-
-                    <p class="text-slate-600">{{ $asignado->codigo ?? 'N/A' }}</p>
                     <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
                     <p><strong>Cantidad original:</strong> {{ $asignado->cantidad_original ?? $asignado->cantidad }}</p>
                     <p><strong>Cantidad actual:</strong> {{ $asignado->cantidad }}</p>
@@ -75,45 +63,16 @@
                 </div>
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-
-                    <button wire:click="modaldetalle({{ $asignado->id }})" class="btn-cyan" title="Ver detalle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                            <path d="M8 12l0 .01" />
-                            <path d="M12 12l0 .01" />
-                            <path d="M16 12l0 .01" />
-                        </svg>
-                        Ver mas
-                    </button>
-
+                    <button wire:click="modaldetalle({{ $asignado->id }})" class="btn-cyan" title="Ver detalle">Ver
+                        más</button>
                     @if($asignado->cantidad > 0)
                         <button wire:click="abrirModal('edit', {{ $asignado->id }})"
-                            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                <path d="M16 5l3 3" />
-                            </svg>
-                            Editar
-                        </button>
-
-                        <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                            </svg>
-                            Eliminar
-                        </button>
+                            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">Editar</button>
+                        <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan"
+                            title="Cerrar">Eliminar</button>
                     @endif
                 </div>
             </div>
-
         @empty
             <div class="col-span-full text-center py-4 text-gray-600">
                 No hay asignaciones registradas.
@@ -121,14 +80,12 @@
         @endforelse
     </div>
 
-
-
-
     @if($modal)
         <div class="modal-overlay">
-            <div class="modal-box">
+            <div class="modal-box max-w-4xl">
                 <div class="modal-content flex flex-col gap-4">
 
+                    {{-- Mensajes de error --}}
                     @if ($errors->any())
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                             <strong class="font-bold">¡Atención!</strong>
@@ -140,175 +97,121 @@
                             </ul>
                         </div>
                     @endif
-                    <div class="grid grid-cols-1 gap-2 mt-2">
+
+                    {{-- Datos generales --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                         <p class="font-semibold text-sm">
-                            <span class="text-u">{{ $codigo }}</span>
+                            Código: <span class="text-u">{{ $codigo }}</span>
                         </p>
                         <p class="font-semibold text-sm">
-                            Fecha:
-                            <span class="font-normal">
-                                {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}
-                            </span>
+                            Fecha: <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
                         </p>
                         <p class="font-semibold text-sm">
-                            Personal: <span class="font-normal">
-                                {{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}
-                            </span>
+                            Personal: <span
+                                class="font-normal">{{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}</span>
                         </p>
-                        <p class="font-semibold text-sm">
-                            Sucursal: <span class="font-normal">
-                                {{ optional($existencias->firstWhere('id', $existencia_id))->sucursal->nombre ?? 'Sin sucursal' }}
-                            </span>
-                        </p>
+                    </div>
 
-                        <div class="grid grid-cols-1 gap-2 mt-2">
-                            <div>
-                                <label class="text-u">Producto (Requerido)</label>
-
-                                @if($accion === 'edit')
-                                    @php
-                                        $ex = $existencias->firstWhere('id', $existencia_id);
-                                        $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
-                                        $cantidadDisponible = $ex
-                                            ? $ex->reposiciones->where('estado_revision', true)->sum('cantidad')
-                                            : 0;
-                                    @endphp
-
-                                    <p
-                                        class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800 text-center">
-                                        <span class="text-u">
-                                            {{ $tipo }}:
-                                            {{ $ex->existenciable->descripcion ?? ('Existencia #' . $existencia_id) }}
-                                        </span>
-
-                                        <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                            Disponible: {{ $cantidadDisponible }}
-                                        </span>
-
-                                        <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                            {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
-                                        </span>
-                                    </p>
-                                @else
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Sucursal</label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button type="button" wire:click="filtrarSucursalModal(null)"
-                                                class="px-3 py-1 rounded-full text-sm font-medium border 
-                                                                                                            {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
-                                                Todas
-                                            </button>
-                                            @foreach($sucursales as $sucursal)
-                                                <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                                                    class="px-3 py-1 rounded-full text-sm font-medium border 
-                                                                                                                                                                        {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
-                                                    {{ $sucursal->nombre }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar existencia</label>
-                                        <input type="text" wire:model.live="searchExistencia" class="input-minimal w-full"
-                                            placeholder="Escribe la descripción..." />
-                                    </div>
-
-                                    <div
-                                        class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
-                                        @forelse($existencias as $existencia)
-                                                            @php
-                                                                $tipo = class_basename($existencia->existenciable_type);
-                                                                $cantidadDisponible = $existencia->reposiciones->where('estado_revision', true)->sum('cantidad');
-                                                            @endphp
-
-                                                            <button type="button" wire:click="$set('existencia_id', {{ $existencia->id }})"
-                                                                class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                                                                                                                                                                                                                                                                                                                {{ $existencia_id == $existencia->id
-                                            ? 'border-cyan-600 text-cyan-600'
-                                            : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}
-                                                                                                                                                                                                                                                                                                                                bg-white">
-
-                                                                <span class="text-u">
-                                                                    {{ $tipo }}:
-                                                                    {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}
-                                                                </span>
-
-                                                                <div class="flex flex-wrap justify-center gap-3 mt-2">
-                                                                    <div class="flex flex-col items-center gap-1">
-                                                                        <span class="text-xs font-medium text-gray-600">
-                                                                            {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
-                                                                        </span>
-                                                                        <span
-                                                                            class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                                            {{ $cantidadDisponible }} Disponibles
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                            </button>
-                                        @empty
-                                            <p class="text-gray-500 text-sm text-center py-2 col-span-full">
-                                                No hay productos disponibles
-                                            </p>
-                                        @endforelse
-                                    </div>
-                                @endif
-                            </div>
+                    {{-- Filtros --}}
+                    <div class="mb-4 border-b pb-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Sucursal</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" wire:click="filtrarSucursalModal(null)"
+                                class="px-3 py-1 rounded-full text-sm font-medium border 
+                                {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                Todas
+                            </button>
+                            @foreach($sucursales as $sucursal)
+                                <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
+                                    class="px-3 py-1 rounded-full text-sm font-medium border 
+                                            {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
+                                    {{ $sucursal->nombre }}
+                                </button>
+                            @endforeach
                         </div>
 
-
-
-                        <div>
-                            <label class=" text-u">Cantidad (Requerido)</label>
-                            @if($accion === 'edit')
-                                <span
-                                    class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">{{ $cantidad }}</span>
-                            @else
-                                <input type="number" wire:model="cantidad" class="input-minimal" min="1" placeholder="Cantidad">
-                            @endif
+                        <div class="mt-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar existencia</label>
+                            <input type="text" wire:model.live="searchExistencia" class="input-minimal w-full"
+                                placeholder="Escribe la descripción..." />
                         </div>
                     </div>
+
+                    {{-- Lista de existencias --}}
+                    <div class="border rounded-lg p-3 bg-gray-50">
+                        <h3 class="font-semibold text-gray-800 mb-3 text-center">Selecciona los productos a asignar</h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[300px]">
+                            @forelse($existencias as $existencia)
+                                @php
+                                    $tipo = class_basename($existencia->existenciable_type);
+                                    $cantidadDisponible = $existencia->reposiciones->where('estado_revision', true)->sum('cantidad');
+                                    $descripcion = $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id;
+
+                                    $seleccionadoIndex = collect($items ?? [])->search(fn($item) => $item['existencia_id'] === $existencia->id);
+                                    $seleccionado = $seleccionadoIndex !== false;
+                                @endphp
+
+                                <div
+                                    class="border-2 rounded-lg p-3 text-center transition {{ $seleccionado ? 'border-cyan-600 bg-white shadow' : 'border-gray-200 bg-white hover:border-cyan-400' }}">
+                                    <span class="text-u block mb-1">{{ $tipo }}: {{ $descripcion }}</span>
+                                    <span
+                                        class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold inline-block mb-2">
+                                        {{ $cantidadDisponible }} disponibles
+                                    </span>
+
+                                    <div class="flex justify-center items-center gap-2">
+                                        @if($seleccionado)
+                                            <input type="number" wire:model="items.{{ $seleccionadoIndex }}.cantidad" min="1"
+                                                max="{{ $cantidadDisponible }}" class="input-minimal w-20 text-center"
+                                                placeholder="Cant.">
+                                            <button type="button" wire:click="quitarExistencia({{ $existencia->id }})"
+                                                class="text-red-500 hover:text-red-700 text-sm font-semibold">
+                                                Quitar
+                                            </button>
+                                        @else
+                                            <button type="button" wire:click="agregarExistencia({{ $existencia->id }})"
+                                                class="btn-cyan text-xs">
+                                                + Agregar
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-gray-500 text-sm text-center col-span-full py-4">
+                                    No hay productos disponibles.
+                                </p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    {{-- Campos extra --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                         <div>
                             <label class="font-semibold text-sm">Motivo (Opcional)</label>
                             <input type="text" wire:model="motivo" class="input-minimal"
-                                placeholder="Motivo de la asignacion del material">
+                                placeholder="Motivo de la asignación">
                         </div>
 
                         <div>
                             <label class="font-semibold text-sm">Observaciones (Opcional)</label>
                             <input type="text" wire:model="observaciones" class="input-minimal"
-                                placeholder="Observacion de la asignacion">
+                                placeholder="Observaciones adicionales">
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                            </svg>
-                            CERRAR
-                        </button>
-                        <button type="button" wire:click="guardarAsignacion" class="btn-cyan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" />
-                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                <path d="M14 4l0 4l-6 0l0 -4" />
-                            </svg>
-                            Guardar
-                        </button>
-
+                    {{-- Botones --}}
+                    <div class="modal-footer mt-4 flex justify-between">
+                        <button type="button" wire:click="cerrarModal" class="btn-cyan">Cerrar</button>
+                        <button type="button" wire:click="guardarAsignacion" class="btn-cyan">Guardar</button>
                     </div>
 
                 </div>
             </div>
         </div>
     @endif
+
+
 
     @if($modalError)
         <div wire:click.self="$set('modalError', false)"
@@ -320,41 +223,7 @@
             </div>
         </div>
     @endif
-    @if($confirmingDeleteAsignacionId)
-        <div class="modal-overlay">
-            <div class="modal-box">
-                <div class="modal-content">
-                    <div class="flex flex-col gap-4 text-center">
-                        <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
-                        <p class="text-gray-600">
-                            La asignación seleccionada se eliminará y se restaurarán los lotes.
-                        </p>
-                    </div>
-                </div>
 
-                <div class="modal-footer">
-                    <button type="button" wire:click="eliminarAsignacionConfirmado" class="btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                        </svg>
-                        Eliminar
-                    </button>
-
-                    <button type="button" wire:click="$set('confirmingDeleteAsignacionId', null)"
-                        class="btn-circle btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10 10l4 4m0-4l-4 4" />
-                            <circle cx="12" cy="12" r="9" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
     @if($modalDetalle && $asignacionSeleccionada)
         <div class="modal-overlay" wire:ignore.self>
             <div class="modal-box">

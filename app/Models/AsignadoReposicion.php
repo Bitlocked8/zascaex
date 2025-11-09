@@ -12,6 +12,7 @@ class AsignadoReposicion extends Model
     protected $fillable = [
         'asignado_id',
         'reposicion_id',
+        'existencia_id',
         'cantidad',
     ];
     public function asignado()
@@ -22,5 +23,9 @@ class AsignadoReposicion extends Model
     public function reposicion()
     {
         return $this->belongsTo(Reposicion::class);
+    }
+    public function existencia()
+    {
+        return $this->belongsTo(Existencia::class);
     }
 }

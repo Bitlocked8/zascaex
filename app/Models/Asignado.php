@@ -11,7 +11,6 @@ class Asignado extends Model
 
     protected $fillable = [
         'codigo',
-        'existencia_id',
         'personal_id',
         'cantidad',
         'cantidad_original',
@@ -20,12 +19,6 @@ class Asignado extends Model
         'observaciones'
     ];
 
-
-    public function existencia()
-    {
-        return $this->belongsTo(Existencia::class);
-    }
-
     public function personal()
     {
         return $this->belongsTo(Personal::class);
@@ -33,8 +26,8 @@ class Asignado extends Model
 
     public function reposiciones()
     {
-        return $this->belongsToMany(Reposicion::class, 'asignado_reposicions')
-            ->withPivot('cantidad')
+        return $this->belongsToMany(Reposicion::class, 'asignado_reposicions') // asegúrate que coincide con la migración
+            ->withPivot('cantidad', 'existencia_id') // agrega existencia_id si lo necesitas en pivot
             ->withTimestamps();
     }
 

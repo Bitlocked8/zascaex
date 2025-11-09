@@ -53,10 +53,10 @@ class Soplados extends Component
             })
             ->get();
         $sucursales = \App\Models\Sucursal::all();
-        $asignaciones = Asignado::with('existencia.existenciable', 'existencia.sucursal')
+        $asignaciones = Asignado::with('reposiciones.existencia.existenciable', 'reposiciones.existencia.sucursal')
             ->where('cantidad', '>', 0)
             ->whereDoesntHave('soplados')
-            ->whereHas('existencia', function ($q) {
+            ->whereHas('reposiciones.existencia', function ($q) {
                 $q->where('existenciable_type', \App\Models\Preforma::class);
                 if ($this->sucursalSeleccionada) {
                     $q->where('sucursal_id', $this->sucursalSeleccionada);
@@ -64,13 +64,13 @@ class Soplados extends Component
             })
             ->when($this->filtroSucursalElemento, function ($q) {
                 $q->whereHas(
-                    'existencia',
+                    'reposiciones.existencia',
                     fn($sub) =>
                     $sub->where('sucursal_id', $this->filtroSucursalElemento)
                 );
             })
             ->when($this->busquedaAsignacion, function ($q) {
-                $q->whereHas('existencia.existenciable', function ($sub) {
+                $q->whereHas('reposiciones.existencia.existenciable', function ($sub) {
                     $sub->where('descripcion', 'like', "%{$this->busquedaAsignacion}%");
                 });
             })

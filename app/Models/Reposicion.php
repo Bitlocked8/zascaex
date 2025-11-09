@@ -47,9 +47,10 @@ class Reposicion extends Model
     public function asignados()
     {
         return $this->belongsToMany(Asignado::class, 'asignado_reposicions')
-            ->withPivot('cantidad')
+            ->withPivot('cantidad', 'existencia_id')
             ->withTimestamps();
     }
+
 
     public function traspasosOrigen()
     {

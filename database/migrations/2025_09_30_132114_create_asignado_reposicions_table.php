@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asignado_id')->constrained('asignados')->onDelete('cascade');
             $table->foreignId('reposicion_id')->constrained('reposicions')->onDelete('cascade');
+            $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
             $table->integer('cantidad');
             $table->timestamps();
         });
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('asignado_reposicions');
+        Schema::dropIfExists('asignado_reposicion');
     }
 };

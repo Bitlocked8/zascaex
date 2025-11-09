@@ -132,6 +132,8 @@
         <div class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-content flex flex-col gap-4">
+
+                    {{-- Errores --}}
                     @if($errors->any())
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                             <strong class="font-bold">¡Atención!</strong>
@@ -147,9 +149,10 @@
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <span class="text-u">{{ $codigo }}</span>
                         <span class="text-u"> fecha soplado: {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
+
+                        {{-- Sucursal --}}
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Sucursal del elemento</label>
-
                             @if($accion === 'create')
                                 @if($sucursales->count() > 0)
                                     <div class="flex flex-wrap gap-3">
@@ -165,26 +168,25 @@
                                 @endif
                             @else
                                 @php
-                                    $sucursalNombre = optional($soplado->asignado->existencia->sucursal ?? null)->nombre ?? 'N/A';
+                                    $sucursalNombre = $soplado->asignado?->existencia?->sucursal?->nombre ?? 'N/A';
                                 @endphp
                                 <span
                                     class="inline-block px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border border-gray-300 font-medium">
                                     {{ $sucursalNombre }}
                                 </span>
                             @endif
-
                         </div>
 
-
+                        {{-- Preforma --}}
                         <div>
                             <label class="text-u">Preforma (Requerido)</label>
 
-
                             @if($accion === 'edit')
                                 @php
-                                    $as = $asignaciones->firstWhere('id', $asignado_id)
-                                        ?? ($soplado->asignado ?? null);
-                                    $tipo = $as ? class_basename($as->existencia->existenciable_type ?? '') : 'Desconocido';
+                                    $as = $asignaciones->firstWhere('id', $asignado_id) ?? ($soplado->asignado ?? null);
+                                    $tipo = $as && optional($as->existencia)->existenciable
+                                        ? class_basename($as->existencia->existenciable_type)
+                                        : 'Desconocido';
                                 @endphp
 
                                 @if($as)
@@ -192,13 +194,13 @@
                                         class="flex flex-col md:flex-row md:items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800">
                                         <span class="font-medium text-u">
                                             {{ $tipo }}:
-                                            {{ $as->existencia->existenciable->descripcion ?? 'Asignado #' . ($as->id ?? $asignado_id) }}
+                                            {{ optional(optional($as->existencia)->existenciable)->descripcion ?? 'Asignado #' . ($as->id ?? $asignado_id) }}
                                         </span>
                                         <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                             Disponible: {{ $as->cantidad ?? 0 }}
                                         </span>
                                         <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                            {{ $as->existencia->sucursal->nombre ?? 'Sin sucursal' }}
+                                            {{ optional(optional($as->existencia)->sucursal)->nombre ?? 'Sin sucursal' }}
                                         </span>
                                     </p>
                                 @else
@@ -212,27 +214,29 @@
                                     <input id="busquedaAsignacion" type="search" wire:model.live="busquedaAsignacion"
                                         class="input-minimal" placeholder="Buscar preforma..." />
                                 </div>
+
                                 @if($asignaciones->count() > 0)
                                     <div
                                         class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
                                         @foreach($asignaciones as $asignado)
                                             @php
-                                                $tipo = class_basename($asignado->existencia->existenciable_type);
+                                                $existencia = $asignado->existencia;
+                                                $tipo = optional($existencia)->existenciable ? class_basename($existencia->existenciable_type) : 'Desconocido';
                                             @endphp
                                             <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
                                                 <span class="text-u">
                                                     {{ $tipo }}:
-                                                    {{ $asignado->existencia->existenciable->descripcion ?? 'Asignado #' . $asignado->id }}
+                                                    {{ optional(optional($existencia)->existenciable)->descripcion ?? 'Asignado #' . $asignado->id }}
                                                 </span>
                                                 <div class="flex flex-wrap justify-center gap-3 mt-2">
                                                     <div class="flex flex-col items-center gap-1">
                                                         <span class="text-xs font-medium text-gray-600">
-                                                            {{ $asignado->existencia->sucursal->nombre ?? 'Sin sucursal' }}
+                                                            {{ optional($existencia)->sucursal->nombre ?? 'Sin sucursal' }}
                                                         </span>
                                                         <span
                                                             class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                            {{ $asignado->cantidad }} Disponibles
+                                                            {{ $asignado->cantidad ?? 0 }} Disponibles
                                                         </span>
                                                     </div>
                                                 </div>
@@ -243,9 +247,9 @@
                                     <p class="text-center text-gray-500 p-2">No hay preformas disponibles.</p>
                                 @endif
                             @endif
-
                         </div>
 
+                        {{-- Base --}}
                         <div>
                             <label class="text-u">Base (Requerido)</label>
                             <div class="flex-1">
@@ -259,28 +263,27 @@
                             @if($accion === 'edit')
                                 @php
                                     $ex = $existenciasDestino->firstWhere('id', $existencia_destino_id);
-                                    $tipo = $ex ? class_basename($ex->existenciable_type) : 'Desconocido';
+                                    $tipo = $ex && $ex->existenciable ? class_basename($ex->existenciable_type) : 'Desconocido';
                                 @endphp
                                 <p
                                     class="flex flex-col md:flex-row md:items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800">
                                     <span class="font-medium text-u">
                                         {{ $tipo }}:
-                                        {{ $ex->existenciable->descripcion ?? 'Existencia #' . $existencia_destino_id }}
+                                        {{ optional($ex->existenciable)->descripcion ?? 'Existencia #' . $existencia_destino_id }}
                                     </span>
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         Disponible: {{ $ex->cantidad ?? 0 }}
                                     </span>
                                     <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        {{ $ex->sucursal->nombre ?? 'Sin sucursal' }}
+                                        {{ optional($ex->sucursal)->nombre ?? 'Sin sucursal' }}
                                     </span>
                                 </p>
-
                             @else
                                 <div
                                     class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
                                     @foreach($existenciasDestino as $existencia)
                                         @php
-                                            $tipo = class_basename($existencia->existenciable_type);
+                                            $tipo = optional($existencia->existenciable) ? class_basename($existencia->existenciable_type) : 'Desconocido';
                                             $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
                                         @endphp
                                         <button type="button" wire:click="$set('existencia_destino_id', {{ $existencia->id }})"
@@ -288,24 +291,23 @@
                                             @if($disabled) disabled @endif>
                                             <span class="text-u font-medium">
                                                 {{ $tipo }}:
-                                                {{ $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id }}
+                                                {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}
                                             </span>
                                             <div class="flex flex-wrap justify-center gap-3 mt-2">
                                                 <div class="flex flex-col items-center gap-1">
                                                     <span
                                                         class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                        Disponible: {{ $existencia->cantidad }}
+                                                        Disponible: {{ $existencia->cantidad ?? 0 }}
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-col items-center gap-1">
                                                     <span
                                                         class="bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                        {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}
+                                                        {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
                                                     </span>
                                                 </div>
                                             </div>
                                         </button>
-
                                     @endforeach
                                 </div>
                             @endif
@@ -313,90 +315,59 @@
                                 <span class="text-red-500">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        {{-- Cantidad --}}
                         <div>
                             <label class="text-u">Cantidad a producir (Requerido)</label>
                             <input type="number" wire:model="cantidad" class="input-minimal"
-                                placeholder="ingrese la cantidad que se obtuvo">
+                                placeholder="Ingrese la cantidad que se obtuvo">
                         </div>
-                        <div>
-                            <label class="font-semibold text-sm">Merma (Se genera automatico)</label>
-                            <input type="number" wire:model="merma" class="input-minimal"
-                                placeholder="se genera automaticamente">
 
+                        {{-- Merma --}}
+                        <div>
+                            <label class="font-semibold text-sm">Merma (Se genera automáticamente)</label>
+                            <input type="number" wire:model="merma" class="input-minimal"
+                                placeholder="Se genera automáticamente">
                         </div>
+
+                        {{-- Observaciones --}}
                         <div>
                             <label class="font-semibold text-sm">Observaciones (Opcional)</label>
                             <input type="text" wire:model="observaciones" class="input-minimal" placeholder="Observaciones">
                         </div>
+
+                        {{-- Estado --}}
                         <div class="text-center">
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
                             <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
                                 <button type="button" wire:click="$set('estado', 0)"
                                     class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 0 ? 'bg-yellow-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-yellow-400' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="inline mr-1">
-                                        <circle cx="10" cy="10" r="9" />
-                                        <polyline points="10 5 10 10 13 12" />
-                                    </svg>
                                     En proceso
                                 </button>
-
                                 <button type="button" wire:click="$set('estado', 1)"
                                     class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 1 ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-blue-400' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="inline mr-1">
-                                        <path d="M4 12l4 4L18 6" />
-                                    </svg>
-                                    En revision
+                                    En revisión
                                 </button>
-
                                 <button type="button" wire:click="$set('estado', 2)"
                                     class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 2 ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-green-400' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="inline mr-1">
-                                        <path d="M16 4L4 16" />
-                                        <path d="M4 4l12 12" />
-                                    </svg>
                                     Confirmado
                                 </button>
                             </div>
                         </div>
 
-
-
                     </div>
 
+                    {{-- Footer --}}
                     <div class="modal-footer">
-                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                            </svg>
-                            CERRAR
-                        </button>
-                        <button type="button" wire:click="guardar" class="btn-cyan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" />
-                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                <path d="M14 4l0 4l-6 0l0 -4" />
-                            </svg>
-                            Guardar
-                        </button>
-
-
+                        <button type="button" wire:click="cerrarModal" class="btn-cyan">CERRAR</button>
+                        <button type="button" wire:click="guardar" class="btn-cyan">Guardar</button>
                     </div>
 
                 </div>
             </div>
         </div>
     @endif
+
 
     @if($modalDetalle && $sopladoSeleccionado)
         <div class="modal-overlay">
