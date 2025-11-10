@@ -177,30 +177,29 @@
                             @endif
                         </div>
 
-                        {{-- Preforma --}}
                         <div>
                             <label class="text-u">Preforma (Requerido)</label>
 
                             @if($accion === 'edit')
                                 @php
                                     $as = $asignaciones->firstWhere('id', $asignado_id) ?? ($soplado->asignado ?? null);
-                                    $tipo = $as && optional($as->existencia)->existenciable
-                                        ? class_basename($as->existencia->existenciable_type)
-                                        : 'Desconocido';
+                                    $reposicion = $as?->reposiciones->first();
+                                    $existencia = $reposicion?->existencia;
+                                    $tipo = optional($existencia)->existenciable ? class_basename($existencia->existenciable_type) : 'Desconocido';
                                 @endphp
 
-                                @if($as)
+                                @if($as && $existencia)
                                     <p
                                         class="flex flex-col md:flex-row md:items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800">
                                         <span class="font-medium text-u">
                                             {{ $tipo }}:
-                                            {{ optional(optional($as->existencia)->existenciable)->descripcion ?? 'Asignado #' . ($as->id ?? $asignado_id) }}
+                                            {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . ($as->id ?? $asignado_id) }}
                                         </span>
                                         <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                             Disponible: {{ $as->cantidad ?? 0 }}
                                         </span>
                                         <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                            {{ optional(optional($as->existencia)->sucursal)->nombre ?? 'Sin sucursal' }}
+                                            {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
                                         </span>
                                     </p>
                                 @else
@@ -219,28 +218,30 @@
                                     <div
                                         class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
                                         @foreach($asignaciones as $asignado)
-                                            @php
-                                                $existencia = $asignado->existencia;
-                                                $tipo = optional($existencia)->existenciable ? class_basename($existencia->existenciable_type) : 'Desconocido';
-                                            @endphp
-                                            <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
-                                                class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                                                <span class="text-u">
-                                                    {{ $tipo }}:
-                                                    {{ optional(optional($existencia)->existenciable)->descripcion ?? 'Asignado #' . $asignado->id }}
-                                                </span>
-                                                <div class="flex flex-wrap justify-center gap-3 mt-2">
-                                                    <div class="flex flex-col items-center gap-1">
-                                                        <span class="text-xs font-medium text-gray-600">
-                                                            {{ optional($existencia)->sucursal->nombre ?? 'Sin sucursal' }}
-                                                        </span>
-                                                        <span
-                                                            class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                            {{ $asignado->cantidad ?? 0 }} Disponibles
-                                                        </span>
+                                                @php
+                                                    $reposicion = $asignado->reposiciones->first();
+                                                    $existencia = $reposicion?->existencia;
+                                                    $tipo = optional($existencia)->existenciable ? class_basename($existencia->existenciable_type) : 'Desconocido';
+                                                @endphp
+                                                <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
+                                                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
+                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                    <span class="text-u">
+                                                        {{ $tipo }}:
+                                                        {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . $asignado->id }}
+                                                    </span>
+                                                    <div class="flex flex-wrap justify-center gap-3 mt-2">
+                                                        <div class="flex flex-col items-center gap-1">
+                                                            <span class="text-xs font-medium text-gray-600">
+                                                                {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                            </span>
+                                                            <span
+                                                                class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                                                {{ $asignado->cantidad ?? 0 }} Disponibles
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </button>
+                                                </button>
                                         @endforeach
                                     </div>
                                 @else
@@ -249,7 +250,7 @@
                             @endif
                         </div>
 
-                        {{-- Base --}}
+
                         <div>
                             <label class="text-u">Base (Requerido)</label>
                             <div class="flex-1">

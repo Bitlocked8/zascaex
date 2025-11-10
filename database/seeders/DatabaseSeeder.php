@@ -72,7 +72,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BaseSeeder::class);
         $this->call(ProductoSeeder::class);
         $this->call(OtroSeeder::class);
-        $this->call(ClienteSeeder::class);
+        // $this->call(ClienteSeeder::class);
         Proveedor::factory(10)->create();
         $this->call(PersonalSeeder::class);
 

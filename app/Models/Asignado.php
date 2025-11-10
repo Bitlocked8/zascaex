@@ -36,4 +36,9 @@ class Asignado extends Model
         return $this->hasMany(Soplado::class);
     }
 
+    public function llenados()
+    {
+        return $this->hasMany(Llenado::class);
+    }
+
 }

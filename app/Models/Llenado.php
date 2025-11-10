@@ -11,41 +11,39 @@ class Llenado extends Model
 
     protected $fillable = [
         'codigo',
-        'asignado_base_id',
-        'asignado_tapa_id',
+        'asignado_id',
         'existencia_id',
-        'personal_id',
         'reposicion_id',
+        'personal_id',
         'cantidad',
-        'merma_base',
-        'merma_tapa',
+        'merma',
         'estado',
         'observaciones',
         'fecha',
     ];
-    public function asignadoBase()
+
+    public function asignado()
     {
-        return $this->belongsTo(Asignado::class, 'asignado_base_id');
+        return $this->belongsTo(Asignado::class);
     }
-    public function asignadoTapa()
-    {
-        return $this->belongsTo(Asignado::class, 'asignado_tapa_id');
-    }
-    public function existencia()
-    {
-        return $this->belongsTo(Existencia::class);
-    }
-    public function personal()
-    {
-        return $this->belongsTo(Personal::class);
-    }
+
     public function reposicion()
     {
         return $this->belongsTo(Reposicion::class);
     }
 
+    public function existencia()
+    {
+        return $this->belongsTo(Existencia::class);
+    }
+
+    public function personal()
+    {
+        return $this->belongsTo(Personal::class);
+    }
+
     public function existenciaDestino()
-{
-    return $this->belongsTo(Existencia::class, 'existencia_id');
-}
+    {
+        return $this->belongsTo(Existencia::class, 'existencia_id');
+    }
 }
