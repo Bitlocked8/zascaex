@@ -20,29 +20,27 @@
 
         @forelse($asignaciones as $asignado)
             @php
-                $montoAsignado = 0;
-                foreach ($asignado->reposiciones as $reposicion) {
-                    $cantidadUsada = $reposicion->pivot->cantidad;
-                    $descripcion = $reposicion->existencia->existenciable->descripcion ?? 'N/A';
-                    $montoAsignado += $cantidadUsada;
-                }
-                $tipoAccion = $asignado->soplados()->sum('cantidad') > 0 ? 'Soplado' : null;
-                $claseColor = $tipoAccion === 'Soplado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : '';
+                $montoAsignado = $asignado->reposiciones->sum(fn($r) => $r->pivot->cantidad);
             @endphp
 
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
                     <p class="text-emerald-600 uppercase font-semibold">{{ $asignado->codigo ?? 'N/A' }}</p>
+
+                    {{-- Mostrar todas las reposiciones asociadas --}}
                     @foreach($asignado->reposiciones as $reposicion)
                         <p class="text-slate-600">
                             {{ class_basename($reposicion->existencia->existenciable ?? '') }}:
                             {{ $reposicion->existencia->existenciable->descripcion ?? 'N/A' }}
+                            (Cantidad: {{ $reposicion->pivot->cantidad }})
                         </p>
                     @endforeach
 
                     <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
-                    <p><strong>Cantidad original:</strong> {{ $asignado->cantidad_original ?? $asignado->cantidad }}</p>
-                    <p><strong>Cantidad actual:</strong> {{ $asignado->cantidad }}</p>
+
+                    {{-- Ahora que cantidad_original no está en Asignado, mostramos solo la suma de pivot --}}
+                    <p><strong>Cantidad total asignada:</strong> {{ $asignado->cantidad }}</p>
+
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div
                             class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
@@ -51,25 +49,17 @@
                                 {{ $montoAsignado > 0 ? number_format($montoAsignado, 2, ',', '.') . ' Bs' : '—' }}
                             </span>
                         </div>
-
-                        @if($tipoAccion)
-                            <div class="flex justify-center items-center rounded-lg px-4 py-2 shadow-sm {{ $claseColor }}">
-                                <span class="text-sm font-semibold">
-                                    Fue usada en {{ $tipoAccion }}
-                                </span>
-                            </div>
-                        @endif
                     </div>
                 </div>
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="modaldetalle({{ $asignado->id }})" class="btn-cyan" title="Ver detalle">Ver
-                        más</button>
+                    <button wire:click="modaldetalle({{ $asignado->id }})" class="btn-cyan" title="Ver detalle">Ver más</button>
+
                     @if($asignado->cantidad > 0)
                         <button wire:click="abrirModal('edit', {{ $asignado->id }})"
                             class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">Editar</button>
                         <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan"
-                            title="Cerrar">Eliminar</button>
+                            title="Eliminar">Eliminar</button>
                     @endif
                 </div>
             </div>
@@ -79,6 +69,7 @@
             </div>
         @endforelse
     </div>
+
 
     @if($modal)
         <div class="modal-overlay">

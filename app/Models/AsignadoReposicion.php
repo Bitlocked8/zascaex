@@ -14,6 +14,7 @@ class AsignadoReposicion extends Model
         'reposicion_id',
         'existencia_id',
         'cantidad',
+        'cantidad_original',
     ];
     public function asignado()
     {

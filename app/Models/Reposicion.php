@@ -47,7 +47,7 @@ class Reposicion extends Model
     public function asignados()
     {
         return $this->belongsToMany(Asignado::class, 'asignado_reposicions')
-            ->withPivot('cantidad', 'existencia_id')
+            ->withPivot('cantidad', 'cantidad_original', 'existencia_id')
             ->withTimestamps();
     }
 

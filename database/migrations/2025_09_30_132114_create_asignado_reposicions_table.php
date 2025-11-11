@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,6 +16,7 @@ return new class extends Migration
             $table->foreignId('reposicion_id')->constrained('reposicions')->onDelete('cascade');
             $table->foreignId('existencia_id')->constrained('existencias')->onDelete('cascade');
             $table->integer('cantidad');
+            $table->integer('cantidad_original')->nullable();
             $table->timestamps();
         });
     }

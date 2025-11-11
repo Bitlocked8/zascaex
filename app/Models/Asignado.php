@@ -26,10 +26,11 @@ class Asignado extends Model
 
     public function reposiciones()
     {
-        return $this->belongsToMany(Reposicion::class, 'asignado_reposicions') // asegúrate que coincide con la migración
-            ->withPivot('cantidad', 'existencia_id') // agrega existencia_id si lo necesitas en pivot
+        return $this->belongsToMany(Reposicion::class, 'asignado_reposicions')
+            ->withPivot('cantidad', 'cantidad_original', 'existencia_id')
             ->withTimestamps();
     }
+
 
     public function soplados()
     {

@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('codigo')->unique();
             $table->foreignId('personal_id')->constrained('personals')->onDelete('cascade');
             $table->integer('cantidad');
-            $table->integer('cantidad_original');
             $table->dateTime('fecha');
             $table->string('motivo')->nullable();
             $table->text('observaciones')->nullable();
