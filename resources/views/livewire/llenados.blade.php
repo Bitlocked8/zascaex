@@ -220,7 +220,7 @@
                                         @foreach($asignaciones as $asignado)
                                             <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-2
-                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 
                                                 @foreach($asignado->reposiciones as $reposicion)
                                                     @php
@@ -352,8 +352,24 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" wire:click="cerrarModal" class="btn-cyan">CERRAR</button>
-                        <button type="button" wire:click="guardar" class="btn-cyan">Guardar</button>
+                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
+                        </button>
+                        <button type="button" wire:click="guardar" class="btn-cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Guardar</button>
                     </div>
 
                 </div>

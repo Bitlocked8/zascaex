@@ -42,4 +42,10 @@ class Asignado extends Model
         return $this->hasMany(Llenado::class);
     }
 
+    public function asignadoReposicions()
+    {
+        return $this->hasMany(AsignadoReposicion::class);
+    }
+
+
 }

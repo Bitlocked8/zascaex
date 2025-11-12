@@ -132,7 +132,6 @@
             <div class="modal-box">
                 <div class="modal-content flex flex-col gap-4">
 
-                    {{-- Errores --}}
                     @if($errors->any())
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                             <strong class="font-bold">¡Atención!</strong>
@@ -148,8 +147,6 @@
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <span class="text-u">{{ $codigo }}</span>
                         <span class="text-u"> fecha soplado: {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
-
-                        {{-- Sucursal --}}
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Sucursal del elemento</label>
                             @if($accion === 'create')
@@ -185,28 +182,54 @@
                                 @endphp
 
                                 @if($as && $as->reposiciones->count() > 0)
-                                    <button class="w-full p-4 rounded-lg border-2 bg-white text-gray-800 flex flex-col gap-2">
+                                    <div
+                                        class="w-full p-4 rounded-lg border-2 bg-white text-gray-800 flex flex-col gap-4 items-center text-center">
                                         @foreach($as->reposiciones as $reposicion)
                                             @php
                                                 $existencia = $reposicion->existencia;
                                                 $tipo = optional($existencia)->existenciable
-                                                    ? class_basename($existencia->existenciable_type)
+                                                    ? ucfirst(class_basename($existencia->existenciable_type))
                                                     : 'Desconocido';
+                                                $pivot = $reposicion->pivot;
+                                                $descripcion = optional($existencia->existenciable)->descripcion ?? 'Sin descripción';
                                             @endphp
-                                            <div class="flex justify-between items-center">
-                                                <span class="font-medium text-u">
-                                                    {{ $tipo }}:
-                                                    {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . $as->id }}
-                                                </span>
-                                                <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                                    {{ $reposicion->pivot->cantidad ?? 0 }} Disponibles
-                                                </span>
-                                                <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                                    {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
-                                                </span>
+
+                                            <div class="flex flex-col items-center gap-1 border-b border-gray-200 pb-3">
+                                                <p class="text-lg font-semibold text-u">{{ $tipo }}</p>
+                                                <p class="text-base text-u">{{ $descripcion }}</p>
+
+                                                <p class="text-sm text-gray-700">
+                                                    <span class="bg-gray-700 text-white px-3 py-1 rounded-md">
+                                                        {{ $as->codigo ?? 'N/A' }}
+                                                    </span>
+                                                </p>
+
+
+                                                <p class="text-sm text-gray-700 mt-1">
+
+                                                    <span class="bg-gray-600 text-white px-3 py-1 rounded-md">
+                                                        {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                    </span>
+                                                </p>
+
+                                                <p class="text-sm text-gray-700">
+                                                    Cantidad actual de {{ strtolower($tipo) }}:
+                                                    <span class="bg-teal-600 text-white px-3 py-1 rounded-md">
+                                                        {{ $pivot->cantidad ?? 0 }}
+                                                    </span>
+                                                </p>
+
+                                                <p class="text-sm text-gray-700">
+                                                    Cantidad de Salida {{ strtolower($tipo) }}:
+                                                    <span class="bg-cyan-600 text-white px-3 py-1 rounded-md">
+                                                        {{ $pivot->cantidad_original ?? 0 }}
+                                                    </span>
+                                                </p>
+
+
                                             </div>
                                         @endforeach
-                                    </button>
+                                    </div>
                                 @else
                                     <p class="text-center text-gray-500 p-2">Asignación de soplado no disponible</p>
                                 @endif
@@ -225,31 +248,51 @@
                                         class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[250px]">
                                         @foreach($asignaciones as $asignado)
                                             <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
-                                                class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-2
-                                                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-3 items-center text-center
+                                                                                                                                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 
                                                 @foreach($asignado->reposiciones as $reposicion)
                                                     @php
                                                         $existencia = $reposicion->existencia;
                                                         $tipo = optional($existencia)->existenciable
-                                                            ? class_basename($existencia->existenciable_type)
+                                                            ? ucfirst(class_basename($existencia->existenciable_type))
                                                             : 'Desconocido';
+                                                        $pivot = $reposicion->pivot;
+                                                        $descripcion = optional($existencia->existenciable)->descripcion ?? 'Sin descripción';
                                                     @endphp
 
-                                                    <div class="flex justify-between items-center">
-                                                        <span class="text-u">
-                                                            {{ $tipo }}:
-                                                            {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . $asignado->id }}
-                                                        </span>
-                                                        <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                                            {{ $reposicion->pivot->cantidad ?? 0 }} Disponibles
-                                                        </span>
-                                                        <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                                            {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
-                                                        </span>
+                                                    <div class="flex flex-col items-center gap-1 border-b border-gray-200 pb-3">
+                                                        <p class="text-lg font-semibold text-u">{{ $tipo }}</p>
+                                                        <p class="text-base text-gray-700">{{ $descripcion }}</p>
+
+                                                        <p class="text-sm text-u">
+                                                            <span class="bg-gray-700 text-white px-3 py-1 rounded-md">
+                                                                {{ $asignado->codigo ?? 'N/A' }}
+                                                            </span>
+                                                        </p>
+
+                                                        <p class="text-sm text-gray-700">
+                                                            Cantidad actual de {{ strtolower($tipo) }}:
+                                                            <span class="bg-teal-600 text-white px-3 py-1 rounded-md">
+                                                                {{ $pivot->cantidad ?? 0 }}
+                                                            </span>
+                                                        </p>
+
+                                                        <p class="text-sm text-gray-700">
+                                                            Cantidad original de {{ strtolower($tipo) }}:
+                                                            <span class="bg-cyan-600 text-white px-3 py-1 rounded-md">
+                                                                {{ $pivot->cantidad_original ?? 0 }}
+                                                            </span>
+                                                        </p>
+
+                                                        <p class="text-sm text-gray-700">
+                                                            Sucursal:
+                                                            <span class="bg-gray-600 text-white px-3 py-1 rounded-md">
+                                                                {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                            </span>
+                                                        </p>
                                                     </div>
                                                 @endforeach
-
                                             </button>
                                         @endforeach
                                     </div>
@@ -258,7 +301,6 @@
                                 @endif
                             @endif
                         </div>
-
                         <div>
                             <label class="text-u">Base (Requerido)</label>
                             <div class="flex-1">
@@ -289,63 +331,68 @@
                                 </p>
                             @else
                                 <div
-                                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+                                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[200px]">
                                     @foreach($existenciasDestino as $existencia)
-                                        @php
-                                            $tipo = optional($existencia->existenciable) ? class_basename($existencia->existenciable_type) : 'Desconocido';
-                                            $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
-                                        @endphp
-                                        <button type="button" wire:click="$set('existencia_destino_id', {{ $existencia->id }})"
-                                            class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $existencia_destino_id == $existencia->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }}{{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                            @if($disabled) disabled @endif>
-                                            <span class="text-u font-medium">
-                                                {{ $tipo }}:
-                                                {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}
-                                            </span>
-                                            <div class="flex flex-wrap justify-center gap-3 mt-2">
-                                                <div class="flex flex-col items-center gap-1">
-                                                    <span
-                                                        class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                        Disponible: {{ $existencia->cantidad ?? 0 }}
+                                                @php
+                                                    $tipo = optional($existencia->existenciable) ? class_basename($existencia->existenciable_type) : 'Desconocido';
+                                                    $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
+                                                    $compatibilidad = optional($existencia->existenciable)->compatibilidad ?? null;
+                                                @endphp
+
+                                                <button type="button" wire:click="$set('existencia_destino_id', {{ $existencia->id }})"
+                                                    class="w-full p-4 rounded-xl border-2 transition flex flex-col items-center justify-center text-center
+                                        {{ $existencia_destino_id == $existencia->id ? 'border-cyan-600 text-cyan-700 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-700 hover:bg-cyan-50' }}
+                                        {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}" @if($disabled) disabled @endif>
+
+                                                    <span class="text-u font-semibold text-lg">
+                                                        {{ $tipo }}:
+                                                        {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}
                                                     </span>
-                                                </div>
-                                                <div class="flex flex-col items-center gap-1">
-                                                    <span
-                                                        class="bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                        {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </button>
+
+                                                    @if($compatibilidad)
+                                                        <span class="text-sm text-gray-600 italic mt-1">
+                                                            Compatibilidad: <strong>{{ $compatibilidad }}</strong>
+                                                        </span>
+                                                    @endif
+
+                                                    <div class="flex flex-wrap justify-center gap-3 mt-3">
+                                                        <div class="flex flex-col items-center">
+                                                            <span
+                                                                class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-sm">
+                                                                Disponible: {{ $existencia->cantidad ?? 0 }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex flex-col items-center">
+                                                            <span
+                                                                class="bg-gray-700 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-sm">
+                                                                {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </button>
                                     @endforeach
                                 </div>
                             @endif
+
                             @error('existencia_destino_id')
                                 <span class="text-red-500">{{ $message }}</span>
                             @enderror
                         </div>
 
-                        {{-- Cantidad --}}
                         <div>
                             <label class="text-u">Cantidad a producir (Requerido)</label>
                             <input type="number" wire:model="cantidad" class="input-minimal"
                                 placeholder="Ingrese la cantidad que se obtuvo">
                         </div>
-
-                        {{-- Merma --}}
                         <div>
                             <label class="font-semibold text-sm">Merma (Se genera automáticamente)</label>
                             <input type="number" wire:model="merma" class="input-minimal"
                                 placeholder="Se genera automáticamente">
                         </div>
-
-                        {{-- Observaciones --}}
                         <div>
                             <label class="font-semibold text-sm">Observaciones (Opcional)</label>
                             <input type="text" wire:model="observaciones" class="input-minimal" placeholder="Observaciones">
                         </div>
-
-                        {{-- Estado --}}
                         <div class="text-center">
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
                             <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
@@ -365,11 +412,25 @@
                         </div>
 
                     </div>
-
-                    {{-- Footer --}}
                     <div class="modal-footer">
-                        <button type="button" wire:click="cerrarModal" class="btn-cyan">CERRAR</button>
-                        <button type="button" wire:click="guardar" class="btn-cyan">Guardar</button>
+                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
+                        </button>
+                        <button type="button" wire:click="guardar" class="btn-cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Guardar</button>
                     </div>
 
                 </div>

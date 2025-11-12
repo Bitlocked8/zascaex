@@ -16,6 +16,7 @@ class Base extends Model
         'estado',
         'observaciones',
         'tipo',
+        'compatibilidad',
     ];
 
     /**
