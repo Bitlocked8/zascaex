@@ -123,14 +123,12 @@
                 No hay llenados registrados.
             </div>
         @endforelse
-
     </div>
+
     @if($modal)
         <div class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-content flex flex-col gap-4">
-
-                    {{-- Errores --}}
                     @if($errors->any())
                         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                             <strong class="font-bold">¡Atención!</strong>
@@ -146,8 +144,6 @@
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <span class="text-u">{{ $codigo }}</span>
                         <span class="text-u"> fecha llenado: {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
-
-                        {{-- Sucursal --}}
                         <div class="mb-4">
                             <label class="block text-sm font-semibold mb-2">Sucursal del elemento</label>
                             @if($accion === 'create')
@@ -322,28 +318,20 @@
                                 <span class="text-red-500">{{ $message }}</span>
                             @enderror
                         </div>
-
-                        {{-- Cantidad --}}
                         <div>
                             <label class="text-u">Cantidad a producir (Requerido)</label>
                             <input type="number" wire:model="cantidad" class="input-minimal"
                                 placeholder="Ingrese la cantidad que se obtuvo">
                         </div>
-
-                        {{-- Merma --}}
                         <div>
                             <label class="font-semibold text-sm">Merma (Se genera automáticamente)</label>
                             <input type="number" wire:model="merma" class="input-minimal"
                                 placeholder="Se genera automáticamente">
                         </div>
-
-                        {{-- Observaciones --}}
                         <div>
                             <label class="font-semibold text-sm">Observaciones (Opcional)</label>
                             <input type="text" wire:model="observaciones" class="input-minimal" placeholder="Observaciones">
                         </div>
-
-                        {{-- Estado --}}
                         <div class="text-center">
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
                             <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
@@ -363,8 +351,6 @@
                         </div>
 
                     </div>
-
-                    {{-- Footer --}}
                     <div class="modal-footer">
                         <button type="button" wire:click="cerrarModal" class="btn-cyan">CERRAR</button>
                         <button type="button" wire:click="guardar" class="btn-cyan">Guardar</button>
@@ -375,7 +361,6 @@
         </div>
     @endif
 
-    {{-- Modal de confirmación para eliminar --}}
     @if($confirmingDeleteLlenadoId)
         <div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">

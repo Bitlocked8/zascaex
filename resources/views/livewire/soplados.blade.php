@@ -6,7 +6,6 @@
             Soplados
         </h3>
 
-
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input type="text" wire:model.live="search" placeholder="Buscar por código o asignación..."
                 class="input-minimal w-full" />
@@ -42,8 +41,8 @@
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-1">
                     <p class="text-emerald-600 uppercase font-semibold">
-                        {{ class_basename($soplado->existenciaDestino?->existenciable ?? '') }}:
-                        {{ $soplado->existenciaDestino?->existenciable?->descripcion ?? 'N/A' }}
+                        {{ class_basename($soplado->existencia?->existenciable ?? '') }}:
+                        {{ $soplado->existencia?->existenciable?->descripcion ?? 'N/A' }}
                     </p>
                     <p class="text-slate-600">{{ $soplado->codigo }}</p>
                     <p><strong>Fecha del soplado:</strong> {{ \Carbon\Carbon::parse($soplado->fecha)->format('d/m/Y H:i') }}
@@ -178,78 +177,87 @@
                         </div>
 
                         <div>
-                            <label class="text-u">Preforma (Requerido)</label>
+                            <label class="text-u">Soplado (Elementos Asignados)</label>
 
                             @if($accion === 'edit')
                                 @php
                                     $as = $asignaciones->firstWhere('id', $asignado_id) ?? ($soplado->asignado ?? null);
-                                    $reposicion = $as?->reposiciones->first();
-                                    $existencia = $reposicion?->existencia;
-                                    $tipo = optional($existencia)->existenciable ? class_basename($existencia->existenciable_type) : 'Desconocido';
                                 @endphp
 
-                                @if($as && $existencia)
-                                    <p
-                                        class="flex flex-col md:flex-row md:items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800">
-                                        <span class="font-medium text-u">
-                                            {{ $tipo }}:
-                                            {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . ($as->id ?? $asignado_id) }}
-                                        </span>
-                                        <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                            Disponible: {{ $as->cantidad ?? 0 }}
-                                        </span>
-                                        <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                            {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
-                                        </span>
-                                    </p>
+                                @if($as && $as->reposiciones->count() > 0)
+                                    <button class="w-full p-4 rounded-lg border-2 bg-white text-gray-800 flex flex-col gap-2">
+                                        @foreach($as->reposiciones as $reposicion)
+                                            @php
+                                                $existencia = $reposicion->existencia;
+                                                $tipo = optional($existencia)->existenciable
+                                                    ? class_basename($existencia->existenciable_type)
+                                                    : 'Desconocido';
+                                            @endphp
+                                            <div class="flex justify-between items-center">
+                                                <span class="font-medium text-u">
+                                                    {{ $tipo }}:
+                                                    {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . $as->id }}
+                                                </span>
+                                                <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                    {{ $reposicion->pivot->cantidad ?? 0 }} Disponibles
+                                                </span>
+                                                <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                    {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </button>
                                 @else
-                                    <p class="text-center text-gray-500 p-2">Preforma seleccionada no disponible</p>
+                                    <p class="text-center text-gray-500 p-2">Asignación de soplado no disponible</p>
                                 @endif
+
                             @else
                                 <div class="flex-1 mb-2">
                                     <label for="busquedaAsignacion" class="block text-sm font-medium text-gray-700">
-                                        Buscar Preforma
+                                        Buscar Soplado
                                     </label>
                                     <input id="busquedaAsignacion" type="search" wire:model.live="busquedaAsignacion"
-                                        class="input-minimal" placeholder="Buscar preforma..." />
+                                        class="input-minimal" placeholder="Buscar elementos de soplado..." />
                                 </div>
 
                                 @if($asignaciones->count() > 0)
                                     <div
-                                        class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+                                        class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[250px]">
                                         @foreach($asignaciones as $asignado)
-                                                @php
-                                                    $reposicion = $asignado->reposiciones->first();
-                                                    $existencia = $reposicion?->existencia;
-                                                    $tipo = optional($existencia)->existenciable ? class_basename($existencia->existenciable_type) : 'Desconocido';
-                                                @endphp
-                                                <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
-                                                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                                                    <span class="text-u">
-                                                        {{ $tipo }}:
-                                                        {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . $asignado->id }}
-                                                    </span>
-                                                    <div class="flex flex-wrap justify-center gap-3 mt-2">
-                                                        <div class="flex flex-col items-center gap-1">
-                                                            <span class="text-xs font-medium text-gray-600">
-                                                                {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
-                                                            </span>
-                                                            <span
-                                                                class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                                {{ $asignado->cantidad ?? 0 }} Disponibles
-                                                            </span>
-                                                        </div>
+                                            <button type="button" wire:click="$set('asignado_id', {{ $asignado->id }})"
+                                                class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-2
+                                                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+
+                                                @foreach($asignado->reposiciones as $reposicion)
+                                                    @php
+                                                        $existencia = $reposicion->existencia;
+                                                        $tipo = optional($existencia)->existenciable
+                                                            ? class_basename($existencia->existenciable_type)
+                                                            : 'Desconocido';
+                                                    @endphp
+
+                                                    <div class="flex justify-between items-center">
+                                                        <span class="text-u">
+                                                            {{ $tipo }}:
+                                                            {{ optional($existencia->existenciable)->descripcion ?? 'Asignado #' . $asignado->id }}
+                                                        </span>
+                                                        <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                            {{ $reposicion->pivot->cantidad ?? 0 }} Disponibles
+                                                        </span>
+                                                        <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                                            {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                        </span>
                                                     </div>
-                                                </button>
+                                                @endforeach
+
+                                            </button>
                                         @endforeach
                                     </div>
                                 @else
-                                    <p class="text-center text-gray-500 p-2">No hay preformas disponibles.</p>
+                                    <p class="text-center text-gray-500 p-2">No hay elementos de soplado disponibles.</p>
                                 @endif
                             @endif
                         </div>
-
 
                         <div>
                             <label class="text-u">Base (Requerido)</label>
@@ -465,46 +473,30 @@
     @endif
 
 
-
-
     @if($confirmingDeleteSopladoId)
-        <div class="modal-overlay">
-            <div class="modal-box">
-                <div class="modal-content">
-                    <div class="flex flex-col gap-4 text-center">
-                        <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
-                        <p class="text-gray-600">
-                            El registro de soplado seleccionado se eliminará y se revertirán las cantidades utilizadas.
-                        </p>
-                    </div>
-                </div>
+        <div class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                    ¿Eliminar este soplado?
+                </h2>
 
-                <div class="modal-footer">
-                    <button type="button" wire:click="eliminarSopladoConfirmado" class="btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M7 12l5 5l10 -10" />
-                            <path d="M2 12l5 5m5 -5l5 -5" />
-                        </svg>
-                        confirmar
+                <p class="text-gray-600 text-center mb-6">
+                    Esta acción no se puede deshacer. Se revertirán las cantidades en inventario.
+                </p>
+
+                <div class="flex justify-center gap-4">
+                    <button wire:click="$set('confirmingDeleteSopladoId', null)"
+                        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
+                        Cancelar
                     </button>
-
-                    <button type="button" wire:click="$set('confirmingDeleteSopladoId', null)" class="btn-cyan"
-                        title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                        </svg>
-                        cancelar
+                    <button wire:click="eliminarSopladoConfirmado"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        Sí, eliminar
                     </button>
                 </div>
             </div>
         </div>
     @endif
-
 
 
 

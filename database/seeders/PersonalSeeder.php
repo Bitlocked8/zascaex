@@ -29,42 +29,36 @@ class PersonalSeeder extends Seeder
         }
 
         $personalesSucursal2 = [
-            'Rosario Rivera Torres',
-            'Lucia Leidi Lozano Roja',
-            'Roger Ambrocio Rios',
-            'Jhon Deivi Soria Rodriguez',
-            'Danitza Mejia Marin',
+            ['nombres' => 'Rosario', 'apellidos' => 'Rivera Torres', 'direccion' => '8vo anillo cambodromo', 'celular' => '61336551'],
+            ['nombres' => 'Lucia Leidi', 'apellidos' => 'Lozano Roja', 'direccion' => 'Av. beni 8vo anillo C/ sagrado corazon', 'celular' => '64601844'],
+            ['nombres' => 'Roger', 'apellidos' => 'Ambrocio Rios', 'direccion' => 'Plan 3mil Av/ paurito', 'celular' => '63377975'],
+            ['nombres' => 'Jhon Deivi', 'apellidos' => 'Soria Rodriguez', 'direccion' => 'Av. Beni C/ Paraiso N°8032', 'celular' => '77315104'],
+            ['nombres' => 'Danitza', 'apellidos' => 'Mejia Marin', 'direccion' => '8vo anilo Cambodromo C/ bibosi N° 83', 'celular' => '78502161'],
         ];
 
         $sucursal2_id = 2;
         $rolSucursal2 = 2;
 
-        foreach ($personalesSucursal2 as $nombreCompleto) {
-            $this->crearPersonal($nombreCompleto, $rolSucursal2, $sucursal2_id);
+        foreach ($personalesSucursal2 as $data) {
+            $this->crearPersonalConDatos($data['nombres'], $data['apellidos'], $data['direccion'], $data['celular'], $rolSucursal2, $sucursal2_id);
         }
     }
 
-    /**
-     * Función para crear personal + usuario + trabajo, evitando emails duplicados
-     */
     private function crearPersonal(string $nombreCompleto, int $rol_id, int $sucursal_id)
     {
         $partes = explode(' ', $nombreCompleto, 2);
         $nombre = $partes[0];
         $apellido = $partes[1] ?? '';
 
-        // Generar email base
         $emailBase = strtolower(str_replace(' ', '.', $nombreCompleto));
         $email = $emailBase . '@mail.com';
 
-        // Evitar duplicados en users
         $contador = 1;
         while(User::where('email', $email)->exists()) {
             $email = $emailBase . $contador . '@mail.com';
             $contador++;
         }
 
-        // Crear usuario
         $user = User::create([
             'email' => $email,
             'password' => Hash::make('trabajadorverzasca2025'),
@@ -72,7 +66,6 @@ class PersonalSeeder extends Seeder
             'estado' => 1,
         ]);
 
-        // Crear personal
         $personal = Personal::create([
             'nombres' => $nombre,
             'apellidos' => $apellido,
@@ -82,7 +75,42 @@ class PersonalSeeder extends Seeder
             'direccion' => null,
         ]);
 
-        // Crear trabajo
+        Trabajo::create([
+            'fechaInicio' => Carbon::today(),
+            'estado' => 1,
+            'sucursal_id' => $sucursal_id,
+            'personal_id' => $personal->id,
+            'labor_id' => null,
+        ]);
+    }
+
+    private function crearPersonalConDatos(string $nombre, string $apellidos, string $direccion, string $celular, int $rol_id, int $sucursal_id)
+    {
+        $emailBase = strtolower(str_replace(' ', '.', $nombre . ' ' . $apellidos));
+        $email = $emailBase . '@mail.com';
+
+        $contador = 1;
+        while(User::where('email', $email)->exists()) {
+            $email = $emailBase . $contador . '@mail.com';
+            $contador++;
+        }
+
+        $user = User::create([
+            'email' => $email,
+            'password' => Hash::make('trabajadorverzasca2025'),
+            'rol_id' => $rol_id,
+            'estado' => 1,
+        ]);
+
+        $personal = Personal::create([
+            'nombres' => $nombre,
+            'apellidos' => $apellidos,
+            'celular' => $celular,
+            'user_id' => $user->id,
+            'estado' => 1,
+            'direccion' => $direccion,
+        ]);
+
         Trabajo::create([
             'fechaInicio' => Carbon::today(),
             'estado' => 1,

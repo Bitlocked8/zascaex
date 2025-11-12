@@ -32,9 +32,13 @@ class BaseSeeder extends Seeder
 
         foreach ($bases as $data) {
             foreach ([1, 2] as $sucursal_id) {
+
+                // Concatenamos la descripción con la capacidad
+                $descripcion = trim($data['descripcion'] . ' ' . $data['capacidad'] . 'ml');
+
                 $base = Base::create([
                     'imagen' => null,
-                    'descripcion' => $data['descripcion'],
+                    'descripcion' => $descripcion,
                     'capacidad' => $data['capacidad'],
                     'estado' => 1,
                     'tipo' => $data['tipo'],

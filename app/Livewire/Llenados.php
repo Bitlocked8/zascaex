@@ -304,7 +304,6 @@ class Llenados extends Component
         $contador = $ultimaReposicion ? intval(substr($ultimaReposicion->codigo, -3)) + 1 : 1;
         $codigoReposicion = 'R-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
 
-        // Verificar que el código no exista (por si acaso)
         $existe = Reposicion::where('codigo', $codigoReposicion)->exists();
         if ($existe) {
             $codigoReposicion = 'R-' . $fechaHoy . '-' . str_pad($contador + 1, 3, '0', STR_PAD_LEFT);
@@ -333,7 +332,12 @@ class Llenados extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
-        $this->llenadoSeleccionado = Llenado::with(['asignado.existencia.existenciable', 'existencia.existenciable', 'personal', 'reposicion'])->findOrFail($id);
+        $this->llenadoSeleccionado = Llenado::with([
+            'asignado.reposiciones.existencia.existenciable',
+            'existencia.existenciable',
+            'personal',
+            'reposicion'
+        ])->findOrFail($id);
         $this->existenciaSeleccionada = $this->llenadoSeleccionado->existencia;
         $this->modalDetalle = true;
     }
@@ -374,7 +378,6 @@ class Llenados extends Component
             $asignado = $llenado->asignado;
 
             if ($asignado) {
-                // ✅ RESTAURAR LOS PIVOTS DESDE cantidad_original
                 foreach ($asignado->reposiciones as $reposicion) {
                     DB::table('asignado_reposicions')
                         ->where('asignado_id', $asignado->id)
@@ -383,16 +386,12 @@ class Llenados extends Component
                             'cantidad' => $reposicion->pivot->cantidad_original
                         ]);
                 }
-
-                // ✅ ACTUALIZAR LA CANTIDAD TOTAL DE LA ASIGNACIÓN
                 $nuevaCantidad = DB::table('asignado_reposicions')
                     ->where('asignado_id', $asignado->id)
                     ->sum('cantidad');
                 $asignado->cantidad = $nuevaCantidad;
                 $asignado->save();
             }
-
-            // Revertir existencia del producto si estaba confirmado
             if ($llenado->estado == 2) {
                 $existenciaDestino = $llenado->existencia;
                 if ($existenciaDestino) {
@@ -402,8 +401,6 @@ class Llenados extends Component
                     $existenciaDestino->save();
                 }
             }
-
-            // Eliminar reposición destino si existe
             if ($llenado->reposicion_id) {
                 $reposicion = Reposicion::find($llenado->reposicion_id);
                 if ($reposicion)
