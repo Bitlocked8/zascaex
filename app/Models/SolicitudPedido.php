@@ -20,4 +20,9 @@ class SolicitudPedido extends Model
     {
         return $this->belongsTo(Cliente::class);
     }
+
+    public function pedido()
+    {
+        return $this->hasOne(Pedido::class, 'solicitud_pedido_id');
+    }
 }

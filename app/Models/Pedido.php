@@ -8,17 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Pedido extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'codigo',
-        'cliente_id',
+        'solicitud_pedido_id',
         'personal_id',
         'estado_pedido',
         'observaciones',
         'fecha_pedido',
     ];
-    public function cliente()
+
+    public function solicitudPedido()
     {
-        return $this->belongsTo(Cliente::class);
+        return $this->belongsTo(SolicitudPedido::class, 'solicitud_pedido_id');
     }
 
     public function personal()
@@ -41,10 +43,9 @@ class Pedido extends Model
         return $this->belongsToMany(Distribucion::class, 'distribucion_pedidos')
             ->withTimestamps();
     }
-     public function adornados()
+
+    public function adornados()
     {
         return $this->hasMany(Adornado::class);
     }
-
-    
 }

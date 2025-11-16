@@ -37,7 +37,10 @@
       <div class="card-teal flex flex-col gap-4">
 
         <div class="flex flex-col gap-2">
-          <p class="text-emerald-600 uppercase font-semibold"> {{ $pedido->cliente->nombre ?? 'N/A' }}</p>
+          <p class="text-emerald-600 uppercase font-semibold">
+            {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Sin cliente' }}
+          </p>
+
           <p class="text-slate-600">{{ $pedido->codigo }}</p>
 
           <p><strong>Persona de atencion:</strong> {{ $pedido->personal->nombres ?? 'N/A' }}</p>
@@ -119,320 +122,262 @@
             </svg>
             Ver mas
           </button>
+          <button wire:click="eliminarPedido({{ $pedido->id }})" class="btn-rose flex items-center gap-1 flex-shrink-0"
+            title="Eliminar"
+            onclick="confirm('¿Estás seguro de eliminar este pedido?') || event.stopImmediatePropagation()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M4 7h16" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+              <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+              <path d="M9 7v-3h6v3" />
+            </svg>
+            Eliminar
+          </button>
+
         </div>
-
       </div>
-
     @empty
       <div class="col-span-full text-center py-4 text-gray-600">
         No hay pedidos registrados.
       </div>
     @endforelse
-
-
   </div>
 
   @if($modalPedido)
     <div class="modal-overlay">
       <div class="modal-box">
         <div class="modal-content flex flex-col gap-4">
-          <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-            <div>
-              <span class="text-emerald-600 uppercase font-semibold">
-                Personal de atención: {{ $pedido->personal->nombres ?? 'Sin asignar' }}
-              </span>
-            </div>
-            <div>
-              <span class="text-slate-600">
-                Fecha del pedido: {{ \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') }}
-              </span>
-            </div>
-            <div class="text-center">
-              <label class="font-semibold text-sm mb-2 block text-gray-700">Estado del Pedido</label>
+          <div>
+            <label class="text-u">Seleccionar Solicitud de Pedido (Requerido)</label>
+            <div class="w-full border border-gray-300 rounded-md p-2 bg-white max-h-[260px] overflow-y-auto">
 
-              <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
-                <button type="button" wire:click="$set('estado_pedido', 0)"
-                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-              {{ $estado_pedido == 0 ? 'bg-teal-400 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-600' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
-                    <circle cx="10" cy="10" r="9" />
-                    <polyline points="10 5 10 10 13 12" />
-                  </svg>
-                  Pendiente
-                </button>
+              @forelse($solicitudPedidos as $solicitud)
 
-                <button type="button" wire:click="$set('estado_pedido', 1)"
-                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-              {{ $estado_pedido == 1 ? 'bg-cyan-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-600' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
-                    <path d="M4 12l4 4L18 6" />
-                  </svg>
-                  Entregado
-                </button>
+                @php
+                  $detallesSolicitud = $solicitud->detalles;
+                  $totalPaquetes = $detallesSolicitud->sum('cantidad');
+                  $totalUnidades = $detallesSolicitud->sum(function ($d) {
+                    $paq = $d->cantidad;
+                    $unidad = $d->producto->paquete ?? 1;
+                    return $paq * $unidad;
+                  });
+                @endphp
+                <button type="button" wire:click="seleccionarSolicitud({{ $solicitud->id }})"
+                  class="w-full text-left p-3 mb-2 rounded-lg border-2 transition bg-white  {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
 
-                <button type="button" wire:click="$set('estado_pedido', 2)"
-                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-              {{ $estado_pedido == 2 ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-rose-100 hover:text-rose-600' }}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
-                    <path d="M16 4L4 16" />
-                    <path d="M4 4l12 12" />
-                  </svg>
-                  Cancelado
-                </button>
-              </div>
-            </div>
-
-
-
-            <div class="grid grid-cols-1 gap-2 mt-2">
-              <div>
-                <label class="font-semibold text-sm mb-2 block">Cliente (requerido)</label>
-                <div
-                  class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
-                  @foreach($clientes as $cliente)
-                    <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})"
-                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center{{ $cliente_id == $cliente->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}                                                                            bg-white">
-                      <span class="font-semibold text-u">{{ $cliente->nombre }}</span>
-                      <span class="text-xs text-gray-500">Código: {{ $cliente->codigo }}</span>
-                      @if($cliente->direccion)
-                        <span class="text-u">Dirección: {{ $cliente->direccion }}</span>
-                      @endif
-                    </button>
-                  @endforeach
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 gap-4 mb-4">
-            <div>
-              <!-- FILTRO POR SUCURSAL -->
-              <div class="mb-6">
-                <label class="block text-sm font-semibold mb-2 text-gray-700">Filtrar por Sucursal</label>
-
-                <div class="flex flex-wrap gap-3">
-                  @foreach($sucursales as $sucursal)
-                              <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                                class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition
-                        {{ $sucursal_id == $sucursal->id
-                    ? 'bg-cyan-500 text-white shadow-lg border border-cyan-500'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-400' }}">
-                                {{ $sucursal->nombre }}
-                              </button>
-                  @endforeach
-                </div>
-              </div>
-
-              <!-- TIPO DE ITEM -->
-              <div class="text-center">
-                <label class="font-semibold text-sm mb-3 block text-gray-700">Tipo de Ítem</label>
-
-                <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
-                  <button type="button" wire:click="$set('tipoProducto', 'producto')" class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2
-          {{ $tipoProducto == 'producto'
-      ? 'bg-teal-500 text-white shadow-lg'
-      : 'bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
-                    Productos
-                  </button>
-
-                  <button type="button" wire:click="$set('tipoProducto', 'otro')" class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2
-          {{ $tipoProducto == 'otro'
-      ? 'bg-emerald-500 text-white shadow-lg'
-      : 'bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600' }}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-                    </svg>
-                    Otros Ítems
-                  </button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-            <div>
-              <div class="grid grid-cols-1 gap-2 mt-2">
-                <div>
-                  <label class="font-semibold text-sm mb-2 block">
-                    @if($tipoProducto === 'producto')
-                      Producto (requerido)
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold text-gray-900">
+                      {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+                    </span>
+                    @if($totalPaquetes == 0)
+                      <span class="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                        Empty
+                      </span>
                     @else
-                      Otro Item (requerido)
+                      <span
+                        class="{{ $solicitud->estado === 'pendiente' ? 'text-yellow-600' : ($solicitud->estado === 'procesada' ? 'text-blue-600' : 'text-green-600') }}">
+                        {{ $solicitud->estado === 'pendiente' ? 'Pendiente' : ($solicitud->estado === 'Entregado' ? 'En Proceso' : 'Cancelado') }}
+                      </span>
                     @endif
-                  </label>
-                  <div
-                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
-                    @if($tipoProducto === 'producto')
-                      @foreach($productos as $producto)
-                        @php
-                          $cantidadesPorSucursal = [];
-                          foreach ($producto->existencias as $existencia) {
-                            $totalExistencia = $existencia->reposiciones->sum('cantidad');
-                            if ($totalExistencia > 0) {
-                              $sucursalNombre = $existencia->sucursal->nombre ?? 'Sin sucursal';
-                              $cantidadesPorSucursal[$sucursalNombre] = ($cantidadesPorSucursal[$sucursalNombre] ?? 0) + $totalExistencia;
-                            }
-                          }
-                        @endphp
-
-                        <button type="button" wire:click="$set('productoSeleccionado', {{ $producto->id }})"
-                          class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                          <span
-                            class="text-u font-semibold">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
-                          <div class="flex flex-wrap justify-center gap-3 mt-2">
-                            @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
-                              <div class="flex flex-col items-center gap-1">
-                                <span class="text-xs font-medium text-gray-600">{{ $sucursal }}</span>
-                                <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                  {{ $cantidad }} Disponibles
-                                </span>
-                              </div>
-                            @endforeach
-                          </div>
-                          <span class="text-u text-sm mt-1">
-                            {{ $producto->precioReferencia ?? 'sin precio' }} BS
-                          </span>
-                        </button>
-                      @endforeach
-                    @else
-                      @foreach($otros as $otro)
-                        @php
-                          $cantidadesPorSucursal = [];
-                          foreach ($otro->existencias as $existencia) {
-                            $totalExistencia = $existencia->reposiciones->sum('cantidad');
-                            if ($totalExistencia > 0) {
-                              $sucursalNombre = $existencia->sucursal->nombre ?? 'Sin sucursal';
-                              $cantidadesPorSucursal[$sucursalNombre] = ($cantidadesPorSucursal[$sucursalNombre] ?? 0) + $totalExistencia;
-                            }
-                          }
-                        @endphp
-
-                        <button type="button" wire:click="$set('otroSeleccionado', {{ $otro->id }})"
-                          class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $otroSeleccionado == $otro->id ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }} bg-white">
-                          <span class="text-u font-semibold">{{ $otro->descripcion ?? 'Item #' . $otro->id }}</span>
-                          <div class="flex flex-wrap justify-center gap-3 mt-2">
-                            @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
-                              <div class="flex flex-col items-center gap-1">
-                                <span class="text-xs font-medium text-gray-600">{{ $sucursal }}</span>
-                                <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                  {{ $cantidad }} Disponibles
-                                </span>
-                              </div>
-                            @endforeach
-                          </div>
-                          <div class="flex flex-wrap justify-center gap-2 mt-1">
-                            @if($otro->unidad)
-                              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                {{ $otro->unidad }}
-                              </span>
-                            @endif
-                            @if($otro->tipoProducto)
-                              <span class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
-                                {{ $otro->tipoProducto }}
-                              </span>
-                            @endif
-                          </div>
-                          <span class="text-u text-sm mt-1">
-                            {{ $otro->precioReferencia ?? 'sin precio' }} BS
-                          </span>
-                        </button>
-                      @endforeach
-                    @endif
-
                   </div>
+
+                  <div class="text-xs space-y-1 text-gray-700">
+                    @foreach($detallesSolicitud as $detalle)
+                      @php
+                        $producto = $detalle->producto;
+                        $paquetes = $detalle->cantidad;
+                        $unidadesPorPaquete = $producto->paquete ?? 1;
+                        $total = $paquetes * $unidadesPorPaquete;
+                      @endphp
+
+                      <div class="border-b pb-1 flex justify-between">
+                        <div>
+                          <span class="font-medium text-gray-900">
+                            {{ $producto->descripcion ?? 'Producto eliminado' }}
+                          </span>
+                          @if($producto && $producto->paquete)
+                            <span class="ml-1 text-[10px] bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded">
+                              {{ $unidadesPorPaquete }} unidades por paquete
+                            </span>
+                          @endif
+                        </div>
+
+                        <div class="text-right">
+                          <span class="font-semibold text-gray-900 block">
+                            {{ $paquetes }} {{ $paquetes == 1 ? 'paquete' : 'paquetes' }}
+                          </span>
+                          <span class="text-[11px] text-gray-600 block">
+                            {{ $total }} {{ $total == 1 ? 'unidad' : 'unidades' }}
+                          </span>
+                        </div>
+                      </div>
+                    @endforeach
+                  </div>
+
+                  <div class="mt-2 text-xs flex justify-between">
+                    <span class="font-medium text-gray-800">
+                      Total:
+                      {{ $totalPaquetes }} {{ $totalPaquetes == 1 ? 'paquete' : 'paquetes' }} —
+                      {{ $totalUnidades }} {{ $totalUnidades == 1 ? 'unidad' : 'unidades' }}
+                    </span>
+                    <span class="text-gray-500">
+                      {{ $solicitud->created_at->format('d/m/Y') }}
+                    </span>
+                  </div>
+                </button>
+
+
+
+              @empty
+                <div class="text-center py-4 text-gray-600">
+                  No hay solicitudes registradas.
                 </div>
-              </div>
+              @endforelse
+
+
+
+            </div>
+
+          </div>
+          <div class="mb-6">
+            <div class="flex flex-wrap gap-3">
+              @foreach($sucursales as $sucursal)
+                <button type="button" wire:click="$set('sucursal_id', {{ $sucursal->id }})"
+                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $sucursal_id == $sucursal->id ? 'bg-cyan-500 text-white shadow-lg border border-cyan-500' : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-400' }}">
+                  {{ $sucursal->nombre }}
+                </button>
+              @endforeach
+            </div>
+          </div>
+          <div class="text-center mb-6">
+            <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
+              <button type="button" wire:click="$set('tipoProducto', 'producto')"
+                class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition {{ $tipoProducto == 'producto' ? 'bg-teal-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600' }}">
+                Productos
+              </button>
+              <button type="button" wire:click="$set('tipoProducto', 'otro')"
+                class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition {{ $tipoProducto == 'otro' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600' }}">
+                Otros Ítems
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 gap-4 mb-6">
+            <div
+              class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
+              @if($tipoProducto === 'producto')
+                @foreach($productos as $producto)
+                  @php
+                    $cantidadesPorSucursal = [];
+                    foreach ($producto->existencias as $existencia) {
+                      $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                      if ($totalExistencia > 0) {
+                        $cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] = ($cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] ?? 0) + $totalExistencia;
+                      }
+                    }
+                  @endphp
+                  <button type="button" wire:click="$set('productoSeleccionado', {{ $producto->id }})"
+                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}">
+                    <span class="font-semibold">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                    <div class="flex flex-wrap justify-center gap-3 mt-2">
+                      @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                        <span class="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-semibold">{{ $sucursal }}:
+                          {{ $cantidad }}</span>
+                      @endforeach
+                    </div>
+                    <span class="text-sm mt-1">{{ $producto->precioReferencia ?? 'sin precio' }} BS</span>
+                  </button>
+                @endforeach
+              @else
+                @foreach($otros as $otro)
+                  @php
+                    $cantidadesPorSucursal = [];
+                    foreach ($otro->existencias as $existencia) {
+                      $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                      if ($totalExistencia > 0) {
+                        $cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] = ($cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] ?? 0) + $totalExistencia;
+                      }
+                    }
+                  @endphp
+                  <button type="button" wire:click="$set('otroSeleccionado', {{ $otro->id }})"
+                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $otroSeleccionado == $otro->id ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }}">
+                    <span class="font-semibold">{{ $otro->descripcion ?? 'Item #' . $otro->id }}</span>
+                    <div class="flex flex-wrap justify-center gap-2 mt-1">
+                      @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                        <span class="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-semibold">{{ $sucursal }}:
+                          {{ $cantidad }}</span>
+                      @endforeach
+                    </div>
+                    <span class="text-sm mt-1">{{ $otro->precioReferencia ?? 'sin precio' }} BS</span>
+                  </button>
+                @endforeach
+              @endif
             </div>
           </div>
           <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-6 w-full">
-            <div class="flex items-center gap-2">
-              <label class="font-semibold text-sm">Cantidad (Requerido)</label>
-              <input type="number" wire:model="cantidadSeleccionada" class="input-minimal text-center" min="1"
-                placeholder="Cantidad" />
-            </div>
-            <button wire:click="agregarProducto" class="btn-cyan">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
-                <path d="M9 12h6" />
-                <path d="M12 9v6" />
-              </svg>
-              Añadir Item
-            </button>
+            <input type="number" wire:model="cantidadSeleccionada" class="input-minimal text-center" min="1"
+              placeholder="Cantidad" />
+            <button wire:click="agregarProducto" class="btn-cyan">Añadir Item</button>
           </div>
           <div class="mb-6">
-            <h4 class="font-semibold mb-2">Items agregados</h4>
-
-            @if(count($detalles))
-              <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-                @foreach($detalles as $index => $detalle)
-                  @if(!isset($detalle['eliminar']))
-                    <div
-                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center bg-white hover:border-cyan-600 hover:text-cyan-600 border-gray-300 shadow-sm relative{{ $detalle['tipo'] === 'producto' ? 'border-l-4 border-l-cyan-500' : 'border-l-4 border-l-green-500' }}">
-                      <span
-                        class="top-2 left-2 text-xs px-2 py-0.5 rounded-full font-semibold {{ $detalle['tipo'] === 'producto' ? 'bg-cyan-100 text-cyan-800' : 'bg-green-100 text-green-800' }}">
-                        {{ $detalle['tipo'] === 'producto' ? 'Producto' : 'Otro' }}
-                      </span>
-
-                      <span class="text-u font-semibold mt-4">{{ $detalle['nombre'] }}</span>
-                      <span class="mt-2 bg-teal-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                        {{ fmod($detalle['cantidad'], 1) == 0 ? intval($detalle['cantidad']) : number_format($detalle['cantidad'], 2) }}
-                        Unidad(es)
-                      </span>
-                      @if(!empty($detalle['sucursal_nombre']))
-                        <span class="text-xs text-gray-500 mt-1">
-                          Sucursal: {{ $detalle['sucursal_nombre'] }}
-                        </span>
-                      @endif
-                      <button wire:click="eliminarDetalle({{ $index }})" class="btn-cyan" title="Eliminar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor" stroke-width="2">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                          <path d="M4 7l16 0" />
-                          <path d="M10 11l0 6" />
-                          <path d="M14 11l0 6" />
-                          <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                          <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                        </svg>
-                        Eliminar
-                      </button>
-                    </div>
-                  @endif
-                @endforeach
-              </div>
-            @else
-              <p class="text-gray-500 text-sm italic">No hay items agregados.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+              @foreach($detalles as $index => $detalle)
+                @if(!isset($detalle['eliminar']))
+                  <div
+                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center bg-white hover:border-cyan-600 hover:text-cyan-600 border-gray-300 shadow-sm {{ $detalle['tipo'] === 'producto' ? 'border-l-4 border-l-cyan-500' : 'border-l-4 border-l-green-500' }}">
+                    <span
+                      class="text-xs px-2 py-0.5 rounded-full font-semibold {{ $detalle['tipo'] === 'producto' ? 'bg-cyan-100 text-cyan-800' : 'bg-green-100 text-green-800' }}">{{ ucfirst($detalle['tipo']) }}</span>
+                    <span class="font-semibold mt-4">{{ $detalle['nombre'] }}</span>
+                    <span
+                      class="mt-2 bg-teal-600 text-white text-xs px-3 py-1 rounded-full font-semibold">{{ fmod($detalle['cantidad'], 1) == 0 ? intval($detalle['cantidad']) : number_format($detalle['cantidad'], 2) }}
+                      Unidad(es)</span>
+                    @if(!empty($detalle['sucursal_nombre']))
+                      <span class="text-xs text-gray-500 mt-1">Sucursal: {{ $detalle['sucursal_nombre'] }}</span>
+                    @endif
+                    <button wire:click="eliminarDetalle({{ $index }})" class="btn-cyan mt-2">Eliminar</button>
+                  </div>
+                @endif
+              @endforeach
+            </div>
+            @if(count($detalles) === 0)
+              <p class="text-gray-500 text-sm italic mt-2">No hay items agregados.</p>
             @endif
+
+            <div class="mb-4">
+              <label class=" font-semibold">Observaciones (Opcional)</label>
+              <textarea wire:model="observaciones" class="w-full border border-gray-300 rounded-md p-2 bg-white" rows="3"
+                placeholder="Escribe observaciones del pedido..."></textarea>
+            </div>
+            <div class="mb-4">
+              <label class="font-semibold">Estado del Pedido (Automatico)</label>
+
+              <div class="flex gap-2 mt-2">
+                <button type="button" wire:click="$set('estado_pedido', 0)"
+                  class="px-3 py-1.5 rounded-md border 
+                  {{ $estado_pedido == 0 ? 'bg-yellow-500 text-white border-yellow-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                  Pendiente
+                </button>
+                <button type="button" wire:click="$set('estado_pedido', 1)"
+                  class="px-3 py-1.5 rounded-md border
+                  {{ $estado_pedido == 1 ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                  Entregado
+                </button>
+                <button type="button" wire:click="$set('estado_pedido', 2)"
+                  class="px-3 py-1.5 rounded-md border
+                  {{ $estado_pedido == 2 ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                  Cancelado
+                </button>
+
+              </div>
+            </div>
+
+
           </div>
           <div class="modal-footer">
-            <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-              </svg>
-              CERRAR
-            </button>
-            <button wire:click="guardarPedido" class="btn-cyan">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" />
-                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                <path d="M14 4l0 4l-6 0l0 -4" />
-              </svg>
-              Guardar Pedido
-            </button>
+            <button wire:click="cerrarModal" class="btn-cyan">Cerrar</button>
+            <button wire:click="guardarPedido" class="btn-cyan">Guardar Pedido</button>
           </div>
         </div>
       </div>
@@ -619,17 +564,9 @@
 
               <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                 <span class="label-info">Estado:</span>
-                <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold 
-                                                          {{ $pedidoDetalle->estado_pedido == 0
-      ? 'bg-cyan-600 text-white'
-      : ($pedidoDetalle->estado_pedido == 1
-        ? 'bg-emerald-600 text-white'
-        : 'bg-red-600 text-white') }}">
-                  {{ $pedidoDetalle->estado_pedido == 0
-      ? 'Pendiente'
-      : ($pedidoDetalle->estado_pedido == 1
-        ? 'Entregado'
-        : 'Cancelado') }}
+                <span
+                  class="inline-block px-2 py-1 rounded-full text-sm font-semibold  {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-cyan-600 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
+                  {{ $pedidoDetalle->estado_pedido == 0 ? 'Pendiente' : ($pedidoDetalle->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
                 </span>
               </div>
 
@@ -649,8 +586,6 @@
                 $sucursal = $detalle->existencia->sucursal ?? null;
                 $precioUnitario = $producto->precioReferencia ?? 0;
                 $totalProducto = $precioUnitario * $detalle->cantidad;
-
-                // Sumamos al total general
                 $totalGeneral += $totalProducto;
               @endphp
               <div class="flex flex-col md:flex-row justify-between items-start md:items-center py-2">

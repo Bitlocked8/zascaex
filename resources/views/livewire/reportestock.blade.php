@@ -25,17 +25,12 @@
                 <tbody class="divide-y divide-gray-100 text-center">
                     @forelse($movimientos as $m)
                         <tr class="hover:bg-gray-100 transition duration-150">
-                            <!-- Fecha -->
                             <td class="py-3 px-2 text-gray-700">
                                 {{ \Carbon\Carbon::parse($m['fecha'])->format('d/m/Y') }}
                             </td>
-
-                            <!-- Código -->
                             <td class="py-3 px-2 font-semibold text-gray-800">
                                 {{ $m['codigo'] ?? '-' }}
                             </td>
-
-                            <!-- Tipo (Entrada / Salida / Proceso) -->
                             <td class="py-3 px-2">
                                 @php
                                     $color = $m['tipo'] === 'Entrada'
