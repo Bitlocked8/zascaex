@@ -24,4 +24,10 @@ class SucursalPago extends Model
     {
         return $this->belongsTo(Sucursal::class);
     }
+
+    public function pagosPedidos()
+    {
+        return $this->hasMany(PagoPedido::class, 'sucursal_pago_id');
+    }
+
 }

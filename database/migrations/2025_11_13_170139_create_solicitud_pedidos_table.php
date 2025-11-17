@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('cliente_id')->nullable();
             $table->string('codigo')->unique();
             $table->text('observaciones')->nullable();
-            $table->string('estado')->default('pendiente'); // pendiente, procesada, cancelada
+            $table->tinyInteger('estado')->default(0);
             $table->timestamps();
 
             $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('set null');

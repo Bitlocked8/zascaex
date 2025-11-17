@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 class Pedidos extends Component
 {
     use WithFileUploads;
+
     public $observaciones;
     public $sucursal_id = null;
     public $modalDetallePedido = false;
@@ -41,6 +42,14 @@ class Pedidos extends Component
     public $pedidoParaPago;
     public $pagos = [];
     public $modalPagos = false;
+
+    public function quitarSolicitud()
+    {
+        $this->solicitudSeleccionadaId = null;
+        $this->solicitud_pedido_id = null; // limpiar la variable real
+        $this->detalles = []; // opcional: limpiar los detalles asociados a la solicitud
+    }
+
 
     public function mount($pedido_id = null)
     {
@@ -345,7 +354,7 @@ class Pedidos extends Component
         $this->estado_pedido = $this->pedido->estado_pedido;
         $this->fecha_pedido = $this->pedido->fecha_pedido ?? now();
         $this->observaciones = $this->pedido->observaciones;
-        
+
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
             $existenciable = $detalle->existencia->existenciable ?? null;
             $sucursal = $detalle->existencia->sucursal ?? null;

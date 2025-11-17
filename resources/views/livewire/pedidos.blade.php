@@ -46,11 +46,28 @@
           <p><strong>Persona de atencion:</strong> {{ $pedido->personal->nombres ?? 'N/A' }}</p>
 
           <p class="mt-1 text-sm font-semibold">
-            <span
-              class="{{ $pedido->estado_pedido == 0 ? 'text-yellow-600' : ($pedido->estado_pedido == 1 ? 'text-blue-600' : 'text-red-600') }}">
-              {{ $pedido->estado_pedido == 0 ? 'Pendiente' : ($pedido->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
+            @php
+              $colores = [
+                0 => 'text-gray-600',
+                1 => 'text-blue-500',
+                2 => 'text-yellow-500',
+                3 => 'text-green-500',
+                4 => 'text-teal-600',
+              ];
+              $labels = [
+                0 => 'Pendiente',
+                1 => 'Preparando',
+                2 => 'Pago Pendiente',
+                3 => 'Pagado',
+                4 => 'Completado',
+              ];
+            @endphp
+            <span class="{{ $colores[$pedido->estado_pedido] ?? 'text-gray-400' }}">
+              {{ $labels[$pedido->estado_pedido] ?? 'Desconocido' }}
             </span>
           </p>
+
+
 
           <p class="mt-1 text-sm font-semibold">
             @if($pedido->adornados->count())
@@ -122,8 +139,7 @@
             </svg>
             Ver mas
           </button>
-          <button wire:click="eliminarPedido({{ $pedido->id }})" class="btn-rose flex items-center gap-1 flex-shrink-0"
-            title="Eliminar"
+          <button wire:click="eliminarPedido({{ $pedido->id }})" class="btn-cyan" title="Eliminar"
             onclick="confirm('¿Estás seguro de eliminar este pedido?') || event.stopImmediatePropagation()">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,98 +166,142 @@
     <div class="modal-overlay">
       <div class="modal-box">
         <div class="modal-content flex flex-col gap-4">
+
           <div>
             <label class="text-u">Seleccionar Solicitud de Pedido (Requerido)</label>
-            <div class="w-full border border-gray-300 rounded-md p-2 bg-white max-h-[260px] overflow-y-auto">
+            @if($solicitud_pedido_id)
 
-              @forelse($solicitudPedidos as $solicitud)
+              @php
+                $solicitud = $solicitudPedidos->firstWhere('id', $solicitud_pedido_id);
+                $detallesSolicitud = $solicitud?->detalles ?? collect();
+                $totalPaquetes = $detallesSolicitud->sum('cantidad');
+                $totalUnidades = $detallesSolicitud->sum(function ($d) {
+                  return $d->cantidad * ($d->producto->paquete ?? 1);
+                });
+              @endphp
 
-                @php
-                  $detallesSolicitud = $solicitud->detalles;
-                  $totalPaquetes = $detallesSolicitud->sum('cantidad');
-                  $totalUnidades = $detallesSolicitud->sum(function ($d) {
-                    $paq = $d->cantidad;
-                    $unidad = $d->producto->paquete ?? 1;
-                    return $paq * $unidad;
-                  });
-                @endphp
-                <button type="button" wire:click="seleccionarSolicitud({{ $solicitud->id }})"
-                  class="w-full text-left p-3 mb-2 rounded-lg border-2 transition bg-white  {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
+              <div class="w-full border border-gray-300 rounded-md p-3 bg-gray-100">
+                <p class="font-semibold text-gray-800 mb-1">
+                  Solicitud asignada:
+                </p>
 
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="font-semibold text-gray-900">
-                      {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
-                    </span>
-                    @if($totalPaquetes == 0)
-                      <span class="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
-                        Empty
+                <p class="font-medium text-gray-900">
+                  {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+                </p>
+
+                <p class="text-xs text-gray-500">
+                  {{ $solicitud->created_at->format('d/m/Y') }}
+                </p>
+
+                <div class="mt-3 text-xs space-y-1 text-gray-700">
+                  @foreach($detallesSolicitud as $detalle)
+                    @php
+                      $producto = $detalle->producto;
+                      $paquetes = $detalle->cantidad;
+                      $unidadPaq = $producto->paquete ?? 1;
+                      $total = $paquetes * $unidadPaq;
+                    @endphp
+
+                    <div class="border-b pb-1 flex justify-between">
+                      <span>
+                        {{ $producto->descripcion ?? 'Producto eliminado' }}
+                        @if($producto && $producto->paquete)
+                          <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">
+                            {{ $unidadPaq }} unidades por paquete
+                          </span>
+                        @endif
                       </span>
-                    @else
-                      <span
-                        class="{{ $solicitud->estado === 'pendiente' ? 'text-yellow-600' : ($solicitud->estado === 'procesada' ? 'text-blue-600' : 'text-green-600') }}">
-                        {{ $solicitud->estado === 'pendiente' ? 'Pendiente' : ($solicitud->estado === 'Entregado' ? 'En Proceso' : 'Cancelado') }}
+
+                      <span class="text-right">
+                        <span class="font-semibold block">{{ $paquetes }} paquetes</span>
+                        <span class="text-[11px] text-gray-600">{{ $total }} unidades</span>
                       </span>
-                    @endif
-                  </div>
-
-                  <div class="text-xs space-y-1 text-gray-700">
-                    @foreach($detallesSolicitud as $detalle)
-                      @php
-                        $producto = $detalle->producto;
-                        $paquetes = $detalle->cantidad;
-                        $unidadesPorPaquete = $producto->paquete ?? 1;
-                        $total = $paquetes * $unidadesPorPaquete;
-                      @endphp
-
-                      <div class="border-b pb-1 flex justify-between">
-                        <div>
-                          <span class="font-medium text-gray-900">
-                            {{ $producto->descripcion ?? 'Producto eliminado' }}
-                          </span>
-                          @if($producto && $producto->paquete)
-                            <span class="ml-1 text-[10px] bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded">
-                              {{ $unidadesPorPaquete }} unidades por paquete
-                            </span>
-                          @endif
-                        </div>
-
-                        <div class="text-right">
-                          <span class="font-semibold text-gray-900 block">
-                            {{ $paquetes }} {{ $paquetes == 1 ? 'paquete' : 'paquetes' }}
-                          </span>
-                          <span class="text-[11px] text-gray-600 block">
-                            {{ $total }} {{ $total == 1 ? 'unidad' : 'unidades' }}
-                          </span>
-                        </div>
-                      </div>
-                    @endforeach
-                  </div>
-
-                  <div class="mt-2 text-xs flex justify-between">
-                    <span class="font-medium text-gray-800">
-                      Total:
-                      {{ $totalPaquetes }} {{ $totalPaquetes == 1 ? 'paquete' : 'paquetes' }} —
-                      {{ $totalUnidades }} {{ $totalUnidades == 1 ? 'unidad' : 'unidades' }}
-                    </span>
-                    <span class="text-gray-500">
-                      {{ $solicitud->created_at->format('d/m/Y') }}
-                    </span>
-                  </div>
-                </button>
-
-
-
-              @empty
-                <div class="text-center py-4 text-gray-600">
-                  No hay solicitudes registradas.
+                    </div>
+                  @endforeach
                 </div>
-              @endforelse
+                <p class="mt-2 text-xs font-medium text-gray-700">
+                  Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }} unidades
+                </p>
+                <button type="button" wire:click="quitarSolicitud"
+                  class="mt-3 px-3 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600">
+                  Quitar solicitud
+                </button>
+              </div>
+            @else
 
+              <div class="w-full border border-gray-300 rounded-md p-2 bg-white max-h-[260px] overflow-y-auto">
 
+                @forelse($solicitudPedidos as $solicitud)
 
-            </div>
+                  @php
+                    $detallesSolicitud = $solicitud->detalles;
+                    $totalPaquetes = $detallesSolicitud->sum('cantidad');
+                    $totalUnidades = $detallesSolicitud->sum(function ($d) {
+                      return $d->cantidad * ($d->producto->paquete ?? 1);
+                    });
+                  @endphp
 
+                  <button type="button" wire:click="seleccionarSolicitud({{ $solicitud->id }})"
+                    class="w-full text-left p-3 mb-2 rounded-lg border-2 transition bg-white  {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
+
+                    <div class="flex justify-between items-center mb-2">
+                      <span class="font-semibold text-gray-900">
+                        {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+                      </span>
+                    </div>
+
+                    <div class="text-xs space-y-1 text-gray-700">
+                      @foreach($detallesSolicitud as $detalle)
+                        @php
+                          $producto = $detalle->producto;
+                          $paquetes = $detalle->cantidad;
+                          $unidadPaq = $producto->paquete ?? 1;
+                          $total = $paquetes * $unidadPaq;
+                        @endphp
+
+                        <div class="border-b pb-1 flex justify-between">
+                          <div>
+                            <span class="font-medium text-gray-900">
+                              {{ $producto->descripcion ?? 'Producto eliminado' }}
+                            </span>
+
+                            @if($producto && $producto->paquete)
+                              <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">
+                                {{ $unidadPaq }} u/pq
+                              </span>
+                            @endif
+                          </div>
+
+                          <div class="text-right">
+                            <span class="font-semibold block">{{ $paquetes }} paquetes</span>
+                            <span class="text-[11px] text-gray-600">{{ $total }} unidades</span>
+                          </div>
+                        </div>
+                      @endforeach
+                    </div>
+
+                    <div class="mt-2 text-xs flex justify-between">
+                      <span class="font-medium text-gray-800">
+                        Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }} unidades
+                      </span>
+                      <span class="text-gray-500">
+                        {{ $solicitud->created_at->format('d/m/Y') }}
+                      </span>
+                    </div>
+
+                  </button>
+
+                @empty
+                  <div class="text-center py-4 text-gray-600">No hay solicitudes registradas.</div>
+                @endforelse
+
+              </div>
+
+            @endif
           </div>
+
+
+
           <div class="mb-6">
             <div class="flex flex-wrap gap-3">
               @foreach($sucursales as $sucursal)
@@ -268,51 +328,67 @@
             <div
               class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
               @if($tipoProducto === 'producto')
-                @foreach($productos as $producto)
-                  @php
-                    $cantidadesPorSucursal = [];
-                    foreach ($producto->existencias as $existencia) {
-                      $totalExistencia = $existencia->reposiciones->sum('cantidad');
-                      if ($totalExistencia > 0) {
-                        $cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] = ($cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] ?? 0) + $totalExistencia;
+                @if($productos->count())
+                  @foreach($productos as $producto)
+                    @php
+                      $cantidadesPorSucursal = [];
+                      foreach ($producto->existencias as $existencia) {
+                        $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                        if ($totalExistencia > 0) {
+                          $cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] =
+                            ($cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] ?? 0) + $totalExistencia;
+                        }
                       }
-                    }
-                  @endphp
-                  <button type="button" wire:click="$set('productoSeleccionado', {{ $producto->id }})"
-                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}">
-                    <span class="font-semibold">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
-                    <div class="flex flex-wrap justify-center gap-3 mt-2">
-                      @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
-                        <span class="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-semibold">{{ $sucursal }}:
-                          {{ $cantidad }}</span>
-                      @endforeach
-                    </div>
-                    <span class="text-sm mt-1">{{ $producto->precioReferencia ?? 'sin precio' }} BS</span>
-                  </button>
-                @endforeach
+                    @endphp
+                    <button type="button" wire:click="$set('productoSeleccionado', {{ $producto->id }})"
+                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $productoSeleccionado == $producto->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }}">
+                      <span class="font-semibold">{{ $producto->descripcion ?? 'Producto #' . $producto->id }}</span>
+                      <div class="flex flex-wrap justify-center gap-3 mt-2">
+                        @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                          <span class="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-semibold">{{ $sucursal }}:
+                            {{ $cantidad }}</span>
+                        @endforeach
+                      </div>
+                      <span class="text-sm mt-1">{{ $producto->precioReferencia ?? 'sin precio' }} BS</span>
+                    </button>
+                  @endforeach
+                @else
+                  <div class="text-center text-gray-500 py-4">
+                    No hay productos disponibles.
+                  </div>
+                @endif
+
               @else
-                @foreach($otros as $otro)
-                  @php
-                    $cantidadesPorSucursal = [];
-                    foreach ($otro->existencias as $existencia) {
-                      $totalExistencia = $existencia->reposiciones->sum('cantidad');
-                      if ($totalExistencia > 0) {
-                        $cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] = ($cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] ?? 0) + $totalExistencia;
+                @if($otros->count())
+                  @foreach($otros as $otro)
+                    @php
+                      $cantidadesPorSucursal = [];
+                      foreach ($otro->existencias as $existencia) {
+                        $totalExistencia = $existencia->reposiciones->sum('cantidad');
+                        if ($totalExistencia > 0) {
+                          $cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] =
+                            ($cantidadesPorSucursal[$existencia->sucursal->nombre ?? 'Sin sucursal'] ?? 0) + $totalExistencia;
+                        }
                       }
-                    }
-                  @endphp
-                  <button type="button" wire:click="$set('otroSeleccionado', {{ $otro->id }})"
-                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $otroSeleccionado == $otro->id ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }}">
-                    <span class="font-semibold">{{ $otro->descripcion ?? 'Item #' . $otro->id }}</span>
-                    <div class="flex flex-wrap justify-center gap-2 mt-1">
-                      @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
-                        <span class="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-semibold">{{ $sucursal }}:
-                          {{ $cantidad }}</span>
-                      @endforeach
-                    </div>
-                    <span class="text-sm mt-1">{{ $otro->precioReferencia ?? 'sin precio' }} BS</span>
-                  </button>
-                @endforeach
+                    @endphp
+                    <button type="button" wire:click="$set('otroSeleccionado', {{ $otro->id }})"
+                      class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $otroSeleccionado == $otro->id ? 'border-green-600 text-green-600 bg-green-50' : 'border-gray-300 text-gray-800 hover:border-green-600 hover:text-green-600' }}">
+                      <span class="font-semibold">{{ $otro->descripcion ?? 'Item #' . $otro->id }}</span>
+                      <div class="flex flex-wrap justify-center gap-2 mt-1">
+                        @foreach($cantidadesPorSucursal as $sucursal => $cantidad)
+                          <span class="text-xs bg-teal-600 text-white px-2 py-0.5 rounded-full font-semibold">{{ $sucursal }}:
+                            {{ $cantidad }}</span>
+                        @endforeach
+                      </div>
+                      <span class="text-sm mt-1">{{ $otro->precioReferencia ?? 'sin precio' }} BS</span>
+                    </button>
+                  @endforeach
+                @else
+                  <div class="text-center text-gray-500 py-4">
+                    No hay otros ítems disponibles.
+                  </div>
+                @endif
+
               @endif
             </div>
           </div>
@@ -351,27 +427,38 @@
                 placeholder="Escribe observaciones del pedido..."></textarea>
             </div>
             <div class="mb-4">
-              <label class="font-semibold">Estado del Pedido (Automatico)</label>
+              <label class="font-semibold">Estado del Pedido (Automático)</label>
 
-              <div class="flex gap-2 mt-2">
+              <div class="flex flex-wrap gap-2 mt-2">
+
                 <button type="button" wire:click="$set('estado_pedido', 0)"
-                  class="px-3 py-1.5 rounded-md border 
-                  {{ $estado_pedido == 0 ? 'bg-yellow-500 text-white border-yellow-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                  class="px-3 py-1.5 rounded-md border
+                  {{ $estado_pedido == 0 ? 'bg-gray-600 text-white border-gray-700' : 'bg-white text-gray-700 border-gray-300' }}">
                   Pendiente
                 </button>
                 <button type="button" wire:click="$set('estado_pedido', 1)"
                   class="px-3 py-1.5 rounded-md border
                   {{ $estado_pedido == 1 ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300' }}">
-                  Entregado
+                  Preparando
                 </button>
                 <button type="button" wire:click="$set('estado_pedido', 2)"
                   class="px-3 py-1.5 rounded-md border
-                  {{ $estado_pedido == 2 ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300' }}">
-                  Cancelado
+                  {{ $estado_pedido == 2 ? 'bg-yellow-500 text-white border-yellow-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                  Pago Pendiente
                 </button>
-
+                <button type="button" wire:click="$set('estado_pedido', 3)"
+                  class="px-3 py-1.5 rounded-md border
+                  {{ $estado_pedido == 3 ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                  Pagado
+                </button>
+                <button type="button" wire:click="$set('estado_pedido', 4)"
+                  class="px-3 py-1.5 rounded-md border
+                  {{ $estado_pedido == 4 ? 'bg-teal-600 text-white border-teal-700' : 'bg-white text-gray-700 border-gray-300' }}">
+                  Completado
+                </button>
               </div>
             </div>
+
 
 
           </div>
@@ -412,7 +499,7 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                   <div class="sm:col-span-2">
-                    <label class="font-semibold text-sm">Monto (Requerido)</label>
+                    <label class="font-semibold text-u">Monto (Requerido)</label>
                     <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
                   </div>
 
