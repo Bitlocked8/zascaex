@@ -166,139 +166,141 @@
     <div class="modal-overlay">
       <div class="modal-box">
         <div class="modal-content flex flex-col gap-4">
+<div>
+    <label class="text-u">Seleccionar Solicitud de Pedido (Requerido)</label>
 
-          <div>
-            <label class="text-u">Seleccionar Solicitud de Pedido (Requerido)</label>
-            @if($solicitud_pedido_id)
+    @if($solicitud_pedido_id)
 
-              @php
-                $solicitud = $solicitudPedidos->firstWhere('id', $solicitud_pedido_id);
-                $detallesSolicitud = $solicitud?->detalles ?? collect();
-                $totalPaquetes = $detallesSolicitud->sum('cantidad');
-                $totalUnidades = $detallesSolicitud->sum(function ($d) {
-                  return $d->cantidad * ($d->producto->paquete ?? 1);
-                });
-              @endphp
+        @php
+            $solicitud = $solicitudPedidos->firstWhere('id', $solicitud_pedido_id);
+            $detallesSolicitud = $solicitud?->detalles ?? collect();
+            $totalPaquetes = $detallesSolicitud->sum('cantidad');
+            $totalUnidades = $detallesSolicitud->sum(function ($d) {
+                return $d->cantidad * ($d->paquete ?? 1);
+            });
+        @endphp
 
-              <div class="w-full border border-gray-300 rounded-md p-3 bg-gray-100">
-                <p class="font-semibold text-gray-800 mb-1">
-                  Solicitud asignada:
-                </p>
+        <div class="w-full border border-gray-300 rounded-md p-3 bg-gray-100">
+            <p class="font-semibold text-gray-800 mb-1">
+                Solicitud asignada:
+            </p>
 
-                <p class="font-medium text-gray-900">
-                  {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
-                </p>
+            <p class="font-medium text-gray-900">
+                {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+            </p>
 
-                <p class="text-xs text-gray-500">
-                  {{ $solicitud->created_at->format('d/m/Y') }}
-                </p>
+            <p class="text-xs text-gray-500">
+                {{ $solicitud->created_at->format('d/m/Y') }}
+            </p>
 
-                <div class="mt-3 text-xs space-y-1 text-gray-700">
-                  @foreach($detallesSolicitud as $detalle)
+            <div class="mt-3 text-xs space-y-1 text-gray-700">
+                @foreach($detallesSolicitud as $detalle)
                     @php
-                      $producto = $detalle->producto;
-                      $paquetes = $detalle->cantidad;
-                      $unidadPaq = $producto->paquete ?? 1;
-                      $total = $paquetes * $unidadPaq;
+                        $paquetes = $detalle->cantidad;
+                        $unidadPaq = $detalle->paquete ?? 1;
+                        $total = $paquetes * $unidadPaq;
                     @endphp
 
                     <div class="border-b pb-1 flex justify-between">
-                      <span>
-                        {{ $producto->descripcion ?? 'Producto eliminado' }}
-                        @if($producto && $producto->paquete)
-                          <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">
-                            {{ $unidadPaq }} unidades por paquete
-                          </span>
-                        @endif
-                      </span>
+                        <span>
+                            {{ $detalle->descripcion ?? 'Sin descripción' }}
+                            @if($unidadPaq > 1)
+                                <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">
+                                    {{ $unidadPaq }} unidades por paquete
+                                </span>
+                            @endif
+                        </span>
 
-                      <span class="text-right">
-                        <span class="font-semibold block">{{ $paquetes }} paquetes</span>
-                        <span class="text-[11px] text-gray-600">{{ $total }} unidades</span>
-                      </span>
+                        <span class="text-right">
+                            <span class="font-semibold block">{{ $paquetes }} paquetes</span>
+                            <span class="text-[11px] text-gray-600">{{ $total }} unidades</span>
+                        </span>
                     </div>
-                  @endforeach
-                </div>
-                <p class="mt-2 text-xs font-medium text-gray-700">
-                  Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }} unidades
-                </p>
-                <button type="button" wire:click="quitarSolicitud"
-                  class="mt-3 px-3 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600">
-                  Quitar solicitud
-                </button>
-              </div>
-            @else
+                @endforeach
+            </div>
 
-              <div class="w-full border border-gray-300 rounded-md p-2 bg-white max-h-[260px] overflow-y-auto">
+            <p class="mt-2 text-xs font-medium text-gray-700">
+                Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }} unidades
+            </p>
 
-                @forelse($solicitudPedidos as $solicitud)
+            <button type="button" wire:click="quitarSolicitud"
+                    class="mt-3 px-3 py-1 bg-red-500 text-white rounded-md text-xs hover:bg-red-600">
+                Quitar solicitud
+            </button>
+        </div>
 
-                  @php
+    @else
+
+        <div class="w-full border border-gray-300 rounded-md p-2 bg-white max-h-[260px] overflow-y-auto">
+
+            @forelse($solicitudPedidos as $solicitud)
+
+                @php
                     $detallesSolicitud = $solicitud->detalles;
                     $totalPaquetes = $detallesSolicitud->sum('cantidad');
                     $totalUnidades = $detallesSolicitud->sum(function ($d) {
-                      return $d->cantidad * ($d->producto->paquete ?? 1);
+                        return $d->cantidad * ($d->paquete ?? 1);
                     });
-                  @endphp
+                @endphp
 
-                  <button type="button" wire:click="seleccionarSolicitud({{ $solicitud->id }})"
-                    class="w-full text-left p-3 mb-2 rounded-lg border-2 transition bg-white  {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
-
+                <button type="button" wire:click="seleccionarSolicitud({{ $solicitud->id }})"
+                        class="w-full text-left p-3 mb-2 rounded-lg border-2 transition bg-white {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
+                    
                     <div class="flex justify-between items-center mb-2">
-                      <span class="font-semibold text-gray-900">
-                        {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
-                      </span>
+                        <span class="font-semibold text-gray-900">
+                            {{ $solicitud->codigo }} — {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+                        </span>
                     </div>
 
                     <div class="text-xs space-y-1 text-gray-700">
-                      @foreach($detallesSolicitud as $detalle)
-                        @php
-                          $producto = $detalle->producto;
-                          $paquetes = $detalle->cantidad;
-                          $unidadPaq = $producto->paquete ?? 1;
-                          $total = $paquetes * $unidadPaq;
-                        @endphp
+                        @foreach($detallesSolicitud as $detalle)
+                            @php
+                                $paquetes = $detalle->cantidad;
+                                $unidadPaq = $detalle->paquete ?? 1;
+                                $total = $paquetes * $unidadPaq;
+                            @endphp
 
-                        <div class="border-b pb-1 flex justify-between">
-                          <div>
-                            <span class="font-medium text-gray-900">
-                              {{ $producto->descripcion ?? 'Producto eliminado' }}
-                            </span>
+                            <div class="border-b pb-1 flex justify-between">
+                                <div>
+                                    <span class="font-medium text-gray-900">
+                                        {{ $detalle->descripcion ?? 'Sin descripción' }}
+                                    </span>
 
-                            @if($producto && $producto->paquete)
-                              <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">
-                                {{ $unidadPaq }} u/pq
-                              </span>
-                            @endif
-                          </div>
+                                    @if($unidadPaq > 1)
+                                        <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">
+                                            {{ $unidadPaq }} u/pq
+                                        </span>
+                                    @endif
+                                </div>
 
-                          <div class="text-right">
-                            <span class="font-semibold block">{{ $paquetes }} paquetes</span>
-                            <span class="text-[11px] text-gray-600">{{ $total }} unidades</span>
-                          </div>
-                        </div>
-                      @endforeach
+                                <div class="text-right">
+                                    <span class="font-semibold block">{{ $paquetes }} paquetes</span>
+                                    <span class="text-[11px] text-gray-600">{{ $total }} unidades</span>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
 
                     <div class="mt-2 text-xs flex justify-between">
-                      <span class="font-medium text-gray-800">
-                        Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }} unidades
-                      </span>
-                      <span class="text-gray-500">
-                        {{ $solicitud->created_at->format('d/m/Y') }}
-                      </span>
+                        <span class="font-medium text-gray-800">
+                            Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }} unidades
+                        </span>
+                        <span class="text-gray-500">
+                            {{ $solicitud->created_at->format('d/m/Y') }}
+                        </span>
                     </div>
 
-                  </button>
+                </button>
 
-                @empty
-                  <div class="text-center py-4 text-gray-600">No hay solicitudes registradas.</div>
-                @endforelse
+            @empty
+                <div class="text-center py-4 text-gray-600">No hay solicitudes registradas.</div>
+            @endforelse
 
-              </div>
+        </div>
 
-            @endif
-          </div>
+    @endif
+</div>
+
 
 
 

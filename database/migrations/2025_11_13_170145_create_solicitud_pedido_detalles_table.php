@@ -13,15 +13,26 @@ return new class extends Migration {
         Schema::create('solicitud_pedido_detalles', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('solicitud_pedido_id');
-            $table->unsignedBigInteger('producto_id')->nullable();
+
+            // Guardamos datos descriptivos directamente
+            $table->string('descripcion');
             $table->integer('cantidad')->default(1);
-            $table->decimal('precio', 8, 2)->nullable();
+            $table->integer('paquete')->default(1);
+            $table->decimal('precio_unitario', 10, 2)->nullable();
+            $table->decimal('total', 12, 2)->nullable();
+            $table->string('tapa_descripcion')->nullable();
+            $table->string('tapa_imagen')->nullable();    
+            $table->string('etiqueta_descripcion')->nullable();
+            $table->string('etiqueta_imagen')->nullable();
+
+
             $table->timestamps();
 
-            $table->foreign('solicitud_pedido_id')->references('id')->on('solicitud_pedidos')->onDelete('cascade');
-            $table->foreign('producto_id')->references('id')->on('productos')->onDelete('set null');
+            $table->foreign('solicitud_pedido_id')
+                ->references('id')
+                ->on('solicitud_pedidos')
+                ->onDelete('cascade');
         });
-
     }
 
     /**

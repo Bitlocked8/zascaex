@@ -9,15 +9,21 @@ class SolicitudPedidoDetalle extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['solicitud_pedido_id', 'producto_id', 'cantidad', 'precio'];
+    protected $fillable = [
+        'solicitud_pedido_id',
+        'descripcion',
+        'cantidad',
+        'paquete',
+        'precio_unitario',
+        'total',
+        'tapa_descripcion',
+        'tapa_imagen',          // ← agregado
+        'etiqueta_descripcion',
+        'etiqueta_imagen',
+    ];
 
     public function solicitudPedido()
     {
         return $this->belongsTo(SolicitudPedido::class);
-    }
-
-    public function producto()
-    {
-        return $this->belongsTo(Producto::class);
     }
 }

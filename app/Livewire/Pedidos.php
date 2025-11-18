@@ -268,13 +268,15 @@ class Pedidos extends Component
             $q->whereHas('reposiciones', fn($query) => $query->where('estado_revision', 1)->where('cantidad', '>', 0));
         })->with(['existencias.reposiciones' => fn($query) => $query->where('estado_revision', 1)->where('cantidad', '>', 0)])->get();
 
-        $solicitudPedidos = SolicitudPedido::with('cliente', 'detalles.producto')
+        $solicitudPedidos = SolicitudPedido::with('cliente', 'detalles')
             ->whereDoesntHave('pedido')
             ->orderBy('created_at', 'desc')
             ->get();
 
+
         if ($this->pedido->exists && $this->pedido->solicitud_pedido_id) {
-            $solicitudEdit = SolicitudPedido::with('cliente', 'detalles.producto')->find($this->pedido->solicitud_pedido_id);
+            $solicitudEdit = SolicitudPedido::with('cliente', 'detalles')->find($this->pedido->solicitud_pedido_id);
+
             if ($solicitudEdit && !$solicitudPedidos->contains('id', $solicitudEdit->id)) {
                 $solicitudPedidos->prepend($solicitudEdit);
             }
@@ -293,51 +295,6 @@ class Pedidos extends Component
     public function filtrarSucursalModal($id = null)
     {
         $this->sucursal_id = $id;
-    }
-
-    public function abrirModalPagosPedido($pedido_id)
-    {
-        $this->pedidoParaPago = $pedido_id;
-        $this->pagos = PagoPedido::where('pedido_id', $pedido_id)
-            ->get()
-            ->map(fn($p) => [
-                'id' => $p->id,
-                'codigo' => $p->codigo ?? 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-                'fecha_pago' => $p->fecha_pago ? Carbon::parse($p->fecha_pago)->format('Y-m-d') : now()->format('Y-m-d'),
-                'monto' => $p->monto,
-                'observaciones' => $p->observaciones,
-                'imagen_comprobante' => $p->imagen_comprobante,
-                'metodo' => $p->metodo,
-                'referencia' => $p->referencia,
-                'estado' => $p->estado,
-            ])->toArray();
-
-        $this->modalPagos = true;
-    }
-
-    public function agregarPagoPedido()
-    {
-        $this->pagos[] = [
-            'id' => null,
-            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(count($this->pagos) + 1, 3, '0', STR_PAD_LEFT),
-            'fecha_pago' => now()->format('Y-m-d'),
-            'monto' => null,
-            'observaciones' => null,
-            'imagen_comprobante' => null,
-            'metodo' => null,
-            'referencia' => null,
-            'estado' => 0,
-        ];
-    }
-
-    public function eliminarPagoPedido($index)
-    {
-        $pago = $this->pagos[$index] ?? null;
-        if ($pago && isset($pago['id']) && $pago['id']) {
-            PagoPedido::find($pago['id'])?->delete();
-        }
-        unset($this->pagos[$index]);
-        $this->pagos = array_values($this->pagos);
     }
 
     public function editarPedido($pedido_id)
@@ -441,6 +398,51 @@ class Pedidos extends Component
         }
 
         $this->setMensaje('Pedido eliminado correctamente', 'success');
+    }
+
+    public function abrirModalPagosPedido($pedido_id)
+    {
+        $this->pedidoParaPago = $pedido_id;
+        $this->pagos = PagoPedido::where('pedido_id', $pedido_id)
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'codigo' => $p->codigo ?? 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                'fecha_pago' => $p->fecha_pago ? Carbon::parse($p->fecha_pago)->format('Y-m-d') : now()->format('Y-m-d'),
+                'monto' => $p->monto,
+                'observaciones' => $p->observaciones,
+                'imagen_comprobante' => $p->imagen_comprobante,
+                'metodo' => $p->metodo,
+                'referencia' => $p->referencia,
+                'estado' => $p->estado,
+            ])->toArray();
+
+        $this->modalPagos = true;
+    }
+
+    public function agregarPagoPedido()
+    {
+        $this->pagos[] = [
+            'id' => null,
+            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(count($this->pagos) + 1, 3, '0', STR_PAD_LEFT),
+            'fecha_pago' => now()->format('Y-m-d'),
+            'monto' => null,
+            'observaciones' => null,
+            'imagen_comprobante' => null,
+            'metodo' => null,
+            'referencia' => null,
+            'estado' => 0,
+        ];
+    }
+
+    public function eliminarPagoPedido($index)
+    {
+        $pago = $this->pagos[$index] ?? null;
+        if ($pago && isset($pago['id']) && $pago['id']) {
+            PagoPedido::find($pago['id'])?->delete();
+        }
+        unset($this->pagos[$index]);
+        $this->pagos = array_values($this->pagos);
     }
 
 }
