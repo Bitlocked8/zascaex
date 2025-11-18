@@ -64,72 +64,71 @@
 
     @if($modalProducto)
         <div class="modal-overlay">
-            <div class="modal-box max-w-3xl">
+            <div class="modal-box max-w-4xl w-11/12 sm:w-4/5 md:w-3/4 lg:w-2/3">
                 <div class="modal-content flex flex-col gap-4">
-
                     <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold">{{ $productoSeleccionado['descripcion'] ?? '' }}</h2>
-                        <button wire:click="$set('modalProducto', false)"
-                            class="text-red-600 font-bold text-xl hover:text-red-800 transition">✕</button>
+                        <h2 class="text-u sm:text-2xl font-bold">{{ $productoSeleccionado['descripcion'] ?? '' }}</h2>
                     </div>
-
                     <div class="flex justify-center mb-4">
                         @if(!empty($productoSeleccionado['imagen']))
                             <img src="{{ asset('storage/' . $productoSeleccionado['imagen']) }}"
-                                class="h-32 w-32 object-contain border rounded-lg p-1">
+                                class="h-48 sm:h-64 md:h-80 w-full object-contain border rounded-lg p-1">
                         @else
                             <div
-                                class="h-32 w-32 flex items-center justify-center bg-gray-200 text-gray-500 text-sm border rounded-lg">
+                                class="h-48 sm:h-64 md:h-80 w-full flex items-center justify-center bg-gray-200 text-gray-500 text-sm border rounded-lg">
                                 No hay imagen
                             </div>
                         @endif
                     </div>
-
                     <div>
-                        <label class="text-sm font-medium mb-1 block">Cantidad:</label>
+                        <label class="text-sm font-medium mb-1 block">Cantidad de paquetes:</label>
                         <input type="number" min="1" wire:model="cantidadSeleccionada"
-                            class="w-full border rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            class="input-minimal">
                     </div>
 
+                    <h3>
+                        <label class="text-u">personaliza tu botella</label>
+                    </h3>
                     <div>
-                        <label class="text-sm font-medium mb-1 block">Tapa:</label>
-                        <div class="grid grid-cols-4 gap-2">
+                        <label class="text-u">elige una Tapa:</label>
+                        <div class="flex overflow-x-auto gap-4 py-2">
                             @forelse($tapas as $tapa)
                                 <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
-                                    class="border rounded-lg cursor-pointer p-1 transition @if($tapaSeleccionada == $tapa->id) border-teal-600 ring-2 ring-teal-400 @endif">
+                                    class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
+                                                                @if($tapaSeleccionada == $tapa->id) border-teal-600 ring-2 ring-teal-400 @endif">
                                     @if(!empty($tapa->imagen))
                                         <img src="{{ asset('storage/' . $tapa->imagen) }}" alt="{{ $tapa->descripcion }}"
-                                            class="h-20 w-20 object-contain mx-auto border rounded-lg p-1">
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 object-contain mx-auto border rounded-lg p-1">
                                     @else
                                         <div
-                                            class="h-20 w-20 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
                                             No hay imagen
                                         </div>
                                     @endif
-                                    <p class="text-xs text-center mt-1">{{ $tapa->descripcion }}</p>
+                                    <p class="text-xs sm:text-sm text-center mt-1">{{ $tapa->descripcion }}</p>
                                 </div>
                             @empty
                                 <p>No hay tapas disponibles</p>
                             @endforelse
                         </div>
                     </div>
-
                     <div>
-                        <label class="text-u">Etiqueta:</label>
-                        <div class="grid grid-cols-4 gap-2">
+                        <label class="text-u">elige una Etiqueta:</label>
+                        <div class="flex overflow-x-auto gap-4 py-2">
                             @forelse($etiquetas as $etiqueta)
                                 <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
-                                    class="border rounded-lg cursor-pointer p-1 transition @if($etiquetaSeleccionada == $etiqueta->id) border-teal-600 ring-2 ring-teal-400 @endif">
+                                    class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
+                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-teal-600 ring-2 ring-teal-400 @endif">
                                     @if(!empty($etiqueta->imagen))
                                         <img src="{{ asset('storage/' . $etiqueta->imagen) }}" alt="{{ $etiqueta->descripcion }}"
-                                            class="h-20 w-20 object-contain mx-auto border rounded-lg p-1">
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 object-contain mx-auto border rounded-lg p-1">
                                     @else
                                         <div
-                                            class="h-20 w-20 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
                                             No hay imagen
                                         </div>
                                     @endif
-                                    <p class="text-xs text-center mt-1">{{ $etiqueta->descripcion }}</p>
+                                    <p class="text-xs sm:text-sm text-center mt-1">{{ $etiqueta->descripcion }}</p>
                                 </div>
                             @empty
                                 <p>No hay etiquetas disponibles</p>
@@ -139,7 +138,8 @@
 
                 </div>
 
-                <div class="modal-footer flex justify-end gap-2 mt-4">
+                <!-- Footer -->
+                <div class="modal-footer ">
                     <button wire:click="$set('modalProducto', false)"
                         class="btn-cyan flex items-center gap-1">CERRAR</button>
                     <button wire:click="agregarAlCarritoDesdeModal" class="btn-cyan flex items-center gap-1">AÑADIR</button>
@@ -147,6 +147,7 @@
             </div>
         </div>
     @endif
+
 
 
 
