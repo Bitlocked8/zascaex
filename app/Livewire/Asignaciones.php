@@ -46,10 +46,12 @@ class Asignaciones extends Component
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            if ($sucursal_id) $query->where('sucursal_id', $sucursal_id);
+            if ($sucursal_id)
+                $query->where('sucursal_id', $sucursal_id);
         }
 
-        if ($this->filtroSucursalModal) $query->where('sucursal_id', $this->filtroSucursalModal);
+        if ($this->filtroSucursalModal)
+            $query->where('sucursal_id', $this->filtroSucursalModal);
 
         if ($this->searchExistencia) {
             $query->whereHas('existenciable', fn($q) => $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%'));
@@ -71,7 +73,7 @@ class Asignaciones extends Component
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['asignacion_id','codigo','fecha','motivo','observaciones','items']);
+        $this->reset(['asignacion_id', 'codigo', 'fecha', 'motivo', 'observaciones', 'items']);
         $this->accion = $accion;
 
         $usuario = auth()->user();
@@ -100,9 +102,9 @@ class Asignaciones extends Component
     public function agregarExistencia($existenciaId)
     {
         foreach ($this->items as $item) {
-            if ($item['existencia_id'] == $existenciaId) return;
+            if ($item['existencia_id'] == $existenciaId)
+                return;
         }
-
         $this->items[] = ['existencia_id' => $existenciaId, 'cantidad' => 1];
     }
 
@@ -113,13 +115,15 @@ class Asignaciones extends Component
 
     public function editar($id)
     {
-        $asignado = Asignado::with(['reposiciones.existencia.existenciable'])->findOrFail($id);
+        $asignado = Asignado::with(['reposiciones.existencia.existenciable', 'personal'])->findOrFail($id);
 
         $this->asignacion_id = $asignado->id;
         $this->codigo = $asignado->codigo;
         $this->fecha = Carbon::parse($asignado->fecha)->format('Y-m-d\TH:i');
         $this->motivo = $asignado->motivo;
         $this->observaciones = $asignado->observaciones;
+
+        $this->personal_id = $asignado->personal_id;  // ← AQUÍ ESTABA EL ERROR
 
         $this->items = $asignado->reposiciones
             ->groupBy('existencia_id')
@@ -128,6 +132,7 @@ class Asignaciones extends Component
                 'cantidad' => $group->sum('pivot.cantidad')
             ])->values()->toArray();
     }
+
 
     public function guardarAsignacion()
     {
@@ -139,9 +144,21 @@ class Asignaciones extends Component
             'items.*.cantidad' => 'required|integer|min:1',
         ]);
 
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+        $sucursalEmpleado = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+
         DB::beginTransaction();
 
         try {
+            foreach ($this->items as $item) {
+                $existencia = Existencia::findOrFail($item['existencia_id']);
+                if ($rol === 2 && $existencia->sucursal_id != $sucursalEmpleado) {
+                    throw new \Exception("No puedes asignar existencias de otra sucursal: {$existencia->existenciable->descripcion}");
+                }
+            }
+
             $totalCantidad = array_sum(array_column($this->items, 'cantidad'));
 
             if ($this->accion === 'edit' && $this->asignacion_id) {
@@ -186,7 +203,8 @@ class Asignaciones extends Component
 
                 $restante = $cantidadSolicitada;
                 foreach ($reposiciones as $repo) {
-                    if ($restante <= 0) break;
+                    if ($restante <= 0)
+                        break;
 
                     $usar = min($repo->cantidad, $restante);
                     $asignado->reposiciones()->attach($repo->id, [
@@ -233,12 +251,12 @@ class Asignaciones extends Component
     public function cerrarModal()
     {
         $this->modal = false;
-        $this->reset(['codigo','fecha','motivo','observaciones','items']);
+        $this->reset(['codigo', 'fecha', 'motivo', 'observaciones', 'items']);
     }
 
     public function modaldetalle($id)
     {
-        $this->asignacionSeleccionada = Asignado::with(['reposiciones.existencia.existenciable','personal'])->find($id);
+        $this->asignacionSeleccionada = Asignado::with(['reposiciones.existencia.existenciable', 'personal'])->find($id);
         $this->modalDetalle = true;
     }
 
@@ -254,7 +272,7 @@ class Asignaciones extends Component
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
-        $query = Asignado::with(['reposiciones.existencia.existenciable','personal']);
+        $query = Asignado::with(['reposiciones.existencia.existenciable', 'personal']);
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -262,7 +280,7 @@ class Asignaciones extends Component
         }
 
         $asignaciones = $query
-            ->when($this->searchCodigo, fn($q) => $q->where('codigo','like','%'.$this->searchCodigo.'%'))
+            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
             ->latest()
             ->get();
 

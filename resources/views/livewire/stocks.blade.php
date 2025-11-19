@@ -123,7 +123,7 @@
                             !$repo->adornados()->exists()
                         )
                         <button wire:click="abrirModal('edit', {{ $repo->id }})"
-                            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
+                            class="btn-cyan" title="Editar">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="2">
                                 <path stroke="none" d="M0 0h24v24H0z" />
@@ -135,7 +135,7 @@
                         </button>
 
                         <button wire:click="abrirModalPagos({{ $repo->id }})"
-                            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Pagos">
+                            class="btn-cyan" title="Pagos">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="2">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -150,8 +150,7 @@
                         </button>
 
                         @if(!$repo->estado_revision)
-                            <button wire:click="confirmarEliminarReposicion({{ $repo->id }})"
-                                class="btn-cyan" title="Eliminar">
+                            <button wire:click="confirmarEliminarReposicion({{ $repo->id }})" class="btn-cyan" title="Eliminar">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="2">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -244,18 +243,27 @@
                                 </p>
                             @else
 
-                                <div class="mb-4">
-                                    <label class="block text-sm font-semibold mb-2">Filtrar por Sucursal</label>
-                                    <div class="flex flex-wrap gap-3">
+                                @php $usuario = auth()->user(); @endphp
 
-                                        @foreach($sucursales as $sucursal)
-                                            <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                                                class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $filtroSucursalModal == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
-                                                {{ $sucursal->nombre }}
-                                            </button>
-                                        @endforeach
+                                @if($usuario && $usuario->rol_id === 1)
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-semibold mb-2">Filtrar por Sucursal</label>
+                                        <div class="flex flex-wrap gap-3">
+
+                                            @foreach($sucursales as $sucursal)
+                                                            <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
+                                                                class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
+                                                {{ $filtroSucursalModal == $sucursal->id
+                                                ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600'
+                                                : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
+                                                                {{ $sucursal->nombre }}
+                                                            </button>
+                                            @endforeach
+
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
+
 
 
                                 <div class="mb-4">
@@ -403,73 +411,62 @@
     @if($modalConfigGlobal)
         <div class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-content">
-                    @forelse($existencias as $ex)
-                        <div class="grid grid-cols-12 gap-4 items-start border-b pb-4">
-                            <div class="col-span-6 flex flex-col gap-1">
-                                <span class="uppercase text-cyan-600 font-semibold">
-                                    {{ class_basename($ex->existenciable_type) }}
-                                </span>
-                                <span class="font-medium">
-                                    {{ $ex->existenciable->descripcion ?? 'Sin Nombre' }}
-                                </span>
-                                <span class="bg-cyan-600 text-white text-xs px-2 py-1 rounded-full font-semibold w-max">
-                                    Disponible: {{ $ex->cantidad }}
-                                </span>
-                            </div>
-
-                            <div class="col-span-6 flex flex-col gap-2">
-                                <div>
-                                    <label class="font-semibold text-sm mb-2 block">Sucursal (Opcional)</label>
-                                    <div
-                                        class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
-                                        <button type="button"
-                                            wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)"
-                                            class="w-full px-3 py-2 rounded-md border text-sm text-left transition{{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                            Sin sucursal
-                                        </button>
-                                        @foreach($sucursales as $suc)
+                <div class="modal-content flex flex-col gap-4">
+                    <div class="grid grid-cols-1 gap-2 mt-2">
+                        @forelse($existencias as $ex)
+                            @php
+                                $tipo = class_basename($ex->existenciable_type);
+                                $cantidadDisponible = $ex->cantidad;
+                            @endphp
+                            <div class="w-full border rounded-lg p-4 bg-white shadow-sm flex flex-col gap-2">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex flex-col gap-1">
+                                        <span class="uppercase text-cyan-600 font-semibold">{{ $tipo }}</span>
+                                        <span class="font-medium">{{ $ex->existenciable->descripcion ?? 'Sin nombre' }}</span>
+                                        <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold w-max">
+                                            Disponible: {{ $cantidadDisponible }}
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <label class="text-sm font-semibold">Sucursal (Opcional)</label>
+                                        <div class="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
                                             <button type="button"
-                                                wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
-                                                class="w-full px-3 py-2 rounded-md border text-sm text-left transition{{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                                {{ $suc->nombre }}
+                                                wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)"
+                                                class="w-full px-3 py-2 rounded-md border text-left text-sm transition
+                                                                {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                                Sin sucursal
                                             </button>
-                                        @endforeach
+                                            @foreach($sucursales as $suc)
+                                                <button type="button"
+                                                    wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
+                                                    class="w-full px-3 py-2 rounded-md border text-left text-sm transition
+                                                                            {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                                    {{ $suc->nombre }}
+                                                </button>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    @empty
-                        <div class="text-center text-gray-500 py-8">
-                            No hay existencias disponibles para asignar a una sucursal.
-                        </div>
-                    @endforelse
-                </div>
+                        @empty
+                            <p class="text-gray-500 text-center py-4">No hay existencias disponibles para asignar a una
+                                sucursal.</p>
+                        @endforelse
+                    </div>
 
-                <div class="modal-footer">
-                    <button wire:click="guardarConfigGlobal" class="btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                            <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                            <path d="M14 4l0 4l-6 0l0 -4" />
-                        </svg>
-                        Guardar
-                    </button>
-                    <button wire:click="$set('modalConfigGlobal', false)" class="btn-cyan" title="Cerrar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                        </svg>
-                        CERRAR
-                    </button>
+                    <div class="modal-footer flex justify-end gap-2 mt-4">
+                        <button wire:click="guardarConfigGlobal" class="btn-cyan flex items-center gap-2">
+                            Guardar
+                        </button>
+                        <button wire:click="$set('modalConfigGlobal', false)" class="btn-cyan flex items-center gap-2">
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     @endif
+
     @if($modalPagos)
         <div class="modal-overlay">
             <div class="modal-box">

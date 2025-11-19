@@ -227,7 +227,7 @@
                                                 d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Otros</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Otros Productos</span>
                                 </button>
 
                             </div>
@@ -301,6 +301,8 @@
                                 </button>
                             </div>
                         </div>
+                    @endif
+                    @if(in_array(auth()->user()->rol_id, [1, 4]))
                         <div
                             class="flex flex-wrap items-center justify-between gap-4 mt-2 bg-white/60 border-2 border-indigo-500 rounded-xl p-4 backdrop-blur-sm shadow-md">
                             <h3 class="text-indigo-600 text-lg font-semibold uppercase text-center sm:text-left">
@@ -362,8 +364,9 @@
                                 </button>
                             </div>
                         </div>
-                        <br>
+
                     @endif
+                    <br>
                     @if(in_array(auth()->user()->rol_id, [1, 3]))
                         <h3
                             class="bg-white/30 border-2 border-red-500 text-red-600 px-6 py-3 rounded-xl text-center font-semibold uppercase backdrop-blur-sm shadow-md">

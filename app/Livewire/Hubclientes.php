@@ -29,12 +29,11 @@ class Hubclientes extends Component
 
     public function mount()
     {
-        // Cargar productos y otros
         $productos = Producto::where('estado', 1)
             ->whereHas('existencias')
             ->with('existencias')
             ->get()
-            ->groupBy(fn($p) => $p->descripcion . '|' . $p->tipoProducto . '|' . $p->capacidad)
+            ->groupBy(fn($p) => $p->descripcion . '|' . $p->tipoProducto . '|' . $p->capacidad . '|' . ($p->tipoContenido ?? ''))
             ->map(fn($g) => $g->first())
             ->map(fn($p) => [
                 'uid' => 'producto_' . $p->id,
@@ -43,6 +42,7 @@ class Hubclientes extends Component
                 'precio' => $p->precioReferencia,
                 'imagen' => $p->imagen,
                 'paquete' => $p->paquete ?? 1,
+                'tipoContenido' => $p->tipoContenido,
                 'tipoProducto' => $p->tipoProducto,
                 'capacidad' => $p->capacidad,
                 'unidad' => $p->unidad,
@@ -57,7 +57,7 @@ class Hubclientes extends Component
             ->whereHas('existencias')
             ->with('existencias')
             ->get()
-            ->groupBy(fn($o) => $o->descripcion . '|' . $o->tipoProducto . '|' . $o->capacidad)
+            ->groupBy(fn($o) => $o->descripcion . '|' . $o->tipoProducto . '|' . $o->capacidad . '|' . ($o->tipoContenido ?? ''))
             ->map(fn($g) => $g->first())
             ->map(fn($o) => [
                 'uid' => 'otro_' . $o->id,
@@ -81,53 +81,46 @@ class Hubclientes extends Component
     }
 
     public function abrirModalProducto($uid)
-{
-    $item = collect($this->productos)->firstWhere('uid', $uid);
-    if (!$item) return;
+    {
+        $item = collect($this->productos)->firstWhere('uid', $uid);
+        if (!$item)
+            return;
 
-    // Tomar imagen de la primera existencia con imagen
-    $existencia = $item['existencias'] ?? [];
-    $imagenSucursal = null;
-    foreach ($existencia as $e) {
-        if (!empty($e['imagen'])) {
-            $imagenSucursal = $e['imagen'];
-            break;
+        $existencia = $item['existencias'] ?? [];
+        $imagenSucursal = null;
+        foreach ($existencia as $e) {
+            if (!empty($e['imagen'])) {
+                $imagenSucursal = $e['imagen'];
+                break;
+            }
         }
+        $item['imagen'] = $imagenSucursal ?? $item['imagen'];
+        $this->productoSeleccionado = $item;
+
+        $this->tapas = Tapa::where('estado', 1)
+            ->orderBy('descripcion')
+            ->get()
+            ->groupBy('descripcion')
+            ->map(fn($grupo) => $grupo->first(fn($t) => !empty($t->imagen)) ?? $grupo->first())
+            ->values();
+
+        $this->etiquetas = Etiqueta::where('estado', 1)
+            ->orderBy('descripcion')
+            ->get()
+            ->groupBy('descripcion')
+            ->map(fn($grupo) => $grupo->first(fn($e) => !empty($e->imagen)) ?? $grupo->first())
+            ->values();
+
+        $this->tapaSeleccionada = null;
+        $this->etiquetaSeleccionada = null;
+        $this->cantidadSeleccionada = 1;
+        $this->modalProducto = true;
     }
-    $item['imagen'] = $imagenSucursal ?? $item['imagen'];
-    $this->productoSeleccionado = $item;
-
-    // Cargar tapas únicas, priorizando las que tengan imagen
-    $this->tapas = Tapa::where('estado', 1)
-        ->orderBy('descripcion')
-        ->get()
-        ->groupBy('descripcion')
-        ->map(function ($grupo) {
-            return $grupo->first(fn($t) => !empty($t->imagen)) ?? $grupo->first();
-        })
-        ->values();
-
-    // Cargar etiquetas únicas, priorizando las que tengan imagen
-    $this->etiquetas = Etiqueta::where('estado', 1)
-        ->orderBy('descripcion')
-        ->get()
-        ->groupBy('descripcion')
-        ->map(function ($grupo) {
-            return $grupo->first(fn($e) => !empty($e->imagen)) ?? $grupo->first();
-        })
-        ->values();
-
-    // Inicializar selección
-    $this->tapaSeleccionada = null;
-    $this->etiquetaSeleccionada = null;
-    $this->cantidadSeleccionada = 1;
-    $this->modalProducto = true;
-}
-
 
     public function agregarAlCarritoDesdeModal()
     {
-        if (!$this->productoSeleccionado) return;
+        if (!$this->productoSeleccionado)
+            return;
 
         $uid = $this->productoSeleccionado['uid'] . '_' . ($this->tapaSeleccionada ?? '0') . '_' . ($this->etiquetaSeleccionada ?? '0');
         $cantidad = $this->cantidadSeleccionada;
@@ -145,6 +138,10 @@ class Hubclientes extends Component
             'imagen' => $item['imagen'],
             'tipo_modelo' => $item['tipo_modelo'],
             'paquete' => $item['paquete'] ?? 1,
+            'tipoContenido' => $item['tipoContenido'],
+            'tipoProducto' => $item['tipoProducto'],
+            'capacidad' => $item['capacidad'],
+            'unidad' => $item['unidad'],
             'tapa_descripcion' => $tapa->descripcion ?? null,
             'tapa_imagen' => $tapa->imagen ?? null,
             'etiqueta_descripcion' => $etiqueta->descripcion ?? null,
@@ -161,7 +158,8 @@ class Hubclientes extends Component
     public function hacerPedido()
     {
         $clienteId = Auth::user()->cliente->id ?? null;
-        if (!$clienteId || empty($this->carrito)) return;
+        if (!$clienteId || empty($this->carrito))
+            return;
 
         $solicitud = SolicitudPedido::create([
             'cliente_id' => $clienteId,
@@ -183,11 +181,16 @@ class Hubclientes extends Component
                 'paquete' => $paquete,
                 'precio_unitario' => $precio_unitario,
                 'total' => $total,
+                'tipo_contenido' => $item['tipoContenido'] ?? null,
+                'tipo_producto' => $item['tipoProducto'] ?? null,
+                'capacidad' => $item['capacidad'] ?? null,
+                'unidad' => $item['unidad'] ?? null,
                 'tapa_descripcion' => $item['tapa_descripcion'] ?? null,
                 'tapa_imagen' => $item['tapa_imagen'] ?? null,
                 'etiqueta_descripcion' => $item['etiqueta_descripcion'] ?? null,
                 'etiqueta_imagen' => $item['etiqueta_imagen'] ?? null,
             ]);
+
         }
 
         $this->carrito = [];
@@ -198,7 +201,8 @@ class Hubclientes extends Component
     public function verMisPedidos()
     {
         $cliente = Auth::user()->cliente ?? null;
-        if (!$cliente) return;
+        if (!$cliente)
+            return;
 
         $this->pedidosCliente = SolicitudPedido::where('cliente_id', $cliente->id)
             ->with('detalles')
@@ -207,12 +211,15 @@ class Hubclientes extends Component
             ->map(function ($pedido) {
                 $detalles = $pedido->detalles->map(function ($det) {
                     $detArray = $det->toArray();
+                  $detArray['tipoContenido'] = $det->tipo_contenido ?? null; // ✅ columna real
+                $detArray['tipoProducto'] = $det->tipo_producto ?? null; 
+                    $detArray['capacidad'] = $det->capacidad ?? null;
+                    $detArray['unidad'] = $det->unidad ?? null;
 
-                    // Preparar array de etiquetas con imagen para mostrar
                     $detArray['etiquetas_info'] = [];
                     if (!empty($det->etiqueta_descripcion)) {
                         $descs = explode('|', $det->etiqueta_descripcion);
-                        $imgs  = explode('|', $det->etiqueta_imagen ?? '');
+                        $imgs = explode('|', $det->etiqueta_imagen ?? '');
                         foreach ($descs as $i => $desc) {
                             $detArray['etiquetas_info'][] = [
                                 'descripcion' => $desc,
@@ -221,7 +228,6 @@ class Hubclientes extends Component
                         }
                     }
 
-                    // Tapa como info aparte
                     if (!empty($det->tapa_descripcion)) {
                         $detArray['tapa_info'] = [
                             'descripcion' => $det->tapa_descripcion,
@@ -254,12 +260,17 @@ class Hubclientes extends Component
     public function eliminarSolicitud($id)
     {
         $pedido = SolicitudPedido::find($id);
-        if (!$pedido) return;
+        if (!$pedido)
+            return;
 
         $pedido->detalles()->delete();
         $pedido->delete();
 
-        $this->pedidosCliente = collect($this->pedidosCliente)->filter(fn($p) => $p['id'] !== $id)->values()->toArray();
+        $this->pedidosCliente = collect($this->pedidosCliente)
+            ->filter(fn($p) => $p['id'] !== $id)
+            ->values()
+            ->toArray();
+
         $this->modalPedidosCliente = false;
     }
 

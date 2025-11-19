@@ -26,8 +26,6 @@
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
                     <p class="text-emerald-600 uppercase font-semibold">{{ $asignado->codigo ?? 'N/A' }}</p>
-
-                    {{-- Mostrar todas las reposiciones asociadas --}}
                     @foreach($asignado->reposiciones as $reposicion)
                         <p class="text-slate-600">
                             {{ class_basename($reposicion->existencia->existenciable ?? '') }}:
@@ -37,8 +35,6 @@
                     @endforeach
 
                     <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
-
-                    {{-- Ahora que cantidad_original no está en Asignado, mostramos solo la suma de pivot --}}
                     <p><strong>Cantidad total asignada:</strong> {{ $asignado->cantidad }}</p>
 
                     <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -53,13 +49,41 @@
                 </div>
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="modaldetalle({{ $asignado->id }})" class="btn-cyan" title="Ver detalle">Ver más</button>
+                    <button wire:click="modaldetalle({{ $asignado->id }})" class="btn-cyan" title="Ver detalle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                            <path d="M8 12l0 .01" />
+                            <path d="M12 12l0 .01" />
+                            <path d="M16 12l0 .01" />
+                        </svg>
+                        Ver mas
+                    </button>
 
                     @if($asignado->cantidad > 0)
-                        <button wire:click="abrirModal('edit', {{ $asignado->id }})"
-                            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">Editar</button>
-                        <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan"
-                            title="Eliminar">Eliminar</button>
+                        <button wire:click="abrirModal('edit', {{ $asignado->id }})" class="btn-cyan" title="Editar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                <path d="M16 5l3 3" />
+                            </svg>
+                            Editar
+                        </button>
+                        <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan" title="Eliminar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M4 7l16 0" />
+                                <path d="M10 11l0 6" />
+                                <path d="M14 11l0 6" />
+                                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                            </svg>
+                            Eliminar
+                        </button>
                     @endif
                 </div>
             </div>
@@ -76,9 +100,8 @@
             <div class="modal-box max-w-4xl">
                 <div class="modal-content flex flex-col gap-4">
 
-                    {{-- Mensajes de error --}}
                     @if ($errors->any())
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
                             <strong class="font-bold">¡Atención!</strong>
                             <span class="block sm:inline">Debes corregir los siguientes errores:</span>
                             <ul class="mt-2 list-disc list-inside text-sm">
@@ -89,118 +112,138 @@
                         </div>
                     @endif
 
-                    {{-- Datos generales --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                        <p class="font-semibold text-sm">
-                            Código: <span class="text-u">{{ $codigo }}</span>
+                        <p class="text-u">
+                            Código: <span>{{ $codigo }}</span>
                         </p>
                         <p class="font-semibold text-sm">
-                            Fecha: <span class="font-normal">{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
+                            Fecha: <span>{{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
                         </p>
                         <p class="font-semibold text-sm">
-                            Personal: <span
-                                class="font-normal">{{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}</span>
+                            Personal:
+                            <span>{{ optional(\App\Models\Personal::find($personal_id))->nombres ?? 'Sin nombre' }}</span>
                         </p>
                     </div>
-
-                    {{-- Filtros --}}
-                    <div class="mb-4 border-b pb-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por Sucursal</label>
-                        <div class="flex flex-wrap gap-2">
-                            <button type="button" wire:click="filtrarSucursalModal(null)"
-                                class="px-3 py-1 rounded-full text-sm font-medium border 
-                                {{ $filtroSucursalModal === null ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
-                                Todas
-                            </button>
-                            @foreach($sucursales as $sucursal)
-                                <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                                    class="px-3 py-1 rounded-full text-sm font-medium border 
-                                            {{ $filtroSucursalModal == $sucursal->id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-100' }}">
-                                    {{ $sucursal->nombre }}
+                    @php $usuario = auth()->user(); @endphp
+                    @if($usuario && $usuario->rol_id === 1)
+                        <div class="mb-4">
+                            <label class="block text-sm font-semibold mb-2">Filtrar por Sucursal</label>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" wire:click="filtrarSucursalModal(null)"
+                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $filtroSucursalModal === null ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600' }}">
+                                    Todas
                                 </button>
-                            @endforeach
+
+                                @foreach($sucursales as $sucursal)
+                                    <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
+                                        class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $filtroSucursalModal == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600' }}">
+                                        {{ $sucursal->nombre }}
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar existencia</label>
+                                <input type="text" wire:model.live="searchExistencia" class="input-minimal w-full"
+                                    placeholder="Escribe la descripción...">
+                            </div>
                         </div>
+                    @endif
 
-                        <div class="mt-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Buscar existencia</label>
-                            <input type="text" wire:model.live="searchExistencia" class="input-minimal w-full"
-                                placeholder="Escribe la descripción..." />
-                        </div>
-                    </div>
+                    <div class="border rounded-lg p-3 bg-white">
+                        <h3 class="text-center font-semibold mb-3">Selecciona los productos a asignar</h3>
 
-                    {{-- Lista de existencias --}}
-                    <div class="border rounded-lg p-3 bg-gray-50">
-                        <h3 class="font-semibold text-gray-800 mb-3 text-center">Selecciona los productos a asignar</h3>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[300px]">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto">
                             @forelse($existencias as $existencia)
                                 @php
                                     $tipo = class_basename($existencia->existenciable_type);
                                     $cantidadDisponible = $existencia->reposiciones->where('estado_revision', true)->sum('cantidad');
                                     $descripcion = $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id;
 
-                                    $seleccionadoIndex = collect($items ?? [])->search(fn($item) => $item['existencia_id'] === $existencia->id);
-                                    $seleccionado = $seleccionadoIndex !== false;
+                                    $selectedIndex = collect($items)->search(fn($i) => $i['existencia_id'] === $existencia->id);
+                                    $selected = $selectedIndex !== false;
+
+                                    $sucursal = $existencia->sucursal->nombre ?? 'Sin sucursal';
                                 @endphp
 
                                 <div
-                                    class="border-2 rounded-lg p-3 text-center transition {{ $seleccionado ? 'border-cyan-600 bg-white shadow' : 'border-gray-200 bg-white hover:border-cyan-400' }}">
-                                    <span class="text-u block mb-1">{{ $tipo }}: {{ $descripcion }}</span>
+                                    class="p-4 rounded-lg border-2 transition text-center bg-white {{ $selected ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 hover:border-cyan-600 hover:text-cyan-600' }}">
+                                    <span class="block text-u">{{ $tipo }}: {{ $descripcion }}</span>
+                                    <span class="block text-xs mt-1 text-gray-500">
+                                        Sucursal: <strong>{{ $sucursal }}</strong>
+                                    </span>
+
                                     <span
-                                        class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold inline-block mb-2">
+                                        class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold inline-block mt-2">
                                         {{ $cantidadDisponible }} disponibles
                                     </span>
 
-                                    <div class="flex justify-center items-center gap-2">
-                                        @if($seleccionado)
-                                            <input type="number" wire:model="items.{{ $seleccionadoIndex }}.cantidad" min="1"
-                                                max="{{ $cantidadDisponible }}" class="input-minimal w-20 text-center"
-                                                placeholder="Cant.">
-                                            <button type="button" wire:click="quitarExistencia({{ $existencia->id }})"
-                                                class="text-red-500 hover:text-red-700 text-sm font-semibold">
+                                    <div class="mt-3 flex justify-center items-center gap-2">
+                                        @if($selected)
+                                            <input type="number" class="input-minimal w-20 text-center"
+                                                wire:model="items.{{ $selectedIndex }}.cantidad" min="1"
+                                                max="{{ $cantidadDisponible }}">
+                                            <button wire:click="quitarExistencia({{ $existencia->id }})"
+                                                class="text-red-600 font-semibold text-sm hover:text-red-800">
                                                 Quitar
                                             </button>
                                         @else
-                                            <button type="button" wire:click="agregarExistencia({{ $existencia->id }})"
-                                                class="btn-cyan text-xs">
+                                            <button wire:click="agregarExistencia({{ $existencia->id }})" class="btn-cyan text-xs">
                                                 + Agregar
                                             </button>
                                         @endif
                                     </div>
+
                                 </div>
+
                             @empty
                                 <p class="text-gray-500 text-sm text-center col-span-full py-4">
-                                    No hay productos disponibles.
+                                    No hay existencias disponibles.
                                 </p>
                             @endforelse
                         </div>
                     </div>
 
-                    {{-- Campos extra --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
                         <div>
                             <label class="font-semibold text-sm">Motivo (Opcional)</label>
-                            <input type="text" wire:model="motivo" class="input-minimal"
-                                placeholder="Motivo de la asignación">
+                            <input type="text" wire:model="motivo" class="input-minimal" placeholder="Motivo">
                         </div>
 
                         <div>
                             <label class="font-semibold text-sm">Observaciones (Opcional)</label>
-                            <input type="text" wire:model="observaciones" class="input-minimal"
-                                placeholder="Observaciones adicionales">
+                            <input type="text" wire:model="observaciones" class="input-minimal" placeholder="Observaciones">
                         </div>
                     </div>
 
-                    {{-- Botones --}}
-                    <div class="modal-footer mt-4 flex justify-between">
-                        <button type="button" wire:click="cerrarModal" class="btn-cyan">Cerrar</button>
-                        <button type="button" wire:click="guardarAsignacion" class="btn-cyan">Guardar</button>
+                    <div class="modal-footer">
+                        <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
+                        </button>
+                        <button wire:click="guardarAsignacion" class="btn-cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Guardar
+                        </button>
                     </div>
 
                 </div>
             </div>
         </div>
     @endif
+
 
 
 

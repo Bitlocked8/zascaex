@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string('tipoProducto')->nullable();
             $table->decimal('capacidad', 8, 2)->nullable();
             $table->decimal('precioReferencia', 8, 2)->comment('Precio de referencia');
-            $table->string('paquete')->nullable();
+            $table->integer('paquete')->nullable();
             $table->text('observaciones')->nullable();
             $table->boolean('estado')->default(1);
             $table->string('tipo')->nullable();

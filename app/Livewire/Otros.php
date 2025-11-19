@@ -25,7 +25,7 @@ class Otros extends Component
     public $tipoProducto = '';
     public $capacidad = '';
     public $precioReferencia = '';
-    public $paquete = '';
+    public $paquete = null;
     public $tipo = '';
     public $observaciones = '';
     public $estado = 1;
@@ -118,7 +118,7 @@ class Otros extends Component
             'capacidad' => 'required|numeric|min:0',
             'precioReferencia' => 'required|numeric|min:0',
             'unidad' => 'nullable|string|max:50',
-            'paquete' => 'nullable|string|max:50',
+          'paquete' => 'nullable|integer|min:0',
             'tipo' => 'nullable|string|max:50',
             'observaciones' => 'nullable|string|max:1000',
             'estado' => 'required|boolean',

@@ -17,8 +17,9 @@ class SolicitudPedidoDetalle extends Model
         'precio_unitario',
         'total',
         'tapa_descripcion',
-        'tapa_imagen',          // ← agregado
+        'tapa_imagen',
         'etiqueta_descripcion',
+        'tipo_contenido',
         'etiqueta_imagen',
     ];
 

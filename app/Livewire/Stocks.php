@@ -180,7 +180,7 @@ class Stocks extends Component
             'personal_id' => $this->personal_id,
             'proveedor_id' => $this->proveedor_id,
             'cantidad' => $this->cantidad,
-            'fecha'        => \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s'),
+            'fecha' => \Carbon\Carbon::parse($this->fecha)->format('Y-m-d H:i:s'),
             'observaciones' => $this->observaciones,
             'estado_revision' => $this->estado_revision ?? 0,
         ];
@@ -241,7 +241,7 @@ class Stocks extends Component
         $personal = $usuario->personal;
 
         $queryExistencias = Existencia::with('existenciable')
-            ->where('existenciable_type', '!=', \App\Models\Producto::class)
+
             ->whereNull('sucursal_id')
             ->orderBy('id');
 
@@ -339,8 +339,8 @@ class Stocks extends Component
 
     public function render()
     {
-        $usuario  = auth()->user();
-        $rol      = $usuario->rol_id;
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
         $queryExistencias = Existencia::with('existenciable')
@@ -372,17 +372,19 @@ class Stocks extends Component
         $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')->get();
 
         $personalList = Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
-            ->with(['trabajos' => fn($q) => $q->where('estado', 1)
-                ->latest('fechaInicio')
-                ->with('sucursal')])
+            ->with([
+                'trabajos' => fn($q) => $q->where('estado', 1)
+                    ->latest('fechaInicio')
+                    ->with('sucursal')
+            ])
             ->get();
 
         return view('livewire.stocks', [
-            'existencias'  => $existencias,
+            'existencias' => $existencias,
             'reposiciones' => $reposiciones,
-            'personal'     => $personalList,
-            'proveedores'  => Proveedor::where('estado', 1)->get(),
-            'sucursales'   => Sucursal::all(),
+            'personal' => $personalList,
+            'proveedores' => Proveedor::where('estado', 1)->get(),
+            'sucursales' => Sucursal::all(),
         ]);
     }
     public function eliminarReposicion($id)
@@ -413,7 +415,8 @@ class Stocks extends Component
             }
             if ($existencia) {
                 $existencia->cantidad -= $reposicion->cantidad;
-                if ($existencia->cantidad < 0) $existencia->cantidad = 0;
+                if ($existencia->cantidad < 0)
+                    $existencia->cantidad = 0;
                 $existencia->save();
             }
             $reposicion->delete();
@@ -427,7 +430,8 @@ class Stocks extends Component
 
     public function eliminarPagoConfirmado()
     {
-        if ($this->confirmingDeletePagoIndex === null) return;
+        if ($this->confirmingDeletePagoIndex === null)
+            return;
 
         $this->eliminarPago($this->confirmingDeletePagoIndex);
 
@@ -441,7 +445,8 @@ class Stocks extends Component
 
     public function eliminarReposicionConfirmado()
     {
-        if (!$this->confirmingDeleteReposicionId) return;
+        if (!$this->confirmingDeleteReposicionId)
+            return;
 
         $this->eliminarReposicion($this->confirmingDeleteReposicionId);
 
@@ -474,7 +479,7 @@ class Stocks extends Component
         $existencias = $query->get();
         $this->alertasBajoStock = $existencias
             ->filter(fn($ex) => $ex->cantidad <= $ex->cantidadMinima)
-            ->sortByDesc('cantidad') 
+            ->sortByDesc('cantidad')
             ->values();
     }
 

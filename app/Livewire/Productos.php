@@ -25,7 +25,7 @@ class Productos extends Component
     public $tipoProducto = '';
     public $capacidad = '';
     public $precioReferencia = '';
-    public $paquete = '';
+    public $paquete = null;
     public $tipo = '';
     public $observaciones = '';
     public $estado = 1;
@@ -53,9 +53,11 @@ class Productos extends Component
         $personal = $usuario->personal;
 
         $productosQuery = Producto::query()
-            ->when($this->search, fn($q) => $q
-                ->where('descripcion', 'like', "%{$this->search}%")
-                ->orWhere('capacidad', 'like', "%{$this->search}%")
+            ->when(
+                $this->search,
+                fn($q) => $q
+                    ->where('descripcion', 'like', "%{$this->search}%")
+                    ->orWhere('capacidad', 'like', "%{$this->search}%")
             );
 
         if ($rol === 2 && $personal) {
@@ -71,9 +73,21 @@ class Productos extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'producto_id', 'descripcion', 'unidad', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'paquete', 'tipo', 'observaciones', 'estado',
-            'imagen', 'imagenExistente', 'productoSeleccionado', 'cantidadMinima'
+            'producto_id',
+            'descripcion',
+            'unidad',
+            'tipoContenido',
+            'tipoProducto',
+            'capacidad',
+            'precioReferencia',
+            'paquete',
+            'tipo',
+            'observaciones',
+            'estado',
+            'imagen',
+            'imagenExistente',
+            'productoSeleccionado',
+            'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -88,6 +102,7 @@ class Productos extends Component
     public function editar($id)
     {
         $producto = Producto::with('existencias')->findOrFail($id);
+
         $this->producto_id = $producto->id;
         $this->descripcion = $producto->descripcion;
         $this->unidad = $producto->unidad;
@@ -110,6 +125,7 @@ class Productos extends Component
 
     public function guardar()
     {
+
         $this->validate([
             'descripcion' => 'required|string|max:500',
             'tipoContenido' => 'required|string|max:255',
@@ -117,7 +133,8 @@ class Productos extends Component
             'capacidad' => 'required|numeric|min:0',
             'precioReferencia' => 'required|numeric|min:0',
             'unidad' => 'nullable|string|max:50',
-            'paquete' => 'nullable|string|max:50',
+            'paquete' => 'nullable|integer|min:0',
+
             'tipo' => 'nullable|string|max:50',
             'observaciones' => 'nullable|string|max:1000',
             'estado' => 'required|boolean',
@@ -147,7 +164,6 @@ class Productos extends Component
                 'imagen' => $imagenPath,
             ]
         );
-
         $usuario = Auth::user();
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
@@ -176,13 +192,26 @@ class Productos extends Component
         $this->cerrarModal();
     }
 
+
     public function cerrarModal()
     {
         $this->modal = false;
         $this->reset([
-            'producto_id', 'descripcion', 'unidad', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'paquete', 'tipo', 'observaciones', 'estado',
-            'imagen', 'imagenExistente', 'productoSeleccionado', 'cantidadMinima'
+            'producto_id',
+            'descripcion',
+            'unidad',
+            'tipoContenido',
+            'tipoProducto',
+            'capacidad',
+            'precioReferencia',
+            'paquete',
+            'tipo',
+            'observaciones',
+            'estado',
+            'imagen',
+            'imagenExistente',
+            'productoSeleccionado',
+            'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }
@@ -192,10 +221,9 @@ class Productos extends Component
         $producto = Producto::with('existencias')->findOrFail($id);
 
         $usuario = Auth::user();
-        $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
-        if ($rol === 2 && $personal) {
+        if ($usuario->rol_id === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $producto->existencias = $producto->existencias->where('sucursal_id', $sucursal_id);
         }

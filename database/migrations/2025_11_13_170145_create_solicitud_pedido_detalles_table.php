@@ -21,10 +21,11 @@ return new class extends Migration {
             $table->decimal('precio_unitario', 10, 2)->nullable();
             $table->decimal('total', 12, 2)->nullable();
             $table->string('tapa_descripcion')->nullable();
-            $table->string('tapa_imagen')->nullable();    
+            $table->string('tapa_imagen')->nullable();
             $table->string('etiqueta_descripcion')->nullable();
             $table->string('etiqueta_imagen')->nullable();
 
+            $table->string('tipo_contenido')->nullable();
 
             $table->timestamps();
 
