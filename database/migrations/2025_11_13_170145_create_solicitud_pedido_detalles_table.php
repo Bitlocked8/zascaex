@@ -5,27 +5,21 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('solicitud_pedido_detalles', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('solicitud_pedido_id');
 
-            // Guardamos datos descriptivos directamente
-            $table->string('descripcion');
-            $table->integer('cantidad')->default(1);
-            $table->integer('paquete')->default(1);
-            $table->decimal('precio_unitario', 10, 2)->nullable();
-            $table->decimal('total', 12, 2)->nullable();
-            $table->string('tapa_descripcion')->nullable();
-            $table->string('tapa_imagen')->nullable();
-            $table->string('etiqueta_descripcion')->nullable();
-            $table->string('etiqueta_imagen')->nullable();
+            // Relación con los elementos solicitados
+            $table->unsignedBigInteger('producto_id')->nullable(); 
+            $table->unsignedBigInteger('otro_id')->nullable(); 
+            $table->unsignedBigInteger('tapa_id')->nullable();
+            $table->unsignedBigInteger('etiqueta_id')->nullable();
 
-            $table->string('tipo_contenido')->nullable();
+            // Cantidad solicitada
+            $table->integer('cantidad')->default(1);
 
             $table->timestamps();
 
@@ -33,12 +27,14 @@ return new class extends Migration {
                 ->references('id')
                 ->on('solicitud_pedidos')
                 ->onDelete('cascade');
+
+            $table->foreign('producto_id')->references('id')->on('productos')->onDelete('set null');
+            $table->foreign('otro_id')->references('id')->on('otros')->onDelete('set null');
+            $table->foreign('tapa_id')->references('id')->on('tapas')->onDelete('set null');
+            $table->foreign('etiqueta_id')->references('id')->on('etiquetas')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('solicitud_pedido_detalles');

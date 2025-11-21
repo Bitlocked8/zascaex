@@ -2,7 +2,7 @@
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <h3
-            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
+            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full">
             Productos
         </h3>
 
@@ -11,6 +11,7 @@
                 class="bg-blue-600 text-white px-5 py-2 rounded-xl hover:bg-blue-700 shadow-md transition">
                 Mis Solicitudes
             </button>
+
             <button wire:click="$toggle('mostrarCarrito')"
                 class="bg-teal-600 text-white px-5 py-2 rounded-xl hover:bg-teal-700 shadow-md transition">
                 Ver Carrito ({{ count($carrito) }})
@@ -18,54 +19,61 @@
         </div>
 
         @forelse ($productos as $p)
+            @php
+                $modelo = $p['modelo'];
+                $sucursal = $modelo->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
+            @endphp
+
             <div
                 class="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-1 flex flex-col">
+
                 <div class="flex justify-center items-center h-48 bg-gray-50">
-                    @if(!empty($p['imagen']))
-                        <img src="{{ asset('storage/' . $p['imagen']) }}" class="h-full object-contain">
+                    @if(!empty($modelo->imagen))
+                        <img src="{{ asset('storage/' . $modelo->imagen) }}" class="h-full object-contain">
                     @else
                         <span class="text-gray-400">Sin imagen</span>
                     @endif
                 </div>
 
                 <div class="p-5 text-center flex flex-col gap-2 flex-1">
-                    <h2 class="text-lg font-bold text-gray-800">{{ $p['descripcion'] }}</h2>
-                    @if(!empty($p['tipoContenido']))
-                        <p class="text-sm text-gray-500">Tipo: {{ $p['tipoContenido'] }}</p>
-                    @endif
-                    @if(!empty($p['tipoProducto']))
-                        <p class="text-sm text-gray-500">Categoría: {{ $p['tipoProducto'] }}</p>
-                    @endif
-                    @if(!empty($p['capacidad']))
-                        <p class="text-sm text-gray-500">Capacidad: {{ $p['capacidad'] }} {{ $p['unidad'] }}</p>
-                    @endif
-                    <p class="text-teal-700 font-semibold text-xl">Bs {{ number_format($p['precio'], 2) }} / unidad</p>
-                    @if(!empty($p['paquete']) && !empty($p['unidad']))
-                        <p class="text-sm text-gray-600">Paquete: {{ $p['paquete'] }} unidades</p>
-                    @endif
-                    <div class="flex flex-col gap-2 mt-4">
-                        <button wire:click="abrirModalProducto('{{ $p['uid'] }}')"
-                            class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2">
-                            Seleccionar
-                        </button>
-                    </div>
+                    <h2 class="text-lg font-bold text-gray-800">{{ $modelo->descripcion }}</h2>
+
+                    <p class="text-sm text-gray-600">
+                        Sucursal: <span class="font-semibold">{{ $sucursal }}</span>
+                    </p>
+
+                    <button wire:click="abrirModalProducto('{{ $p['uid'] }}')"
+                        class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2 mt-3">
+                        Seleccionar
+                    </button>
                 </div>
+
             </div>
         @empty
             <p class="col-span-full text-center text-gray-500 mt-10 text-lg">No hay productos disponibles</p>
         @endforelse
+
     </div>
 
     @if($modalProducto)
+        @php
+            $modelo = $productoSeleccionado['modelo'];
+            $sucursalProducto = $modelo->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
+        @endphp
+
         <div class="modal-overlay">
-            <div class="modal-box max-w-4xl w-11/12 sm:w-4/5 md:w-3/4 lg:w-2/3">
+            <div class="modal-box max-w-4xl">
                 <div class="modal-content flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-u sm:text-2xl font-bold">{{ $productoSeleccionado['descripcion'] ?? '' }}</h2>
-                    </div>
+
+                    <!-- Producto -->
+                    <h2 class="text-xl sm:text-2xl font-bold text-center">{{ $modelo->descripcion }}</h2>
+                    <p class="text-center text-gray-700 text-sm">
+                        Sucursal: <span class="font-semibold">{{ $sucursalProducto }}</span>
+                    </p>
+
                     <div class="flex justify-center mb-4">
-                        @if(!empty($productoSeleccionado['imagen']))
-                            <img src="{{ asset('storage/' . $productoSeleccionado['imagen']) }}"
+                        @if(!empty($modelo->imagen))
+                            <img src="{{ asset('storage/' . $modelo->imagen) }}"
                                 class="h-48 sm:h-64 md:h-80 w-full object-contain border rounded-lg p-1">
                         @else
                             <div
@@ -74,212 +82,287 @@
                             </div>
                         @endif
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Tipo: {{ $productoSeleccionado['tipoContenido'] ?? '' }}</p>
-                        <p class="text-sm text-gray-500 mb-1">Categoría: {{ $productoSeleccionado['tipoProducto'] ?? '' }}
-                        </p>
-                        <p class="text-sm text-gray-500 mb-1">Capacidad: {{ $productoSeleccionado['capacidad'] ?? '' }}
-                            {{ $productoSeleccionado['unidad'] ?? '' }}</p>
-                        <label class="text-sm font-medium mb-1 block">Cantidad de paquetes:</label>
-                        <input type="number" min="1" wire:model="cantidadSeleccionada" class="input-minimal">
+
+                    <!-- Cantidad -->
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-medium">Cantidad de paquetes:</label>
+                        <input type="number" min="1" wire:model="cantidadSeleccionada" class="input-minimal w-24">
                     </div>
 
-                    <h3>
-                        <label class="text-u">Personaliza tu botella</label>
-                    </h3>
-                      <div>
-                        <label class="text-u">Elige una Tapa:</label>
+                    <!-- Tapa -->
+                    <div class="border rounded-lg p-3 bg-white">
+                        <h3 class="text-center font-semibold mb-3">Elige una Tapa</h3>
                         <div class="flex overflow-x-auto gap-4 py-2">
                             @forelse($tapas as $tapa)
+                                @php
+                                    $sucursalTapa = $tapa->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
+                                @endphp
                                 <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                    @if($tapaSeleccionada == $tapa->id) border-teal-600 ring-2 ring-teal-400 @endif">
+                                                                                                                                                                                                @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+
                                     @if(!empty($tapa->imagen))
-                                        <img src="{{ asset('storage/' . $tapa->imagen) }}" alt="{{ $tapa->descripcion }}" class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 object-contain mx-auto border rounded-lg p-1">   
-                                    @else
-                                        <div class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
-                                            No hay imagen
-                                        </div>
-                                    @endif
-                                    <p class="text-xs sm:text-sm text-center mt-1">{{ $tapa->descripcion }}</p>
-                                </div>
-                            @empty
-                                <p>No hay tapas disponibles</p>
-                            @endforelse
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-u">Elige una Etiqueta:</label>
-                        <div class="flex overflow-x-auto gap-4 py-2">
-                            @forelse($etiquetas as $etiqueta)
-                                <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
-                                    class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                    @if($etiquetaSeleccionada == $etiqueta->id) border-teal-600 ring-2 ring-teal-400 @endif">
-                                    @if(!empty($etiqueta->imagen))
-                                        <img src="{{ asset('storage/' . $etiqueta->imagen) }}" alt="{{ $etiqueta->descripcion }}"
+                                        <img src="{{ asset('storage/' . $tapa->imagen) }}"
                                             class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 object-contain mx-auto border rounded-lg p-1">
                                     @else
-                                        <div class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
+                                        <div
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
                                             No hay imagen
                                         </div>
                                     @endif
-                                    <p class="text-xs sm:text-sm text-center mt-1">{{ $etiqueta->descripcion }}</p>
+
+                                    <p class="text-xs sm:text-sm text-center mt-1">{{ $tapa->descripcion }}</p>
+                                    <p class="text-xs text-gray-500 text-center mt-1">Sucursal: {{ $sucursalTapa }}</p>
                                 </div>
                             @empty
-                                <p>No hay etiquetas disponibles</p>
+                                <p class="text-center text-gray-500">No hay tapas disponibles</p>
                             @endforelse
                         </div>
                     </div>
 
-                </div>
+                    <!-- Etiqueta -->
+                    <div class="border rounded-lg p-3 bg-white">
+                        <h3 class="text-center font-semibold mb-3">Elige una Etiqueta</h3>
+                        <div class="flex overflow-x-auto gap-4 py-2">
+                            @forelse($etiquetas as $etiqueta)
+                                @php
+                                    $sucursalEtiqueta = $etiqueta->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
+                                @endphp
+                                <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
+                                    class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
+                                                                                                                                                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
-                <div class="modal-footer">
-                    <button wire:click="$set('modalProducto', false)"
-                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition">
-                        Cerrar
-                    </button>
-                    <button wire:click="agregarAlCarritoDesdeModal"
-                        class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
-                        Añadir
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    @if($mostrarCarrito)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div class="bg-white w-96 rounded-2xl shadow-2xl p-6 relative flex flex-col">
-                <button wire:click="$set('mostrarCarrito', false)"
-                    class="absolute top-3 right-3 text-red-600 font-bold text-xl hover:text-red-800 transition">✕</button>
-                <h2 class="text-2xl font-bold text-center mb-4">Tu Carrito</h2>
-
-                @if(empty($carrito))
-                    <p class="text-gray-600 text-center mt-10">Tu carrito está vacío.</p>
-                @else
-                    <div class="space-y-4 max-h-96 overflow-auto">
-                        @foreach($carrito as $item)
-                            @php
-                                $totalItem = $item['precio'] * $item['cantidad'] * ($item['paquete'] ?? 1);
-                            @endphp
-                            <div
-                                class="bg-gray-100 p-3 rounded-lg flex justify-between items-start shadow-sm hover:shadow-md transition">
-                                <div class="flex flex-col gap-1">
-                                    <p class="font-bold text-gray-800">{{ $item['descripcion'] }}</p>
-                                    @if(!empty($item['tipoContenido']))
-                                        <p class="text-sm text-gray-500">Tipo: {{ $item['tipoContenido'] }}</p>
-                                    @endif
-                                    @if(!empty($item['tipoProducto']))
-                                        <p class="text-sm text-gray-500">Categoría: {{ $item['tipoProducto'] }}</p>
-                                    @endif
-                                    <p class="text-sm text-gray-600">Bs {{ number_format($item['precio'], 2) }} / unidad</p>
-                                    @if(!empty($item['paquete']))
-                                        <p class="text-sm text-gray-600">Paquetes: {{ $item['cantidad'] }} × {{ $item['paquete'] }}</p>
-                                    @endif
-                                    @if(!empty($item['tapa_descripcion']))
-                                        <p class="text-sm text-gray-600">Tapa: {{ $item['tapa_descripcion'] }}</p>
-                                    @endif
-                                    @if(!empty($item['etiqueta_descripcion']))
-                                        <div class="flex items-center gap-2">
-                                            @if(!empty($item['etiqueta_imagen']))
-                                                <img src="{{ asset('storage/' . $item['etiqueta_imagen']) }}"
-                                                    alt="{{ $item['etiqueta_descripcion'] }}" class="h-6 w-6 object-contain rounded">
-                                            @endif
-                                            <p class="text-sm text-gray-600">{{ $item['etiqueta_descripcion'] }}</p>
+                                    @if(!empty($etiqueta->imagen))
+                                        <img src="{{ asset('storage/' . $etiqueta->imagen) }}"
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 object-contain mx-auto border rounded-lg p-1">
+                                    @else
+                                        <div
+                                            class="h-32 sm:h-40 md:h-48 w-32 sm:w-40 md:w-48 flex items-center justify-center bg-gray-200 text-gray-500 text-xs mx-auto border rounded-lg">
+                                            No hay imagen
                                         </div>
                                     @endif
-                                    <p class="text-sm font-semibold text-teal-700">Total: Bs {{ number_format($totalItem, 2) }}</p>
+
+                                    <p class="text-xs sm:text-sm text-center mt-1">{{ $etiqueta->descripcion }}</p>
+                                    <p class="text-xs text-gray-500 text-center mt-1">Sucursal: {{ $sucursalEtiqueta }}</p>
                                 </div>
-                                <button wire:click="eliminarDelCarrito('{{ $item['uid'] }}')"
-                                    class="text-red-600 font-bold text-lg hover:text-red-800 transition">✕</button>
-                            </div>
-                        @endforeach
+                            @empty
+                                <p class="text-center text-gray-500">No hay etiquetas disponibles</p>
+                            @endforelse
+                        </div>
                     </div>
 
-                    <div class="mt-4 border-t pt-4">
-                        <p class="text-xl font-bold text-right">
-                            Total: Bs
-                            {{ number_format(collect($carrito)->sum(fn($i) => $i['precio'] * $i['cantidad'] * ($i['paquete'] ?? 1)), 2) }}
-                        </p>
+                    <!-- Botones -->
+                    <div class="modal-footer flex gap-2 justify-end mt-3">
+                        <button wire:click="$set('modalProducto', false)" class="btn-cyan flex items-center gap-2">
+                            CERRAR
+                        </button>
+                        <button wire:click="agregarAlCarritoDesdeModal" class="btn-cyan flex items-center gap-2">
+                            AÑADIR AL CARRITO
+                        </button>
                     </div>
 
-                    <button wire:click="hacerPedido"
-                        class="w-full mt-4 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-semibold">
-                        Enviar Solicitud de Pedido
-                    </button>
-                @endif
+                </div>
+            </div>
+        </div>
+    @endif
+    @if($mostrarCarrito)
+        <div class="modal-overlay fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+            <div class="modal-box max-w-3xl w-full p-4 bg-white rounded-3xl shadow-2xl">
+                <div class="modal-content flex flex-col gap-4">
+                    <h2 class="text-2xl font-bold text-center mb-4">🛒 Carrito ({{ count($carrito) }})</h2>
+
+                    @if(count($carrito) > 0)
+                        <div class="flex flex-col gap-4 max-h-96 overflow-y-auto">
+                            @foreach($carrito as $item)
+                                @php
+                                    $modelo = $item['modelo'];
+                                    $tapa = $item['tapa_id'] ? $tapas->firstWhere('id', $item['tapa_id']) : null;
+                                    $etiqueta = $item['etiqueta_id'] ? $etiquetas->firstWhere('id', $item['etiqueta_id']) : null;
+                                    $imagenProd = $modelo->imagen ?? null;
+                                    $descripcion = $modelo->descripcion ?? '';
+                                @endphp
+
+                                <div class="flex flex-col border rounded-lg p-3 bg-gray-50 gap-2">
+                                    <div class="flex items-center gap-2">
+                                        @if($imagenProd)
+                                            <img src="{{ asset('storage/' . $imagenProd) }}"
+                                                class="h-16 w-16 object-contain border rounded-lg">
+                                        @endif
+                                        <p class="font-semibold">{{ $descripcion }}</p>
+                                    </div>
+
+                                    <p class="text-sm text-gray-600">Cantidad: {{ $item['cantidad'] }}</p>
+
+                                    @if($tapa)
+                                        <div class="flex items-center gap-2">
+                                            @if($tapa->imagen)
+                                                <img src="{{ asset('storage/' . $tapa->imagen) }}"
+                                                    class="h-10 w-10 object-contain border rounded-lg">
+                                            @endif
+                                            <p class="text-sm text-gray-600">Tapa: {{ $tapa->descripcion }}</p>
+                                        </div>
+                                    @endif
+
+                                    @if($etiqueta)
+                                        <div class="flex items-center gap-2">
+                                            @if($etiqueta->imagen)
+                                                <img src="{{ asset('storage/' . $etiqueta->imagen) }}"
+                                                    class="h-10 w-10 object-contain border rounded-lg">
+                                            @endif
+                                            <p class="text-sm text-gray-600">Etiqueta: {{ $etiqueta->descripcion }}</p>
+                                        </div>
+                                    @endif
+
+                                    <div class="flex justify-end mt-2">
+                                        <button wire:click="eliminarDelCarrito('{{ $item['uid'] }}')"
+                                            class="text-red-600 font-semibold hover:text-red-800 transition px-2 py-1 border border-red-600 rounded-md">
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="modal-footer flex justify-end mt-4 gap-2">
+                            <button wire:click="$set('mostrarCarrito', false)" class="btn-cyan flex items-center gap-2">
+                                CERRAR
+                            </button>
+                            <button wire:click="hacerPedido" class="btn-cyan flex items-center gap-2">
+                                REALIZAR PEDIDO
+                            </button>
+                        </div>
+                    @else
+                        <p class="text-center text-gray-500 py-10">El carrito está vacío.</p>
+                        <div class="modal-footer flex justify-center mt-4">
+                            <button wire:click="$set('mostrarCarrito', false)" class="btn-cyan flex items-center gap-2">
+                                CERRAR
+                            </button>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     @endif
 
+
     @if($modalPedidosCliente)
-        <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded-xl w-3/4 shadow-xl relative max-h-[90vh] overflow-auto">
-                <button wire:click="cerrarModalPedidos"
-                    class="absolute top-2 right-2 text-red-600 font-bold text-xl">✕</button>
-                <h2 class="text-2xl font-bold mb-4">Mis Solicitudes</h2>
+        <div class="modal-overlay">
+            <div class="modal-box w-full max-w-3xl">
+                <div class="modal-content flex flex-col gap-4">
 
-                @forelse ($pedidosCliente as $pedido)
-                    <div class="border p-4 rounded-lg mb-4 bg-gray-100 relative">
-                        <!-- Botón de eliminar - Solo para pedidos pendientes -->
-                        @if($pedido['estado'] == 0)
-                            <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
-                                class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                Eliminar
+                    <h2 class="text-2xl font-bold text-center mb-4">Mis Pedidos ({{ count($pedidosCliente) }})</h2>
+
+                    @if(count($pedidosCliente) > 0)
+                        <div class="flex flex-col gap-4 max-h-96 overflow-y-auto">
+                            @foreach($pedidosCliente as $pedido)
+                                <div class="border rounded-lg p-3 bg-gray-50 flex flex-col gap-2">
+                                    <p class="text-sm">
+                                        <strong>Estado:</strong>
+                                        <span
+                                            class="inline-block px-2 py-1 rounded-full text-sm font-semibold {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' : ($pedido['estado'] == 1 ? 'bg-green-200 text-green-800' : ($pedido['estado'] == 2 ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-800')) }}">
+                                            {{ $pedido['estado'] == 0 ? 'Pendiente de pago' : ($pedido['estado'] == 1 ? 'Pagado' : ($pedido['estado'] == 2 ? 'Entregado' : 'Desconocido')) }}
+                                        </span>
+                                    </p>
+
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
+                                        <p class="text-sm text-gray-600">Selecciona un método de Pago:</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
+                                                class="px-3 py-1 rounded text-sm font-semibold transition
+                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                QR
+                                            </button>
+                                            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
+                                                class="px-3 py-1 rounded text-sm font-semibold transition
+                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                Efectivo
+                                            </button>
+                                            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 2)"
+                                                class="px-3 py-1 rounded text-sm font-semibold transition
+                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                Crédito
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+                                    @if(!empty($pedido['detalles']))
+                                        <div class="flex flex-col gap-2 mt-2">
+                                            @foreach($pedido['detalles'] as $detalle)
+                                                @php
+                                                    $producto = $detalle['producto'] ?? null;
+                                                    $otro = $detalle['otro'] ?? null;
+                                                    $tapa = $detalle['tapa'] ?? null;
+                                                    $etiqueta = $detalle['etiqueta'] ?? null;
+
+                                                    $descripcion = $producto['descripcion'] ?? $otro['descripcion'] ?? '';
+                                                    $imagenProd = $producto['imagen'] ?? $otro['imagen'] ?? null;
+                                                    $imagenTapa = $tapa['imagen'] ?? null;
+                                                    $imagenEtiqueta = $etiqueta['imagen'] ?? null;
+                                                @endphp
+
+                                                <div class="flex flex-col gap-1 border rounded-lg p-2 bg-white">
+
+                                                    <div class="flex items-center gap-2">
+                                                        @if($imagenProd)
+                                                            <img src="{{ asset('storage/' . $imagenProd) }}"
+                                                                class="h-16 w-16 object-contain border rounded-lg">
+                                                        @endif
+                                                        <p class="font-semibold">{{ $descripcion }}</p>
+                                                    </div>
+
+                                                    <p class="text-sm text-gray-600">Cantidad: {{ $detalle['cantidad'] }}</p>
+                                                    @if($tapa)
+                                                        <div class="flex items-center gap-2 mt-1">
+                                                            @if($imagenTapa)
+                                                                <img src="{{ asset('storage/' . $imagenTapa) }}"
+                                                                    class="h-10 w-10 object-contain border rounded-lg">
+                                                            @endif
+                                                            <p class="text-sm text-gray-600">Tapa: {{ $tapa['descripcion'] ?? '-' }}</p>
+                                                        </div>
+                                                    @endif
+                                                    @if($etiqueta)
+                                                        <div class="flex items-center gap-2 mt-1">
+                                                            @if($imagenEtiqueta)
+                                                                <img src="{{ asset('storage/' . $imagenEtiqueta) }}"
+                                                                    class="h-10 w-10 object-contain border rounded-lg">
+                                                            @endif
+                                                            <p class="text-sm text-gray-600">Etiqueta: {{ $etiqueta['descripcion'] ?? '-' }}</p>
+                                                        </div>
+                                                    @endif
+
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <div class="flex justify-end mt-2">
+                                        <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
+                                            class="text-red-600 font-semibold hover:text-red-800 transition px-2 py-1 border border-red-600 rounded-md">
+                                            Eliminar Pedido
+                                        </button>
+                                    </div>
+
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="modal-footer mt-4">
+                            <button wire:click="$set('modalPedidosCliente', false)" class="btn-cyan flex items-center gap-2">
+                                CERRAR
                             </button>
-                        @endif
+                        </div>
 
-                        <p><strong>Código:</strong> {{ $pedido['codigo'] }}</p>
-                        <p><strong>Estado:</strong>
-                            @if($pedido['estado'] == 0) Pendiente
-                            @elseif($pedido['estado'] == 1) Aprobado
-                            @else Rechazado @endif
-                        </p>
-                        <h4 class="font-bold mt-2">Detalles:</h4>
+                    @else
+                        <p class="text-center text-gray-500 py-10">No tienes pedidos.</p>
+                        <div class="modal-footer flex justify-center mt-4">
+                            <button wire:click="$set('modalPedidosCliente', false)" class="btn-cyan flex items-center gap-2">
+                                CERRAR
+                            </button>
+                        </div>
+                    @endif
 
-                        @foreach ($pedido['detalles'] as $det)
-                            <div class="ml-4 mb-4 border-b pb-2">
-                                <p>- {{ $det['descripcion'] }} (x{{ $det['cantidad'] }})</p>
-                                @if($det['paquete'] > 1)
-                                    <p>- Paquetes: {{ $det['cantidad'] }} × {{ $det['paquete'] }}</p>
-                                @endif
-                                @if(!empty($det['tapa_descripcion']))
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span>- Tapa: {{ $det['tapa_descripcion'] }}</span>
-                                        @if(!empty($det['tapa_imagen']))
-                                            <img src="{{ asset('storage/' . $det['tapa_imagen']) }}"
-                                                class="h-16 w-16 object-contain rounded border p-1">
-                                        @endif
-                                    </div>
-                                @endif
-                                @if(!empty($det['etiquetas_info']))
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <span>- Etiquetas:</span>
-                                        @foreach($det['etiquetas_info'] as $et)
-                                            <span>{{ $et['descripcion'] }}</span>
-                                            @if(!empty($et['imagen']))
-                                                <img src="{{ asset('storage/' . $et['imagen']) }}"
-                                                    class="h-16 w-16 object-contain rounded border p-1">
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                @endif
-                                @if(!empty($det['tipoContenido']))
-                                    <p>- Tipo: {{ $det['tipoContenido'] }}</p>
-                                @endif
-                                <p>- Bs {{ number_format($det['precio_unitario'], 2) }}</p>
-                                <p>- Total: Bs {{ number_format($det['total'], 2) }}</p>
-                            </div>
-                        @endforeach
-
-                        <p class="mt-2 font-semibold text-teal-700 text-right">
-                            Total del pedido: Bs {{ number_format(collect($pedido['detalles'])->sum('total'), 2) }}
-                        </p>
-                    </div>
-                @empty
-                    <p class="text-gray-600">No tienes solicitudes aún.</p>
-                @endforelse
-
+                </div>
             </div>
         </div>
     @endif

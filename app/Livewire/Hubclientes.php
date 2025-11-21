@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Models\Otro;
 use App\Models\Producto;
+use App\Models\Otro;
 use App\Models\Tapa;
 use App\Models\Etiqueta;
 use App\Models\SolicitudPedido;
@@ -15,101 +15,66 @@ class Hubclientes extends Component
 {
     public $productos = [];
     public $carrito = [];
-    public $cantidades = [];
-    public $modalPedidosCliente = false;
-    public $pedidosCliente = [];
-    public $mostrarCarrito = false;
     public $modalProducto = false;
     public $productoSeleccionado = null;
+    public $mostrarCarrito = false;
+
     public $tapas = [];
     public $etiquetas = [];
     public $tapaSeleccionada = null;
     public $etiquetaSeleccionada = null;
     public $cantidadSeleccionada = 1;
 
+    public $modalPedidosCliente = false;
+    public $pedidosCliente = [];
+
     public function mount()
     {
         $productos = Producto::where('estado', 1)
-            ->whereHas('existencias')
-            ->with('existencias')
-            ->get()
-            ->groupBy(fn($p) => $p->descripcion . '|' . $p->tipoProducto . '|' . $p->capacidad . '|' . ($p->tipoContenido ?? ''))
-            ->map(fn($g) => $g->first())
-            ->map(fn($p) => [
+            ->with('existencias.sucursal')
+            ->orderBy('descripcion')
+            ->get();
+
+        foreach ($productos as $p) {
+            $this->productos[] = [
                 'uid' => 'producto_' . $p->id,
-                'id' => $p->id,
-                'descripcion' => $p->descripcion,
-                'precio' => $p->precioReferencia,
-                'imagen' => $p->imagen,
-                'paquete' => $p->paquete ?? 1,
-                'tipoContenido' => $p->tipoContenido,
-                'tipoProducto' => $p->tipoProducto,
-                'capacidad' => $p->capacidad,
-                'unidad' => $p->unidad,
+                'modelo' => $p,
                 'tipo_modelo' => 'producto',
-                'sucursales' => $p->existencias->pluck('sucursal_id')->toArray(),
-                'existencias' => $p->existencias->toArray(),
-            ])
-            ->values()
-            ->toArray();
-
+            ];
+        }
         $otros = Otro::where('estado', 1)
-            ->whereHas('existencias')
-            ->with('existencias')
-            ->get()
-            ->groupBy(fn($o) => $o->descripcion . '|' . $o->tipoProducto . '|' . $o->capacidad . '|' . ($o->tipoContenido ?? ''))
-            ->map(fn($g) => $g->first())
-            ->map(fn($o) => [
-                'uid' => 'otro_' . $o->id,
-                'id' => $o->id,
-                'descripcion' => $o->descripcion,
-                'precio' => $o->precioReferencia,
-                'imagen' => $o->imagen,
-                'paquete' => $o->paquete ?? 1,
-                'capacidad' => $o->capacidad,
-                'unidad' => $o->unidad,
-                'tipoContenido' => $o->tipoContenido,
-                'tipoProducto' => $o->tipoProducto,
-                'tipo_modelo' => 'otro',
-                'sucursales' => $o->existencias->pluck('sucursal_id')->toArray(),
-                'existencias' => $o->existencias->toArray(),
-            ])
-            ->values()
-            ->toArray();
+            ->with('existencias.sucursal')
+            ->orderBy('descripcion')
+            ->get();
 
-        $this->productos = array_merge($productos, $otros);
+        foreach ($otros as $o) {
+            $this->productos[] = [
+                'uid' => 'otro_' . $o->id,
+                'modelo' => $o,
+                'tipo_modelo' => 'otro',
+            ];
+        }
     }
 
     public function abrirModalProducto($uid)
     {
-        $item = collect($this->productos)->firstWhere('uid', $uid);
-        if (!$item)
+        $this->productoSeleccionado = collect($this->productos)->firstWhere('uid', $uid);
+        if (!$this->productoSeleccionado)
             return;
-
-        $existencia = $item['existencias'] ?? [];
-        $imagenSucursal = null;
-        foreach ($existencia as $e) {
-            if (!empty($e['imagen'])) {
-                $imagenSucursal = $e['imagen'];
-                break;
-            }
-        }
-        $item['imagen'] = $imagenSucursal ?? $item['imagen'];
-        $this->productoSeleccionado = $item;
-
+        $modelo = $this->productoSeleccionado['modelo'];
+        $sucursalId = $modelo->existencias->first()->sucursal->id ?? null;
         $this->tapas = Tapa::where('estado', 1)
+            ->whereHas('existencias', function ($query) use ($sucursalId) {
+                $query->where('sucursal_id', $sucursalId);
+            })
             ->orderBy('descripcion')
-            ->get()
-            ->groupBy('descripcion')
-            ->map(fn($grupo) => $grupo->first(fn($t) => !empty($t->imagen)) ?? $grupo->first())
-            ->values();
-
+            ->get();
         $this->etiquetas = Etiqueta::where('estado', 1)
+            ->whereHas('existencias', function ($query) use ($sucursalId) {
+                $query->where('sucursal_id', $sucursalId);
+            })
             ->orderBy('descripcion')
-            ->get()
-            ->groupBy('descripcion')
-            ->map(fn($grupo) => $grupo->first(fn($e) => !empty($e->imagen)) ?? $grupo->first())
-            ->values();
+            ->get();
 
         $this->tapaSeleccionada = null;
         $this->etiquetaSeleccionada = null;
@@ -117,84 +82,61 @@ class Hubclientes extends Component
         $this->modalProducto = true;
     }
 
+
+
     public function agregarAlCarritoDesdeModal()
     {
         if (!$this->productoSeleccionado)
             return;
 
-        $uid = $this->productoSeleccionado['uid'] . '_' . ($this->tapaSeleccionada ?? '0') . '_' . ($this->etiquetaSeleccionada ?? '0');
-        $cantidad = $this->cantidadSeleccionada;
-        $item = $this->productoSeleccionado;
+        $modelo = $this->productoSeleccionado['modelo'];
 
-        $tapa = $this->tapaSeleccionada ? Tapa::find($this->tapaSeleccionada) : null;
-        $etiqueta = $this->etiquetaSeleccionada ? Etiqueta::find($this->etiquetaSeleccionada) : null;
+        $uid = $this->productoSeleccionado['uid'] . '_' .
+            ($this->tapaSeleccionada ?? '0') . '_' .
+            ($this->etiquetaSeleccionada ?? '0');
 
         $this->carrito[$uid] = [
             'uid' => $uid,
-            'id' => $item['id'],
-            'descripcion' => $item['descripcion'],
-            'precio' => $item['precio'],
-            'cantidad' => $cantidad,
-            'imagen' => $item['imagen'],
-            'tipo_modelo' => $item['tipo_modelo'],
-            'paquete' => $item['paquete'] ?? 1,
-            'tipoContenido' => $item['tipoContenido'],
-            'tipoProducto' => $item['tipoProducto'],
-            'capacidad' => $item['capacidad'],
-            'unidad' => $item['unidad'],
-            'tapa_descripcion' => $tapa->descripcion ?? null,
-            'tapa_imagen' => $tapa->imagen ?? null,
-            'etiqueta_descripcion' => $etiqueta->descripcion ?? null,
-            'etiqueta_imagen' => $etiqueta->imagen ?? null,
+            'tipo_modelo' => $this->productoSeleccionado['tipo_modelo'],
+            'id' => $modelo->id,
+            'modelo' => $modelo,
+            'cantidad' => $this->cantidadSeleccionada,
+            'tapa_id' => $this->tapaSeleccionada,
+            'etiqueta_id' => $this->etiquetaSeleccionada,
         ];
 
         $this->modalProducto = false;
-        $this->productoSeleccionado = null;
-        $this->tapaSeleccionada = null;
-        $this->etiquetaSeleccionada = null;
-        $this->cantidadSeleccionada = 1;
     }
 
     public function hacerPedido()
     {
+        if (empty($this->carrito))
+            return;
+
         $clienteId = Auth::user()->cliente->id ?? null;
-        if (!$clienteId || empty($this->carrito))
+        if (!$clienteId)
             return;
 
         $solicitud = SolicitudPedido::create([
             'cliente_id' => $clienteId,
             'codigo' => 'SP-' . now()->format('YmdHis'),
             'estado' => 0,
-            'observaciones' => null,
+            'metodo_pago' => 0,
+            'observaciones' => null
         ]);
 
         foreach ($this->carrito as $item) {
-            $cantidad = $item['cantidad'];
-            $paquete = $item['paquete'] ?? 1;
-            $precio_unitario = $item['precio'];
-            $total = $cantidad * $paquete * $precio_unitario;
-
             SolicitudPedidoDetalle::create([
                 'solicitud_pedido_id' => $solicitud->id,
-                'descripcion' => $item['descripcion'],
-                'cantidad' => $cantidad,
-                'paquete' => $paquete,
-                'precio_unitario' => $precio_unitario,
-                'total' => $total,
-                'tipo_contenido' => $item['tipoContenido'] ?? null,
-                'tipo_producto' => $item['tipoProducto'] ?? null,
-                'capacidad' => $item['capacidad'] ?? null,
-                'unidad' => $item['unidad'] ?? null,
-                'tapa_descripcion' => $item['tapa_descripcion'] ?? null,
-                'tapa_imagen' => $item['tapa_imagen'] ?? null,
-                'etiqueta_descripcion' => $item['etiqueta_descripcion'] ?? null,
-                'etiqueta_imagen' => $item['etiqueta_imagen'] ?? null,
+                'producto_id' => $item['tipo_modelo'] === 'producto' ? $item['id'] : null,
+                'otro_id' => $item['tipo_modelo'] === 'otro' ? $item['id'] : null,
+                'tapa_id' => $item['tapa_id'],
+                'etiqueta_id' => $item['etiqueta_id'],
+                'cantidad' => $item['cantidad'],
             ]);
-
         }
 
         $this->carrito = [];
-        $this->mostrarCarrito = false;
         $this->verMisPedidos();
     }
 
@@ -205,56 +147,12 @@ class Hubclientes extends Component
             return;
 
         $this->pedidosCliente = SolicitudPedido::where('cliente_id', $cliente->id)
-            ->with('detalles')
+            ->with(['detalles.producto', 'detalles.otro', 'detalles.tapa', 'detalles.etiqueta'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($pedido) {
-                $detalles = $pedido->detalles->map(function ($det) {
-                    $detArray = $det->toArray();
-                  $detArray['tipoContenido'] = $det->tipo_contenido ?? null; // ✅ columna real
-                $detArray['tipoProducto'] = $det->tipo_producto ?? null; 
-                    $detArray['capacidad'] = $det->capacidad ?? null;
-                    $detArray['unidad'] = $det->unidad ?? null;
-
-                    $detArray['etiquetas_info'] = [];
-                    if (!empty($det->etiqueta_descripcion)) {
-                        $descs = explode('|', $det->etiqueta_descripcion);
-                        $imgs = explode('|', $det->etiqueta_imagen ?? '');
-                        foreach ($descs as $i => $desc) {
-                            $detArray['etiquetas_info'][] = [
-                                'descripcion' => $desc,
-                                'imagen' => $imgs[$i] ?? null,
-                            ];
-                        }
-                    }
-
-                    if (!empty($det->tapa_descripcion)) {
-                        $detArray['tapa_info'] = [
-                            'descripcion' => $det->tapa_descripcion,
-                            'imagen' => $det->tapa_imagen ?? null,
-                        ];
-                    }
-
-                    return $detArray;
-                });
-
-                $pedidoArray = $pedido->toArray();
-                $pedidoArray['detalles'] = $detalles;
-                return $pedidoArray;
-            })
             ->toArray();
 
         $this->modalPedidosCliente = true;
-    }
-
-    public function cerrarModalPedidos()
-    {
-        $this->modalPedidosCliente = false;
-    }
-
-    public function eliminarDelCarrito($uid)
-    {
-        unset($this->carrito[$uid]);
     }
 
     public function eliminarSolicitud($id)
@@ -266,12 +164,13 @@ class Hubclientes extends Component
         $pedido->detalles()->delete();
         $pedido->delete();
 
-        $this->pedidosCliente = collect($this->pedidosCliente)
-            ->filter(fn($p) => $p['id'] !== $id)
-            ->values()
-            ->toArray();
-
+        $this->pedidosCliente = array_filter($this->pedidosCliente, fn($p) => $p['id'] !== $id);
         $this->modalPedidosCliente = false;
+    }
+
+    public function eliminarDelCarrito($uid)
+    {
+        unset($this->carrito[$uid]);
     }
 
     public function render()
@@ -279,7 +178,24 @@ class Hubclientes extends Component
         return view('livewire.hubclientes', [
             'productos' => $this->productos,
             'carrito' => $this->carrito,
-            'pedidosCliente' => $this->pedidosCliente,
+            'pedidosCliente' => $this->pedidosCliente
         ]);
     }
+    public function actualizarMetodoPago($pedidoId, $valor)
+    {
+        $pedido = SolicitudPedido::find($pedidoId);
+        if (!$pedido)
+            return;
+
+        $pedido->metodo_pago = $valor;
+        $pedido->save();
+        foreach ($this->pedidosCliente as &$p) {
+            if ($p['id'] == $pedidoId) {
+                $p['metodo_pago'] = $valor;
+            }
+        }
+    }
+
+
 }
+

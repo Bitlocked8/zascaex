@@ -9,7 +9,7 @@ class SolicitudPedido extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['cliente_id', 'codigo', 'observaciones', 'estado'];
+    protected $fillable = ['cliente_id', 'codigo', 'observaciones', 'estado', 'metodo_pago'];
 
     public function detalles()
     {

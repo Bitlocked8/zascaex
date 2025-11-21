@@ -11,20 +11,35 @@ class SolicitudPedidoDetalle extends Model
 
     protected $fillable = [
         'solicitud_pedido_id',
-        'descripcion',
+        'producto_id',
+        'otro_id',
+        'tapa_id',
+        'etiqueta_id',
         'cantidad',
-        'paquete',
-        'precio_unitario',
-        'total',
-        'tapa_descripcion',
-        'tapa_imagen',
-        'etiqueta_descripcion',
-        'tipo_contenido',
-        'etiqueta_imagen',
     ];
 
     public function solicitudPedido()
     {
         return $this->belongsTo(SolicitudPedido::class);
+    }
+
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class);
+    }
+
+    public function otro()
+    {
+        return $this->belongsTo(Otro::class);
+    }
+
+    public function tapa()
+    {
+        return $this->belongsTo(Tapa::class);
+    }
+
+    public function etiqueta()
+    {
+        return $this->belongsTo(Etiqueta::class);
     }
 }

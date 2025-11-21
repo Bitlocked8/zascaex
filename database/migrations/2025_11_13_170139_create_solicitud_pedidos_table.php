@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('codigo')->unique();
             $table->text('observaciones')->nullable();
             $table->tinyInteger('estado')->default(0);
+            $table->tinyInteger('metodo_pago')->default(0);
             $table->timestamps();
 
             $table->foreign('cliente_id')->references('id')->on('clientes')->onDelete('set null');
