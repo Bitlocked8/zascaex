@@ -19,12 +19,15 @@ class PagoPedido extends Model
         'imagen_comprobante',
         'estado',
         'observaciones',
+        'codigo_pago',
     ];
+
 
     public function pedido()
     {
         return $this->belongsTo(Pedido::class);
     }
+
     public function sucursalPago()
     {
         return $this->belongsTo(SucursalPago::class, 'sucursal_pago_id');

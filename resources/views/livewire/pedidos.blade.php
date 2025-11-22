@@ -7,8 +7,9 @@
     </h3>
 
     <div class="flex items-center gap-2 mb-4 col-span-full">
-      <input type="text" wire:model.live="search" placeholder="Buscar por código, cliente o personal..."
+      <input type="text" wire:model.live="search" placeholder="Buscar por código o cliente..."
         class="input-minimal w-full" />
+
       <button wire:click="$set('modalPedido', true)" class="btn-cyan">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -48,25 +49,22 @@
           <p class="mt-1 text-sm font-semibold">
             @php
               $colores = [
-                0 => 'text-gray-600',
-                1 => 'text-blue-500',
-                2 => 'text-yellow-500',
-                3 => 'text-green-500',
-                4 => 'text-teal-600',
+                0 => 'text-blue-500',     // Preparando
+                1 => 'text-yellow-500',   // En Revisión
+                2 => 'text-green-600',    // Completado
               ];
+
               $labels = [
-                0 => 'Pendiente',
-                1 => 'Preparando',
-                2 => 'Pago Pendiente',
-                3 => 'Pagado',
-                4 => 'Completado',
+                0 => 'Preparando',
+                1 => 'En Revisión',
+                2 => 'Completado',
               ];
             @endphp
+
             <span class="{{ $colores[$pedido->estado_pedido] ?? 'text-gray-400' }}">
               {{ $labels[$pedido->estado_pedido] ?? 'Desconocido' }}
             </span>
           </p>
-
 
 
           <p class="mt-1 text-sm font-semibold">
@@ -80,26 +78,27 @@
               </span>
             @endif
           </p>
-
           <p><strong>Productos añadidos:</strong> {{ $pedido->detalles->count() }}</p>
-
-          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-              <span class="text-sm font-medium text-gray-700">Total:</span>
-              <span class="text-sm font-semibold text-gray-900">{{ number_format($totalGeneral, 2, ',', '.') }} Bs</span>
-            </div>
-            <div
-              class="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2 shadow-sm">
-              <span class="text-sm font-medium text-emerald-700">Pagado:</span>
-              <span class="text-sm font-semibold text-emerald-900">{{ number_format($montoTotalPagado, 2, ',', '.') }}
-                Bs</span>
-            </div>
-            <div class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm">
-              <span class="text-sm font-medium text-red-700">Faltante:</span>
-              <span class="text-sm font-semibold text-red-900">{{ number_format($faltante, 2, ',', '.') }} Bs</span>
-            </div>
+          <div class="mt-2">
+            <p class="font-semibold text-sm text-gray-700">Pagos realizados:</p>
+            @if($pagoPedidos->count())
+              <ul class="flex flex-wrap gap-2 mt-1">
+                @foreach($pagoPedidos as $pago)
+                  @php
+                    $estadoPago = $pago->estado ? ' Pagado' : ' No pagado';
+                    $colorEstado = $pago->estado ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white';
+                  @endphp
+                  <li class="px-2 py-1 rounded-full text-xs {{ $colorEstado }}">
+                    Bs: {{ number_format($pago->monto, 2) }} ({{ $estadoPago }})
+                  </li>
+                @endforeach
+              </ul>
+            @else
+              <p class="text-gray-500 text-sm mt-1">No se han registrado pagos.</p>
+            @endif
           </div>
+
+
         </div>
 
         <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
@@ -161,6 +160,181 @@
       </div>
     @endforelse
   </div>
+
+
+
+  @if($modalPagos)
+    <div class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-content flex flex-col gap-4">
+          <div class="space-y-4">
+
+            @foreach($pagos as $index => $pago)
+              <div class="border p-4 rounded flex flex-col gap-2">
+
+                {{-- HEADER --}}
+                <div class="flex justify-between items-center">
+                  <strong>Código: {{ $pago['codigo_pago'] }}</strong>
+                  <p class="text-sm text-gray-600">
+                    Fecha: {{ $pago['fecha_pago'] }}
+                  </p>
+
+                  <button type="button" wire:click="eliminarPagoPedido({{ $index }})" class="btn-circle btn-cyan"
+                    title="Eliminar">
+                    🗑
+                  </button>
+                </div>
+
+                {{-- CAMPOS --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+
+                  {{-- MONTO --}}
+                  <div class="sm:col-span-2">
+                    <label class="font-semibold text-u">Monto (Requerido)</label>
+                    <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
+                  </div>
+
+                  {{-- METODO DE PAGO --}}
+                  <div class="sm:col-span-2">
+                    <label class="font-semibold text-sm">Método de Pago</label>
+
+                    <div class="flex gap-2 mt-1">
+                      <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 0)"
+                        class="btn-cyan {{ $pagos[$index]['metodo'] === 0 ? 'bg-blue-700 text-white' : '' }}">
+                        QR
+                      </button>
+
+                      <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 1)"
+                        class="btn-cyan {{ $pagos[$index]['metodo'] === 1 ? 'bg-blue-700 text-white' : '' }}">
+                        Efectivo
+                      </button>
+
+                      <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 2)"
+                        class="btn-cyan {{ $pagos[$index]['metodo'] === 2 ? 'bg-blue-700 text-white' : '' }}">
+                        Crédito
+                      </button>
+                    </div>
+                  </div>
+
+                  {{-- ESTADO DEL PAGO --}}
+                  <div class="sm:col-span-2">
+                    <label class="font-semibold text-sm">Pago Confirmado</label>
+
+                    <button type="button" wire:click="$set('pagos.{{ $index }}.estado', {{ $pago['estado'] ? 0 : 1 }})"
+                      class="px-4 py-1 rounded-md border text-white
+                                        {{ $pagos[$index]['estado'] ? 'bg-green-600 border-green-700' : 'bg-gray-600 border-gray-700' }}">
+                      {{ $pagos[$index]['estado'] ? '✔ Pagado' : '✖ No pagado' }}
+                    </button>
+                  </div>
+
+                  {{-- REFERENCIA --}}
+                  <div class="sm:col-span-2">
+                    <label class="font-semibold text-sm">Referencia (Opcional)</label>
+                    <input type="text" wire:model="pagos.{{ $index }}.referencia" class="input-minimal">
+                  </div>
+
+                  {{-- OBSERVACIONES --}}
+                  <div class="sm:col-span-2">
+                    <label class="font-semibold text-sm">Observaciones (Opcional)</label>
+                    <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal">
+                  </div>
+
+                  {{-- SELECCIONAR SUCURSAL DE PAGO --}}
+                  <div class="sm:col-span-2">
+                    <label class="text-u">Método QR auxiliar (Sucursal)</label>
+
+                    <div
+                      class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[180px] overflow-y-auto">
+
+                      {{-- NINGUNO --}}
+                      <button type="button" wire:click="$set('pagos.{{ $index }}.sucursal_pago_id', null)"
+                        class="w-full p-4 rounded-lg border-2 text-center
+                                          {{ empty($pagos[$index]['sucursal_pago_id']) ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800' }}">
+                        <span class="font-medium">-- Ninguno --</span>
+                      </button>
+
+                      {{-- LISTA DE SUCURSALES --}}
+                      @foreach($sucursalesPago as $sp)
+                        <button type="button" wire:click="$set('pagos.{{ $index }}.sucursal_pago_id', {{ $sp->id }})"
+                          class="w-full p-4 rounded-lg border-2 text-center
+                                                        {{ $pagos[$index]['sucursal_pago_id'] == $sp->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800' }}">
+                          <span class="font-medium">{{ $sp->nombre }}</span>
+
+                          @if($sp->tipo)
+                            <span class="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full mt-1">
+                              {{ $sp->tipo }}
+                            </span>
+                          @endif
+
+                          @if($sp->sucursal)
+                            <span class="text-gray-500 text-xs mt-1">(Sucursal: {{ $sp->sucursal->nombre }})</span>
+                          @endif
+                        </button>
+                      @endforeach
+                    </div>
+
+                    {{-- MOSTRAR QR --}}
+                    @if(isset($pagos[$index]['sucursal_pago_id']) && $pagos[$index]['sucursal_pago_id'])
+                      @php $metodo = $sucursalesPago->firstWhere('id', $pagos[$index]['sucursal_pago_id']); @endphp
+
+                      @if($metodo && $metodo->imagen_qr)
+                        <div class="mt-3 flex flex-col items-center space-y-2">
+                          <img src="{{ Storage::url($metodo->imagen_qr) }}"
+                            class="w-48 h-48 object-cover rounded shadow cursor-pointer"
+                            wire:click="$set('imagenPreviewModal', '{{ Storage::url($metodo->imagen_qr) }}'); $set('modalImagenAbierta', true)">
+                          <p class="text-sm text-gray-600 text-center">
+                            {{ $metodo->nombre }} — {{ $metodo->tipo }}
+                          </p>
+                        </div>
+                      @endif
+                    @endif
+                  </div>
+
+                  {{-- IMAGEN COMPROBANTE --}}
+                  <div class="sm:col-span-2">
+                    <label class="font-semibold text-sm">Imagen del comprobante</label>
+                    <input type="file" wire:model="pagos.{{ $index }}.imagen_comprobante" class="input-minimal">
+
+                    @php
+                      $imagenUrl = isset($pagos[$index]['imagen_comprobante'])
+                        ? (is_string($pagos[$index]['imagen_comprobante'])
+                          ? Storage::url($pagos[$index]['imagen_comprobante'])
+                          : $pagos[$index]['imagen_comprobante']->temporaryUrl())
+                        : null;
+                    @endphp
+
+                    @if($imagenUrl)
+                      <div class="mt-2 flex flex-col items-center space-y-2">
+                        <img src="{{ $imagenUrl }}" class="w-80 h-80 object-cover rounded-lg shadow cursor-pointer"
+                          wire:click="$set('imagenPreviewModal', '{{ $imagenUrl }}'); $set('modalImagenAbierta', true)">
+                        @if(is_string($pagos[$index]['imagen_comprobante']))
+                          <a href="{{ $imagenUrl }}" download class="btn-circle btn-cyan">⬇</a>
+                        @endif
+                      </div>
+                    @endif
+
+                  </div>
+
+                </div>
+              </div>
+            @endforeach
+          </div>
+
+          {{-- FOOTER --}}
+          <div class="modal-footer">
+
+            <button type="button" wire:click="agregarPagoPedido" class="btn-cyan">➕ Añadir pago</button>
+
+            <button type="button" wire:click="guardarPagosPedido" class="btn-cyan">💾 Guardar</button>
+
+            <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan">❌ Cerrar</button>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  @endif
 
   @if($modalPedido)
     <div class="modal-overlay">
@@ -471,37 +645,31 @@
                 placeholder="Escribe observaciones del pedido..."></textarea>
             </div>
             <div class="mb-4">
-              <label class="font-semibold">Estado del Pedido (Automático)</label>
+              <label class="font-semibold">Estado del Pedido</label>
 
               <div class="flex flex-wrap gap-2 mt-2">
 
-                <button type="button" wire:click="$set('estado_pedido', 0)"
-                  class="px-3 py-1.5 rounded-md border
-                                    {{ $estado_pedido == 0 ? 'bg-gray-600 text-white border-gray-700' : 'bg-white text-gray-700 border-gray-300' }}">
-                  Pendiente
-                </button>
-                <button type="button" wire:click="$set('estado_pedido', 1)"
-                  class="px-3 py-1.5 rounded-md border
-                                    {{ $estado_pedido == 1 ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300' }}">
+                <button type="button" wire:click="$set('estado_pedido', 0)" class="px-3 py-1.5 rounded-md border
+                        {{ $estado_pedido == 0 ? 'bg-blue-500 text-white border-blue-600' :
+      'bg-white text-gray-700 border-gray-300' }}">
                   Preparando
                 </button>
-                <button type="button" wire:click="$set('estado_pedido', 2)"
-                  class="px-3 py-1.5 rounded-md border
-                                    {{ $estado_pedido == 2 ? 'bg-yellow-500 text-white border-yellow-600' : 'bg-white text-gray-700 border-gray-300' }}">
-                  Pago Pendiente
+
+                <button type="button" wire:click="$set('estado_pedido', 1)" class="px-3 py-1.5 rounded-md border
+                        {{ $estado_pedido == 1 ? 'bg-yellow-500 text-white border-yellow-600' :
+      'bg-white text-gray-700 border-gray-300' }}">
+                  En Revisión
                 </button>
-                <button type="button" wire:click="$set('estado_pedido', 3)"
-                  class="px-3 py-1.5 rounded-md border
-                                    {{ $estado_pedido == 3 ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300' }}">
-                  Pagado
-                </button>
-                <button type="button" wire:click="$set('estado_pedido', 4)"
-                  class="px-3 py-1.5 rounded-md border
-                                    {{ $estado_pedido == 4 ? 'bg-teal-600 text-white border-teal-700' : 'bg-white text-gray-700 border-gray-300' }}">
+
+                <button type="button" wire:click="$set('estado_pedido', 2)" class="px-3 py-1.5 rounded-md border
+                        {{ $estado_pedido == 2 ? 'bg-green-500 text-white border-green-600' :
+      'bg-white text-gray-700 border-gray-300' }}">
                   Completado
                 </button>
+
               </div>
             </div>
+
 
 
 
@@ -515,145 +683,6 @@
     </div>
   @endif
 
-  @if($modalPagos)
-    <div class="modal-overlay">
-      <div class="modal-box">
-        <div class="modal-content flex flex-col gap-4">
-          <div class="space-y-4">
-            @foreach($pagos as $index => $pago)
-              <div class="border p-4 rounded flex flex-col gap-2">
-                <div class="flex justify-between items-center">
-                  <strong>Código: {{ $pago['codigo'] }}</strong>
-                  <p class="text-sm text-gray-600">
-                    Fecha: {{ $pago['fecha_pago'] }}
-                  </p>
-                  <button type="button" wire:click="eliminarPagoPedido({{ $index }})" class="btn-circle btn-cyan"
-                    title="Eliminar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                      <path d="M4 7l16 0" />
-                      <path d="M10 11l0 6" />
-                      <path d="M14 11l0 6" />
-                      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                      <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                  <div class="sm:col-span-2">
-                    <label class="font-semibold text-u">Monto (Requerido)</label>
-                    <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
-                  </div>
-
-                  <div class="sm:col-span-2">
-                    <label class="font-semibold text-sm">Método (Opcional)</label>
-                    <input type="text" wire:model="pagos.{{ $index }}.metodo" class="input-minimal">
-                  </div>
-
-                  <div class="sm:col-span-2">
-                    <label class="font-semibold text-sm">Referencia (Opcional)</label>
-                    <input type="text" wire:model="pagos.{{ $index }}.referencia" class="input-minimal">
-                  </div>
-
-                  <div class="sm:col-span-2">
-                    <label class="font-semibold text-sm">Observaciones (Opcional)</label>
-                    <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal">
-                  </div>
-                  <div class="sm:col-span-2">
-                    <label class="font-semibold text-sm">Estado del Pago</label>
-                    <div class="flex gap-2 mt-1">
-                      <button type="button" wire:click="$set('pagos.{{ $index }}.estado', 1)"
-                        class="btn-cyan {{ $pagos[$index]['estado'] === 1 ? 'bg-blue-700' : '' }}">
-                        QR
-                      </button>
-                      <button type="button" wire:click="$set('pagos.{{ $index }}.estado', 2)"
-                        class="btn-cyan {{ $pagos[$index]['estado'] === 2 ? 'bg-blue-700' : '' }}">
-                        Efectivo
-                      </button>
-                      <button type="button" wire:click="$set('pagos.{{ $index }}.estado', 3)"
-                        class="btn-cyan {{ $pagos[$index]['estado'] === 3 ? 'bg-blue-700' : '' }}">
-                        Crédito
-                      </button>
-                    </div>
-                  </div>
-
-
-                  <div class="sm:col-span-2">
-                    <label class="font-semibold text-sm">Imagen (Opcional)</label>
-                    <input type="file" wire:model="pagos.{{ $index }}.imagen_comprobante" class="input-minimal">
-
-                    @php
-                      $imagenUrl = null;
-                      if (isset($pagos[$index]['imagen_comprobante'])) {
-                        $imagenUrl = is_string($pagos[$index]['imagen_comprobante'])
-                          ? Storage::url($pagos[$index]['imagen_comprobante'])
-                          : $pagos[$index]['imagen_comprobante']->temporaryUrl();
-                      }
-                    @endphp
-
-                    @if($imagenUrl)
-                      <div class="mt-2 flex flex-col items-center space-y-2">
-                        <img src="{{ $imagenUrl }}" alt="Imagen"
-                          class="w-80 h-80 object-cover rounded-lg shadow cursor-pointer"
-                          wire:click="$set('imagenPreviewModal', '{{ $imagenUrl }}'); $set('modalImagenAbierta', true)">
-                        @if(is_string($pagos[$index]['imagen_comprobante']))
-                          <a href="{{ $imagenUrl }}" download class="btn-circle btn-cyan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                              <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                              <path d="M7 11l5 5l5 -5" />
-                              <path d="M12 4l0 12" />
-                            </svg>
-                          </a>
-                        @endif
-                      </div>
-                    @endif
-                  </div>
-                </div>
-              </div>
-            @endforeach
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" wire:click="agregarPagoPedido" class="btn-cyan">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path
-                  d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-                <path
-                  d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-              </svg>
-              añadir pago
-            </button>
-
-            <button type="button" wire:click="guardarPagosPedido" class="btn-cyan">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                <path d="M14 4l0 4l-6 0l0 -4" />
-              </svg>
-              guardar pago
-            </button>
-            <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan" title="Cerrar">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-              </svg>
-              CERRAR
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  @endif
 
   @if($modalDetallePedido && $pedidoDetalle)
     <div class="modal-overlay">

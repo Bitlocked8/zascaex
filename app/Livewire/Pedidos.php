@@ -14,7 +14,7 @@ use App\Models\SolicitudPedido;
 use App\Models\Sucursal;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\SucursalPago;
 class Pedidos extends Component
 {
     use WithFileUploads;
@@ -23,7 +23,7 @@ class Pedidos extends Component
     public $sucursal_id = null;
     public $modalDetallePedido = false;
     public $pedidoDetalle;
-    public $searchSolicitud = '';
+    public $search = '';
     public $imagenPreviewModal = null;
     public $pedido;
     public $solicitud_pedido_id;
@@ -41,13 +41,14 @@ class Pedidos extends Component
     public $solicitudSeleccionadaId = null;
     public $pedidoParaPago;
     public $pagos = [];
+    public $sucursalesPago = [];
     public $modalPagos = false;
 
     public function quitarSolicitud()
     {
         $this->solicitudSeleccionadaId = null;
-        $this->solicitud_pedido_id = null; // limpiar la variable real
-        $this->detalles = []; // opcional: limpiar los detalles asociados a la solicitud
+        $this->solicitud_pedido_id = null;
+        $this->detalles = [];
     }
 
 
@@ -105,7 +106,7 @@ class Pedidos extends Component
         $this->solicitud_pedido_id = $id;
 
         if (!$id) {
-            $this->detalles = []; // opcional: limpiar detalles si se quita la solicitud
+            $this->detalles = [];
         }
     }
 
@@ -259,31 +260,64 @@ class Pedidos extends Component
         $productos = Producto::whereHas('existencias', function ($q) {
             if ($this->sucursal_id)
                 $q->where('sucursal_id', $this->sucursal_id);
-            $q->whereHas('reposiciones', fn($query) => $query->where('estado_revision', 1)->where('cantidad', '>', 0));
-        })->with(['existencias.reposiciones' => fn($query) => $query->where('estado_revision', 1)->where('cantidad', '>', 0)])->get();
+
+            $q->whereHas(
+                'reposiciones',
+                fn($query) =>
+                $query->where('estado_revision', 1)
+                    ->where('cantidad', '>', 0)
+            );
+        })
+            ->with([
+                'existencias.reposiciones' => fn($query) =>
+                    $query->where('estado_revision', 1)
+                        ->where('cantidad', '>', 0)
+            ])
+            ->get();
 
         $otros = Otro::whereHas('existencias', function ($q) {
             if ($this->sucursal_id)
                 $q->where('sucursal_id', $this->sucursal_id);
-            $q->whereHas('reposiciones', fn($query) => $query->where('estado_revision', 1)->where('cantidad', '>', 0));
-        })->with(['existencias.reposiciones' => fn($query) => $query->where('estado_revision', 1)->where('cantidad', '>', 0)])->get();
+
+            $q->whereHas(
+                'reposiciones',
+                fn($query) =>
+                $query->where('estado_revision', 1)
+                    ->where('cantidad', '>', 0)
+            );
+        })
+            ->with([
+                'existencias.reposiciones' => fn($query) =>
+                    $query->where('estado_revision', 1)
+                        ->where('cantidad', '>', 0)
+            ])
+            ->get();
 
         $solicitudPedidos = SolicitudPedido::with('cliente', 'detalles')
             ->whereDoesntHave('pedido')
             ->orderBy('created_at', 'desc')
             ->get();
 
-
         if ($this->pedido->exists && $this->pedido->solicitud_pedido_id) {
-            $solicitudEdit = SolicitudPedido::with('cliente', 'detalles')->find($this->pedido->solicitud_pedido_id);
+            $solicitudEdit = SolicitudPedido::with('cliente', 'detalles')
+                ->find($this->pedido->solicitud_pedido_id);
 
             if ($solicitudEdit && !$solicitudPedidos->contains('id', $solicitudEdit->id)) {
                 $solicitudPedidos->prepend($solicitudEdit);
             }
         }
+        $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles'])
+            ->when($this->search, function ($q) {
+                $q->where('codigo', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('solicitudPedido.cliente', function ($query) {
+                        $query->where('nombre', 'like', '%' . $this->search . '%');
+                    });
+            })
+            ->latest()
+            ->get();
 
         return view('livewire.pedidos', [
-            'pedidos' => Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles'])->latest()->get(),
+            'pedidos' => $pedidos,
             'productos' => $productos,
             'otros' => $otros,
             'detalles' => $this->detalles,
@@ -291,6 +325,7 @@ class Pedidos extends Component
             'solicitudPedidos' => $solicitudPedidos,
         ]);
     }
+
 
     public function filtrarSucursalModal($id = null)
     {
@@ -329,34 +364,6 @@ class Pedidos extends Component
         })->toArray();
 
         $this->modalPedido = true;
-    }
-
-    public function guardarPagosPedido()
-    {
-        foreach ($this->pagos as $index => $pago) {
-            $imagenPath = $pago['imagen_comprobante'];
-            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
-                $imagenPath = $pago['imagen_comprobante']->store('pagos_pedido', 'public');
-            }
-
-            PagoPedido::updateOrCreate(
-                ['id' => $pago['id'] ?? 0],
-                [
-                    'pedido_id' => $this->pedidoParaPago,
-                    'codigo' => $pago['codigo'],
-                    'monto' => $pago['monto'],
-                    'fecha_pago' => $pago['fecha_pago'] ?? now()->format('Y-m-d'),
-                    'observaciones' => $pago['observaciones'] ?? null,
-                    'imagen_comprobante' => $imagenPath,
-                    'metodo' => $pago['metodo'] ?? null,
-                    'referencia' => $pago['referencia'] ?? null,
-                    'estado' => $pago['estado'] ?? 0,
-                ]
-            );
-        }
-
-        $this->reset(['pagos']);
-        $this->modalPagos = false;
     }
 
     public function abrirModalDetallePedido($pedido_id)
@@ -403,11 +410,14 @@ class Pedidos extends Component
     public function abrirModalPagosPedido($pedido_id)
     {
         $this->pedidoParaPago = $pedido_id;
+
+        $this->sucursalesPago = SucursalPago::where('estado', 1)->get();
+
         $this->pagos = PagoPedido::where('pedido_id', $pedido_id)
             ->get()
             ->map(fn($p) => [
                 'id' => $p->id,
-                'codigo' => $p->codigo ?? 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                'codigo_pago' => $p->codigo_pago ?? 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
                 'fecha_pago' => $p->fecha_pago ? Carbon::parse($p->fecha_pago)->format('Y-m-d') : now()->format('Y-m-d'),
                 'monto' => $p->monto,
                 'observaciones' => $p->observaciones,
@@ -415,16 +425,49 @@ class Pedidos extends Component
                 'metodo' => $p->metodo,
                 'referencia' => $p->referencia,
                 'estado' => $p->estado,
-            ])->toArray();
+                'sucursal_pago_id' => $p->sucursal_pago_id,
+            ])
+            ->toArray();
 
         $this->modalPagos = true;
     }
+
+    public function guardarPagosPedido()
+    {
+        foreach ($this->pagos as $index => $pago) {
+            $imagenPath = $pago['imagen_comprobante'];
+            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
+                $imagenPath = $imagenPath->store('pagos_pedido', 'public');
+            }
+
+            PagoPedido::updateOrCreate(
+                ['id' => $pago['id'] ?? 0],
+                [
+                    'pedido_id' => $this->pedidoParaPago,
+                    'codigo_pago' => $pago['codigo_pago'],
+                    'monto' => $pago['monto'],
+                    'fecha_pago' => $pago['fecha_pago'],
+                    'observaciones' => $pago['observaciones'],
+                    'imagen_comprobante' => $imagenPath,
+                    'metodo' => (int) $pago['metodo'],
+                    'referencia' => $pago['referencia'],
+                    'estado' => (bool) $pago['estado'],
+                    'sucursal_pago_id' => $pago['sucursal_pago_id'],
+                ]
+            );
+        }
+
+        $this->reset(['pagos']);
+        $this->modalPagos = false;
+    }
+
+
 
     public function agregarPagoPedido()
     {
         $this->pagos[] = [
             'id' => null,
-            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(count($this->pagos) + 1, 3, '0', STR_PAD_LEFT),
+            'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
             'fecha_pago' => now()->format('Y-m-d'),
             'monto' => null,
             'observaciones' => null,
@@ -432,8 +475,10 @@ class Pedidos extends Component
             'metodo' => null,
             'referencia' => null,
             'estado' => 0,
+            'sucursal_pago_id' => null,
         ];
     }
+
 
     public function eliminarPagoPedido($index)
     {

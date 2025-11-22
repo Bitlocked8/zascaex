@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\PagoPedido;
 use App\Models\Producto;
 use App\Models\Otro;
 use App\Models\Tapa;
@@ -10,9 +11,10 @@ use App\Models\SolicitudPedido;
 use App\Models\SolicitudPedidoDetalle;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-
+use Livewire\WithFileUploads;
 class Hubclientes extends Component
 {
+        use WithFileUploads; 
     public $productos = [];
     public $carrito = [];
     public $modalProducto = false;
@@ -27,7 +29,8 @@ class Hubclientes extends Component
 
     public $modalPedidosCliente = false;
     public $pedidosCliente = [];
-
+    public $archivoPago;
+    public $pagoSeleccionado;
     public function mount()
     {
         $productos = Producto::where('estado', 1)
@@ -61,18 +64,17 @@ class Hubclientes extends Component
         $this->productoSeleccionado = collect($this->productos)->firstWhere('uid', $uid);
         if (!$this->productoSeleccionado)
             return;
+
         $modelo = $this->productoSeleccionado['modelo'];
         $sucursalId = $modelo->existencias->first()->sucursal->id ?? null;
+
         $this->tapas = Tapa::where('estado', 1)
-            ->whereHas('existencias', function ($query) use ($sucursalId) {
-                $query->where('sucursal_id', $sucursalId);
-            })
+            ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
             ->orderBy('descripcion')
             ->get();
+
         $this->etiquetas = Etiqueta::where('estado', 1)
-            ->whereHas('existencias', function ($query) use ($sucursalId) {
-                $query->where('sucursal_id', $sucursalId);
-            })
+            ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
             ->orderBy('descripcion')
             ->get();
 
@@ -82,18 +84,13 @@ class Hubclientes extends Component
         $this->modalProducto = true;
     }
 
-
-
     public function agregarAlCarritoDesdeModal()
     {
         if (!$this->productoSeleccionado)
             return;
 
         $modelo = $this->productoSeleccionado['modelo'];
-
-        $uid = $this->productoSeleccionado['uid'] . '_' .
-            ($this->tapaSeleccionada ?? '0') . '_' .
-            ($this->etiquetaSeleccionada ?? '0');
+        $uid = $this->productoSeleccionado['uid'] . '_' . ($this->tapaSeleccionada ?? '0') . '_' . ($this->etiquetaSeleccionada ?? '0');
 
         $this->carrito[$uid] = [
             'uid' => $uid,
@@ -147,7 +144,13 @@ class Hubclientes extends Component
             return;
 
         $this->pedidosCliente = SolicitudPedido::where('cliente_id', $cliente->id)
-            ->with(['detalles.producto', 'detalles.otro', 'detalles.tapa', 'detalles.etiqueta'])
+            ->with([
+                'detalles.producto',
+                'detalles.otro',
+                'detalles.tapa',
+                'detalles.etiqueta',
+                'pedido.pagoPedidos.sucursalPago'
+            ])
             ->orderBy('created_at', 'desc')
             ->get()
             ->toArray();
@@ -155,14 +158,15 @@ class Hubclientes extends Component
         $this->modalPedidosCliente = true;
     }
 
+
     public function eliminarSolicitud($id)
     {
-        $pedido = SolicitudPedido::find($id);
-        if (!$pedido)
+        $solicitud = SolicitudPedido::find($id);
+        if (!$solicitud)
             return;
 
-        $pedido->detalles()->delete();
-        $pedido->delete();
+        $solicitud->detalles()->delete();
+        $solicitud->delete();
 
         $this->pedidosCliente = array_filter($this->pedidosCliente, fn($p) => $p['id'] !== $id);
         $this->modalPedidosCliente = false;
@@ -181,21 +185,39 @@ class Hubclientes extends Component
             'pedidosCliente' => $this->pedidosCliente
         ]);
     }
-    public function actualizarMetodoPago($pedidoId, $valor)
-    {
-        $pedido = SolicitudPedido::find($pedidoId);
-        if (!$pedido)
-            return;
 
-        $pedido->metodo_pago = $valor;
-        $pedido->save();
-        foreach ($this->pedidosCliente as &$p) {
-            if ($p['id'] == $pedidoId) {
-                $p['metodo_pago'] = $valor;
-            }
+   public function actualizarMetodoPago($pedidoId, $valor)
+{
+    $pedido = SolicitudPedido::find($pedidoId);
+    if (!$pedido) return;
+
+    $pedido->metodo_pago = $valor;
+    $pedido->save();
+
+    foreach ($this->pedidosCliente as &$p) {
+        if ($p['id'] == $pedidoId) {
+            $p['metodo_pago'] = $valor;
         }
     }
+}
+
+public function subirComprobante($pagoId)
+{
+    if (!$this->archivoPago) return;
+
+    $pago = PagoPedido::find($pagoId);
+    if (!$pago) return;
+
+    $path = $this->archivoPago->store('pagos', 'public');
+    $pago->imagen_comprobante = $path;
+    $pago->estado = true;
+    $pago->fecha_pago = now();
+    $pago->save();
+
+    $this->archivoPago = null;
+
+    $this->verMisPedidos();
+}
 
 
 }
-

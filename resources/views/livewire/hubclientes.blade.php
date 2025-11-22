@@ -99,7 +99,7 @@
                                 @endphp
                                 <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                                                                                                                                                                @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                                                                                                                                                                                @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($tapa->imagen))
                                         <img src="{{ asset('storage/' . $tapa->imagen) }}"
@@ -130,7 +130,7 @@
                                 @endphp
                                 <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                                                                                                                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                                                                                                                                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($etiqueta->imagen))
                                         <img src="{{ asset('storage/' . $etiqueta->imagen) }}"
@@ -249,7 +249,6 @@
         <div class="modal-overlay">
             <div class="modal-box w-full max-w-3xl">
                 <div class="modal-content flex flex-col gap-4">
-
                     <h2 class="text-2xl font-bold text-center mb-4">Mis Pedidos ({{ count($pedidosCliente) }})</h2>
 
                     @if(count($pedidosCliente) > 0)
@@ -268,23 +267,13 @@
                                         <p class="text-sm text-gray-600">Selecciona un método de Pago:</p>
                                         <div class="flex flex-wrap gap-2">
                                             <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
-                                                class="px-3 py-1 rounded text-sm font-semibold transition
-                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                                                QR
-                                            </button>
+                                                class="px-3 py-1 rounded text-sm font-semibold transition {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">QR</button>
                                             <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
-                                                class="px-3 py-1 rounded text-sm font-semibold transition
-                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                                                Efectivo
-                                            </button>
+                                                class="px-3 py-1 rounded text-sm font-semibold transition {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">Efectivo</button>
                                             <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 2)"
-                                                class="px-3 py-1 rounded text-sm font-semibold transition
-                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                                                Crédito
-                                            </button>
+                                                class="px-3 py-1 rounded text-sm font-semibold transition {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">Crédito</button>
                                         </div>
                                     </div>
-
 
                                     @if(!empty($pedido['detalles']))
                                         <div class="flex flex-col gap-2 mt-2">
@@ -294,15 +283,12 @@
                                                     $otro = $detalle['otro'] ?? null;
                                                     $tapa = $detalle['tapa'] ?? null;
                                                     $etiqueta = $detalle['etiqueta'] ?? null;
-
                                                     $descripcion = $producto['descripcion'] ?? $otro['descripcion'] ?? '';
                                                     $imagenProd = $producto['imagen'] ?? $otro['imagen'] ?? null;
                                                     $imagenTapa = $tapa['imagen'] ?? null;
                                                     $imagenEtiqueta = $etiqueta['imagen'] ?? null;
                                                 @endphp
-
                                                 <div class="flex flex-col gap-1 border rounded-lg p-2 bg-white">
-
                                                     <div class="flex items-center gap-2">
                                                         @if($imagenProd)
                                                             <img src="{{ asset('storage/' . $imagenProd) }}"
@@ -310,7 +296,6 @@
                                                         @endif
                                                         <p class="font-semibold">{{ $descripcion }}</p>
                                                     </div>
-
                                                     <p class="text-sm text-gray-600">Cantidad: {{ $detalle['cantidad'] }}</p>
                                                     @if($tapa)
                                                         <div class="flex items-center gap-2 mt-1">
@@ -330,7 +315,35 @@
                                                             <p class="text-sm text-gray-600">Etiqueta: {{ $etiqueta['descripcion'] ?? '-' }}</p>
                                                         </div>
                                                     @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
 
+                                    @if(!empty($pedido['pedido']['pago_pedidos']))
+                                        <div class="flex flex-col gap-2 mt-2 p-2 border-t border-gray-300">
+                                            <h4 class="font-semibold text-gray-700">Pagos realizados:</h4>
+                                            @foreach($pedido['pedido']['pago_pedidos'] as $pago)
+                                                <div
+                                                    class="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-100 p-2 rounded-lg gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <p class="text-sm font-medium">Monto: {{ number_format($pago['monto'], 2) }}</p>
+                                                        <p class="text-sm text-gray-600">Método:
+                                                            {{ $pago['metodo'] == 0 ? 'QR' : ($pago['metodo'] == 1 ? 'Efectivo' : 'Crédito') }}
+                                                        </p>
+                                                        @if(!empty($pago['imagen_comprobante']))
+                                                            <img src="{{ asset('storage/' . $pago['imagen_comprobante']) }}"
+                                                                class="h-12 w-12 object-contain border rounded-lg">
+                                                        @endif
+                                                    </div>
+                                                    @if(empty($pago['imagen_comprobante']))
+                                                        <div class="flex items-center gap-2">
+                                                            <input type="file" wire:model="archivoPago" class="text-sm">
+                                                            <button wire:click="subirComprobante({{ $pago['id'] }})"
+                                                                wire:loading.attr="disabled"
+                                                                class="px-2 py-1 bg-green-500 text-white rounded text-sm">Subir</button>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
@@ -338,32 +351,29 @@
 
                                     <div class="flex justify-end mt-2">
                                         <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
-                                            class="text-red-600 font-semibold hover:text-red-800 transition px-2 py-1 border border-red-600 rounded-md">
-                                            Eliminar Pedido
-                                        </button>
+                                            class="text-red-600 font-semibold hover:text-red-800 transition px-2 py-1 border border-red-600 rounded-md">Eliminar
+                                            Pedido</button>
                                     </div>
-
                                 </div>
                             @endforeach
                         </div>
 
                         <div class="modal-footer mt-4">
-                            <button wire:click="$set('modalPedidosCliente', false)" class="btn-cyan flex items-center gap-2">
-                                CERRAR
-                            </button>
+                            <button wire:click="$set('modalPedidosCliente', false)"
+                                class="btn-cyan flex items-center gap-2">CERRAR</button>
                         </div>
-
                     @else
                         <p class="text-center text-gray-500 py-10">No tienes pedidos.</p>
                         <div class="modal-footer flex justify-center mt-4">
-                            <button wire:click="$set('modalPedidosCliente', false)" class="btn-cyan flex items-center gap-2">
-                                CERRAR
-                            </button>
+                            <button wire:click="$set('modalPedidosCliente', false)"
+                                class="btn-cyan flex items-center gap-2">CERRAR</button>
                         </div>
                     @endif
-
                 </div>
             </div>
         </div>
     @endif
+
+
+
 </div>
