@@ -99,7 +99,7 @@
                                 @endphp
                                 <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                                                                                                                                                                                @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                                                                                                                                                                                                                                @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($tapa->imagen))
                                         <img src="{{ asset('storage/' . $tapa->imagen) }}"
@@ -130,7 +130,7 @@
                                 @endphp
                                 <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                                                                                                                                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                                                                                                                                                                                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($etiqueta->imagen))
                                         <img src="{{ asset('storage/' . $etiqueta->imagen) }}"
@@ -152,7 +152,7 @@
                     </div>
 
                     <!-- Botones -->
-                    <div class="modal-footer flex gap-2 justify-end mt-3">
+                    <div class="modal-footer">
                         <button wire:click="$set('modalProducto', false)" class="btn-cyan flex items-center gap-2">
                             CERRAR
                         </button>
@@ -165,6 +165,7 @@
             </div>
         </div>
     @endif
+
     @if($mostrarCarrito)
         <div class="modal-overlay fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
             <div class="modal-box max-w-3xl w-full p-4 bg-white rounded-3xl shadow-2xl">
@@ -247,132 +248,231 @@
 
     @if($modalPedidosCliente)
         <div class="modal-overlay">
-            <div class="modal-box w-full max-w-3xl">
-                <div class="modal-content flex flex-col gap-4">
-                    <h2 class="text-2xl font-bold text-center mb-4">Mis Pedidos ({{ count($pedidosCliente) }})</h2>
+            <div class="modal-box w-full max-w-5xl p-6">
 
-                    @if(count($pedidosCliente) > 0)
-                        <div class="flex flex-col gap-4 max-h-96 overflow-y-auto">
-                            @foreach($pedidosCliente as $pedido)
-                                <div class="border rounded-lg p-3 bg-gray-50 flex flex-col gap-2">
-                                    <p class="text-sm">
-                                        <strong>Estado:</strong>
-                                        <span
-                                            class="inline-block px-2 py-1 rounded-full text-sm font-semibold {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' : ($pedido['estado'] == 1 ? 'bg-green-200 text-green-800' : ($pedido['estado'] == 2 ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-800')) }}">
-                                            {{ $pedido['estado'] == 0 ? 'Pendiente de pago' : ($pedido['estado'] == 1 ? 'Pagado' : ($pedido['estado'] == 2 ? 'Entregado' : 'Desconocido')) }}
+                <h2 class="text-2xl font-bold text-center text-teal-700 mb-4">
+                    Mis Pedidos ({{ count($pedidosCliente) }})
+                </h2>
+
+                @if(count($pedidosCliente) > 0)
+                    <div class="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-2">
+
+                        @foreach($pedidosCliente as $pedido)
+                            @php
+                                $pedidoId = $pedido['id'];
+                                $expandido = $expandidoPedidos[$pedidoId] ?? false;
+                            @endphp
+
+                            <div class="border rounded-xl p-4 bg-white shadow-sm flex flex-col gap-2">
+
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-gray-700">Código: {{ $pedido['codigo'] }}</p>
+                                        <span class="px-3 py-1 rounded-full text-sm font-semibold
+                                                {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' :
+                            ($pedido['estado'] == 1 ? 'bg-green-200 text-green-800' :
+                                ($pedido['estado'] == 2 ? 'bg-blue-200 text-blue-800' :
+                                    'bg-gray-200 text-gray-800')) }}">
+                                            {{ $pedido['estado'] == 0 ? 'Pendiente de pago' :
+                            ($pedido['estado'] == 1 ? 'Pagado' :
+                                ($pedido['estado'] == 2 ? 'Entregado' : 'Desconocido')) }}
                                         </span>
-                                    </p>
-
-                                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-1">
-                                        <p class="text-sm text-gray-600">Selecciona un método de Pago:</p>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
-                                                class="px-3 py-1 rounded text-sm font-semibold transition {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">QR</button>
-                                            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
-                                                class="px-3 py-1 rounded text-sm font-semibold transition {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">Efectivo</button>
-                                            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 2)"
-                                                class="px-3 py-1 rounded text-sm font-semibold transition {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">Crédito</button>
-                                        </div>
                                     </div>
+                                    <button wire:click="$toggle('expandidoPedidos.{{ $pedidoId }}')"
+                                        class="px-3 py-1 bg-teal-500 text-white rounded hover:bg-teal-600 transition">
+                                        {{ $expandido ? 'Ocultar detalles' : 'Ver detalles' }}
+                                    </button>
+                                </div>
 
-                                    @if(!empty($pedido['detalles']))
-                                        <div class="flex flex-col gap-2 mt-2">
-                                            @foreach($pedido['detalles'] as $detalle)
-                                                @php
-                                                    $producto = $detalle['producto'] ?? null;
-                                                    $otro = $detalle['otro'] ?? null;
-                                                    $tapa = $detalle['tapa'] ?? null;
-                                                    $etiqueta = $detalle['etiqueta'] ?? null;
-                                                    $descripcion = $producto['descripcion'] ?? $otro['descripcion'] ?? '';
-                                                    $imagenProd = $producto['imagen'] ?? $otro['imagen'] ?? null;
-                                                    $imagenTapa = $tapa['imagen'] ?? null;
-                                                    $imagenEtiqueta = $etiqueta['imagen'] ?? null;
-                                                @endphp
-                                                <div class="flex flex-col gap-1 border rounded-lg p-2 bg-white">
-                                                    <div class="flex items-center gap-2">
+                                @if($expandido)
+                                    <div class="mt-4 flex flex-col gap-4">
+
+                                        {{-- Métodos de pago --}}
+                                        <div class="flex flex-col gap-2">
+                                            <p class="text-sm font-medium text-gray-600">Método de pago:</p>
+                                            <div class="flex flex-wrap gap-2">
+                                                <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
+                                                    class="px-3 py-1 rounded-md text-sm font-semibold transition
+                                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                    QR
+                                                </button>
+                                                <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
+                                                    class="px-3 py-1 rounded-md text-sm font-semibold transition
+                                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                    Efectivo
+                                                </button>
+                                                <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 2)"
+                                                    class="px-3 py-1 rounded-md text-sm font-semibold transition
+                                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                    Crédito
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {{-- Detalles del pedido --}}
+                                        @if(!empty($pedido['detalles']))
+                                            <div class="flex flex-col gap-4 pt-2 border-t">
+                                                @foreach($pedido['detalles'] as $detalle)
+                                                    @php
+                                                        $producto = $detalle['producto'] ?? $detalle['otro'] ?? null;
+                                                        $descripcion = $producto['descripcion'] ?? '';
+                                                        $imagenProd = $producto['imagen'] ?? null;
+                                                        $tapa = $detalle['tapa'] ?? null;
+                                                        $imagenTapa = $tapa['imagen'] ?? null;
+                                                        $etiqueta = $detalle['etiqueta'] ?? null;
+                                                        $imagenEtiqueta = $etiqueta['imagen'] ?? null;
+                                                    @endphp
+
+                                                    <div class="flex flex-col gap-4 border rounded-lg p-3 bg-gray-50">
                                                         @if($imagenProd)
                                                             <img src="{{ asset('storage/' . $imagenProd) }}"
-                                                                class="h-16 w-16 object-contain border rounded-lg">
+                                                                class="w-full max-h-[400px] rounded-lg border object-contain">
                                                         @endif
-                                                        <p class="font-semibold">{{ $descripcion }}</p>
-                                                    </div>
-                                                    <p class="text-sm text-gray-600">Cantidad: {{ $detalle['cantidad'] }}</p>
-                                                    @if($tapa)
-                                                        <div class="flex items-center gap-2 mt-1">
-                                                            @if($imagenTapa)
-                                                                <img src="{{ asset('storage/' . $imagenTapa) }}"
-                                                                    class="h-10 w-10 object-contain border rounded-lg">
-                                                            @endif
-                                                            <p class="text-sm text-gray-600">Tapa: {{ $tapa['descripcion'] ?? '-' }}</p>
-                                                        </div>
-                                                    @endif
-                                                    @if($etiqueta)
-                                                        <div class="flex items-center gap-2 mt-1">
-                                                            @if($imagenEtiqueta)
-                                                                <img src="{{ asset('storage/' . $imagenEtiqueta) }}"
-                                                                    class="h-10 w-10 object-contain border rounded-lg">
-                                                            @endif
-                                                            <p class="text-sm text-gray-600">Etiqueta: {{ $etiqueta['descripcion'] ?? '-' }}</p>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                                        <p class="font-semibold text-gray-800 text-lg">{{ $descripcion }}</p>
+                                                        <p class="text-sm text-gray-600">Cantidad: {{ $detalle['cantidad'] }}</p>
 
-                                    @if(!empty($pedido['pedido']['pago_pedidos']))
-                                        <div class="flex flex-col gap-2 mt-2 p-2 border-t border-gray-300">
-                                            <h4 class="font-semibold text-gray-700">Pagos realizados:</h4>
-                                            @foreach($pedido['pedido']['pago_pedidos'] as $pago)
-                                                <div
-                                                    class="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-100 p-2 rounded-lg gap-2">
-                                                    <div class="flex items-center gap-2">
-                                                        <p class="text-sm font-medium">Monto: {{ number_format($pago['monto'], 2) }}</p>
-                                                        <p class="text-sm text-gray-600">Método:
-                                                            {{ $pago['metodo'] == 0 ? 'QR' : ($pago['metodo'] == 1 ? 'Efectivo' : 'Crédito') }}
-                                                        </p>
-                                                        @if(!empty($pago['imagen_comprobante']))
-                                                            <img src="{{ asset('storage/' . $pago['imagen_comprobante']) }}"
-                                                                class="h-12 w-12 object-contain border rounded-lg">
+                                                        @if($tapa)
+                                                            <div class="flex flex-col md:flex-row items-center gap-4">
+                                                                @if($imagenTapa)
+                                                                    <img src="{{ asset('storage/' . $imagenTapa) }}"
+                                                                        class="w-full md:w-1/3 max-h-[300px] rounded-lg border object-contain">
+                                                                @endif
+                                                                <p class="text-sm text-gray-600">Tapa: {{ $tapa['descripcion'] ?? '-' }}</p>
+                                                            </div>
+                                                        @endif
+
+                                                        @if($etiqueta)
+                                                            <div class="flex flex-col md:flex-row items-center gap-4">
+                                                                @if($imagenEtiqueta)
+                                                                    <img src="{{ asset('storage/' . $imagenEtiqueta) }}"
+                                                                        class="w-full md:w-1/3 max-h-[300px] rounded-lg border object-contain">
+                                                                @endif
+                                                                <p class="text-sm text-gray-600">Etiqueta: {{ $etiqueta['descripcion'] ?? '-' }}</p>
+                                                            </div>
                                                         @endif
                                                     </div>
-                                                    @if(empty($pago['imagen_comprobante']))
-                                                        <div class="flex items-center gap-2">
-                                                            <input type="file" wire:model="archivoPago" class="text-sm">
-                                                            <button wire:click="subirComprobante({{ $pago['id'] }})"
-                                                                wire:loading.attr="disabled"
-                                                                class="px-2 py-1 bg-green-500 text-white rounded text-sm">Subir</button>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
 
-                                    <div class="flex justify-end mt-2">
-                                        <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
-                                            class="text-red-600 font-semibold hover:text-red-800 transition px-2 py-1 border border-red-600 rounded-md">Eliminar
-                                            Pedido</button>
+                                        {{-- Pagos realizados --}}
+                                        @if(!empty($pedido['pedido']['pago_pedidos']))
+                                            <div class="flex flex-col gap-3 pt-4 border-t">
+                                                <h4 class="font-semibold text-gray-700">Pagos realizados:</h4>
+                                                @foreach($pedido['pedido']['pago_pedidos'] as $pago)
+                                                    <div class="flex flex-col gap-3 bg-gray-100 p-3 rounded-lg shadow-sm">
+
+                                                        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+
+                                                            <div class="flex items-center gap-3 flex-wrap">
+                                                                <p class="text-sm font-medium">Monto: {{ number_format($pago['monto'], 2) }}</p>
+                                                                <p class="text-sm text-gray-600">
+                                                                    Método:
+                                                                    {{ $pago['metodo'] == 0 ? 'QR' : ($pago['metodo'] == 1 ? 'Efectivo' : 'Crédito') }}
+                                                                </p>
+
+                                                                @if(!empty($pago['imagen_comprobante']))
+                                                                    <img src="{{ asset('storage/' . $pago['imagen_comprobante']) }}"
+                                                                        class="w-full md:w-1/3 max-h-[400px] rounded-lg border object-contain"
+                                                                        alt="Comprobante">
+                                                                @endif
+                                                            </div>
+
+                                                            @if($pago['metodo'] == 0 && !empty($pago['sucursal_pago']['imagen_qr']))
+                                                                <button wire:click="verQr({{ $pago['id'] }})"
+                                                                    class="px-4 py-2 bg-blue-500 text-white rounded text-sm mt-2 md:mt-0">
+                                                                    Ver QR
+                                                                </button>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="flex flex-wrap gap-2 mt-2 items-center">
+                                                            @if(empty($pago['imagen_comprobante']))
+                                                                <input type="file" wire:model="archivoPago"
+                                                                    wire:click="$set('pagoSeleccionado', {{ $pago['id'] }})" class="text-sm">
+                                                                <button wire:click="subirComprobante({{ $pago['id'] }})"
+                                                                    class="px-3 py-1 bg-green-500 text-white rounded text-sm">
+                                                                    Subir
+                                                                </button>
+                                                            @else
+                                                                <button wire:click="eliminarComprobante({{ $pago['id'] }})"
+                                                                    class="px-3 py-1 bg-red-500 text-white rounded text-sm">
+                                                                    Eliminar
+                                                                </button>
+                                                                <div class="flex items-center gap-2">
+                                                                    <input type="file" wire:model="archivoPago"
+                                                                        wire:click="$set('pagoSeleccionado', {{ $pago['id'] }})" class="text-sm">
+                                                                    <button wire:click="subirComprobante({{ $pago['id'] }})"
+                                                                        class="px-3 py-1 bg-blue-500 text-white rounded text-sm">
+                                                                        Reemplazar
+                                                                    </button>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        <div class="flex justify-center pt-2">
+                                            <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
+                                                class="text-red-600 font-semibold hover:text-red-800 transition px-3 py-1 border border-red-600 rounded-md">
+                                                Eliminar Pedido
+                                            </button>
+                                        </div>
+
                                     </div>
-                                </div>
-                            @endforeach
-                        </div>
+                                @endif
 
-                        <div class="modal-footer mt-4">
-                            <button wire:click="$set('modalPedidosCliente', false)"
-                                class="btn-cyan flex items-center gap-2">CERRAR</button>
-                        </div>
-                    @else
-                        <p class="text-center text-gray-500 py-10">No tienes pedidos.</p>
-                        <div class="modal-footer flex justify-center mt-4">
-                            <button wire:click="$set('modalPedidosCliente', false)"
-                                class="btn-cyan flex items-center gap-2">CERRAR</button>
-                        </div>
-                    @endif
-                </div>
+                            </div>
+                        @endforeach
+
+                    </div>
+
+                    <div class="flex justify-center mt-4">
+                        <button wire:click="$set('modalPedidosCliente', false)"
+                            class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition">
+                            CERRAR
+                        </button>
+                    </div>
+
+                @else
+                    <p class="text-center text-gray-500 py-10">No tienes pedidos.</p>
+                @endif
+
             </div>
         </div>
     @endif
+
+
+    @if($modalVerQR && $qrSeleccionado)
+        <div class="modal-overlay">
+            <div class="modal-box max-w-3xl w-full p-6 flex flex-col items-center gap-4">
+
+                <h3 class="text-2xl font-bold text-teal-700 text-center">QR de Pago</h3>
+
+                <div class="w-full flex justify-center">
+                    <img src="{{ asset('storage/' . $qrSeleccionado) }}"
+                        class="w-full max-w-[500px] max-h-[500px] object-contain border rounded-lg shadow-lg"
+                        alt="QR de Pago">
+                </div>
+
+                <div class="flex gap-4 mt-4">
+                    <button wire:click="$set('modalVerQR', false)"
+                        class="px-6 py-2 bg-cyan-500 text-white font-semibold rounded-lg hover:bg-cyan-600 transition">
+                        Cerrar
+                    </button>
+
+                    <a href="{{ asset('storage/' . $qrSeleccionado) }}" download
+                        class="px-6 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition">
+                        Descargar QR
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    @endif
+
 
 
 

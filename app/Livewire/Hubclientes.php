@@ -14,7 +14,12 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\WithFileUploads;
 class Hubclientes extends Component
 {
-        use WithFileUploads; 
+    use WithFileUploads;
+    public $expandidoPedidos = [];
+
+    public $modalVerQR = false;
+    public $qrSeleccionado = null;
+
     public $productos = [];
     public $carrito = [];
     public $modalProducto = false;
@@ -186,38 +191,73 @@ class Hubclientes extends Component
         ]);
     }
 
-   public function actualizarMetodoPago($pedidoId, $valor)
-{
-    $pedido = SolicitudPedido::find($pedidoId);
-    if (!$pedido) return;
+    public function actualizarMetodoPago($pedidoId, $valor)
+    {
+        $pedido = SolicitudPedido::find($pedidoId);
+        if (!$pedido)
+            return;
 
-    $pedido->metodo_pago = $valor;
-    $pedido->save();
+        $pedido->metodo_pago = $valor;
+        $pedido->save();
 
-    foreach ($this->pedidosCliente as &$p) {
-        if ($p['id'] == $pedidoId) {
-            $p['metodo_pago'] = $valor;
+        foreach ($this->pedidosCliente as &$p) {
+            if ($p['id'] == $pedidoId) {
+                $p['metodo_pago'] = $valor;
+            }
         }
     }
-}
 
-public function subirComprobante($pagoId)
-{
-    if (!$this->archivoPago) return;
+    public function subirComprobante($pagoId)
+    {
+        if (!$this->archivoPago)
+            return;
 
-    $pago = PagoPedido::find($pagoId);
-    if (!$pago) return;
+        $pago = PagoPedido::find($pagoId);
+        if (!$pago)
+            return;
 
-    $path = $this->archivoPago->store('pagos', 'public');
-    $pago->imagen_comprobante = $path;
-    $pago->estado = true;
-    $pago->fecha_pago = now();
-    $pago->save();
+        if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
+            \Storage::disk('public')->delete($pago->imagen_comprobante);
+        }
 
-    $this->archivoPago = null;
+        $path = $this->archivoPago->store('pagos', 'public');
 
-    $this->verMisPedidos();
-}
+        $pago->imagen_comprobante = $path;
+        $pago->estado = true;
+        $pago->fecha_pago = now();
+        $pago->save();
 
+        $this->archivoPago = null;
+
+        $this->verMisPedidos();
+    }
+
+    public function eliminarComprobante($pagoId)
+    {
+        $pago = PagoPedido::find($pagoId);
+        if (!$pago)
+            return;
+
+        if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
+            \Storage::disk('public')->delete($pago->imagen_comprobante);
+        }
+
+        $pago->imagen_comprobante = null;
+        $pago->estado = false;
+        $pago->fecha_pago = null;
+        $pago->save();
+
+        $this->verMisPedidos();
+    }
+    public function verQr($pagoId)
+    {
+        $pago = PagoPedido::with('sucursalPago')->find($pagoId);
+        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr) {
+            return;
+        }
+
+        $this->qrSeleccionado = $pago->sucursalPago->imagen_qr;
+        $this->modalVerQR = true;
+    }
 
 }
