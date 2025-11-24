@@ -1,82 +1,46 @@
-<div class="flex justify-center mt-16 px-4">
+<div class="flex justify-center mt-20 px-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl">
 
-        <!-- Card Usuario Logueado -->
-        <div class="p-6 bg-cyan-600 text-white rounded-2xl shadow-lg">
-            <h2 class="text-2xl font-bold mb-4">Usuario Logueado</h2>
+        <!-- Tarjeta Usuario -->
+        <div class="p-6 bg-gradient-to-r from-cyan-500 to-cyan-400 text-white rounded-3xl shadow-xl border border-cyan-300">
+            <h2 class="text-2xl font-extrabold mb-6">Usuario Logueado</h2>
 
             @if($usuario)
-            <p><strong>Email:</strong> {{ $usuario->email ?? 'N/A' }}</p>
-            <p><strong>Rol:</strong> {{ $usuario->rol->nombre ?? 'N/A' }}</p>
-            <p><strong>Fecha de creación:</strong> {{ $usuario->created_at->format('d/m/Y H:i') }}</p>
-            <p><strong>Última actualización:</strong> {{ $usuario->updated_at->format('d/m/Y H:i') }}</p>
+                <div class="space-y-2">
+                    <p><span class="font-semibold">Email:</span> {{ $usuario->email ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Rol:</span> {{ $usuario->rol->nombre ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Creación:</span> {{ $usuario->created_at->format('d/m/Y H:i') }}</p>
+                    <p><span class="font-semibold">Última actualización:</span> {{ $usuario->updated_at->format('d/m/Y H:i') }}</p>
+                </div>
             @else
-            <p>No hay usuario logueado.</p>
+                <p class="italic text-gray-200">No hay usuario logueado.</p>
             @endif
         </div>
 
-        <!-- Card Datos del Cliente Asociado -->
-        <div class="p-6 bg-cyan-600 text-white rounded-2xl shadow-lg">
-            <h2 class="text-2xl font-bold mb-4">Datos del Cliente Asociado</h2>
+        <!-- Tarjeta Cliente -->
+        <div class="p-6 bg-white rounded-3xl shadow-xl border border-gray-200">
+            <h2 class="text-2xl font-extrabold mb-6 text-teal-700">Datos del Cliente Asociado</h2>
 
             @if($cliente)
-            <p><strong>Codigo:</strong> {{ $cliente->codigo ?? 'N/A' }}</p>
-            <p><strong>Nombre:</strong> {{ $cliente->nombre ?? 'N/A' }}</p>
-            <p><strong>Empresa:</strong> {{ $cliente->empresa ?? 'N/A' }}</p>
-            <p><strong>Teléfono:</strong> {{ $cliente->telefono ?? 'N/A' }}</p>
-            <p><strong>Correo Cliente:</strong> {{ $cliente->correo ?? 'N/A' }}</p>
-            <p><strong>Latitud:</strong> {{ $cliente->latitud ?? 'N/A' }}</p>
-            <p><strong>Longitud:</strong> {{ $cliente->longitud ?? 'N/A' }}</p>
-            <p><strong>Categoria:</strong> {{ $cliente->categoria ?? 'N/A' }}</p>
-            <p><strong>Estado:</strong> {{ $cliente->estado ? 'Activo' : 'Inactivo' }}</p>
+                <div class="space-y-2 text-gray-700">
+                    <p><span class="font-semibold">Código:</span> {{ $cliente->codigo ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Nombre:</span> {{ $cliente->nombre ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Empresa:</span> {{ $cliente->empresa ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Teléfono:</span> {{ $cliente->telefono ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Correo:</span> {{ $cliente->correo ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Latitud:</span> {{ $cliente->latitud ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Longitud:</span> {{ $cliente->longitud ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Categoría:</span> {{ $cliente->categoria ?? 'N/A' }}</p>
+                    <p><span class="font-semibold">Estado:</span> 
+                        <span class="{{ $cliente->estado ? 'text-green-600' : 'text-red-600' }}">
+                            {{ $cliente->estado ? 'Activo' : 'Inactivo' }}
+                        </span>
+                    </p>
+                </div>
             @else
-            <p>No hay cliente asociado.</p>
+                <p class="italic text-gray-400">No hay cliente asociado.</p>
             @endif
-        </div>
-
-        <!-- Card Reloj Digital -->
-        <div class="md:col-span-2 p-6 bg-cyan-600 text-white rounded-2xl shadow-lg flex justify-center items-center">
-            <div class="flex flex-col items-center justify-center">
-                <!-- Icono más grande -->
-                <svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-4">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 12l2 3" />
-                    <path d="M12 7v5" />
-                </svg>
-
-                <!-- Reloj -->
-                <p class="text-6xl font-mono" id="reloj"></p>
-            </div>
         </div>
 
     </div>
 </div>
-
-<script>
-    function actualizarReloj() {
-        const ahora = new Date();
-
-        // Formato de hora con zona horaria de Bolivia
-        const opciones = {
-            timeZone: 'America/La_Paz',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        };
-
-        const hora = new Intl.DateTimeFormat('es-BO', opciones).format(ahora);
-
-        // Fecha también en Bolivia
-        const fecha = ahora.toLocaleDateString('es-BO', {
-            timeZone: 'America/La_Paz'
-        });
-
-        document.getElementById('reloj').textContent = `${hora} - ${fecha}`;
-    }
-
-    // Actualiza el reloj cada segundo
-    setInterval(actualizarReloj, 1000);
-    actualizarReloj();
-</script>

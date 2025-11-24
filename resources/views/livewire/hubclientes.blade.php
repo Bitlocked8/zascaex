@@ -36,19 +36,36 @@
                 </div>
 
                 <div class="p-5 text-center flex flex-col gap-2 flex-1">
-                    <h2 class="text-lg font-bold text-gray-800">{{ $modelo->descripcion }}</h2>
 
+                    <h2 class="font-bold text-u text-3xl">{{ $modelo->descripcion }} {{ $modelo->unidad }}</h2>
+                    @php
+                        $precioAprox = ($modelo->precioReferencia && $modelo->paquete)
+                            ? $modelo->precioReferencia * $modelo->paquete
+                            : null;
+                    @endphp
+
+                    <p class="text-sm text-u font-semibold">
+                        Precio Aproximado por paquete:
+                        <span class="text-gray-800 font-bold">
+                            @if($precioAprox)
+                                {{ number_format($precioAprox, 2) }} Bs
+                            @else
+                                -
+                            @endif
+                        </span>
+                    </p>
                     <p class="text-sm text-gray-600">
                         Sucursal: <span class="font-semibold">{{ $sucursal }}</span>
                     </p>
-
                     <button wire:click="abrirModalProducto('{{ $p['uid'] }}')"
                         class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2 mt-3">
                         Seleccionar
                     </button>
+
                 </div>
 
             </div>
+
         @empty
             <p class="col-span-full text-center text-gray-500 mt-10 text-lg">No hay productos disponibles</p>
         @endforelse
@@ -64,13 +81,12 @@
         <div class="modal-overlay">
             <div class="modal-box max-w-4xl">
                 <div class="modal-content flex flex-col gap-4">
-
-                    <!-- Producto -->
-                    <h2 class="text-xl sm:text-2xl font-bold text-center">{{ $modelo->descripcion }}</h2>
+                    <h2 class="text-u sm:text-2xl font-bold text-center">{{ $modelo->descripcion }}
+                        {{ $modelo->unidad ?? '-' }}
+                    </h2>
                     <p class="text-center text-gray-700 text-sm">
                         Sucursal: <span class="font-semibold">{{ $sucursalProducto }}</span>
                     </p>
-
                     <div class="flex justify-center mb-4">
                         @if(!empty($modelo->imagen))
                             <img src="{{ asset('storage/' . $modelo->imagen) }}"
@@ -82,14 +98,34 @@
                             </div>
                         @endif
                     </div>
-
-                    <!-- Cantidad -->
-                    <div class="flex flex-col gap-2">
-                        <label class="text-sm font-medium">Cantidad de paquetes:</label>
-                        <input type="number" min="1" wire:model="cantidadSeleccionada" class="input-minimal w-24">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white border rounded-lg p-4">
+                        <p><span class="font-semibold">Contenido en ml.lt , etc:</span> {{ $modelo->unidad ?? '-' }}</p>
+                        <p><span class="font-semibold">Tipo de contenido:</span> {{ $modelo->tipoContenido ?? '-' }}</p>
+                        <p><span class="font-semibold">Tipo de producto:</span> {{ $modelo->tipoProducto ?? '-' }}</p>
+                        <p><span class="font-semibold">Capacidad:</span> {{ $modelo->capacidad ?? '-' }}</p>
+                        <p><span class="font-semibold">Precio por unidad aproximado.:</span>
+                            {{ $modelo->precioReferencia ? number_format($modelo->precioReferencia, 2) : '-' }} Bs
+                        </p>
+                        <p><span class="font-semibold">Paquete:</span> {{ $modelo->paquete ?? '-' }}</p>
+                        <p class="font-semibold text-cyan-700">
+                            Precio aproximado por paquete:
+                            <span class="font-normal text-black">
+                                @if($modelo->precioReferencia && $modelo->paquete)
+                                    {{ number_format($modelo->precioReferencia * $modelo->paquete, 2) }} Bs
+                                @else
+                                    -
+                                @endif
+                            </span>
+                        </p>
+                        <p class="col-span-full">
+                            <span class="font-semibold">Observaciones:</span>
+                            {{ $modelo->observaciones ?? 'Sin observaciones' }}
+                        </p>
                     </div>
-
-                    <!-- Tapa -->
+                    <div>
+                        <label class="text-u text-center font-medium">coloca una Cantidad de paquetes:</label>
+                        <input type="number" wire:model="cantidadSeleccionada" class="input-minimal">
+                    </div>
                     <div class="border rounded-lg p-3 bg-white">
                         <h3 class="text-center font-semibold mb-3">Elige una Tapa</h3>
                         <div class="flex overflow-x-auto gap-4 py-2">
@@ -97,9 +133,10 @@
                                 @php
                                     $sucursalTapa = $tapa->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
                                 @endphp
+
                                 <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                                                                                                                                                                                                                                @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                    @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($tapa->imagen))
                                         <img src="{{ asset('storage/' . $tapa->imagen) }}"
@@ -119,8 +156,6 @@
                             @endforelse
                         </div>
                     </div>
-
-                    <!-- Etiqueta -->
                     <div class="border rounded-lg p-3 bg-white">
                         <h3 class="text-center font-semibold mb-3">Elige una Etiqueta</h3>
                         <div class="flex overflow-x-auto gap-4 py-2">
@@ -128,9 +163,10 @@
                                 @php
                                     $sucursalEtiqueta = $etiqueta->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
                                 @endphp
+
                                 <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                                                                                                                                                                                                                                @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                    @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($etiqueta->imagen))
                                         <img src="{{ asset('storage/' . $etiqueta->imagen) }}"
@@ -145,13 +181,12 @@
                                     <p class="text-xs sm:text-sm text-center mt-1">{{ $etiqueta->descripcion }}</p>
                                     <p class="text-xs text-gray-500 text-center mt-1">Sucursal: {{ $sucursalEtiqueta }}</p>
                                 </div>
+
                             @empty
                                 <p class="text-center text-gray-500">No hay etiquetas disponibles</p>
                             @endforelse
                         </div>
                     </div>
-
-                    <!-- Botones -->
                     <div class="modal-footer">
                         <button wire:click="$set('modalProducto', false)" class="btn-cyan flex items-center gap-2">
                             CERRAR
@@ -165,6 +200,7 @@
             </div>
         </div>
     @endif
+
 
     @if($mostrarCarrito)
         <div class="modal-overlay fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
@@ -269,7 +305,7 @@
                                     <div>
                                         <p class="font-semibold text-gray-700">Código: {{ $pedido['codigo'] }}</p>
                                         <span class="px-3 py-1 rounded-full text-sm font-semibold
-                                                {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' :
+                                                                                    {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' :
                             ($pedido['estado'] == 1 ? 'bg-green-200 text-green-800' :
                                 ($pedido['estado'] == 2 ? 'bg-blue-200 text-blue-800' :
                                     'bg-gray-200 text-gray-800')) }}">
@@ -293,17 +329,17 @@
                                             <div class="flex flex-wrap gap-2">
                                                 <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
                                                     class="px-3 py-1 rounded-md text-sm font-semibold transition
-                                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                                                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
                                                     QR
                                                 </button>
                                                 <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
                                                     class="px-3 py-1 rounded-md text-sm font-semibold transition
-                                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                                                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
                                                     Efectivo
                                                 </button>
                                                 <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 2)"
                                                     class="px-3 py-1 rounded-md text-sm font-semibold transition
-                                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                                                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
                                                     Crédito
                                                 </button>
                                             </div>
