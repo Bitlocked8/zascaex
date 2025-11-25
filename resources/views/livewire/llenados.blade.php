@@ -198,7 +198,7 @@
                                     <div
                                         class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[250px]">
                                         @foreach($asignaciones as $asignado)
-                                            <button type="button" wire:click="seleccionarPreforma({{ $asignado->id }})"
+                                            <button type="button" wire:click="seleccionarAsignacion({{ $asignado->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-3 items-center text-center
                                                             {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 

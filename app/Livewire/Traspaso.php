@@ -51,7 +51,7 @@ class Traspaso extends Component
             $sucursalId = $trabajo ? $trabajo->sucursal_id : null;
         }
 
-        // Traemos solo lotes con estado_revision = true
+    
         $repos = Reposicion::with('existencia', 'comprobantes')
             ->where('estado_revision', true)
             ->get();
@@ -106,7 +106,6 @@ class Traspaso extends Component
             $this->personal_id = $traspaso->personal_id;
             $this->observaciones = $traspaso->observaciones;
 
-            // Incluir la reposicion origen asociada al traspaso aunque no tenga stock
             if ($traspaso->reposicionesOrigen->count()) {
                 $this->origen_id = $traspaso->reposicionesOrigen->first()->id;
                 $origenExistenciaId = $traspaso->reposicionesOrigen->first()->existencia_id;
@@ -189,25 +188,18 @@ class Traspaso extends Component
                 foreach ($reposicionesSeleccionadas as $id => $data) {
                     $lote = $data['obj'];
                     $usar = $data['cantidad'];
-
-                    // Ajustamos cantidad en origen
                     $lote->cantidad -= $usar;
                     $lote->cantidad_inicial -= $usar;
                     $lote->save();
 
                     $traspaso->reposicionesOrigen()->attach($lote->id, ['cantidad' => $usar]);
-
-                    // Trasladamos los comprobantes proporcionalmente
                     foreach ($lote->comprobantes as $comprobante) {
-                        $proporcion = $usar / ($lote->cantidad + $usar); // cantidad movida / cantidad original
+                        $proporcion = $usar / ($lote->cantidad + $usar);
                         $montoTraslado = round($comprobante->monto * $proporcion, 2);
 
-                        if ($montoTraslado > 0) {
-                            // Reducimos monto en origen
+                        if ($montoTraslado > 0) {                  
                             $comprobante->monto -= $montoTraslado;
                             $comprobante->save();
-
-                            // Creamos comprobante en destino
                             \App\Models\ComprobantePago::create([
                                 'reposicion_id' => $destino->id,
                                 'codigo' => $comprobante->codigo . '-T',
@@ -218,8 +210,6 @@ class Traspaso extends Component
                         }
                     }
                 }
-
-                // Ajustamos cantidad en destino
                 $destino->cantidad += $totalTraspasado;
                 $destino->cantidad_inicial += $totalTraspasado;
                 $destino->save();
@@ -244,8 +234,6 @@ class Traspaso extends Component
         foreach ($traspaso->reposicionesOrigen as $reposicion) {
             $cant = $reposicion->pivot->cantidad;
             $origen = Reposicion::find($reposicion->id);
-
-            // Restaurar cantidades
             $origen->cantidad += $cant;
             $origen->cantidad_inicial += $cant;
             $origen->save();
@@ -253,8 +241,6 @@ class Traspaso extends Component
             $destino->cantidad -= $cant;
             $destino->cantidad_inicial -= $cant;
             $destino->save();
-
-            // Restaurar montos de todos los comprobantes divididos en destino
             $comprobantesDestino = $destino->comprobantes()
                 ->where('observaciones', 'like', '%Traspaso de lote ' . $reposicion->id . '%')
                 ->get();
@@ -268,8 +254,6 @@ class Traspaso extends Component
                 $comprobanteDestino->delete();
             }
         }
-
-        // Limpiar la relación y eliminar el traspaso
         $traspaso->reposicionesOrigen()->detach();
         $traspaso->delete();
     });
