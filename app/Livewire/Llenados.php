@@ -5,13 +5,12 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Llenado;
 use App\Models\Asignado;
-use App\Models\ComprobantePago;
 use App\Models\Reposicion;
 use App\Models\Existencia;
-use Illuminate\Support\Facades\DB;
 use App\Models\Base;
 use App\Models\Tapa;
 use App\Models\Producto;
+use Illuminate\Support\Facades\DB;
 
 class Llenados extends Component
 {
@@ -35,7 +34,7 @@ class Llenados extends Component
     public $busquedaAsignacion = '';
     public $busquedaDestino = '';
     public $sucursalSeleccionada;
-    public $filtroSucursalElemento;
+    public $existenciasDestino = [];
 
     protected $rules = [
         'asignado_id' => 'required|exists:asignados,id',
@@ -47,60 +46,60 @@ class Llenados extends Component
 
     public function render()
     {
-        $llenados = Llenado::with(['asignado', 'reposicion', 'existencia'])
-            ->when($this->search, function ($q) {
-                $q->where('codigo', 'like', "%{$this->search}%")
-                    ->orWhereHas('asignado', fn($q) => $q->where('codigo', 'like', "%{$this->search}%"));
-            })
-            ->get();
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
 
-        $sucursales = \App\Models\Sucursal::all();
+        $llenadosQuery = Llenado::with(['asignado', 'reposicion', 'existencia'])
+            ->when(
+                $this->search,
+                fn($q) => $q->where('codigo', 'like', "%{$this->search}%")
+                    ->orWhereHas('asignado', fn($q2) => $q2->where('codigo', 'like', "%{$this->search}%"))
+            );
 
-        $asignaciones = Asignado::with('reposiciones.existencia.existenciable', 'reposiciones.existencia.sucursal')
+        if ($rol === 4 && $personal) {
+            $sucursalId = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $llenadosQuery->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursalId));
+        }
+
+        $llenados = $llenadosQuery->get();
+
+        $asignacionesQuery = Asignado::with('reposiciones.existencia.existenciable', 'reposiciones.existencia.sucursal')
             ->where('cantidad', '>', 0)
             ->whereDoesntHave('llenados')
-            ->whereHas('reposiciones.existencia', function ($q) {
-                $q->whereIn('existenciable_type', [Base::class, Tapa::class]);
-                if ($this->sucursalSeleccionada) {
-                    $q->where('sucursal_id', $this->sucursalSeleccionada);
-                }
-            })
-            ->when($this->filtroSucursalElemento, function ($q) {
-                $q->whereHas('reposiciones.existencia', fn($sub) => $sub->where('sucursal_id', $this->filtroSucursalElemento));
-            })
-            ->when($this->busquedaAsignacion, function ($q) {
-                $q->whereHas('reposiciones.existencia.existenciable', fn($sub) => $sub->where('descripcion', 'like', "%{$this->busquedaAsignacion}%"));
-            })
-            ->get();
+            ->whereHas('reposiciones.existencia', fn($q) => $q->whereIn('existenciable_type', [Base::class, Tapa::class]));
 
-        $existenciasDestino = Existencia::with('existenciable', 'sucursal')
-            ->where('existenciable_type', Producto::class)
-            ->when($this->sucursalSeleccionada, fn($q) => $q->where('sucursal_id', $this->sucursalSeleccionada))
-            ->when($this->filtroSucursalElemento, fn($q) => $q->where('sucursal_id', $this->filtroSucursalElemento))
-            ->when($this->busquedaDestino, fn($q) => $q->whereHas('existenciable', fn($sub) => $sub->where('descripcion', 'like', "%{$this->busquedaDestino}%")))
-            ->get();
+        if ($rol === 4 && $personal) {
+            $sucursalId = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $asignacionesQuery->whereHas('reposiciones.existencia', fn($q) => $q->where('sucursal_id', $sucursalId));
+        }
 
-        return view('livewire.llenados', compact('llenados', 'asignaciones', 'existenciasDestino', 'sucursales'));
+        if ($this->busquedaAsignacion) {
+            $asignacionesQuery->whereHas(
+                'reposiciones.existencia.existenciable',
+                fn($q) => $q->where('descripcion', 'like', "%{$this->busquedaAsignacion}%")
+            );
+        }
+
+        $asignaciones = $asignacionesQuery->get();
+        $sucursales = \App\Models\Sucursal::all();
+
+        $this->cargarProductosDestino();
+
+        return view('livewire.llenados', compact('llenados', 'asignaciones', 'sucursales'));
     }
 
-    public function seleccionarSucursal($id)
-    {
-        $this->sucursalSeleccionada = $id;
-    }
-
-    public function filtrarSucursalElemento($id)
-    {
-        $this->filtroSucursalElemento = $id;
-    }
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['llenado_id', 'asignado_id', 'existencia_destino_id', 'cantidad', 'merma', 'estado', 'observaciones', 'fecha', 'codigo', 'llenadoSeleccionado']);
+        $this->reset(['llenado_id', 'asignado_id', 'existencia_destino_id', 'cantidad', 'merma', 'estado', 'observaciones', 'fecha', 'codigo', 'llenadoSeleccionado', 'existenciasDestino', 'sucursalSeleccionada']);
         $this->accion = $accion;
-        if ($accion === 'create')
-            $this->fecha = now();
-        if ($accion === 'edit' && $id)
+        $this->fecha = now();
+
+        if ($accion === 'edit' && $id) {
             $this->editar($id);
+        }
+
         $this->modal = true;
     }
 
@@ -118,209 +117,160 @@ class Llenados extends Component
         $this->codigo = $llenado->codigo;
         $this->accion = 'edit';
         $this->llenadoSeleccionado = $llenado;
+
+        $this->sucursalSeleccionada = $llenado->asignado->reposiciones->first()->existencia->sucursal_id ?? null;
+        $this->cargarProductosDestino();
+    }
+
+    public function seleccionarAsignacion($asignado_id)
+    {
+        $this->asignado_id = $asignado_id;
+        $asignado = Asignado::with('reposiciones.existencia.sucursal')->find($asignado_id);
+        $this->sucursalSeleccionada = $asignado->reposiciones->first()->existencia->sucursal_id ?? null;
+        $this->cargarProductosDestino();
+    }
+
+    public function seleccionarSucursal($id)
+    {
+        $this->sucursalSeleccionada = $id;
+        $this->cargarProductosDestino();
+    }
+
+    public function cargarProductosDestino()
+    {
+        $this->existenciasDestino = collect();
+        if (!$this->asignado_id)
+            return;
+
+        $asignado = Asignado::with('reposiciones.existencia.existenciable')->find($this->asignado_id);
+        if (!$asignado)
+            return;
+        $sucursales = $asignado->reposiciones->map(
+            fn($r) =>
+            in_array(class_basename($r->existencia->existenciable), ['Base', 'Tapa'])
+            ? $r->existencia->sucursal_id
+            : null
+        )->filter()->unique();
+
+        if ($sucursales->isEmpty())
+            return;
+
+        $this->existenciasDestino = Existencia::with('existenciable', 'sucursal')
+            ->where('existenciable_type', Producto::class)
+            ->whereIn('sucursal_id', $sucursales)
+            ->when(
+                $this->busquedaDestino,
+                fn($q) =>
+                $q->whereHas(
+                    'existenciable',
+                    fn($sub) =>
+                    $sub->where('descripcion', 'like', "%{$this->busquedaDestino}%")
+                )
+            )
+            ->get();
     }
 
     public function guardar()
     {
         $this->validate();
 
-        $usuario = auth()->user()->load('personal');
-        if (!$usuario->personal) {
-            $this->addError('personal_id', 'El usuario autenticado no tiene un personal asignado.');
+        $usuario = auth()->user();
+        $personal = $usuario->personal;
+
+        if (!$personal) {
+            session()->flash('error', 'No tienes un registro de personal asociado.');
             return;
         }
-        $personalId = $usuario->personal->id;
+
+        $personalId = $personal->id;
 
         $asignado = Asignado::with(['reposiciones.existencia.existenciable'])->findOrFail($this->asignado_id);
         $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
         $cantidadProducida = $this->cantidad ?? 0;
 
-        if ($asignado->reposiciones->isEmpty()) {
-            $this->addError('asignado_id', 'La asignación no tiene materiales asignados.');
-            return;
-        }
 
-        $diferencia = 0;
-        $llenadoAnterior = null;
-
-        if ($this->accion === 'edit' && $this->llenado_id) {
-            $llenadoAnterior = Llenado::find($this->llenado_id);
-            $diferencia = $cantidadProducida - $llenadoAnterior->cantidad;
-            if ($llenadoAnterior && $llenadoAnterior->estado == 2) {
-                $existenciaDestino->cantidad -= $llenadoAnterior->cantidad;
-                $existenciaDestino->save();
-            }
-        }
-
-        $materiales = $asignado->reposiciones->groupBy(function ($reposicion) {
-            return class_basename($reposicion->existencia->existenciable);
-        })->map(function ($group, $tipo) {
-            return [
+        $materiales = $asignado->reposiciones->groupBy(fn($r) => class_basename($r->existencia->existenciable))
+            ->map(fn($g, $tipo) => [
                 'tipo' => $tipo,
-                'cantidad_total' => $group->sum('pivot.cantidad_original'),
-                'reposiciones' => $group
-            ];
-        });
+                'cantidad_total' => $g->sum('pivot.cantidad_original'),
+                'reposiciones' => $g
+            ]);
 
         $cantidadMaximaProducible = $materiales->min('cantidad_total');
-
         if ($cantidadProducida > $cantidadMaximaProducible) {
-            $this->addError('cantidad', "⚠ No puedes producir más de {$cantidadMaximaProducible} unidades.");
+            $this->addError('cantidad', "No puedes producir más de {$cantidadMaximaProducible} unidades.");
             return;
         }
 
         $mermaTotal = 0;
-        $detalleMerma = '';
-
-        foreach ($materiales as $tipo => $material) {
-            $mermaMaterial = $material['cantidad_total'] - $cantidadProducida;
-            $mermaTotal += $mermaMaterial;
-            $detalleMerma .= ($detalleMerma ? ', ' : '') . "{$tipo}: {$mermaMaterial} unidades";
+        foreach ($materiales as $m) {
+            $mermaTotal += $m['cantidad_total'] - $cantidadProducida;
         }
-        DB::transaction(function () use ($asignado, $existenciaDestino, $cantidadProducida, $personalId, $mermaTotal, $detalleMerma, $materiales, $diferencia, $llenadoAnterior) {
+
+        DB::transaction(function () use ($asignado, $existenciaDestino, $cantidadProducida, $personalId, $mermaTotal) {
+
             foreach ($asignado->reposiciones as $reposicion) {
-                $asignado->reposiciones()->updateExistingPivot($reposicion->id, [
-                    'cantidad' => 0
-                ]);
+                $asignado->reposiciones()->updateExistingPivot($reposicion->id, ['cantidad' => 0]);
             }
 
-            $reposicionDestino = null;
-
-            if ($this->accion === 'edit' && $this->llenado_id) {
-                $llenadoExistente = Llenado::find($this->llenado_id);
-                $reposicionDestino = $llenadoExistente->reposicion;
-
-                if ($reposicionDestino) {
-                    $reposicionDestino->update([
-                        'observaciones' => $this->observaciones ?? 'Reposición actualizada desde llenado',
-                        'fecha' => now(),
-                        'existencia_id' => $existenciaDestino->id,
-                    ]);
-                }
-            }
-            if (!$reposicionDestino) {
-                $reposicionDestino = $this->crearReposicion($existenciaDestino, $personalId);
-            }
-
-            if ($this->accion === 'create') {
-                $codigo = $this->generarCodigo('L');
-
-                $llenado = Llenado::create([
-                    'codigo' => $codigo,
-                    'asignado_id' => $asignado->id,
+            if ($this->accion === 'edit' && $this->llenadoSeleccionado && $this->llenadoSeleccionado->reposicion_id) {
+                $reposicionDestino = Reposicion::find($this->llenadoSeleccionado->reposicion_id);
+                $reposicionDestino->update([
                     'existencia_id' => $existenciaDestino->id,
-                    'reposicion_id' => $reposicionDestino->id,
-                    'personal_id' => $personalId,
-                    'cantidad' => $cantidadProducida,
-                    'merma' => $mermaTotal,
-                    'estado' => $this->estado,
-                    'observaciones' => $this->observaciones,
-                    'fecha' => now(),
+                    'observaciones' => $this->observaciones ?? $reposicionDestino->observaciones,
+                    'estado_revision' => 0
                 ]);
             } else {
-                $llenado = Llenado::findOrFail($this->llenado_id);
-                $llenado->update([
-                    'asignado_id' => $asignado->id,
-                    'existencia_id' => $existenciaDestino->id,
-                    'reposicion_id' => $reposicionDestino->id,
-                    'personal_id' => $personalId,
-                    'cantidad' => $cantidadProducida,
-                    'merma' => $mermaTotal,
-                    'estado' => $this->estado,
-                    'observaciones' => $this->observaciones,
+                $reposicionDestino = Reposicion::create([
                     'fecha' => now(),
+                    'codigo' => 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                    'cantidad' => 0,
+                    'cantidad_inicial' => 0,
+                    'existencia_id' => $existenciaDestino->id,
+                    'personal_id' => $personalId,
+                    'observaciones' => $this->observaciones ?? 'Reposición creada desde llenado',
+                    'estado_revision' => 0
                 ]);
             }
-            $asignado->load('reposiciones');
-            $asignado->cantidad = $asignado->reposiciones->sum('pivot.cantidad');
-            $asignado->save();
+            $llenadoData = [
+                'codigo' => $this->accion === 'create'
+                    ? 'L-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT)
+                    : $this->codigo,
+                'asignado_id' => $asignado->id,
+                'existencia_id' => $existenciaDestino->id,
+                'reposicion_id' => $reposicionDestino->id,
+                'cantidad' => $cantidadProducida,
+                'merma' => $mermaTotal,
+                'estado' => $this->estado,
+                'observaciones' => $this->observaciones,
+                'fecha' => now(),
+            ];
+
+            if ($this->accion === 'create') {
+                $llenadoData['personal_id'] = $personalId;
+            }
+
+            $llenado = Llenado::updateOrCreate(['id' => $this->llenado_id], $llenadoData);
+            if ($this->accion === 'edit' && $this->llenadoSeleccionado && $this->llenadoSeleccionado->estado == 2) {
+                $existenciaDestino->cantidad -= $this->llenadoSeleccionado->cantidad;
+            }
+
             if ($this->estado == 2 && $cantidadProducida > 0) {
                 $existenciaDestino->cantidad += $cantidadProducida;
-                $existenciaDestino->save();
-
                 $reposicionDestino->update([
                     'cantidad' => $cantidadProducida,
                     'cantidad_inicial' => $cantidadProducida,
-                    'estado_revision' => true,
+                    'estado_revision' => true
                 ]);
-
-                $this->crearComprobante($reposicionDestino, $asignado, $cantidadProducida);
             }
+
+            $existenciaDestino->save();
+
         });
 
         $this->cerrarModal();
         session()->flash('mensaje', 'Llenado ' . ($this->accion === 'create' ? 'guardado' : 'actualizado') . ' correctamente.');
-        session()->flash('detalle_merma', $detalleMerma);
     }
-    private function restaurarDesdeCantidadOriginal($asignado)
-    {
-        foreach ($asignado->reposiciones as $reposicion) {
-            DB::table('asignado_reposicions')
-                ->where('asignado_id', $asignado->id)
-                ->where('reposicion_id', $reposicion->id)
-                ->update([
-                    'cantidad' => $reposicion->pivot->cantidad_original
-                ]);
-        }
-        $asignado->cantidad = $asignado->reposiciones->sum('pivot.cantidad_original');
-        $asignado->save();
-    }
-
-    protected function generarCodigo($prefijo)
-    {
-        $fechaHoy = now()->format('Ymd');
-        $ultimo = Llenado::where('codigo', 'like', $prefijo . '-' . $fechaHoy . '%')
-            ->lockForUpdate()
-            ->orderBy('codigo', 'desc')
-            ->first();
-
-        $contador = $ultimo ? intval(substr($ultimo->codigo, -3)) + 1 : 1;
-        return $prefijo . '-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
-    }
-
-    private function crearComprobante($reposicion, $asignado, $cantidadUsada)
-    {
-        ComprobantePago::where('reposicion_id', $reposicion->id)->delete();
-        $precioUnitario = $asignado->precio_unitario ?? 1;
-        $monto = $precioUnitario * $cantidadUsada;
-        $comprobante = ComprobantePago::create([
-            'reposicion_id' => $reposicion->id,
-            'codigo' => 'PAGO-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-            'monto' => $monto,
-            'fecha' => now(),
-            'observaciones' => 'Pago generado por llenado ' . ($this->codigo ?? ''),
-        ]);
-        $reposicion->update(['monto_usado' => $comprobante->monto]);
-    }
-
-    private function crearReposicion($existenciaDestino, $personalId)
-    {
-        $fechaHoy = now()->format('Ymd');
-        $ultimaReposicion = Reposicion::where('codigo', 'like', 'R-' . $fechaHoy . '%')
-            ->lockForUpdate()
-            ->orderBy('codigo', 'desc')
-            ->first();
-
-        $contador = $ultimaReposicion ? intval(substr($ultimaReposicion->codigo, -3)) + 1 : 1;
-        $codigoReposicion = 'R-' . $fechaHoy . '-' . str_pad($contador, 3, '0', STR_PAD_LEFT);
-
-        $existe = Reposicion::where('codigo', $codigoReposicion)->exists();
-        if ($existe) {
-            $codigoReposicion = 'R-' . $fechaHoy . '-' . str_pad($contador + 1, 3, '0', STR_PAD_LEFT);
-        }
-
-        return Reposicion::create([
-            'fecha' => now(),
-            'codigo' => $codigoReposicion,
-            'cantidad' => 0,
-            'cantidad_inicial' => 0,
-            'existencia_id' => $existenciaDestino->id,
-            'personal_id' => $personalId,
-            'observaciones' => $this->observaciones ?? 'Reposición creada desde llenado',
-            'estado_revision' => 0,
-        ]);
-    }
-
     public function cerrarModal()
     {
         $this->modal = false;
@@ -330,8 +280,6 @@ class Llenados extends Component
 
     public function verDetalleLlenado($id)
     {
-        $this->resetErrorBag();
-        $this->resetValidation();
         $this->llenadoSeleccionado = Llenado::with([
             'asignado.reposiciones.existencia.existenciable',
             'existencia.existenciable',
@@ -346,11 +294,6 @@ class Llenados extends Component
     {
         $this->modalDetalle = false;
         $this->llenadoSeleccionado = null;
-    }
-
-    public static function booted()
-    {
-        Asignado::deleting(fn($asignado) => $asignado->llenados()->count() > 0 ? throw new \Exception("No se puede eliminar la asignación porque ya tiene llenados registrados.") : null);
     }
 
     public function confirmarEliminarLlenado($id)
@@ -369,38 +312,31 @@ class Llenados extends Component
     public function eliminar($llenado_id)
     {
         $llenado = Llenado::find($llenado_id);
-        if (!$llenado) {
-            session()->flash('error', 'El llenado no existe.');
+        if (!$llenado)
             return;
-        }
 
         DB::transaction(function () use ($llenado) {
             $asignado = $llenado->asignado;
-
             if ($asignado) {
                 foreach ($asignado->reposiciones as $reposicion) {
                     DB::table('asignado_reposicions')
                         ->where('asignado_id', $asignado->id)
                         ->where('reposicion_id', $reposicion->id)
-                        ->update([
-                            'cantidad' => $reposicion->pivot->cantidad_original
-                        ]);
+                        ->update(['cantidad' => $reposicion->pivot->cantidad_original]);
                 }
-                $nuevaCantidad = DB::table('asignado_reposicions')
-                    ->where('asignado_id', $asignado->id)
-                    ->sum('cantidad');
-                $asignado->cantidad = $nuevaCantidad;
+                $asignado->cantidad = DB::table('asignado_reposicions')->where('asignado_id', $asignado->id)->sum('cantidad');
                 $asignado->save();
             }
+
             if ($llenado->estado == 2) {
                 $existenciaDestino = $llenado->existencia;
                 if ($existenciaDestino) {
                     $existenciaDestino->cantidad -= $llenado->cantidad;
-                    if ($existenciaDestino->cantidad < 0)
-                        $existenciaDestino->cantidad = 0;
+                    $existenciaDestino->cantidad = max(0, $existenciaDestino->cantidad);
                     $existenciaDestino->save();
                 }
             }
+
             if ($llenado->reposicion_id) {
                 $reposicion = Reposicion::find($llenado->reposicion_id);
                 if ($reposicion)
@@ -411,5 +347,10 @@ class Llenados extends Component
         });
 
         session()->flash('mensaje', 'Llenado eliminado correctamente.');
+    }
+
+    public static function booted()
+    {
+        Asignado::deleting(fn($asignado) => $asignado->llenados()->count() > 0 ? throw new \Exception("No se puede eliminar la asignación porque ya tiene llenados registrados.") : null);
     }
 }

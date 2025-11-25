@@ -31,13 +31,13 @@ class Personal extends Component
 
     protected $rules = [
         'nombres' => 'required|string|max:255',
-        'apellidos' => 'required|string|max:255',
+        'apellidos' => 'nullable|string|max:255',
         'direccion' => 'nullable|string|max:255',
-        'celular' => 'required|string|max:15',
-        'estado' => 'required|boolean',
+        'celular' => 'nullable|string|max:15',
+        'estado' => 'nullable|boolean',
         'email' => 'required|email|max:255|unique:users,email',
         'password' => 'required|string|min:8',
-        'rol_id' => 'required|exists:rols,id',
+        'rol_id' => 'nullable|exists:rols,id',
     ];
 
     public function mount()
@@ -102,19 +102,19 @@ class Personal extends Component
         if ($this->accion === 'edit') {
             $this->validate([
                 'nombres' => 'required|string|max:255',
-                'apellidos' => 'required|string|max:255',
+                'apellidos' => 'nullable|string|max:255',
                 'direccion' => 'nullable|string|max:255',
-                'celular' => 'required|string|max:15',
-                'estado' => 'required|boolean',
+                'celular' => 'nullable|string|max:15',
+                'estado' => 'nullable|boolean',
                 'rol_id' => 'required|exists:rols,id',
             ]);
         } else {
             $this->validate([
                 'nombres' => 'required|string|max:255',
-                'apellidos' => 'required|string|max:255',
+                'apellidos' => 'nullable|string|max:255',
                 'direccion' => 'nullable|string|max:255',
-                'celular' => 'required|string|max:15',
-                'estado' => 'required|boolean',
+                'celular' => 'nullable|string|max:15',
+                'estado' => 'nullable|boolean',
                 'email' => 'required|email|max:255|unique:users,email',
                 'password' => 'required|string|min:8',
                 'rol_id' => 'required|exists:rols,id',

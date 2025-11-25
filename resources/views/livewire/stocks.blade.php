@@ -117,37 +117,36 @@
                         </svg>
                         Ver mas
                     </button>
+
+                    <button wire:click="abrirModal('edit', {{ $repo->id }})" class="btn-cyan" title="Editar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                            <path d="M16 5l3 3" />
+                        </svg>
+                        Editar
+                    </button>
+
+                    <button wire:click="abrirModalPagos({{ $repo->id }})" class="btn-cyan" title="Pagos">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
+                            <path d="M3 10h18" />
+                            <path d="M16 19h6" />
+                            <path d="M19 16l3 3l-3 3" />
+                            <path d="M7.005 15h.005" />
+                            <path d="M11 15h2" />
+                        </svg>
+                        Pagos
+                    </button>
                     @if(
                             !$repo->soplados()->exists() &&
                             !$repo->llenados()->exists() &&
                             !$repo->adornados()->exists()
                         )
-                        <button wire:click="abrirModal('edit', {{ $repo->id }})"
-                            class="btn-cyan" title="Editar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke="none" d="M0 0h24v24H0z" />
-                                <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                                <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                                <path d="M16 5l3 3" />
-                            </svg>
-                            Editar
-                        </button>
-
-                        <button wire:click="abrirModalPagos({{ $repo->id }})"
-                            class="btn-cyan" title="Pagos">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M12 19h-6a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" />
-                                <path d="M3 10h18" />
-                                <path d="M16 19h6" />
-                                <path d="M19 16l3 3l-3 3" />
-                                <path d="M7.005 15h.005" />
-                                <path d="M11 15h2" />
-                            </svg>
-                            Pagos
-                        </button>
 
                         @if(!$repo->estado_revision)
                             <button wire:click="confirmarEliminarReposicion({{ $repo->id }})" class="btn-cyan" title="Eliminar">
@@ -253,7 +252,7 @@
                                             @foreach($sucursales as $sucursal)
                                                             <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
                                                                 class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-                                                {{ $filtroSucursalModal == $sucursal->id
+                                                                            {{ $filtroSucursalModal == $sucursal->id
                                                 ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600'
                                                 : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
                                                                 {{ $sucursal->nombre }}
@@ -433,14 +432,14 @@
                                             <button type="button"
                                                 wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)"
                                                 class="w-full px-3 py-2 rounded-md border text-left text-sm transition
-                                                                {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                                                        {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                                 Sin sucursal
                                             </button>
                                             @foreach($sucursales as $suc)
                                                 <button type="button"
                                                     wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
                                                     class="w-full px-3 py-2 rounded-md border text-left text-sm transition
-                                                                            {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                                                                        {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                                     {{ $suc->nombre }}
                                                 </button>
                                             @endforeach
