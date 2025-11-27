@@ -12,6 +12,8 @@ use Carbon\Carbon;
 
 class Asignaciones extends Component
 {
+    public $modalEliminar = false;
+    public $asignacionEliminarId;
     public $searchCodigo = '';
     public $modal = false;
     public $accion = 'create';
@@ -130,7 +132,7 @@ class Asignaciones extends Component
         $this->motivo = $asignado->motivo;
         $this->observaciones = $asignado->observaciones;
 
-        $this->personal_id = $asignado->personal_id;  
+        $this->personal_id = $asignado->personal_id;
 
         $this->items = $asignado->reposiciones
             ->groupBy('existencia_id')
@@ -241,9 +243,21 @@ class Asignaciones extends Component
         }
     }
 
-    public function eliminarAsignacion($id)
+    public function confirmarEliminarAsignacion($id)
     {
+        $this->asignacionEliminarId = $id;
+        $this->modalEliminar = true;
+    }
+
+
+    public function eliminarConfirmado()
+    {
+        $id = $this->asignacionEliminarId;
+        if (!$id)
+            return;
+
         $asignado = Asignado::with('reposiciones')->findOrFail($id);
+
         DB::transaction(function () use ($asignado) {
             foreach ($asignado->reposiciones as $repo) {
                 $repo->cantidad += $repo->pivot->cantidad_original;
@@ -252,8 +266,13 @@ class Asignaciones extends Component
             $asignado->reposiciones()->detach();
             $asignado->delete();
         });
+
+        $this->modalEliminar = false;
+        $this->asignacionEliminarId = null;
+
         session()->flash('message', 'Asignación eliminada correctamente.');
     }
+
 
     public function cerrarModal()
     {

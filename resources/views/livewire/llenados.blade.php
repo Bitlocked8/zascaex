@@ -237,13 +237,13 @@
 
 
                         <div>
-                            <label class="text-u">Base (Requerido)</label>
+                            <label class="text-u">Producto (Requerido)</label>
                             <div class="flex-1">
                                 <label for="busquedaDestino" class="block text-sm font-medium text-gray-700">
-                                    Buscar Base
+                                    Buscar Producto
                                 </label>
                                 <input id="busquedaDestino" type="search" wire:model.live="busquedaDestino"
-                                    class="input-minimal" placeholder="Buscar base..." />
+                                    class="input-minimal" placeholder="Buscar Producto..." />
                             </div>
 
                             @if($accion === 'edit')
@@ -301,6 +301,7 @@
                                 <span class="text-red-500">{{ $message }}</span>
                             @enderror
                         </div>
+                        
                         <div>
                             <label class="text-u">Cantidad a producir (Requerido)</label>
 

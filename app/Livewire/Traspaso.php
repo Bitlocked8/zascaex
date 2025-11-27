@@ -45,66 +45,79 @@ class Traspaso extends Component
     }
 
     private function cargarReposiciones($usuario)
-{
-    $sucursalId = $usuario->rol_id == 2
-        ? optional($usuario->personal->trabajos()->where('estado', 1)->first())->sucursal_id
-        : null;
+    {
+        $sucursalId = $usuario->rol_id == 2
+            ? optional($usuario->personal->trabajos()->where('estado', 1)->first())->sucursal_id
+            : null;
 
-    $query = Asignado::with('reposiciones.existencia')
-        ->when($usuario->rol_id == 2, function ($q) use ($sucursalId) {
-            $q->whereHas('reposiciones.existencia', fn($q2) =>
-                $q2->where('sucursal_id', $sucursalId)
-            );
+        $query = Asignado::with('reposiciones.existencia')
+            ->when($usuario->rol_id == 2, function ($q) use ($sucursalId) {
+                $q->whereHas(
+                    'reposiciones.existencia',
+                    fn($q2) =>
+                    $q2->where('sucursal_id', $sucursalId)
+                );
+            });
+
+        if ($this->accion === 'create') {
+            $query->whereHas('reposiciones', function ($q) {
+                $q->where('asignado_reposicions.cantidad', '>', 0);
+            });
+        }
+
+        if ($this->accion === 'edit' && $this->traspaso_id) {
+            $traspaso = TraspasoModel::find($this->traspaso_id);
+            $query->where(function ($q) use ($traspaso) {
+                $q->whereHas('reposiciones', function ($q2) {
+                    $q2->where('asignado_reposicions.cantidad', '>', 0);
+                })
+                    ->orWhere('id', $traspaso->asignacion_id);
+            });
+        }
+
+        $asignados = $query->get()->map(function ($a) {
+            $total = $a->reposiciones->sum(function ($r) {
+                return $r->pivot->cantidad;
+            });
+            return (object) [
+                'asignacion' => $a,
+                'existencia' => optional($a->reposiciones->first())->existencia,
+                'totalDisponible' => $total,
+            ];
         });
 
-    if ($this->accion === 'create') {
-        $query->whereHas('reposiciones', function($q){
-            $q->where('asignado_reposicions.cantidad', '>', 0);
+        $asignados = $asignados->filter(function ($item) {
+            $asignacion = $item->asignacion;
+            $tipos = $asignacion->reposiciones
+                ->pluck('existencia.existenciable_type')
+                ->unique()
+                ->values();
+            return $tipos->count() === 1;
         });
+
+        $this->reposicionesOrigen = $asignados->values();
+        $this->reposicionesDestino = $this->filtrarDestinosPorTipo($this->origen_id);
     }
-
-    if ($this->accion === 'edit' && $this->traspaso_id) {
-        $traspaso = TraspasoModel::find($this->traspaso_id);
-        $query->where(function ($q) use ($traspaso) {
-            $q->whereHas('reposiciones', function ($q2) {
-                $q2->where('asignado_reposicions.cantidad', '>', 0);
-            })
-            ->orWhere('id', $traspaso->asignacion_id);
-        });
-    }
-
-    $asignados = $query->get()->map(function ($a) {
-        $total = $a->reposiciones->sum(function ($r) {
-            return $r->pivot->cantidad;
-        });
-        return (object)[
-            'asignacion' => $a,
-            'existencia' => optional($a->reposiciones->first())->existencia,
-            'totalDisponible' => $total,
-        ];
-    });
-
-    $this->reposicionesOrigen = $asignados->values();
-    $this->reposicionesDestino = $this->filtrarDestinosPorTipo($this->origen_id);
-}
 
 
     private function filtrarDestinosPorTipo($origen_id)
     {
-        if (!$origen_id) return collect();
+        if (!$origen_id)
+            return collect();
 
         $origen = Asignado::with('reposiciones.existencia.existenciable')->find($origen_id);
         $existenciaOrigen = optional($origen->reposiciones->first())->existencia;
         $tipoOrigen = optional($existenciaOrigen)->existenciable_type;
         $sucursalOrigenId = optional($existenciaOrigen)->sucursal_id;
 
-        if (!$tipoOrigen) return collect();
+        if (!$tipoOrigen)
+            return collect();
 
         return Existencia::with('existenciable', 'sucursal')
             ->where('sucursal_id', '!=', $sucursalOrigenId)
             ->where('existenciable_type', $tipoOrigen)
             ->get()
-            ->map(fn($ex) => (object)[
+            ->map(fn($ex) => (object) [
                 'existencia' => $ex,
                 'totalDisponible' => $ex->cantidad
             ]);
@@ -263,7 +276,8 @@ class Traspaso extends Component
 
     public function eliminarTraspaso()
     {
-        if (!$this->confirmingDeleteId) return;
+        if (!$this->confirmingDeleteId)
+            return;
 
         $traspaso = TraspasoModel::with(['reposicionDestino', 'asignacion.reposiciones'])
             ->findOrFail($this->confirmingDeleteId);
@@ -314,16 +328,16 @@ class Traspaso extends Component
     }
 
     public function guardarObservaciones()
-{
-    $this->validate([
-        'observaciones' => 'nullable|string|max:500',
-    ]);
+    {
+        $this->validate([
+            'observaciones' => 'nullable|string|max:500',
+        ]);
 
-    $traspaso = TraspasoModel::findOrFail($this->traspaso_id);
-    $traspaso->observaciones = $this->observaciones;
-    $traspaso->save();
+        $traspaso = TraspasoModel::findOrFail($this->traspaso_id);
+        $traspaso->observaciones = $this->observaciones;
+        $traspaso->save();
 
-    $this->cerrarModal();
-    session()->flash('message', 'Observaciones actualizadas correctamente.');
-}
+        $this->cerrarModal();
+        session()->flash('message', 'Observaciones actualizadas correctamente.');
+    }
 }

@@ -143,7 +143,7 @@
                                         @endphp
                                         <button type="button" wire:click="$set('origen_id', {{ $item->asignacion->id }})"
                                             class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-2 items-center text-center
-                                                    {{ $origen_id == $item->asignacion->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }} bg-white">
+                                                                {{ $origen_id == $item->asignacion->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }} bg-white">
                                             <p class="text-lg font-semibold text-u">{{ $tipo }}</p>
                                             <p class="text-base text-u">{{ $descripcion }}</p>
                                             <p class="text-sm text-gray-700">Sucursal: <span class="text-u">{{ $sucursal }}</span>
@@ -189,7 +189,7 @@
                                             @endphp
                                             <button type="button" wire:click="$set('destino_id', {{ $item->existencia->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-2 items-center text-center
-                                                            {{ $destino_id == $item->existencia->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }} bg-white">
+                                                                            {{ $destino_id == $item->existencia->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }} bg-white">
                                                 <p class="text-lg font-semibold text-u">{{ $tipo }}</p>
                                                 <p class="text-base text-u">{{ $descripcion }}</p>
                                                 <p class="text-sm text-gray-700">Sucursal: <span class="text-u">{{ $sucursal }}</span>
@@ -205,7 +205,7 @@
                         </div>
 
 
-                     
+
                         <div>
                             <label class="font-semibold text-sm">Observaciones</label>
                             <textarea wire:model="observaciones" class="input-minimal w-full"

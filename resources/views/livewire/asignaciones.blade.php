@@ -65,8 +65,8 @@
 
                     @if($cantidadPivote > 0)
                         <button wire:click="abrirModal('edit', {{ $asignado->id }})" class="btn-cyan" title="Editar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
                                 <path stroke="none" d="M0 0h24v24H0z" />
                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
@@ -76,8 +76,8 @@
                         </button>
 
                         <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan" title="Eliminar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M4 7l16 0" />
                                 <path d="M10 11l0 6" />
@@ -248,9 +248,6 @@
         </div>
     @endif
 
-
-
-
     @if($modalError)
         <div wire:click.self="$set('modalError', false)"
             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -365,6 +362,28 @@
             </div>
         </div>
     @endif
+
+    @if($modalEliminar)
+        <div class="modal-overlay">
+            <div class="modal-box">
+
+                <h2 class="text-lg font-bold">¿Eliminar asignación?</h2>
+                <p class="mt-2 mb-4 text-gray-700">
+                    Esta acción no se puede deshacer.
+                </p>
+
+                <div class="flex justify-end gap-3">
+                    <button class="btn" wire:click="$set('modalEliminar', false)">Cancelar</button>
+
+                    <button class="btn-danger" wire:click="eliminarConfirmado">
+                        Eliminar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    @endif
+
 
 
 
