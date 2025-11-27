@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Traspaso extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'reposicion_destino_id',
+        'asignacion_id',
         'personal_id',
         'fecha_traspaso',
         'cantidad',
@@ -15,23 +17,19 @@ class Traspaso extends Model
         'codigo',
     ];
 
-    // Relación con múltiples reposiciones de origen
-    public function reposicionesOrigen()
+    public function asignacion()
     {
-        return $this->belongsToMany(Reposicion::class, 'reposicion_traspasos')
-            ->withPivot('cantidad')
-            ->withTimestamps();
+        return $this->belongsTo(Asignado::class, 'asignacion_id');
     }
 
-    // Relación con reposición destino
     public function reposicionDestino()
     {
         return $this->belongsTo(Reposicion::class, 'reposicion_destino_id');
     }
 
-    // Relación con personal
     public function personal()
     {
         return $this->belongsTo(Personal::class);
     }
 }
+

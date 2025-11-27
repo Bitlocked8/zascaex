@@ -4,21 +4,22 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('traspasos', function (Blueprint $table) {
             $table->id();
             $table->string('codigo')->unique();
 
-            $table->foreignId('reposicion_destino_id')
-                  ->constrained('reposicions')
-                  ->onDelete('cascade');
+            $table->unsignedBigInteger('reposicion_destino_id')->nullable();
+            $table->foreignId('asignacion_id')
+                ->nullable()
+                ->constrained('asignados')
+                ->onDelete('set null');
 
             $table->foreignId('personal_id')
-                  ->constrained('personals')
-                  ->onDelete('cascade');
+                ->constrained('personals')
+                ->onDelete('cascade');
 
             $table->integer('cantidad');
             $table->dateTime('fecha_traspaso');

@@ -21,11 +21,13 @@
         @forelse($asignaciones as $asignado)
             @php
                 $montoAsignado = $asignado->reposiciones->sum(fn($r) => $r->pivot->cantidad);
+                $cantidadPivote = $asignado->reposiciones->sum(fn($r) => $r->pivot->cantidad);
             @endphp
 
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
                     <p class="text-emerald-600 uppercase font-semibold">{{ $asignado->codigo ?? 'N/A' }}</p>
+
                     @foreach($asignado->reposiciones as $reposicion)
                         <p class="text-slate-600">
                             {{ class_basename($reposicion->existencia->existenciable ?? '') }}:
@@ -58,13 +60,13 @@
                             <path d="M12 12l0 .01" />
                             <path d="M16 12l0 .01" />
                         </svg>
-                        Ver mas
+                        Ver más
                     </button>
 
-                    @if($asignado->cantidad > 0)
+                    @if($cantidadPivote > 0)
                         <button wire:click="abrirModal('edit', {{ $asignado->id }})" class="btn-cyan" title="Editar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke="none" d="M0 0h24v24H0z" />
                                 <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
                                 <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
@@ -72,9 +74,10 @@
                             </svg>
                             Editar
                         </button>
+
                         <button wire:click="confirmarEliminarAsignacion({{ $asignado->id }})" class="btn-cyan" title="Eliminar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M4 7l16 0" />
                                 <path d="M10 11l0 6" />
@@ -93,6 +96,7 @@
             </div>
         @endforelse
     </div>
+
 
 
     @if($modal)

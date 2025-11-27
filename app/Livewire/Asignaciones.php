@@ -41,9 +41,10 @@ class Asignaciones extends Component
         $personal = $usuario->personal;
 
         $query = Existencia::with(['existenciable', 'sucursal'])
-            ->whereHas('reposiciones', fn($q) => $q->where('cantidad', '>', 0)->where('estado_revision', true))
-            ->whereNotIn('existenciable_type', [\App\Models\Producto::class, \App\Models\Otro::class]);
-
+            ->whereHas('reposiciones', function ($q) {
+                $q->where('estado_revision', true)
+                    ->where('cantidad', '>', 0);
+            });
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             if ($sucursal_id)
@@ -54,11 +55,17 @@ class Asignaciones extends Component
             $query->where('sucursal_id', $this->filtroSucursalModal);
 
         if ($this->searchExistencia) {
-            $query->whereHas('existenciable', fn($q) => $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%'));
+            $query->whereHas(
+                'existenciable',
+                fn($q) =>
+                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%')
+            );
         }
 
         $this->existencias = $query->orderBy('id')->get();
     }
+
+
 
     public function updatingSearchExistencia()
     {
@@ -123,7 +130,7 @@ class Asignaciones extends Component
         $this->motivo = $asignado->motivo;
         $this->observaciones = $asignado->observaciones;
 
-        $this->personal_id = $asignado->personal_id;  // ← AQUÍ ESTABA EL ERROR
+        $this->personal_id = $asignado->personal_id;  
 
         $this->items = $asignado->reposiciones
             ->groupBy('existencia_id')
