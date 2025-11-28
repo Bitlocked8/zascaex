@@ -12,6 +12,7 @@ class Adornado extends Model
     protected $fillable = [
         'codigo',
         'pedido_id',
+        'personal_id',
         'observaciones',
     ];
 
@@ -20,11 +21,15 @@ class Adornado extends Model
         return $this->belongsTo(Pedido::class);
     }
 
+    public function personal()
+    {
+        return $this->belongsTo(Personal::class); 
+    }
+
     public function reposiciones()
     {
         return $this->belongsToMany(Reposicion::class, 'adornado_reposicions')
             ->withPivot('cantidad_usada', 'merma')
             ->withTimestamps();
     }
-
 }

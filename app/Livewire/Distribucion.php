@@ -8,12 +8,12 @@ use App\Models\Pedido;
 use App\Models\Coche;
 use App\Models\Personal;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Distribucion extends Component
 {
     public $modalDistribucion = false;
     public $modalPedidos = false;
-
     public $distribucionModel;
 
     public $codigo;
@@ -22,7 +22,7 @@ class Distribucion extends Component
     public $coche_id;
     public $personal_id;
     public $observaciones;
-    public $estado = 1;
+    public $estado = 0;
 
     public $pedidos_seleccionados = [];
     public $pedidosDeDistribucion = [];
@@ -30,8 +30,9 @@ class Distribucion extends Component
     public $coches = [];
     public $personals = [];
     public $pedidos = [];
-
     public $search = '';
+
+    public $confirmingDeleteId = null;
 
     public function mount($distribucion_id = null)
     {
@@ -42,6 +43,10 @@ class Distribucion extends Component
         $this->distribucionModel = $distribucion_id
             ? DistribucionModel::with('pedidos')->find($distribucion_id)
             : new DistribucionModel();
+
+        if (!$this->distribucionModel->exists) {
+            $this->personal_id = optional(auth()->user()->personal)->id;
+        }
 
         $this->loadDistribucionData();
     }
@@ -66,38 +71,38 @@ class Distribucion extends Component
         $this->pedidos = $query->get();
     }
 
-
     private function loadDistribucionData()
     {
         if ($this->distribucionModel && $this->distribucionModel->exists) {
+
             $this->codigo = $this->distribucionModel->codigo;
             $this->fecha_asignacion = $this->distribucionModel->fecha_asignacion
-                ? \Carbon\Carbon::parse($this->distribucionModel->fecha_asignacion)->format('Y-m-d\TH:i:s')
+                ? Carbon::parse($this->distribucionModel->fecha_asignacion)->format('Y-m-d\TH:i:s')
                 : now()->format('Y-m-d\TH:i:s');
 
             $this->fecha_entrega = $this->distribucionModel->fecha_entrega
-                ? \Carbon\Carbon::parse($this->distribucionModel->fecha_entrega)->format('Y-m-d\TH:i:s')
+                ? Carbon::parse($this->distribucionModel->fecha_entrega)->format('Y-m-d\TH:i:s')
                 : null;
 
             $this->coche_id = $this->distribucionModel->coche_id;
-            $this->personal_id = $this->distribucionModel->personal_id;
+            $this->personal_id = $this->distribucionModel->personal_id; // Se mantiene, no se sobrescribe
             $this->observaciones = $this->distribucionModel->observaciones;
             $this->estado = $this->distribucionModel->estado;
             $this->pedidos_seleccionados = $this->distribucionModel->pedidos->pluck('id')->toArray();
+
         } else {
             $this->reset([
                 'codigo',
                 'fecha_entrega',
                 'coche_id',
-                'personal_id',
                 'observaciones',
                 'pedidos_seleccionados',
                 'estado'
             ]);
+
             $this->fecha_asignacion = now()->format('Y-m-d\TH:i:s');
         }
     }
-
 
     public function abrirModal($distribucion_id = null)
     {
@@ -106,6 +111,7 @@ class Distribucion extends Component
             $this->loadPedidosDisponibles($distribucion_id);
         } else {
             $this->distribucionModel = new DistribucionModel();
+            $this->personal_id = optional(auth()->user()->personal)->id;
             $this->loadPedidosDisponibles();
         }
 
@@ -122,12 +128,12 @@ class Distribucion extends Component
             'fecha_asignacion',
             'fecha_entrega',
             'coche_id',
-            'personal_id',
             'observaciones',
             'pedidos_seleccionados',
             'estado',
         ]);
 
+        $this->personal_id = optional(auth()->user()->personal)->id;
         $this->loadPedidosDisponibles();
     }
 
@@ -143,38 +149,46 @@ class Distribucion extends Component
         $this->pedidos_seleccionados = array_values(
             array_filter($this->pedidos_seleccionados, fn($id) => $id != $pedido_id)
         );
+
         $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
     }
 
     public function guardarDistribucion()
     {
         $this->validate([
-            'personal_id' => 'required',
             'pedidos_seleccionados' => 'nullable|array',
         ]);
+
         if (!$this->distribucionModel instanceof DistribucionModel) {
             $this->distribucionModel = new DistribucionModel();
         }
+
         $dist = $this->distribucionModel;
+
         if (!$dist->exists || !$dist->codigo) {
             $dist->codigo = 'DIS-' . mt_rand(1000000000, 9999999999);
         }
+
         if (!$dist->exists) {
             $dist->fecha_asignacion = now();
+            // 🔥 SOLO AL CREAR SE ASIGNA EL PERSONAL
+            $dist->personal_id = auth()->user()->personal->id ?? null;
         }
+
         $dist->fecha_entrega = $this->fecha_entrega
             ? Carbon::parse($this->fecha_entrega)
             : null;
+
         $dist->coche_id = $this->coche_id;
-        $dist->personal_id = $this->personal_id;
         $dist->observaciones = $this->observaciones;
         $dist->estado = $this->estado;
+
         $dist->save();
         $dist->pedidos()->sync($this->pedidos_seleccionados ?? []);
+
         session()->flash('message', 'Distribución guardada correctamente.');
         $this->cerrarModal();
     }
-
 
     public function editarDistribucion($id)
     {
@@ -183,15 +197,48 @@ class Distribucion extends Component
 
     public function verPedidos($id)
     {
-        $distribucion = DistribucionModel::with('pedidos')->find($id);
-        $this->pedidosDeDistribucion = $distribucion ? $distribucion->pedidos : [];
+        $distribucion = DistribucionModel::with([
+            'personal',
+            'coche',
+            'pedidos.solicitudPedido.cliente', // carga el cliente a través de solicitudPedido
+        ])->find($id);
+
+        $this->distribucionModel = $distribucion;
+        $this->pedidosDeDistribucion = $distribucion ? $distribucion->pedidos : collect();
         $this->modalPedidos = true;
     }
+
 
     public function cerrarModalPedidos()
     {
         $this->modalPedidos = false;
         $this->pedidosDeDistribucion = [];
+    }
+
+    public function confirmarEliminar($id)
+    {
+        $this->confirmingDeleteId = $id;
+    }
+
+    public function eliminarDistribucion()
+    {
+        if (!$this->confirmingDeleteId)
+            return;
+
+        DB::transaction(function () {
+            $distribucion = DistribucionModel::with('pedidos')->findOrFail($this->confirmingDeleteId);
+            $distribucion->pedidos()->detach();
+            $distribucion->delete();
+        });
+
+        $this->confirmingDeleteId = null;
+
+        session()->flash('message', 'Distribución eliminada correctamente.');
+    }
+
+    public function cancelarEliminar()
+    {
+        $this->confirmingDeleteId = null;
     }
 
     public function getPedidosAsignadosProperty()
@@ -204,7 +251,6 @@ class Distribucion extends Component
         $this->fecha_entrega = Carbon::now()->format('m/d/y H:i:s');
     }
 
-
     public function render()
     {
         return view('livewire.distribucion', [
@@ -216,7 +262,7 @@ class Distribucion extends Component
                 })
                 ->latest()
                 ->get(),
-            'pedidosAsignados' => $this->pedidosAsignados, // 🔹 PASARLA AL VIEW
+            'pedidosAsignados' => $this->pedidosAsignados,
         ]);
     }
 }

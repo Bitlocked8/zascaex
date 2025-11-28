@@ -367,7 +367,9 @@
 
                     @endif
                     <br>
+
                     @if(in_array(auth()->user()->rol_id, [1, 3]))
+
                         <h3
                             class="bg-white/30 border-2 border-red-500 text-red-600 px-6 py-3 rounded-xl text-center font-semibold uppercase backdrop-blur-sm shadow-md">
                             Ventas
@@ -496,7 +498,7 @@
                             </div>
                         </div>
                     @endif
-
+                    <br>
                     <h3
                         class="bg-white/30 border-2 border-slate-500 text-slate-600 px-6 py-3 rounded-xl text-center font-semibold uppercase backdrop-blur-sm shadow-md">
                         Mi espacio

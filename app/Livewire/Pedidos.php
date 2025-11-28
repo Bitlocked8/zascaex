@@ -160,6 +160,7 @@ class Pedidos extends Component
                     'tipo' => $this->tipoProducto,
                     'nuevo' => true,
                     'sucursal_nombre' => $existencia->sucursal->nombre ?? 'Sin sucursal',
+                    'tipo_contenido' => $modelo->tipoContenido ?? null,
                 ];
                 $cantidadRestante -= $consumir;
             }
@@ -360,6 +361,7 @@ class Pedidos extends Component
                 'tipo' => $tipo,
                 'sucursal_id' => $sucursal->id ?? null,
                 'sucursal_nombre' => $sucursal->nombre ?? 'Sin sucursal',
+                'tipo_contenido' => $existenciable->tipoContenido ?? null,
             ];
         })->toArray();
 
@@ -369,7 +371,7 @@ class Pedidos extends Component
     public function abrirModalDetallePedido($pedido_id)
     {
         $this->pedidoDetalle = Pedido::with([
-            'cliente',
+            'solicitudPedido.cliente', // ← cliente correcto
             'personal',
             'detalles.existencia.existenciable',
             'detalles.existencia.sucursal'
@@ -377,6 +379,7 @@ class Pedidos extends Component
 
         $this->modalDetallePedido = true;
     }
+
 
     public function eliminarPedido($pedido_id, $eliminarSolicitud = false)
     {

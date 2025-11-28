@@ -11,6 +11,8 @@ return new class extends Migration {
         Schema::create('adornados', function (Blueprint $table) {
             $table->id();
             $table->string('codigo')->unique();
+            $table->foreignId('personal_id')->nullable()->constrained('personals')->onDelete('cascade');
+
             $table->foreignId('pedido_id')->constrained('pedidos')->onDelete('cascade');
             $table->text('observaciones')->nullable();
             $table->timestamps();
