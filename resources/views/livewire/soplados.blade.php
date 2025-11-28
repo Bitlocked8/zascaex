@@ -145,7 +145,6 @@
                     <div class="grid grid-cols-1 gap-2 mt-2">
                         <span class="text-u">{{ $codigo }}</span>
                         <span class="text-u">Fecha soplado: {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y H:i') }}</span>
-
                         <div>
                             <label class="text-u">Soplado (Elementos Asignados)</label>
 
@@ -285,31 +284,31 @@
                         </div>
 
                         <div>
-    <label class="text-u">Cantidad a producir (Requerido)</label>
+                            <label class="text-u">Cantidad a producir (Requerido)</label>
 
-    @php
-        $aproximado = 0;
-        if ($accion === 'edit') {
-            $reposiciones = $sopladoSeleccionado->asignado->reposiciones ?? collect();
-        } else {
-            $asignadoSeleccionado = collect($asignaciones)->firstWhere('id', $asignado_id);
-            $reposiciones = $asignadoSeleccionado ? $asignadoSeleccionado->reposiciones : collect();
-        }
+                            @php
+                                $aproximado = 0;
+                                if ($accion === 'edit') {
+                                    $reposiciones = $sopladoSeleccionado->asignado->reposiciones ?? collect();
+                                } else {
+                                    $asignadoSeleccionado = collect($asignaciones)->firstWhere('id', $asignado_id);
+                                    $reposiciones = $asignadoSeleccionado ? $asignadoSeleccionado->reposiciones : collect();
+                                }
 
-        if ($reposiciones->isNotEmpty()) {
-            $sumPorTipo = $reposiciones->groupBy(fn($r) => $r->existencia->existenciable_type)
-                ->map(fn($g) => $g->sum(fn($r) => $r->pivot->cantidad_original ?? 0));
-            $aproximado = $sumPorTipo->min();
-        }
-    @endphp
+                                if ($reposiciones->isNotEmpty()) {
+                                    $sumPorTipo = $reposiciones->groupBy(fn($r) => $r->existencia->existenciable_type)
+                                        ->map(fn($g) => $g->sum(fn($r) => $r->pivot->cantidad_original ?? 0));
+                                    $aproximado = $sumPorTipo->min();
+                                }
+                            @endphp
 
-    <p class="text-sm text-gray-500 mb-1">
-        Aproximado que se puede producir: <span class="font-semibold">{{ $aproximado }}</span>
-    </p>
+                            <p class="text-sm text-gray-500 mb-1">
+                                Aproximado que se puede producir: <span class="font-semibold">{{ $aproximado }}</span>
+                            </p>
 
-    <input type="number" wire:model="cantidad" class="input-minimal"
-        placeholder="Ingrese la cantidad que se obtuvo">
-</div>
+                            <input type="number" wire:model="cantidad" class="input-minimal"
+                                placeholder="Ingrese la cantidad que se obtuvo">
+                        </div>
 
 
                         <div>
@@ -338,9 +337,26 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer flex justify-end gap-2 mt-4">
-                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">CERRAR</button>
-                        <button type="button" wire:click="guardar" class="btn-cyan">Guardar</button>
+                    <div class="modal-footer">
+                        <button type="button" wire:click="cerrarModal"  class="btn-cyan" title="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+              <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+            </svg>
+            CERRAR
+          </button>
+                        <button type="button" wire:click="guardar" class="btn-cyan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" />
+              <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+              <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M14 4l0 4l-6 0l0 -4" />
+            </svg>
+            Guardar
+          </button>
                     </div>
                 </div>
             </div>

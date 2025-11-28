@@ -47,5 +47,10 @@ class Asignado extends Model
         return $this->hasMany(AsignadoReposicion::class);
     }
 
+    public function traspasos()
+{
+    return $this->hasMany(Traspaso::class, 'asignacion_id');
+}
+
 
 }

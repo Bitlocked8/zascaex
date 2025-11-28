@@ -34,10 +34,10 @@
                         <span class="text-gray-400">Sin imagen</span>
                     @endif
                 </div>
-
                 <div class="p-5 text-center flex flex-col gap-2 flex-1">
 
                     <h2 class="font-bold text-u text-3xl">{{ $modelo->descripcion }} {{ $modelo->unidad }}</h2>
+
                     @php
                         $precioAprox = ($modelo->precioReferencia && $modelo->paquete)
                             ? $modelo->precioReferencia * $modelo->paquete
@@ -55,14 +55,20 @@
                         </span>
                     </p>
                     <p class="text-sm text-gray-600">
+                        Tipo de contenido: <span class="font-semibold">{{ $modelo->tipoContenido ?? '-' }}</span>
+                    </p>
+
+                    <p class="text-sm text-gray-600">
                         Sucursal: <span class="font-semibold">{{ $sucursal }}</span>
                     </p>
+
                     <button wire:click="abrirModalProducto('{{ $p['uid'] }}')"
                         class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2 mt-3">
                         Seleccionar
                     </button>
 
                 </div>
+
 
             </div>
 
@@ -136,7 +142,7 @@
 
                                 <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                    @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                            @if($tapaSeleccionada == $tapa->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($tapa->imagen))
                                         <img src="{{ asset('storage/' . $tapa->imagen) }}"
@@ -166,7 +172,7 @@
 
                                 <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
                                     class="flex-shrink-0 border rounded-lg cursor-pointer p-2 transition
-                                                    @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
+                                                            @if($etiquetaSeleccionada == $etiqueta->id) border-cyan-600 ring-2 ring-cyan-400 @endif">
 
                                     @if(!empty($etiqueta->imagen))
                                         <img src="{{ asset('storage/' . $etiqueta->imagen) }}"
@@ -305,7 +311,7 @@
                                     <div>
                                         <p class="font-semibold text-gray-700">Código: {{ $pedido['codigo'] }}</p>
                                         <span class="px-3 py-1 rounded-full text-sm font-semibold
-                                                                                    {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' :
+                                                                                                {{ $pedido['estado'] == 0 ? 'bg-yellow-200 text-yellow-800' :
                             ($pedido['estado'] == 1 ? 'bg-green-200 text-green-800' :
                                 ($pedido['estado'] == 2 ? 'bg-blue-200 text-blue-800' :
                                     'bg-gray-200 text-gray-800')) }}">
@@ -329,17 +335,17 @@
                                             <div class="flex flex-wrap gap-2">
                                                 <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
                                                     class="px-3 py-1 rounded-md text-sm font-semibold transition
-                                                                                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                                                                                            {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
                                                     QR
                                                 </button>
                                                 <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
                                                     class="px-3 py-1 rounded-md text-sm font-semibold transition
-                                                                                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                                                                                            {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
                                                     Efectivo
                                                 </button>
                                                 <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 2)"
                                                     class="px-3 py-1 rounded-md text-sm font-semibold transition
-                                                                                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                                                                                                            {{ $pedido['metodo_pago'] == 2 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-700' }}">
                                                     Crédito
                                                 </button>
                                             </div>
