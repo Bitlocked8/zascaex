@@ -1,138 +1,154 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
+
 <head>
-<meta charset="UTF-8">
-<title>Reporte de Pedidos</title>
-<style>
-    body {
-        font-family: DejaVu Sans, sans-serif;
-        color: #333;
-        font-size: 12px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-    th, td {
-        border: 1px solid #ccc;
-        padding: 6px;
-        vertical-align: top;
-    }
-    th {
-        background: #0d6efd;
-        color: #fff;
-        text-align: center;
-    }
-    td {
-        text-align: center;
-    }
-    .text-right { text-align: right; }
-    .text-left { text-align: left; }
-    .bg-yellow { background-color: #facc15; color: #000; padding: 2px 4px; border-radius: 3px; border: 1px solid #d4af0a; }
-    .bg-green { background-color: #16a34a; color: #fff; padding: 2px 4px; border-radius: 3px; border: 1px solid #0f6636; }
-    .bg-red { background-color: #dc2626; color: #fff; padding: 2px 4px; border-radius: 3px; border: 1px solid #a21d1d; }
-    .bg-blue { background-color: #2563eb; color: #fff; padding: 2px 4px; border-radius: 3px; border: 1px solid #1e4bb8; }
-    .bg-purple { background-color: #7e22ce; color: #fff; padding: 2px 4px; border-radius: 3px; border: 1px solid #5a1699; }
-    .bg-gray { background-color: #6b7280; color: #fff; padding: 2px 4px; border-radius: 3px; border: 1px solid #4b5563; }
-</style>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .header div {
+            margin: 2px 0;
+        }
+
+        .summary-box {
+            border: 1px solid #000;
+            padding: 5px;
+            margin: 5px 0;
+            text-align: center;
+        }
+    </style>
 </head>
+
 <body>
 
-<!-- Totales generales -->
-<table>
-    <tr>
-        <th>Total unidades</th>
-        <th>Total Bs.</th>
-        <th>Total pagado</th>
-        <th>Saldo pendiente</th>
-    </tr>
-    <tr>
-        <td class="text-right">{{ number_format($totalGeneralCantidad, 2, ',', '.') }}</td>
-        <td class="text-right">{{ number_format($totalGeneralMonto, 2, ',', '.') }}</td>
-        <td class="text-right">{{ number_format($totalGeneralPagado, 2, ',', '.') }} Bs</td>
-        <td class="text-right">{{ number_format($totalGeneralPendiente, 2, ',', '.') }} Bs</td>
-    </tr>
-</table>
+    <h2 class="text-center">Reporte de Ventas</h2>
 
-<!-- Totales por tipo de pago -->
-<table>
-    <tr>
-        @foreach ($totalesPorPago as $tipo)
-            <th>{{ $tipo['nombre'] }}</th>
-        @endforeach
-    </tr>
-    <tr>
-        @foreach ($totalesPorPago as $tipo)
-            <td class="text-right">{{ number_format($tipo['monto'], 2, ',', '.') }} Bs<br>({{ $tipo['pedidos'] }} pedidos)</td>
-        @endforeach
-    </tr>
-</table>
+    <!-- Filtros seleccionados -->
+    <div class="header">
+        <div><strong>Fecha Inicio:</strong> {{ $fecha_inicio ?? 'No definida' }} </div>
+        <div><strong>Fecha Fin:</strong> {{ $fecha_fin ?? 'No definida' }} </div>
+        <div><strong>Cliente:</strong> {{ $cliente_nombre ?? 'Todos los clientes' }} </div>
+        <div><strong>Vendedor:</strong> {{ $personal_nombre ?? 'Todos los vendedores' }} </div>
+        <div><strong>Sucursal:</strong> {{ $sucursal_nombre ?? 'Todas las sucursales' }} </div>
+        <div><strong>Producto:</strong> {{ $producto ?: 'Todos los productos' }} </div>
+        <div><strong>Estado de Pago:</strong> {{ $estado_pago_texto ?? 'Todos' }} </div>
+        <div><strong>Método de Pago:</strong> {{ $metodo_pago_texto ?? 'Todos' }} </div>
+    </div>
 
-<!-- Tabla de pedidos -->
-<table>
-    <thead>
-        <tr>
-            <th>Código</th>
-            <th>Cliente</th>
-            <th>Personal</th>
-            <th>Fecha</th>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Precio Unit.</th>
-            <th>Subtotal</th>
-            <th>Estado Pedido</th>
-            <th>Tipo Pago</th>
-        </tr>
-    </thead>
-    <tbody>
-        @forelse ($pedidos as $pedido)
-            @php $pago = $pedido->pagoPedidos->first(); @endphp
-            @foreach ($pedido->detalles as $detalle)
-                @php
-                    $producto = $detalle->existencia->existenciable ?? null;
-                    $precio = $producto->precioReferencia ?? 0;
-                    $subtotal = $detalle->cantidad * $precio;
-                @endphp
-                <tr>
-                    <td>{{ $pedido->codigo }}</td>
-                    <td class="text-left">{{ $pedido->cliente->nombre ?? 'N/A' }}</td>
-                    <td class="text-left">{{ $pedido->personal->nombres ?? 'N/A' }}</td>
-                    <td>{{ \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') }}</td>
-                    <td class="text-left">{{ $producto->descripcion ?? 'N/A' }}</td>
-                    <td class="text-right">{{ number_format($detalle->cantidad, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($precio, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($subtotal, 2, ',', '.') }}</td>
-                    <td>
-                        @if($pedido->estado_pedido == 0)
-                            <span class="bg-yellow">Pendiente</span>
-                        @elseif($pedido->estado_pedido == 1)
-                            <span class="bg-green">Completado</span>
-                        @else
-                            <span class="bg-red">Cancelado</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if(!$pago)
-                            <span class="bg-gray">Sin pago</span>
-                        @elseif($pago->estado == 1)
-                            <span class="bg-blue">QR</span>
-                        @elseif($pago->estado == 2)
-                            <span class="bg-green">Efectivo</span>
-                        @elseif($pago->estado == 3)
-                            <span class="bg-purple">Crédito</span>
-                        @endif
-                    </td>
-                </tr>
-            @endforeach
-        @empty
+    <!-- Productos por Pedido -->
+    <h3 class="text-center">Productos por Pedido</h3>
+    <table class="table">
+        <thead>
             <tr>
-                <td colspan="10">No se encontraron pedidos.</td>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Sucursal</th>
             </tr>
-        @endforelse
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach($pedidos as $pedido)
+                @foreach($pedido->detalles as $detalle)
+                    <tr>
+                        <td>{{ $pedido->codigo }}</td>
+                        <td>{{ $pedido->solicitudPedido?->cliente?->nombre ?? 'N/A' }}</td>
+                        <td>{{ $pedido->personal?->nombres ?? 'N/A' }}</td>
+                        <td>{{ $pedido->fecha_pedido ? date('d/m/Y H:i', strtotime($pedido->fecha_pedido)) : 'N/D' }}</td>
+                        <td>
+                            {{ $detalle->existencia?->existenciable?->descripcion ?? '' }}
+
+                            @if(!empty($detalle->existencia?->existenciable?->tipoContenido))
+                                <br>
+                                <small style="color:#555;">
+                                    {{ $detalle->existencia->existenciable->tipoContenido }}
+                                </small>
+                            @endif
+                        </td>
+
+                        <td>{{ $detalle->cantidad }}</td>
+                        <td>{{ $detalle->existencia?->sucursal?->nombre ?? 'N/A' }}</td>
+                    </tr>
+                @endforeach
+            @endforeach
+        </tbody>
+    </table>
+
+    <!-- Pagos por Pedido -->
+    <h3 class="text-center">Pagos por Pedido</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Código Pedido</th>
+                <th>Monto</th>
+                <th>Estado Pago</th>
+                <th>Método Pago</th>
+                <th>Deuda Crédito</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pedidos as $pedido)
+                @php
+                    $creditoBase = $pedido->pagoPedidos->where('metodo', 2)->sum('monto');
+                    $pagosNoCredito = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
+                    $deudaTotalCredito = max($creditoBase - $pagosNoCredito, 0);
+                @endphp
+                @foreach($pedido->pagoPedidos as $pago)
+                    <tr>
+                        <td>{{ $pedido->codigo }}</td>
+                        <td>Bs {{ number_format($pago->monto, 2) }}</td>
+                        <td>{{ $pago->estado ? 'Pagado' : 'Sin pagar' }}</td>
+                        <td>
+                            @if($pago->metodo == 0) QR
+                            @elseif($pago->metodo == 1) Efectivo
+                            @elseif($pago->metodo == 2) Crédito
+                            @endif
+                        </td>
+                        <td>{{ $pago->metodo == 2 ? 'Bs ' . number_format($deudaTotalCredito, 2) : '-' }}</td>
+                    </tr>
+                @endforeach
+            @endforeach
+        </tbody>
+    </table>
+
+    <!-- Resumen de Pagos -->
+    <h3 class="text-center">Resumen de Pagos</h3>
+    <div class="summary-box"><strong>Total Pagado:</strong> Bs {{ number_format($totalPagado, 2) }}</div>
+    <div class="summary-box"><strong>Total Sin Pagar:</strong> Bs {{ number_format($totalSinPagar, 2) }}</div>
+    <div class="summary-box"><strong>QR:</strong> Bs {{ number_format($resumenMetodos['QR'], 2) }}</div>
+    <div class="summary-box"><strong>Efectivo:</strong> Bs {{ number_format($resumenMetodos['Efectivo'], 2) }}</div>
+    <div class="summary-box"><strong>Crédito:</strong> Bs {{ number_format($resumenMetodos['Crédito'], 2) }}</div>
+    <div class="summary-box"><strong>Deuda (Crédito pendiente):</strong> Bs {{ number_format($totalDeudaCredito, 2) }}
+    </div>
 
 </body>
+
 </html>
