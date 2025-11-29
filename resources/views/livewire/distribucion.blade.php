@@ -160,7 +160,7 @@
                                             <span class="font-semibold text-u">{{ $c->placa }}</span>
                                             <span class="text-sm text-gray-600">{{ $c->marca }} {{ $c->modelo }}</span>
                                             @if($c->color)
-                                                <span class="text-xs text-gray-500">Color: {{ $c->color }}</span>
+                                                <span class=" text-gray-500">Color: {{ $c->color }}</span>
                                             @endif
                                         </button>
                                     @endforeach
@@ -187,37 +187,61 @@
                                     @endphp
 
                                     <div
-                                        class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
+                                        class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white  grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
 
                                         @forelse($pedidosDisponibles as $pedido)
                                             <div
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col items-start text-left hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
 
+
                                                 <div class="mb-2">
                                                     <span class="font-semibold text-u">
                                                         {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}
                                                     </span>
-                                                    <div class="text-xs text-gray-500 mt-1">Código: {{ $pedido->codigo }}</div>
-                                                    <div class="text-xs text-gray-500 mt-1">Fecha:
-                                                        {{ $pedido->fecha_pedido ?? 'N/D' }}
+
+                                                    <div class=" text-gray-500 mt-1">
+                                                        Código: {{ $pedido->codigo }}
+                                                    </div>
+
+                                                    <div class=" text-gray-500 mt-1">
+                                                        Fecha: {{ $pedido->fecha_pedido ?? 'N/D' }}
+                                                    </div>
+
+                                                    <div class="text-u  mt-1">
+                                                        Ubicación:
+                                                        {{ $pedido->solicitudPedido?->cliente?->departamento_localidad ?? 'Sin ubicación' }}
                                                     </div>
                                                 </div>
 
+
                                                 <div class="w-full mt-2">
                                                     <p class="font-semibold text-sm mb-1">Productos:</p>
-                                                    <ul
-                                                        class="text-xs text-gray-600 list-disc list-inside max-h-32 overflow-y-auto">
+
+                                                    <ul class=" text-gray-600 list-disc list-inside max-h-32 overflow-y-auto">
+
                                                         @foreach($pedido->detalles as $detalle)
-                                                            <li>
+                                                            <li class="mb-1">
+
                                                                 {{ $detalle->existencia?->existenciable?->descripcion ?? 'Producto N/A' }}
+
+
                                                                 @if($detalle->cantidad)
                                                                     - Cantidad: {{ number_format($detalle->cantidad, 2) }}
                                                                 @endif
+
                                                                 @if(isset($detalle->precio))
                                                                     - Precio: {{ number_format($detalle->precio, 2) }}
                                                                 @endif
+
+                                                                <br>
+
+                                                                <span class=" text-gray-400">
+                                                                    Sucursal:
+                                                                    {{ $detalle->existencia?->sucursal?->nombre ?? 'Sin sucursal' }}
+                                                                </span>
                                                             </li>
                                                         @endforeach
+
                                                     </ul>
                                                 </div>
 
@@ -233,6 +257,7 @@
                                                     </svg>
                                                     Añadir
                                                 </button>
+
                                             </div>
                                         @empty
                                             <p class="text-gray-500 text-sm text-center py-2 col-span-full">
@@ -241,6 +266,7 @@
                                         @endforelse
 
                                     </div>
+
                                 </div>
                             </div>
 
@@ -253,34 +279,69 @@
 
                             <div
                                 class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
+
                                 @forelse($pedidosAsignados as $pedido)
                                     <div
-                                        class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
+                                        class="w-full p-4 rounded-lg border-2 transition flex flex-col text-left hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
+
                                         <span class="font-semibold text-u">
                                             {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}
                                         </span>
-                                        <span class="text-xs text-gray-500 mt-1">Código: {{ $pedido->codigo }}</span>
-                                        <span class="text-xs text-gray-500 mt-1">Fecha:
-                                            {{ $pedido->fecha_pedido ?? 'N/D' }}</span>
+                                        <div class="text-u mt-1">
+                                            Ubicación:
+                                            {{ $pedido->solicitudPedido?->cliente?->departamento_localidad ?? 'Sin ubicación' }}
+                                        </div>
 
-                                        <!-- Productos del pedido -->
-                                        <div class="w-full mt-2">
-                                            <p class="font-semibold text-xs mb-1">Productos:</p>
-                                            <ul class="text-xs text-gray-600 list-disc list-inside max-h-32 overflow-y-auto">
+                                        <span class=" mt-1">Código: {{ $pedido->codigo }}</span>
+                                        <span class=" text-gray-500 mt-1">
+                                            Fecha:
+                                            {{ $pedido->fecha_pedido ? date('d/m/Y', strtotime($pedido->fecha_pedido)) : 'N/D' }}
+                                        </span>
+
+
+                                        <div class="w-full mt-3">
+                                            <p class="font-semibold  mb-1">Productos:</p>
+
+                                            <ul class=" text-gray-600 max-h-32 overflow-y-auto space-y-1">
                                                 @foreach($pedido->detalles as $detalle)
-                                                    <li>
-                                                        {{ $detalle->existencia?->existenciable?->descripcion ?? 'Producto N/A' }}
+                                                    <li class="border-b pb-1">
+                                                        <span class="font-semibold">
+                                                            {{ $detalle->existencia?->existenciable?->descripcion ?? 'Producto N/A' }}
+                                                        </span>
+                                                        <div class="text-gray-500">
+                                                            Sucursal:
+                                                            <span class="font-semibold">
+                                                                {{ $detalle->existencia?->sucursal?->nombre ?? 'Sin sucursal' }}
+                                                            </span>
+                                                        </div>
                                                         @if($detalle->cantidad)
-                                                            - Cantidad: {{ number_format($detalle->cantidad, 2) }}
+                                                            <div>
+                                                                Cantidad:
+                                                                <span class="font-semibold">
+                                                                    {{ number_format($detalle->cantidad, 2) }}
+                                                                </span>
+                                                            </div>
                                                         @endif
                                                         @if(isset($detalle->precio))
-                                                            - Precio: {{ number_format($detalle->precio, 2) }}
+                                                            <div>
+                                                                Precio:
+                                                                <span class="font-semibold">
+                                                                    Bs {{ number_format($detalle->precio, 2) }}
+                                                                </span>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($detalle->precio) && isset($detalle->cantidad))
+                                                            <div class="text-gray-700">
+                                                                Total item:
+                                                                <span class="font-semibold">
+                                                                    Bs {{ number_format($detalle->cantidad * $detalle->precio, 2) }}
+                                                                </span>
+                                                            </div>
                                                         @endif
                                                     </li>
                                                 @endforeach
                                             </ul>
                                         </div>
-
                                         <button type="button" wire:click="quitarPedido({{ $pedido->id }})"
                                             class="absolute top-2 right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow transition"
                                             title="Eliminar">
@@ -293,14 +354,17 @@
                                             </svg>
                                         </button>
                                     </div>
+
                                 @empty
                                     <p class="text-gray-500 text-sm text-center py-2 col-span-full">
                                         No hay pedidos asignados
                                     </p>
                                 @endforelse
+
                             </div>
                         </div>
                     </div>
+
 
 
                     <div>
@@ -422,8 +486,8 @@
                                                 {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}
                                             </span>
                                             <br>
-                                            <span class="text-xs text-gray-500"> {{ $pedido->codigo }}</span>
-                                            <span class="text-xs text-gray-500">Fecha:
+                                            <span class=" text-gray-500"> {{ $pedido->codigo }}</span>
+                                            <span class=" text-gray-500">Fecha:
                                                 {{ $pedido->fecha_pedido ?? 'N/D' }}</span>
                                         </div>
 
@@ -431,7 +495,7 @@
                                     </div>
                                     <div class="mt-2">
                                         <p class="font-semibold text-sm mb-1 label-info">Productos:</p>
-                                        <ul class="list-disc list-inside text-xs text-gray-600 max-h-32 overflow-y-auto">
+                                        <ul class="list-disc list-inside  text-gray-600 max-h-32 overflow-y-auto">
                                             @foreach($pedido->detalles as $detalle)
                                                 <li>
                                                     {{ $detalle->existencia?->existenciable?->descripcion ?? 'Producto N/A' }}

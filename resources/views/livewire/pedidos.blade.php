@@ -160,7 +160,7 @@
 
                           {{-- QR --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                      {{ $pagos[$index]['metodo'] === 0
+                                                                                                                                      {{ $pagos[$index]['metodo'] === 0
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             QR
@@ -168,7 +168,7 @@
 
                           {{-- Efectivo --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                      {{ $pagos[$index]['metodo'] === 1
+                                                                                                                                      {{ $pagos[$index]['metodo'] === 1
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             Efectivo
@@ -176,7 +176,7 @@
 
                           {{-- Crédito --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                      {{ $pagos[$index]['metodo'] === 2
+                                                                                                                                      {{ $pagos[$index]['metodo'] === 2
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             Crédito
@@ -192,7 +192,7 @@
                         <div class="flex justify-center mt-2">
                           <button type="button" wire:click="$set('pagos.{{ $index }}.estado', {{ $pago['estado'] ? 0 : 1 }})"
                             class="px-6 py-2 rounded-lg text-white font-semibold border shadow-md transition
-                                                                                                      {{ $pagos[$index]['estado']
+                                                                                                                                      {{ $pagos[$index]['estado']
               ? 'bg-green-600 border-green-700 hover:bg-green-700'
               : 'bg-gray-500 border-gray-600 hover:bg-gray-600' }}">
                             {{ $pagos[$index]['estado'] ? 'PAGADO' : 'NO PAGADO' }}
@@ -341,89 +341,62 @@
               @php
                 $solicitud = $solicitudPedidos->firstWhere('id', $solicitud_pedido_id);
                 $detallesSolicitud = $solicitud?->detalles ?? collect();
-
                 $totalPaquetes = $detallesSolicitud->sum('cantidad');
-                $totalUnidades = $detallesSolicitud->sum(fn($d) => $d->cantidad * ($d->producto->paquete ?? 1));
+                $totalUnidades = $detallesSolicitud->sum(fn($d) => $d->cantidad * (($d->producto->paquete ?? 1) ?: ($d->otro->paquete ?? 1)));
                 $totalPedido = $detallesSolicitud->sum(function ($d) {
-                  $precioUnitario = $d->producto->precioReferencia ?? 0;
-                  $unidades = $d->cantidad * ($d->producto->paquete ?? 1);
+                  $item = $d->producto ?? $d->otro;
+                  $precioUnitario = $item->precioReferencia ?? 0;
+                  $unidades = $d->cantidad * ($item->paquete ?? 1);
                   return $precioUnitario * $unidades;
                 });
               @endphp
 
               <div class="w-full border border-gray-300 rounded-md p-3 bg-gray-100">
                 <p class="font-semibold text-gray-800 mb-1">Solicitud asignada:</p>
-                <p class="font-medium text-gray-900">{{ $solicitud->codigo }} —
-                  {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
-                </p>
+                <p class="font-semibold text-gray-900">{{ $solicitud->codigo }}</p>
+                <p class="text-gray-600 text-sm">{{ $solicitud->cliente->nombre ?? 'Sin cliente' }}</p>
+
                 <p class="text-xs text-gray-500">{{ $solicitud->created_at->format('d/m/Y') }}</p>
 
                 <div class="mt-3 text-xs space-y-3 text-gray-700">
                   @foreach($detallesSolicitud as $detalle)
                     @php
-                      $paquetes = $detalle->cantidad;
-                      $unidadPaq = $detalle->producto->paquete ?? 1;
-                      $totalUnidadesDetalle = $paquetes * $unidadPaq;
-                      $precioUnitario = $detalle->producto->precioReferencia ?? 0;
+                      $item = $detalle->producto ?? $detalle->otro;
+                      $nombre = $item->descripcion ?? 'Sin descripción';
+                      $unidadPaq = $item->paquete ?? 1;
+                      $tipoContenido = $item->tipoContenido ?? null;
+                      $precioUnitario = $item->precioReferencia ?? 0;
+                      $totalUnidadesDetalle = $detalle->cantidad * $unidadPaq;
                       $precioTotal = $precioUnitario * $totalUnidadesDetalle;
+                      $sucursal = $detalle->sucursal_nombre ?? 'Sin sucursal';
                     @endphp
 
-                    <div class="border-b pb-2">
-                      <div class="flex justify-between mb-1">
-                        <span class="font-medium">{{ $detalle->producto->descripcion ?? 'Sin descripción' }}</span>
+                    <div class="border-b pb-2 flex justify-between">
+                      <div class="flex-1">
+                        <span class="font-medium text-gray-900">{{ $nombre }}</span>
+                        <br>
+                        <span class=" text-u">Sucursal: {{ $sucursal }}</span>
 
-                        <span class="text-right">
-                          <span class="font-semibold block">{{ $paquetes }} paquetes</span>
-                          <span class="text-[11px] text-gray-600">{{ $totalUnidadesDetalle }} unidades</span>
-                        </span>
+                        @if(!empty($tipoContenido))
+                          <span class="text-indigo-600 -mt-1 block">
+                            <strong>Contenido:</strong> {{ $tipoContenido }}
+                          </span>
+                        @endif
+
+                        @if($unidadPaq > 1)
+                          <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">{{ $unidadPaq }} u/pq</span>
+                        @endif
                       </div>
 
-                      @if($unidadPaq > 1)
-                        <p class="text-[10px] bg-gray-200 px-1.5 py-0.5 rounded inline-block mb-1">{{ $unidadPaq }} unidades por
-                          paquete</p>
-                      @endif
-
-                      @if(!empty($detalle->producto->tipoContenido))
-                        <span class=" text-indigo-600 -mt-1">
-                          <strong>Contenido:</strong> {{ $detalle->producto->tipoContenido }}
-                        </span>
-                      @endif
-
-                      @if(!empty($detalle->tapa_descripcion))
-                        <div class="flex items-center gap-2 mt-1">
-                          <span class="text-[11px] text-gray-600"><strong>Tapa:</strong> {{ $detalle->tapa_descripcion }}</span>
-                          @if(!empty($detalle->tapa_imagen))
-                            <img src="{{ asset('storage/' . $detalle->tapa_imagen) }}"
-                              class="h-12 w-12 object-contain rounded border p-1">
-                          @endif
-                        </div>
-                      @endif
-
-                      @if(!empty($detalle->etiqueta_descripcion))
-                        <div class="flex items-center gap-2 mt-1 flex-wrap">
-                          <span class="text-[11px] text-gray-600"><strong>Etiquetas:</strong></span>
-                          @php
-                            $etiquetas_desc = explode('|', $detalle->etiqueta_descripcion);
-                            $etiquetas_imgs = !empty($detalle->etiqueta_imagen) ? explode('|', $detalle->etiqueta_imagen) : [];
-                          @endphp
-                          @foreach($etiquetas_desc as $index => $etiqueta_desc)
-                            <div class="flex items-center gap-1">
-                              <span class="text-[10px] bg-blue-100 px-1.5 py-0.5 rounded">{{ $etiqueta_desc }}</span>
-                              @if(isset($etiquetas_imgs[$index]) && !empty($etiquetas_imgs[$index]))
-                                <img src="{{ asset('storage/' . $etiquetas_imgs[$index]) }}"
-                                  class="h-10 w-10 object-contain rounded border p-1">
-                              @endif
-                            </div>
-                          @endforeach
-                        </div>
-                      @endif
-
-                      <div class="mt-1 text-[11px] text-gray-700">
-                        <p><strong>Precio unitario:</strong> Bs {{ number_format($precioUnitario, 2) }}</p>
-                        <p><strong>Total:</strong> Bs {{ number_format($precioTotal, 2) }}</p>
+                      <div class="text-right ml-2">
+                        <span class="font-semibold block">{{ $detalle->cantidad }} paquetes</span>
+                        <span class="text-[11px] text-gray-600">{{ $totalUnidadesDetalle }} unidades</span>
+                        <span class="text-[10px] text-green-600 font-medium">Bs {{ number_format($precioTotal, 2) }}</span>
                       </div>
                     </div>
                   @endforeach
+
+
                 </div>
 
                 <p class="mt-2 text-xs font-medium text-gray-700">Total: {{ $totalPaquetes }} paquetes —
@@ -436,7 +409,6 @@
                   <strong>Método de pago:</strong>
                   <span class="font-semibold text-blue-700">
                     {{ $solicitud->metodo_pago == 0 ? 'QR' : ($solicitud->metodo_pago == 1 ? 'Efectivo' : 'Crédito') }}
-
                   </span>
                 </p>
 
@@ -450,17 +422,17 @@
                   @php
                     $detallesSolicitud = $solicitud->detalles;
                     $totalPaquetes = $detallesSolicitud->sum('cantidad');
-                    $totalUnidades = $detallesSolicitud->sum(fn($d) => $d->cantidad * ($d->producto->paquete ?? 1));
+                    $totalUnidades = $detallesSolicitud->sum(fn($d) => $d->cantidad * (($d->producto->paquete ?? 1) ?: ($d->otro->paquete ?? 1)));
                     $totalPedido = $detallesSolicitud->sum(function ($d) {
-                      $precioUnitario = $d->producto->precioReferencia ?? 0;
-                      $unidades = $d->cantidad * ($d->producto->paquete ?? 1);
+                      $item = $d->producto ?? $d->otro;
+                      $precioUnitario = $item->precioReferencia ?? 0;
+                      $unidades = $d->cantidad * ($item->paquete ?? 1);
                       return $precioUnitario * $unidades;
                     });
                   @endphp
 
                   <button type="button" wire:click="seleccionarSolicitud({{ $solicitud->id }})"
                     class="w-full text-left p-3 mb-2 rounded-lg border-2 transition bg-white {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
-
                     <div class="flex justify-between items-center mb-2">
                       <span class="font-semibold text-gray-900">{{ $solicitud->codigo }} —
                         {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}</span>
@@ -469,27 +441,27 @@
                     <div class="text-xs space-y-2 text-gray-700">
                       @foreach($detallesSolicitud as $detalle)
                         @php
-                          $paquetes = $detalle->cantidad;
-                          $unidadPaq = $detalle->producto->paquete ?? 1;
-                          $totalUnidadesDetalle = $paquetes * $unidadPaq;
-                          $precioUnitario = $detalle->producto->precioReferencia ?? 0;
+                          $item = $detalle->producto ?? $detalle->otro;
+                          $nombre = $item->descripcion ?? 'Sin descripción';
+                          $unidadPaq = $item->paquete ?? 1;
+                          $tipoContenido = $item->tipoContenido ?? null;
+                          $precioUnitario = $item->precioReferencia ?? 0;
+                          $totalUnidadesDetalle = $detalle->cantidad * $unidadPaq;
                           $precioTotal = $precioUnitario * $totalUnidadesDetalle;
                         @endphp
+
                         <div class="border-b pb-2 flex justify-between">
                           <div class="flex-1">
-                            <span
-                              class="font-medium text-gray-900">{{ $detalle->producto->descripcion ?? 'Sin descripción' }}</span>
-                            @if(!empty($producto->tipoContenido))
-                              <span class=" text-indigo-600 -mt-1">
-                                <strong>Contenido:</strong> {{ $producto->tipoContenido }}
-                              </span>
+                            <span class="font-medium text-gray-900">{{ $nombre }}</span>
+                            @if(!empty($tipoContenido))
+                              <span class="text-indigo-600 -mt-1"><strong>Contenido:</strong> {{ $tipoContenido }}</span>
                             @endif
                             @if($unidadPaq > 1)
                               <span class="ml-1 text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">{{ $unidadPaq }} u/pq</span>
                             @endif
                           </div>
                           <div class="text-right ml-2">
-                            <span class="font-semibold block">{{ $paquetes }} paquetes</span>
+                            <span class="font-semibold block">{{ $detalle->cantidad }} paquetes</span>
                             <span class="text-[11px] text-gray-600">{{ $totalUnidadesDetalle }} unidades</span>
                             <span class="text-[10px] text-green-600 font-medium">Bs {{ number_format($precioTotal, 2) }}</span>
                           </div>
@@ -500,17 +472,14 @@
                     <div class="mt-2 text-xs flex justify-between items-center">
                       <span class="font-medium text-gray-800">Total: {{ $totalPaquetes }} paquetes — {{ $totalUnidades }}
                         unidades</span>
-
                       <div class="text-right">
                         <span class="text-gray-500 block">{{ $solicitud->created_at->format('d/m/Y') }}</span>
                         <span class="font-bold text-teal-700">Bs {{ number_format($totalPedido, 2) }}</span>
                       </div>
                       <p class="text-sm">
                         <strong>Método de pago:</strong>
-                        <span class="font-semibold text-blue-700">
-                          {{ $solicitud->metodo_pago == 0 ? 'QR' : ($solicitud->metodo_pago == 1 ? 'Efectivo' : 'Crédito') }}
-
-                        </span>
+                        <span
+                          class="font-semibold text-blue-700">{{ $solicitud->metodo_pago == 0 ? 'QR' : ($solicitud->metodo_pago == 1 ? 'Efectivo' : 'Crédito') }}</span>
                       </p>
                     </div>
                   </button>
@@ -520,6 +489,7 @@
               </div>
             @endif
           </div>
+
 
 
           <div class="mb-6">
@@ -665,7 +635,7 @@
               <div class="flex justify-center gap-3 mt-2">
                 {{-- Preparando --}}
                 <button type="button" wire:click="$set('estado_pedido', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                    {{ $estado_pedido === 0
+                            {{ $estado_pedido === 0
       ? 'bg-blue-700 text-white border-blue-800 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   Preparando
@@ -673,7 +643,7 @@
 
                 {{-- En Revisión --}}
                 <button type="button" wire:click="$set('estado_pedido', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                    {{ $estado_pedido === 1
+                            {{ $estado_pedido === 1
       ? 'bg-yellow-500 text-white border-yellow-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   En Revisión
@@ -681,7 +651,7 @@
 
                 {{-- Completado --}}
                 <button type="button" wire:click="$set('estado_pedido', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                    {{ $estado_pedido === 2
+                            {{ $estado_pedido === 2
       ? 'bg-green-500 text-white border-green-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   Completado
@@ -761,7 +731,7 @@
                 <span class="label-info">Estado:</span>
                 <span
                   class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-          {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
+                  {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
                   {{ $pedidoDetalle->estado_pedido == 0 ? 'Preparando' : ($pedidoDetalle->estado_pedido == 1 ? 'En Revisión' : 'Completado') }}
                 </span>
               </div>

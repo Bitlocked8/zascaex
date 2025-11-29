@@ -51,25 +51,22 @@ class Distribucion extends Component
         $this->loadDistribucionData();
     }
 
-    private function loadPedidosDisponibles($distribucion_id = null)
-    {
-        $query = Pedido::where('estado_pedido', '!=', 2)
-            ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
-                $subquery->where('distribucions.estado', 1);
-                if ($distribucion_id) {
-                    $subquery->where('distribucions.id', '!=', $distribucion_id);
-                }
-            });
-
+   private function loadPedidosDisponibles($distribucion_id = null)
+{
+    $this->pedidos = Pedido::with([
+        'solicitudPedido.cliente',
+        'detalles.existencia.sucursal',
+        'detalles.existencia.existenciable',
+    ])
+    ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
         if ($distribucion_id) {
-            $query = $query->orWhereHas('distribuciones', function ($q) use ($distribucion_id) {
-                $q->where('distribucions.id', $distribucion_id)
-                    ->where('pedidos.estado_pedido', '!=', 2);
-            });
+            $subquery->where('distribucions.id', '!=', $distribucion_id);
         }
+    })
+    ->get();
+}
 
-        $this->pedidos = $query->get();
-    }
+
 
     private function loadDistribucionData()
     {

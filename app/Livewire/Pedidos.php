@@ -199,8 +199,11 @@ class Pedidos extends Component
         }
 
         $pedido = $this->pedido;
+        if (!$pedido->exists) {
+            $pedido->personal_id = $this->personal_id ?? Auth::id();
+        }
+
         $pedido->solicitud_pedido_id = $this->solicitud_pedido_id ?? null;
-        $pedido->personal_id = $this->personal_id ?? Auth::id();
         $pedido->estado_pedido = $this->estado_pedido;
         $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
         $pedido->observaciones = $this->observaciones;
@@ -214,6 +217,7 @@ class Pedidos extends Component
 
         $pedido->save();
 
+        // Eliminar detalles marcados
         foreach ($this->detalles as $index => $pd) {
             if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
                 $detalle = PedidoDetalle::find($pd['id']);
@@ -229,6 +233,7 @@ class Pedidos extends Component
             }
         }
 
+        // Guardar detalles nuevos o modificados
         foreach ($this->detalles as $pd) {
             if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
                 $detalle = PedidoDetalle::create([
@@ -250,6 +255,7 @@ class Pedidos extends Component
         $this->cerrarModal();
     }
 
+
     private function setMensaje($texto, $tipo = 'success')
     {
         $this->mensaje = $texto;
@@ -259,61 +265,104 @@ class Pedidos extends Component
     public function render()
     {
         $productos = Producto::whereHas('existencias', function ($q) {
-            if ($this->sucursal_id)
+            if ($this->sucursal_id) {
                 $q->where('sucursal_id', $this->sucursal_id);
-
+            }
             $q->whereHas(
                 'reposiciones',
                 fn($query) =>
                 $query->where('estado_revision', 1)
                     ->where('cantidad', '>', 0)
             );
-        })
-            ->with([
-                'existencias.reposiciones' => fn($query) =>
-                    $query->where('estado_revision', 1)
-                        ->where('cantidad', '>', 0)
-            ])
-            ->get();
+        })->with([
+                    'existencias' => function ($q) {
+                        if ($this->sucursal_id) {
+                            $q->where('sucursal_id', $this->sucursal_id);
+                        }
+                        $q->whereHas(
+                            'reposiciones',
+                            fn($query) =>
+                            $query->where('estado_revision', 1)
+                                ->where('cantidad', '>', 0)
+                        )->with('sucursal', 'reposiciones');
+                    }
+                ])->get();
 
         $otros = Otro::whereHas('existencias', function ($q) {
-            if ($this->sucursal_id)
+            if ($this->sucursal_id) {
                 $q->where('sucursal_id', $this->sucursal_id);
-
+            }
             $q->whereHas(
                 'reposiciones',
                 fn($query) =>
                 $query->where('estado_revision', 1)
                     ->where('cantidad', '>', 0)
             );
-        })
-            ->with([
-                'existencias.reposiciones' => fn($query) =>
-                    $query->where('estado_revision', 1)
-                        ->where('cantidad', '>', 0)
-            ])
-            ->get();
+        })->with([
+                    'existencias' => function ($q) {
+                        if ($this->sucursal_id) {
+                            $q->where('sucursal_id', $this->sucursal_id);
+                        }
+                        $q->whereHas(
+                            'reposiciones',
+                            fn($query) =>
+                            $query->where('estado_revision', 1)
+                                ->where('cantidad', '>', 0)
+                        )->with('sucursal', 'reposiciones');
+                    }
+                ])->get();
 
-        $solicitudPedidos = SolicitudPedido::with('cliente', 'detalles')
-            ->whereDoesntHave('pedido')
+        $solicitudPedidos = SolicitudPedido::with([
+            'cliente',
+            'detalles.producto.existencias.sucursal',
+            'detalles.otro.existencias.sucursal',
+            'detalles.tapa',
+            'detalles.etiqueta'
+        ])->whereDoesntHave('pedido')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        if ($this->pedido->exists && $this->pedido->solicitud_pedido_id) {
-            $solicitudEdit = SolicitudPedido::with('cliente', 'detalles')
-                ->find($this->pedido->solicitud_pedido_id);
+        $solicitudPedidos->each(function ($solicitud) {
+            $solicitud->detalles->each(function ($detalle) {
+                $item = $detalle->producto ?? $detalle->otro;
+                $existencia = $item->existencias->first();
+                $detalle->sucursal_nombre = $existencia?->sucursal->nombre ?? 'Sin sucursal';
+            });
+        });
 
-            if ($solicitudEdit && !$solicitudPedidos->contains('id', $solicitudEdit->id)) {
-                $solicitudPedidos->prepend($solicitudEdit);
+        if ($this->pedido->exists && $this->pedido->solicitud_pedido_id) {
+            $solicitudEdit = SolicitudPedido::with([
+                'cliente',
+                'detalles.producto.existencias.sucursal',
+                'detalles.otro.existencias.sucursal',
+                'detalles.tapa',
+                'detalles.etiqueta'
+            ])->find($this->pedido->solicitud_pedido_id);
+
+            if ($solicitudEdit) {
+                $solicitudEdit->detalles->each(function ($detalle) {
+                    $item = $detalle->producto ?? $detalle->otro;
+                    $existencia = $item->existencias->first();
+                    $detalle->sucursal_nombre = $existencia?->sucursal->nombre ?? 'Sin sucursal';
+                });
+
+                if (!$solicitudPedidos->contains('id', $solicitudEdit->id)) {
+                    $solicitudPedidos->prepend($solicitudEdit);
+                }
             }
         }
+
         $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles'])
-            ->when($this->search, function ($q) {
+            ->when(
+                $this->search,
+                fn($q) =>
                 $q->where('codigo', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('solicitudPedido.cliente', function ($query) {
-                        $query->where('nombre', 'like', '%' . $this->search . '%');
-                    });
-            })
+                    ->orWhereHas(
+                        'solicitudPedido.cliente',
+                        fn($query) =>
+                        $query->where('nombre', 'like', '%' . $this->search . '%')
+                    )
+            )
             ->latest()
             ->get();
 
@@ -324,6 +373,7 @@ class Pedidos extends Component
             'detalles' => $this->detalles,
             'sucursales' => Sucursal::orderBy('nombre')->get(),
             'solicitudPedidos' => $solicitudPedidos,
+            'sucursalId' => null,
         ]);
     }
 
