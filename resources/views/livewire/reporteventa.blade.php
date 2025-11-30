@@ -64,13 +64,11 @@
             </select>
         </div>
         <div class="flex justify-center mb-6">
-    <button 
-        wire:click="descargarPDF" 
-        class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition"
-    >
-        Descargar PDF
-    </button>
-</div>
+            <button wire:click="descargarPDF"
+                class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">
+                Descargar PDF
+            </button>
+        </div>
 
     </div>
 

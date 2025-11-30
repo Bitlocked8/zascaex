@@ -132,70 +132,73 @@ class Reporteventa extends Component
         return null;
     }
 
-   public function descargarPDF()
-{
-    $pedidos = $this->filtrarPedidos();
+    public function descargarPDF()
+    {
+        $pedidos = $this->filtrarPedidos();
 
-    $cliente_nombre = $this->cliente_id ? Cliente::find($this->cliente_id)?->nombre : 'Todos los clientes';
-    $personal_nombre = $this->personal_id ? Personal::find($this->personal_id)?->nombres : 'Todos los vendedores';
-    $sucursal_nombre = $this->sucursal_id ? Sucursal::find($this->sucursal_id)?->nombre : 'Todas las sucursales';
-    $producto = $this->producto ?: 'Todos los productos';
-    $estado_pago_texto = $this->filtroEstadoPago === '' ? 'Todos' : ($this->filtroEstadoPago == 1 ? 'Pagado' : 'Sin pagar');
-    $metodo_pago_texto = match($this->filtroMetodoPago) {
-        '' => 'Todos',
-        0 => 'QR',
-        1 => 'Efectivo',
-        2 => 'Crédito',
-    };
+        $cliente_nombre = $this->cliente_id ? Cliente::find($this->cliente_id)?->nombre : 'Todos los clientes';
+        $personal_nombre = $this->personal_id ? Personal::find($this->personal_id)?->nombres : 'Todos los vendedores';
+        $sucursal_nombre = $this->sucursal_id ? Sucursal::find($this->sucursal_id)?->nombre : 'Todas las sucursales';
+        $producto = $this->producto ?: 'Todos los productos';
+        $estado_pago_texto = $this->filtroEstadoPago === '' ? 'Todos' : ($this->filtroEstadoPago == 1 ? 'Pagado' : 'Sin pagar');
+        $metodo_pago_texto = match ($this->filtroMetodoPago) {
+            '' => 'Todos',
+            0 => 'QR',
+            1 => 'Efectivo',
+            2 => 'Crédito',
+        };
 
-    $totalPagado = 0;
-    $totalSinPagar = 0;
-    $totalDeudaCredito = 0;
-    $resumenMetodos = ['QR' => 0, 'Efectivo' => 0, 'Crédito' => 0];
+        $totalPagado = 0;
+        $totalSinPagar = 0;
+        $totalDeudaCredito = 0;
+        $resumenMetodos = ['QR' => 0, 'Efectivo' => 0, 'Crédito' => 0];
 
-    foreach ($pedidos as $pedido) {
-        $creditoBase = $pedido->pagoPedidos->where('metodo', 2)->sum('monto');
-        $pagosRealizados = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
-        $totalDeudaCredito += max($creditoBase - $pagosRealizados, 0);
+        foreach ($pedidos as $pedido) {
+            $creditoBase = $pedido->pagoPedidos->where('metodo', 2)->sum('monto');
+            $pagosRealizados = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
+            $totalDeudaCredito += max($creditoBase - $pagosRealizados, 0);
 
-        foreach ($pedido->pagoPedidos as $pago) {
-            if (
-                ($this->filtroEstadoPago === '' || $pago->estado == (int) $this->filtroEstadoPago) &&
-                ($this->filtroMetodoPago === '' || $pago->metodo == (int) $this->filtroMetodoPago)
-            ) {
-                if ($pago->estado == 1 && $pago->metodo != 2) {
-                    $totalPagado += $pago->monto;
-                } elseif ($pago->estado == 0) {
-                    $totalSinPagar += $pago->monto;
+            foreach ($pedido->pagoPedidos as $pago) {
+                if (
+                    ($this->filtroEstadoPago === '' || $pago->estado == (int) $this->filtroEstadoPago) &&
+                    ($this->filtroMetodoPago === '' || $pago->metodo == (int) $this->filtroMetodoPago)
+                ) {
+                    if ($pago->estado == 1 && $pago->metodo != 2) {
+                        $totalPagado += $pago->monto;
+                    } elseif ($pago->estado == 0) {
+                        $totalSinPagar += $pago->monto;
+                    }
+
+                    if ($pago->metodo == 0)
+                        $resumenMetodos['QR'] += $pago->monto;
+                    if ($pago->metodo == 1)
+                        $resumenMetodos['Efectivo'] += $pago->monto;
+                    if ($pago->metodo == 2)
+                        $resumenMetodos['Crédito'] += $pago->monto;
                 }
-
-                if ($pago->metodo == 0) $resumenMetodos['QR'] += $pago->monto;
-                if ($pago->metodo == 1) $resumenMetodos['Efectivo'] += $pago->monto;
-                if ($pago->metodo == 2) $resumenMetodos['Crédito'] += $pago->monto;
             }
         }
+
+        $pdf = Pdf::loadView('pdf.reporteventa', [
+            'pedidos' => $pedidos,
+            'cliente_nombre' => $cliente_nombre,
+            'personal_nombre' => $personal_nombre,
+            'sucursal_nombre' => $sucursal_nombre,
+            'producto' => $producto,
+            'estado_pago_texto' => $estado_pago_texto,
+            'metodo_pago_texto' => $metodo_pago_texto,
+            'totalPagado' => $totalPagado,
+            'totalSinPagar' => $totalSinPagar,
+            'resumenMetodos' => $resumenMetodos,
+            'totalDeudaCredito' => $totalDeudaCredito,
+        ]);
+
+        $filename = 'Reporte_Ventas_' . now()->format('Ymd_His') . '.pdf';
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
-
-    $pdf = Pdf::loadView('pdf.reporteventa', [
-        'pedidos' => $pedidos,
-        'cliente_nombre' => $cliente_nombre,
-        'personal_nombre' => $personal_nombre,
-        'sucursal_nombre' => $sucursal_nombre,
-        'producto' => $producto,
-        'estado_pago_texto' => $estado_pago_texto,
-        'metodo_pago_texto' => $metodo_pago_texto,
-        'totalPagado' => $totalPagado,
-        'totalSinPagar' => $totalSinPagar,
-        'resumenMetodos' => $resumenMetodos,
-        'totalDeudaCredito' => $totalDeudaCredito,
-    ]);
-
-    $filename = 'Reporte_Ventas_' . now()->format('Ymd_His') . '.pdf';
-
-    return response()->streamDownload(function() use ($pdf) {
-        echo $pdf->output();
-    }, $filename);
-}
 
 
 
