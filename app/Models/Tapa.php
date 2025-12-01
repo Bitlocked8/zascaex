@@ -17,13 +17,7 @@ class Tapa extends Model
         'descripcion',
     ];
 
-    /**
-     * Relación: Una tapa puede ser utilizada en múltiples bases.
-     */
-    // public function bases()
-    // {
-    //     return $this->hasMany(Base::class);
-    // }
+   
     public function existencias()
     {
         return $this->morphMany(Existencia::class, 'existenciable');

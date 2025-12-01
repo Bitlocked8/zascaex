@@ -25,7 +25,7 @@ class Adornados extends Component
     public $reposicionesSeleccionadas = [];
     public $reposiciones = [];
 
-    
+
     public $accion = 'create';
 
     protected $rules = [
@@ -49,7 +49,17 @@ class Adornados extends Component
             ->latest()
             ->get();
 
-        $pedidosQuery = Pedido::with(['personal', 'solicitudPedido.cliente']);
+        $pedidosQuery = Pedido::with([
+            'personal',
+            'solicitudPedido',                   // ✅ agregar la relación padre
+            'solicitudPedido.cliente',
+            'solicitudPedido.detalles',          // ✅ esta línea
+            'solicitudPedido.detalles.producto',
+            'solicitudPedido.detalles.tapa',
+            'solicitudPedido.detalles.etiqueta',
+            'solicitudPedido.detalles.otro',
+        ]);
+
         if ($this->accion === 'edit' && $this->adornado_id) {
             $pedidosQuery->where(fn($q) => $q->whereDoesntHave('adornados')->orWhere('id', $this->pedido_id));
         } else {
