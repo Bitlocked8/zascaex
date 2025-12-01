@@ -118,35 +118,45 @@
                         <p class="font-semibold text-sm">
                             <span class="text-u">{{ $codigo }}</span>
                         </p>
-
                         <div>
-                            <label class="text-u">Pedido (Requerido)</label>
+                            <label class="text-u font-semibold mb-2 block">Pedido (Requerido)</label>
 
                             @if($accion === 'edit')
                                 @php
                                     $pedidoActual = $pedidos->firstWhere('id', $pedido_id);
                                 @endphp
 
-                                <p
+                                <div
                                     class="flex flex-col items-center gap-2 p-4 rounded-lg border-2 bg-white text-gray-800 text-center">
-                                    <span class="font-medium">
-                                        {{ $pedidoActual->codigo ?? ('Pedido #' . $pedido_id) }}
-                                    </span>
+                                    <span
+                                        class="font-medium text-lg">{{ $pedidoActual->codigo ?? ('Pedido #' . $pedido_id) }}</span>
 
                                     <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        Cliente: {{ $pedidoActual->cliente->nombre ?? 'Sin cliente' }}
+                                        Cliente: {{ $pedidoActual->solicitudPedido?->cliente?->nombre ?? 'Sin cliente' }}
                                     </span>
 
                                     <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        Estado:
+                                        Personal: {{ $pedidoActual->personal?->nombres ?? 'Sin personal' }}
+                                    </span>
+
+                                    <span class="text-xs mt-1">
+                                        Fecha: {{ optional($pedidoActual->created_at)->format('d/m/Y') ?? 'N/A' }}
+                                    </span>
+
+                                    <span
+                                        class="mt-2 px-2 py-1 rounded-full text-xs font-semibold 
+                                        {{ $pedidoActual->estado_pedido == 0 ? 'bg-yellow-500 text-white' : ($pedidoActual->estado_pedido == 1 ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white') }}">
                                         {{ $pedidoActual->estado_pedido == 0 ? 'Pendiente' : ($pedidoActual->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
                                     </span>
-                                </p>
+
+                                    <span class="text-xs text-gray-500 mt-1">
+                                        Observaciones: {{ $pedidoActual->solicitudPedido?->observaciones ?? 'Ninguna' }}
+                                    </span>
+                                </div>
                             @else
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar pedido</label>
                                     <input type="text" wire:model.live="searchPedido" class="input-minimal w-full"
-                                        placeholder="Escribe el código o cliente..." />
+                                        placeholder="Buscar código o cliente..." />
                                 </div>
 
                                 <div
@@ -162,22 +172,29 @@
                                         @endphp
 
                                         <button type="button" wire:click="$set('pedido_id', {{ $pedido->id }})"
-                                            class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center 
-                                                                            {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                                            <span class="text-u font-medium">
-                                                {{ $pedido->codigo }}
+                                            class="w-full p-4 rounded-lg border-2 transition flex flex-col items-start text-left
+                                                    {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+
+                                            <span class="font-semibold">{{ $pedido->codigo }}</span>
+
+                                            <span class="text-sm text-gray-700">
+                                                Cliente: {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'N/A' }}
                                             </span>
 
-                                            <span class="text-sm font-semibold">
-                                                Cliente: {{ $pedido->cliente->nombre ?? 'N/A' }}
+                                            <span class="text-sm text-gray-700">
+                                                Personal: {{ $pedido->personal?->nombres ?? 'N/A' }}
                                             </span>
 
-                                            <span class="text-sm font-semibold">
-                                                Personal: {{ $pedido->personal->nombres ?? 'N/A' }}
+                                            <span class="text-xs text-gray-500">
+                                                Fecha: {{ optional($pedido->created_at)->format('d/m/Y') ?? 'N/A' }}
                                             </span>
 
                                             <span class="mt-2 px-2 py-1 rounded-full text-xs font-semibold {{ $estadoColor }}">
                                                 {{ $pedido->estado_pedido == 0 ? 'Pendiente' : ($pedido->estado_pedido == 1 ? 'Entregado' : 'Cancelado') }}
+                                            </span>
+
+                                            <span class="text-xs text-gray-500 mt-1">
+                                                Observaciones: {{ $pedido->solicitudPedido?->observaciones ?? 'Ninguna' }}
                                             </span>
                                         </button>
                                     @empty
@@ -217,7 +234,12 @@
                                             <p class="text-xs text-gray-500">
                                                 Cant. disponible: <span class="font-semibold">{{ $repo->cantidad }}</span>
                                             </p>
+                                            <p class="text-xs text-gray-400">
+                                                Sucursal: <span
+                                                    class="font-semibold">{{ $repo->existencia->sucursal->nombre ?? 'Sin sucursal' }}</span>
+                                            </p>
                                         </div>
+
 
                                         <div class="flex flex-wrap items-center gap-2">
                                             @if($seleccionado)

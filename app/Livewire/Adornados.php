@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class Adornados extends Component
 {
+
+    public $solicitud_pedido_id;
+    public $solicitudPedidos = [];
+    public $detallesSolicitud = [];
     public $search = '';
     public $modal = false;
     public $modalDetalle = false;
@@ -19,6 +23,9 @@ class Adornados extends Component
     public $codigo;
     public $observaciones = '';
     public $reposicionesSeleccionadas = [];
+    public $reposiciones = [];
+
+    
     public $accion = 'create';
 
     protected $rules = [
@@ -30,57 +37,86 @@ class Adornados extends Component
 
     public function render()
     {
-        $adornados = Adornado::with(['pedido', 'reposiciones.existencia.existenciable'])
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+        $sucursalId = $personal->trabajos()->latest()->first()?->sucursal_id;
+
+        $adornados = Adornado::with(['pedido', 'reposiciones.existencia.existenciable', 'personal'])
+            ->when($rol === 4, fn($q) => $q->whereHas('reposiciones.existencia', fn($q2) => $q2->where('sucursal_id', $sucursalId)))
             ->when($this->search, fn($q) => $q->where('codigo', 'like', "%{$this->search}%")
                 ->orWhereHas('pedido', fn($q2) => $q2->where('codigo', 'like', "%{$this->search}%")))
-            ->latest()->get();
+            ->latest()
+            ->get();
 
-        $pedidosQuery = Pedido::query();
+        $pedidosQuery = Pedido::with(['personal', 'solicitudPedido.cliente']);
         if ($this->accion === 'edit' && $this->adornado_id) {
-            $pedidosQuery->where(function ($q) {
-                $q->whereDoesntHave('adornados')
-                    ->orWhere('id', $this->pedido_id);
-            });
+            $pedidosQuery->where(fn($q) => $q->whereDoesntHave('adornados')->orWhere('id', $this->pedido_id));
         } else {
             $pedidosQuery->whereDoesntHave('adornados');
         }
         $pedidos = $pedidosQuery->get();
 
-        $reposicionesQuery = Reposicion::with('existencia.existenciable')
-            ->where('estado_revision', true)
-            ->whereHas('existencia', fn($q) => $q->where('existenciable_type', Etiqueta::class));
-
-        if ($this->accion === 'edit') {
-            $reposicionIdsAsignadas = array_keys($this->reposicionesSeleccionadas);
-            $reposicionesQuery->where(function ($q) use ($reposicionIdsAsignadas) {
-                $q->where('cantidad', '>', 0)
-                    ->orWhereIn('id', $reposicionIdsAsignadas);
-            });
-        } else {
-            $reposicionesQuery->where('cantidad', '>', 0);
-        }
-
-        $reposiciones = $reposicionesQuery->get();
-
-        return view('livewire.adornados', compact('adornados', 'pedidos', 'reposiciones'));
+        return view('livewire.adornados', [
+            'adornados' => $adornados,
+            'pedidos' => $pedidos,
+        ]);
     }
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['adornado_id', 'pedido_id', 'codigo', 'observaciones', 'reposicionesSeleccionadas', 'accion']);
+        $this->reset([
+            'adornado_id',
+            'pedido_id',
+            'codigo',
+            'observaciones',
+            'reposicionesSeleccionadas',
+            'reposiciones',
+            'accion'
+        ]);
+
         $this->accion = $accion;
-        if ($accion === 'create')
+
+        $usuario = auth()->user();
+        $personal = $usuario->personal;
+        $rol = $usuario->rol_id;
+        $sucursalId = $personal->trabajos()->latest()->first()?->sucursal_id;
+
+        if ($accion === 'create') {
             $this->codigo = $this->generarCodigo('AD');
-        if ($accion === 'edit' && $id)
+        }
+
+        if ($accion === 'edit' && $id) {
             $this->editar($id);
+        }
+
+        $this->reposiciones = Reposicion::with('existencia.existenciable')
+            ->where('estado_revision', true)
+            ->whereHas('existencia', function ($q) use ($rol, $sucursalId) {
+                $q->where('existenciable_type', Etiqueta::class);
+                if ($rol === 4 && $sucursalId) {
+                    $q->where('sucursal_id', $sucursalId);
+                }
+            })
+            ->when($this->accion === 'edit', function ($q) {
+                $idsSeleccionados = array_keys($this->reposicionesSeleccionadas ?? []);
+                $q->where(function ($sub) use ($idsSeleccionados) {
+                    $sub->where('cantidad', '>', 0)
+                        ->orWhereIn('id', $idsSeleccionados);
+                });
+            })
+            ->when($this->accion === 'create', function ($q) {
+                $q->where('cantidad', '>', 0);
+            })
+            ->get();
+
         $this->modal = true;
     }
 
     protected function generarCodigo($prefijo)
     {
         $fechaHoy = now()->format('Ymd');
-        $ultimoCodigo = Adornado::whereDate('created_at', now()->toDateString())
-            ->latest('id')->value('codigo');
+        $ultimoCodigo = Adornado::whereDate('created_at', now()->toDateString())->latest('id')->value('codigo');
         $contador = 1;
         if ($ultimoCodigo) {
             $partes = explode('-', $ultimoCodigo);
@@ -98,17 +134,14 @@ class Adornados extends Component
         $this->observaciones = $adornado->observaciones;
 
         $this->reposicionesSeleccionadas = $adornado->reposiciones
-            ->mapWithKeys(function ($reposicion) {
-                return [
-                    $reposicion->id => [
-                        'cantidad_usada' => $reposicion->pivot->cantidad_usada ?? 0,
-                        'merma' => $reposicion->pivot->merma ?? 0,
-                        'cantidad_disponible' => $reposicion->cantidad + ($reposicion->pivot->cantidad_usada ?? 0)
-                    ]
-                ];
-            })->toArray();
+            ->mapWithKeys(fn($r) => [
+                $r->id => [
+                    'cantidad_usada' => $r->pivot->cantidad_usada ?? 0,
+                    'merma' => $r->pivot->merma ?? 0,
+                    'cantidad_disponible' => $r->cantidad + ($r->pivot->cantidad_usada ?? 0)
+                ]
+            ])->toArray();
     }
-
 
     public function toggleReposicion($reposicionId)
     {
@@ -138,12 +171,18 @@ class Adornados extends Component
             return;
         }
 
+        if (empty($this->reposicionesSeleccionadas) || collect($this->reposicionesSeleccionadas)->sum('cantidad_usada') <= 0) {
+            $this->addError('reposicionesSeleccionadas', 'Debe seleccionar al menos una reposición con cantidad mayor a 0.');
+            return;
+        }
+
         DB::transaction(function () {
             if ($this->accion === 'create') {
                 $adornado = Adornado::create([
                     'codigo' => $this->codigo,
                     'pedido_id' => $this->pedido_id,
-                    'observaciones' => $this->observaciones
+                    'observaciones' => $this->observaciones,
+                    'personal_id' => auth()->user()->personal->id ?? null,
                 ]);
             } else {
                 $adornado = Adornado::with('reposiciones')->findOrFail($this->adornado_id);
@@ -154,7 +193,7 @@ class Adornados extends Component
                 $adornado->update([
                     'pedido_id' => $this->pedido_id,
                     'codigo' => $this->codigo,
-                    'observaciones' => $this->observaciones
+                    'observaciones' => $this->observaciones,
                 ]);
             }
 
@@ -162,7 +201,6 @@ class Adornados extends Component
             foreach ($this->reposicionesSeleccionadas as $id => $data) {
                 $cantidad = $data['cantidad_usada'] ?? 0;
                 $merma = $data['merma'] ?? 0;
-
                 $reposicion = Reposicion::find($id);
                 if (!$reposicion)
                     continue;
@@ -184,7 +222,6 @@ class Adornados extends Component
 
             $adornado->reposiciones()->sync($syncData);
         });
-
 
         session()->flash('mensaje', 'Adornado guardado correctamente.');
         $this->cerrarModal();
@@ -214,7 +251,15 @@ class Adornados extends Component
     {
         $this->modal = false;
         $this->modalDetalle = false;
-        $this->reset(['adornado_id', 'pedido_id', 'codigo', 'observaciones', 'reposicionesSeleccionadas', 'accion']);
+        $this->reset([
+            'adornado_id',
+            'pedido_id',
+            'codigo',
+            'observaciones',
+            'reposicionesSeleccionadas',
+            'reposiciones',
+            'accion'
+        ]);
         $this->resetErrorBag();
         $this->resetValidation();
     }
