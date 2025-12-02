@@ -18,16 +18,27 @@ class Trabajador extends Component
     public $accion = 'create';
     public $labor_id = null;
     public $labores = [];
+    public $search = '';
     public $modalLabores = false;
 
     public function render()
     {
-        $trabajos = Trabajo::with(['sucursal', 'personal'])->latest()->get();
+        $trabajos = Trabajo::with(['sucursal', 'personal'])
+            ->when($this->search, function ($query) {
+                $query->whereHas('personal', function ($q) {
+                    $q->where('nombres', 'like', '%' . $this->search . '%')
+                        ->orWhere('apellidos', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->latest()
+            ->get();
+
         $sucursales = Sucursal::all();
         $personales = Personal::all();
 
         return view('livewire.trabajador', compact('trabajos', 'sucursales', 'personales'));
     }
+
 
     public function abrirModal($accion = 'create', $id = null)
     {

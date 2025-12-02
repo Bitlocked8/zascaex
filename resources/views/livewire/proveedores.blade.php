@@ -77,82 +77,116 @@
         <div class="modal-content">
           <div class="flex flex-col gap-4">
             <div>
-              <label class="font-semibold text-sm mb-1 block">Razón Social</label>
+              <label class="text-u">Razón Social (requerido)</label>
               <input wire:model="razonSocial" class="input-minimal" placeholder="Ej. Proveedor S.A." />
               @error('razonSocial') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Contacto</label>
+              <label class="font-semibold text-sm mb-1 block">Contacto (opcional )</label>
               <input wire:model="nombreContacto" class="input-minimal" placeholder="Ej. Juan Pérez" />
               @error('nombreContacto') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Dirección</label>
+              <label class="font-semibold text-sm mb-1 block">Dirección (opcional )</label>
               <input wire:model="direccion" class="input-minimal" placeholder="Ej. Av. Siempre Viva 123" />
               @error('direccion') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Teléfono</label>
+              <label class="font-semibold text-sm mb-1 block">Teléfono (opcional )</label>
               <input type="text" wire:model="telefono" class="input-minimal" placeholder="Ej. 70012345" />
               @error('telefono') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Correo</label>
+              <label class="font-semibold text-sm mb-1 block">Correo (opcional )</label>
               <input type="email" wire:model="correo" class="input-minimal" placeholder="Ej. correo@proveedor.com" />
               @error('correo') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Tipo</label>
-              <select wire:model="tipo" class="input-minimal">
-                <option value="">-- Seleccionar Tipo --</option>
-                <option value="tapas">Tapas</option>
-                <option value="preformas">Preformas</option>
-                <option value="etiquetas">Etiquetas</option>
-              </select>
+              <label class="font-semibold text-sm mb-2 block">Tipo</label>
+              <div class="flex justify-center gap-3 mt-2">
+                <button type="button" wire:click="$set('tipo', 'material')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                      {{ $tipo === 'material'
+      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                  Material
+                </button>
+                <button type="button" wire:click="$set('tipo', 'servicio')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                      {{ $tipo === 'servicio'
+      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                  Servicio
+                </button>
+              </div>
               @error('tipo') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
+
+
             <div>
-              <label class="font-semibold text-sm mb-1 block">Servicio</label>
-              <select wire:model="servicio" class="input-minimal">
-                <option value="">-- Seleccionar Servicio --</option>
-                <option value="soplado">Soplado</option>
-                <option value="transporte">Transporte</option>
-              </select>
+              <label class="font-semibold text-sm mb-2 block">Servicio</label>
+              <div class="flex justify-center gap-3 mt-2">
+                <button type="button" wire:click="$set('servicio', 'compra')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                          {{ $servicio === 'compra'
+      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                  Compra
+                </button>
+                <button type="button" wire:click="$set('servicio', 'servicio')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                          {{ $servicio === 'servicio'
+      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                  Servicio
+                </button>
+                <button type="button" wire:click="$set('servicio', 'produccion')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                          {{ $servicio === 'produccion'
+      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                  Producción
+                </button>
+              </div>
               @error('servicio') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
+
             <div>
-              <label class="font-semibold text-sm mb-1 block">Descripción</label>
+              <label class="font-semibold text-sm mb-1 block">Descripción (opcional)</label>
               <input wire:model="descripcion" class="input-minimal" placeholder="Descripción del proveedor" />
               @error('descripcion') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Precio</label>
+              <label class="font-semibold text-sm mb-1 block">Precio (Requerido)</label>
               <input type="number" wire:model="precio" class="input-minimal" placeholder="Ej. 100.50" />
               @error('precio') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
             <div>
-              <label class="font-semibold text-sm mb-1 block">Tiempo de Entrega</label>
+              <label class="font-semibold text-sm mb-1 block">Tiempo de Entrega (opcional)</label>
               <input wire:model="tiempoEntrega" class="input-minimal" placeholder="Ej. 3 días hábiles" />
               @error('tiempoEntrega') <span class="error-message">{{ $message }}</span> @enderror
             </div>
 
-            <div class="flex flex-wrap justify-center gap-2 mt-2">
-              @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
-                <button type="button" wire:click="$set('estado', {{ $key }})"
-                  class="px-4 py-2 rounded-full text-sm flex items-center justify-center{{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
-                  {{ $label }}
-                </button>
-              @endforeach
+            <div class="flex justify-center gap-3 mt-2">
+              <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+        {{ $estado === 1
+      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                Activo
+              </button>
+
+              <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+        {{ $estado === 0
+      ? 'bg-gray-700 text-white border-gray-800 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                Inactivo
+              </button>
             </div>
+
           </div>
         </div>
         <div class="modal-footer">

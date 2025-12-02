@@ -32,5 +32,5 @@ class Trabajo extends Model
     {
         return $this->belongsTo(Labor::class);
     }
-   
+
 }

@@ -63,15 +63,16 @@
             Editar
           </button>
 
-          <button wire:click="modaldetalle({{ $trabajo->id }})" class="btn-cyan" title="Ver Detalle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M12 20l9 -16h-18z" />
-              <path d="M12 9v4" />
-              <path d="M12 17h.01" />
+          <button wire:click="modaldetalle({{ $trabajo->id }})" class="btn-cyan" title="Ver detalle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+              <path d="M8 12l0 .01" />
+              <path d="M12 12l0 .01" />
+              <path d="M16 12l0 .01" />
             </svg>
-            Detalle
+            Ver mas
           </button>
         </div>
       </div>
@@ -89,96 +90,164 @@
     <div class="modal-overlay">
       <div class="modal-box">
         <div class="modal-content flex flex-col gap-4">
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <p class="font-semibold text-sm">
-                Fecha de Inicio: <span class="font-normal">{{ $fechaInicio ?? 'N/A' }}</span>
-              </p>
-            </div>
-            <div>
-              <label class="font-semibold text-sm">Fecha Final</label>
-              <input type="date" wire:model="fechaFinal" class="input-minimal">
-              @error('fechaFinal') <span class="error-message">{{ $message }}</span> @enderror
-            </div>
+
+          <div class="grid grid-cols-1 gap-2 mt-2">
+            <p class="font-semibold text-sm">
+              Fecha de Inicio:
+              <span class="font-normal">{{ $fechaInicio ?? 'N/A' }}</span>
+            </p>
+            <label class="font-semibold text-sm">Fecha Final</label>
+            <input type="date" wire:model="fechaFinal" class="input-minimal text-center">
+            @error('fechaFinal')
+              <span class="error-message">{{ $message }}</span>
+            @enderror
           </div>
-          <div>
+
+          <div class="sm:col-span-2">
             <label class="font-semibold text-sm">Estado</label>
-            <div class="flex flex-wrap gap-2 mt-2">
-              @foreach(['1' => 'Activo', '0' => 'Inactivo'] as $st => $label)
-                <button type="button" wire:click="$set('estado','{{ $st }}')"
-                  class="px-4 py-2 rounded-full text-sm
-                                        {{ $estado == $st ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
-                  {{ $label }}
-                </button>
-              @endforeach
+
+            <div class="flex justify-center gap-3 mt-2">
+
+              {{-- Activo --}}
+              <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                        {{ $estado == 1
+      ? 'bg-green-600 text-white border-green-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                Activo
+              </button>
+
+              {{-- Inactivo --}}
+              <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                        {{ $estado == 0
+      ? 'bg-red-600 text-white border-red-700 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                Inactivo
+              </button>
+
             </div>
-            @error('estado') <span class="error-message">{{ $message }}</span> @enderror
+
+            @error('estado')
+              <span class="error-message">{{ $message }}</span>
+            @enderror
           </div>
+
           <div>
             <label class="font-semibold text-sm mb-2 block">Sucursal</label>
+
             <div
-              class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
-              @foreach($sucursales as $s)
-                <button type="button" wire:click="$set('sucursal_id', {{ $s->id }})"
-                  class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                        {{ $sucursal_id == $s->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                  {{ $s->nombre }}
-                </button>
-              @endforeach
+              class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white  grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
+
+              @forelse($sucursales as $s)
+                      <button type="button" wire:click="$set('sucursal_id', {{ $s->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+                                    {{ $sucursal_id == $s->id
+                ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                : 'bg-gray-100 text-gray-800 hover:bg-cyan-100'
+                                    }}">
+                        <p class="font-semibold text-sm">{{ $s->nombre }}</p>
+                        <p class="text-xs text-gray-600 {{ $sucursal_id == $s->id ? 'text-cyan-100' : '' }}">
+                          {{ $s->empresa?->nombre ?? 'Sin empresa' }}
+                        </p>
+                        <p class="text-xs text-gray-600 {{ $sucursal_id == $s->id ? 'text-cyan-100' : '' }}">
+                          {{ $s->telefono ?? 'Sin teléfono' }}
+                        </p>
+
+                      </button>
+              @empty
+                <p class="text-center text-gray-500 py-3 text-sm">
+                  No hay sucursales disponibles
+                </p>
+              @endforelse
+
             </div>
-            @error('sucursal_id') <span class="error-message">{{ $message }}</span> @enderror
+
+            @error('sucursal_id')
+              <span class="error-message">{{ $message }}</span>
+            @enderror
           </div>
+
+
           <div>
             <label class="font-semibold text-sm mb-2 block">Personal Responsable</label>
+
             <div
               class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
-              @foreach($personales as $p)
-                <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
-                  class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                        {{ $personal_id == $p->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                  {{ $p->nombres }}
-                </button>
-              @endforeach
+
+              @forelse($personales as $p)
+                      <button type="button" wire:click="$set('personal_id', {{ $p->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+                                                        {{ $personal_id == $p->id
+                ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                : 'bg-gray-100 text-gray-800 hover:bg-cyan-100'
+                                                        }}">
+                        <p class="font-semibold text-sm">
+                          {{ $p->nombres }} {{ $p->apellidos }}
+                        </p>
+                        <p class="text-xs text-gray-600 {{ $personal_id == $p->id ? 'text-cyan-100' : '' }}">
+                          {{ $p->celular ?? 'Sin número' }}
+                        </p>
+
+                      </button>
+              @empty
+                <p class="text-center text-gray-500 py-3 text-sm">
+                  No hay personal disponible
+                </p>
+              @endforelse
+
             </div>
-            @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
+
+            @error('personal_id')
+              <span class="error-message">{{ $message }}</span>
+            @enderror
           </div>
 
-          <!-- Labor -->
+
           <div>
             <label class="font-semibold text-sm mb-2 block">Labor</label>
+
             <div
               class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
-              @foreach(\App\Models\Labor::where('estado', 1)->get() as $l)
+
+              @forelse(\App\Models\Labor::where('estado', 1)->get() as $l)
                 <button type="button" wire:click="$set('labor_id', {{ $l->id }})"
                   class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                       {{ $labor_id == $l->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                    {{ $labor_id == $l->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                   {{ $l->nombre }}
                 </button>
-              @endforeach
-            </div>
-            @error('labor_id') <span class="error-message">{{ $message }}</span> @enderror
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path d="M10 10l4 4m0 -4l-4 4" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-            CERRAR
-          </button>
-          <button type="button" wire:click="guardar" class="btn-cyan">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-              <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-              <path d="M14 4l0 4l-6 0l0 -4" />
-            </svg>
-            Guardar
-          </button>
 
+              @empty
+                <p class="text-center text-gray-500 py-3 text-sm">
+                  No hay labores disponibles
+                </p>
+              @endforelse
+
+            </div>
+
+            @error('labor_id')
+              <span class="error-message">{{ $message }}</span>
+            @enderror
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+              </svg>
+              CERRAR
+            </button>
+            <button type="button" wire:click="guardar" class="btn-cyan">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" />
+                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                <path d="M14 4l0 4l-6 0l0 -4" />
+              </svg>
+              Guardar
+            </button>
+
+          </div>
         </div>
       </div>
     </div>
@@ -227,31 +296,37 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" wire:click="agregarLabor" class="btn-circle btn-cyan">
+            <button type="button" wire:click="agregarLabor" class="btn-cyan">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path
                   d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
                 <path
                   d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-              </svg></button>
+              </svg>
+              añadir labor
+            </button>
 
-            <button type="button" wire:click="guardarLabores" class="btn-circle btn-cyan">
+            <button type="button" wire:click="guardarLabores" class="btn-cyan">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                 <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                 <path d="M14 4l0 4l-6 0l0 -4" />
-              </svg></button>
+              </svg>
+              guardar labor
+            </button>
 
-            <button type="button" wire:click="$set('modalLabores', false)" class="btn-circle btn-cyan" title="Cerrar">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+            <button type="button" wire:click="$set('modalLabores', false)" class="btn-cyan" title="Cerrar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" />
-                <path d="M10 10l4 4m0 -4l-4 4" />
-                <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-              </svg></button>
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+              </svg>
+              CERRAR
+            </button>
           </div>
         </div>
       </div>
@@ -301,11 +376,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button wire:click="$set('modalDetalle', false)" lass="btn-cyan" title="Cerrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path d="M10 10l4 4m0 -4l-4 4" />
-              <circle cx="12" cy="12" r="9" />
+          <button wire:click="$set('modalDetalle', false)" class="btn-cyan" title="Cerrar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+              <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
             </svg>
             CERRAR
           </button>

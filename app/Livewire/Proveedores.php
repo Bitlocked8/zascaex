@@ -20,7 +20,7 @@ class Proveedores extends Component
     public $tipo = '';
     public $servicio = '';
     public $descripcion = '';
-    public $precio = '';
+    public $precio = null;
     public $tiempoEntrega = '';
     public $estado = 1;
     public $proveedorSeleccionado = null;
@@ -28,31 +28,44 @@ class Proveedores extends Component
     protected $rules = [
         'razonSocial' => 'required|string|max:255',
         'nombreContacto' => 'nullable|string|max:255',
-        'direccion' => 'required|string|max:255',
-        'telefono' => 'required|integer',
-        'correo' => 'required|email|max:255',
-        'tipo' => 'required|in:tapas,preformas,etiquetas',
-        'servicio' => 'required|in:soplado,transporte',
-        'descripcion' => 'required|string|max:255',
-        'precio' => 'required|numeric|min:0',
-        'tiempoEntrega' => 'required|string|max:255',
-        'estado' => 'required|boolean',
+        'direccion' => 'nullable|string|max:255',
+        'telefono' => 'nullable|integer',
+        'correo' => 'nullable|email|max:255',
+        'tipo' => 'nullable|in:material,servicio',
+        'servicio' => 'nullable|in:compra,servicio,produccion',
+        'descripcion' => 'nullable|string|max:255',
+        'precio' => 'nullable|numeric|min:0',
+        'tiempoEntrega' => 'nullable|string|max:255',
+        'estado' => 'nullable|boolean',
     ];
 
     public function render()
     {
         $proveedores = ModeloProveedor::when($this->search, function ($query) {
             $query->where('razonSocial', 'like', '%' . $this->search . '%')
-                  ->orWhere('nombreContacto', 'like', '%' . $this->search . '%')
-                  ->orWhere('correo', 'like', '%' . $this->search . '%');
-        })->get(); // Eliminamos paginate
+                ->orWhere('nombreContacto', 'like', '%' . $this->search . '%')
+                ->orWhere('correo', 'like', '%' . $this->search . '%');
+        })->get();
 
         return view('livewire.proveedores', compact('proveedores'));
     }
 
     public function abrirModal($accion)
     {
-        $this->reset(['razonSocial', 'nombreContacto', 'direccion', 'telefono', 'correo', 'tipo', 'servicio', 'descripcion', 'precio', 'tiempoEntrega', 'estado', 'proveedorId']);
+        $this->reset([
+            'razonSocial',
+            'nombreContacto',
+            'direccion',
+            'telefono',
+            'correo',
+            'tipo',
+            'servicio',
+            'descripcion',
+            'precio',
+            'tiempoEntrega',
+            'estado',
+            'proveedorId'
+        ]);
         $this->accion = $accion;
         $this->estado = 1;
         $this->modal = true;
@@ -90,35 +103,24 @@ class Proveedores extends Component
     {
         $this->validate();
 
+        $data = [
+            'razonSocial' => $this->razonSocial,
+            'nombreContacto' => $this->nombreContacto ?: null,
+            'direccion' => $this->direccion ?: null,
+            'telefono' => $this->telefono ?: null,
+            'correo' => $this->correo ?: null,
+            'tipo' => $this->tipo ?: null,
+            'servicio' => $this->servicio ?: null,
+            'descripcion' => $this->descripcion ?: null,
+            'precio' => $this->precio !== '' ? $this->precio : null,
+            'tiempoEntrega' => $this->tiempoEntrega ?: null,
+            'estado' => $this->estado ?? 1,
+        ];
+
         if ($this->accion === 'edit' && $this->proveedorId) {
-            $proveedor = ModeloProveedor::findOrFail($this->proveedorId);
-            $proveedor->update([
-                'razonSocial' => $this->razonSocial,
-                'nombreContacto' => $this->nombreContacto,
-                'direccion' => $this->direccion,
-                'telefono' => $this->telefono,
-                'correo' => $this->correo,
-                'tipo' => $this->tipo,
-                'servicio' => $this->servicio,
-                'descripcion' => $this->descripcion,
-                'precio' => $this->precio,
-                'tiempoEntrega' => $this->tiempoEntrega,
-                'estado' => $this->estado,
-            ]);
+            ModeloProveedor::findOrFail($this->proveedorId)->update($data);
         } else {
-            ModeloProveedor::create([
-                'razonSocial' => $this->razonSocial,
-                'nombreContacto' => $this->nombreContacto,
-                'direccion' => $this->direccion,
-                'telefono' => $this->telefono,
-                'correo' => $this->correo,
-                'tipo' => $this->tipo,
-                'servicio' => $this->servicio,
-                'descripcion' => $this->descripcion,
-                'precio' => $this->precio,
-                'tiempoEntrega' => $this->tiempoEntrega,
-                'estado' => $this->estado,
-            ]);
+            ModeloProveedor::create($data);
         }
 
         $this->cerrarModal();
@@ -128,7 +130,21 @@ class Proveedores extends Component
     {
         $this->modal = false;
         $this->detalleModal = false;
-        $this->reset(['razonSocial', 'nombreContacto', 'direccion', 'telefono', 'correo', 'tipo', 'servicio', 'descripcion', 'precio', 'tiempoEntrega', 'estado', 'proveedorId', 'proveedorSeleccionado']);
+        $this->reset([
+            'razonSocial',
+            'nombreContacto',
+            'direccion',
+            'telefono',
+            'correo',
+            'tipo',
+            'servicio',
+            'descripcion',
+            'precio',
+            'tiempoEntrega',
+            'estado',
+            'proveedorId',
+            'proveedorSeleccionado'
+        ]);
         $this->resetErrorBag();
     }
 }

@@ -22,7 +22,7 @@ class Sucursal extends Model
         return $this->belongsTo(Empresa::class);
     }
 
- 
+
     public function existencias()
     {
         return $this->hasMany(Existencia::class);
@@ -32,7 +32,7 @@ class Sucursal extends Model
         return $this->hasMany(Venta::class);
     }
 
-     public function pagos()
+    public function pagos()
     {
         return $this->hasMany(SucursalPago::class);
     }
