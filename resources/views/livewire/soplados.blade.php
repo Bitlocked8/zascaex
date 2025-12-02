@@ -23,20 +23,7 @@
         </div>
 
         @forelse($soplados as $soplado)
-            @php
-                $montoUsado = 0;
-                $montoMerma = 0;
 
-                if ($soplado->asignado) {
-                    foreach ($soplado->asignado->reposiciones as $reposicion) {
-                        $precioUnitario = $reposicion->cantidad_inicial > 0
-                            ? $reposicion->comprobantes->sum('monto') / $reposicion->cantidad_inicial
-                            : 0;
-                        $montoUsado += $precioUnitario * $soplado->cantidad;
-                        $montoMerma += $precioUnitario * ($soplado->merma ?? 0);
-                    }
-                }
-            @endphp
 
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-1">
@@ -48,31 +35,14 @@
                     <p><strong>Fecha del soplado:</strong> {{ \Carbon\Carbon::parse($soplado->fecha)->format('d/m/Y H:i') }}
                     </p>
                     <p><strong>Cantidad de salida:</strong> {{ $soplado->cantidad }}</p>
-                    <p><strong>Merma:</strong> {{ $soplado->merma }}</p>
+                    <p><strong>Merma de todo el material:</strong> {{ $soplado->merma }}</p>
                     <p class="mt-1 text-sm font-semibold">
                         <span
                             class="{{ $soplado->estado == 0 ? 'text-yellow-600' : '' }} {{ $soplado->estado == 1 ? 'text-blue-600' : '' }} {{ $soplado->estado == 2 ? 'text-green-600' : '' }}">
                             {{ $soplado->estado == 0 ? 'Pendiente' : ($soplado->estado == 1 ? 'En Proceso' : 'Finalizado') }}
                         </span>
                     </p>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div
-                            class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-                            <span class="text-sm font-medium text-gray-700">Monto usado:</span>
-                            <span class="text-sm font-semibold text-gray-900">
-                                {{ (floor($montoUsado) == $montoUsado) ? number_format($montoUsado, 0, ',', '.') : number_format($montoUsado, 2, ',', '.') }}
-                                Bs
-                            </span>
-                        </div>
-                        <div
-                            class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm">
-                            <span class="text-sm font-medium text-red-700">Monto merma:</span>
-                            <span class="text-sm font-semibold text-red-900">
-                                {{ (floor($montoMerma) == $montoMerma) ? number_format($montoMerma, 0, ',', '.') : number_format($montoMerma, 2, ',', '.') }}
-                                Bs
-                            </span>
-                        </div>
-                    </div>
+
 
                 </div>
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
@@ -167,16 +137,14 @@
                                                 <p class="text-lg font-semibold text-u">{{ $tipo }}</p>
                                                 <p class="text-base text-u">{{ $descripcion }}</p>
                                                 <p class="text-sm text-gray-700">
-                                                    <span
-                                                        class="text-semibold">{{ $as->codigo ?? 'N/A' }}</span>
+                                                    <span class="text-semibold">{{ $as->codigo ?? 'N/A' }}</span>
                                                 </p>
                                                 <p class="text-sm text-gray-700 mt-1">
                                                     <span
                                                         class="text-u">{{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}</span>
                                                 </p>
                                                 <p class="text-sm text-gray-700">
-                                                    Cantidad actual: <span
-                                                        class="text-semibold">{{ $pivot->cantidad ?? 0 }}</span>
+                                                    Cantidad actual: <span class="text-semibold">{{ $pivot->cantidad ?? 0 }}</span>
                                                 </p>
                                                 <p class="text-sm text-gray-700">
                                                     Cantidad que puede ser prodcucida: <span
@@ -202,7 +170,7 @@
                                         @foreach($asignaciones as $asignado)
                                             <button type="button" wire:click="seleccionarPreforma({{ $asignado->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-3 items-center text-center
-                                                                {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                                                                {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 
                                                 @foreach($asignado->reposiciones as $reposicion)
                                                     @php
@@ -214,14 +182,12 @@
                                                     <div class="flex flex-col items-center gap-1 border-b border-gray-200 pb-3">
 
                                                         <p class="text-sm text-u">
-                                                            <span
-                                                                class="text-semibold">{{ $asignado->codigo ?? 'N/A' }}</span>
+                                                            <span class="text-semibold">{{ $asignado->codigo ?? 'N/A' }}</span>
                                                         </p>
                                                         <p class="text-lg font-semibold text-u">{{ $tipo }}</p>
-                                                        <p class="text-base text-u">{{ $descripcion }}</p>                                                     
+                                                        <p class="text-base text-u">{{ $descripcion }}</p>
                                                         <p class="text-sm text-gray-700">
-                                                            Cantidad actual: <span
-                                                                class="text-semibold">{{ $pivot->cantidad ?? 0 }}</span>
+                                                            Cantidad actual: <span class="text-semibold">{{ $pivot->cantidad ?? 0 }}</span>
                                                         </p>
                                                         <p class="text-sm text-gray-700">
                                                             Cantidad original: <span
@@ -255,11 +221,13 @@
                                         @endphp
                                         <button type="button" wire:click="$set('existencia_destino_id', {{ $existencia->id }})"
                                             class="w-full p-4 rounded-xl border-2 transition flex flex-col items-center justify-center text-center
-                                                        {{ $existencia_destino_id == $existencia->id ? 'border-cyan-600 text-cyan-700 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-700 hover:bg-cyan-50' }}
-                                                        {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}" @if($disabled)
-                                                        disabled @endif>
+                                                                                                        {{ $existencia_destino_id == $existencia->id ? 'border-cyan-600 text-cyan-700 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-700 hover:bg-cyan-50' }}
+                                                                                                        {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                            @if($disabled) disabled @endif>
+
                                             <span class="text-u font-semibold text-lg">{{ $tipo }}:
-                                                {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}</span>
+                                                {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}
+                                            </span>
                                             @if($compatibilidad)
                                                 <span class="text-sm text-gray-600 italic mt-1">Compatibilidad:
                                                     <strong>{{ $compatibilidad }}</strong></span>
@@ -322,41 +290,55 @@
                             <input type="text" wire:model="observaciones" class="input-minimal" placeholder="Observaciones">
                         </div>
 
-                        <div class="text-center">
-                            <label class="font-semibold text-sm mb-2 block">Estado</label>
-                            <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
-                                <button type="button" wire:click="$set('estado', 0)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 0 ? 'bg-yellow-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-yellow-400' }}">En
-                                    proceso</button>
-                                <button type="button" wire:click="$set('estado', 1)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 1 ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-blue-400' }}">En
-                                    revisión</button>
-                                <button type="button" wire:click="$set('estado', 2)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 2 ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-green-400' }}">Confirmado</button>
-                            </div>
+
+
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="font-semibold text-sm">Estado</label>
+
+                        <div class="flex justify-center gap-3 mt-2">
+                            <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                    {{ $estado == 0
+            ? 'bg-yellow-500 text-white border-yellow-600 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                En proceso
+                            </button>
+                            <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                    {{ $estado == 1
+            ? 'bg-blue-600 text-white border-blue-700 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                En revisión
+                            </button>
+                            <button type="button" wire:click="$set('estado', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                    {{ $estado == 2
+            ? 'bg-green-600 text-white border-green-700 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                Confirmado
+                            </button>
+
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" wire:click="cerrarModal"  class="btn-cyan" title="Cerrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-              <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-            </svg>
-            CERRAR
-          </button>
+                        <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
+                        </button>
                         <button type="button" wire:click="guardar" class="btn-cyan">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-              <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-              <path d="M14 4l0 4l-6 0l0 -4" />
-            </svg>
-            Guardar
-          </button>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Guardar
+                        </button>
                     </div>
                 </div>
             </div>

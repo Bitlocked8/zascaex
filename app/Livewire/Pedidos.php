@@ -43,6 +43,9 @@ class Pedidos extends Component
     public $pagos = [];
     public $sucursalesPago = [];
     public $modalPagos = false;
+    public $modalEliminarPedido = false;
+    public $pedidoAEliminar = null;
+    public $eliminarSolicitudAsociada = false;
 
     public function quitarSolicitud()
     {
@@ -85,7 +88,6 @@ class Pedidos extends Component
     {
         $this->modalPedido = true;
     }
-
     public function cerrarModal()
     {
         $this->modalPedido = false;
@@ -99,7 +101,6 @@ class Pedidos extends Component
         $this->estado_pedido = 0;
         $this->pedido = new Pedido();
     }
-
     public function seleccionarSolicitud($id = null)
     {
         $this->solicitudSeleccionadaId = $id;
@@ -109,9 +110,6 @@ class Pedidos extends Component
             $this->detalles = [];
         }
     }
-
-
-
     public function agregarProducto()
     {
         if (!$this->cantidadSeleccionada)
@@ -216,8 +214,6 @@ class Pedidos extends Component
         }
 
         $pedido->save();
-
-        // Eliminar detalles marcados
         foreach ($this->detalles as $index => $pd) {
             if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
                 $detalle = PedidoDetalle::find($pd['id']);
@@ -232,8 +228,6 @@ class Pedidos extends Component
                 unset($this->detalles[$index]);
             }
         }
-
-        // Guardar detalles nuevos o modificados
         foreach ($this->detalles as $pd) {
             if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
                 $detalle = PedidoDetalle::create([
@@ -376,13 +370,10 @@ class Pedidos extends Component
             'sucursalId' => null,
         ]);
     }
-
-
     public function filtrarSucursalModal($id = null)
     {
         $this->sucursal_id = $id;
     }
-
     public function editarPedido($pedido_id)
     {
         $this->pedido = Pedido::with([
@@ -421,7 +412,7 @@ class Pedidos extends Component
     public function abrirModalDetallePedido($pedido_id)
     {
         $this->pedidoDetalle = Pedido::with([
-            'solicitudPedido.cliente', // ← cliente correcto
+            'solicitudPedido.cliente',
             'personal',
             'detalles.existencia.existenciable',
             'detalles.existencia.sucursal'
@@ -429,8 +420,6 @@ class Pedidos extends Component
 
         $this->modalDetallePedido = true;
     }
-
-
     public function eliminarPedido($pedido_id, $eliminarSolicitud = false)
     {
         $pedido = Pedido::with('detalles')->find($pedido_id);
@@ -459,6 +448,13 @@ class Pedidos extends Component
 
         $this->setMensaje('Pedido eliminado correctamente', 'success');
     }
+    public function confirmarEliminarPedido($pedido_id, $eliminarSolicitud = false)
+    {
+        $this->pedidoAEliminar = $pedido_id;
+        $this->eliminarSolicitudAsociada = $eliminarSolicitud;
+        $this->modalEliminarPedido = true;
+    }
+
 
     public function abrirModalPagosPedido($pedido_id)
     {
@@ -513,9 +509,6 @@ class Pedidos extends Component
         $this->reset(['pagos']);
         $this->modalPagos = false;
     }
-
-
-
     public function agregarPagoPedido()
     {
         $this->pagos[] = [
@@ -531,8 +524,6 @@ class Pedidos extends Component
             'sucursal_pago_id' => null,
         ];
     }
-
-
     public function eliminarPagoPedido($index)
     {
         $pago = $this->pagos[$index] ?? null;
@@ -542,5 +533,16 @@ class Pedidos extends Component
         unset($this->pagos[$index]);
         $this->pagos = array_values($this->pagos);
     }
+
+    public function eliminarPedidoConfirmado()
+{
+    if ($this->pedidoAEliminar) {
+        $this->eliminarPedido($this->pedidoAEliminar, $this->eliminarSolicitudAsociada);
+    }
+
+    $this->modalEliminarPedido = false;
+    $this->pedidoAEliminar = null;
+    $this->eliminarSolicitudAsociada = false;
+}
 
 }

@@ -9,7 +9,14 @@
     <div class="flex items-center gap-2 mb-4 col-span-full">
       <input type="text" wire:model.live="search" placeholder="Buscar por código o cliente..."
         class="input-minimal w-full" />
-      <button wire:click="$set('modalPedido', true)" class="btn-cyan">
+      <button wire:click="$set('modalPedido', true)" class="btn-cyan" title="Agregar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+          <path
+            d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+        </svg>
         Añadir
       </button>
     </div>
@@ -23,6 +30,7 @@
 
         $pagosConfirmados = $pagoPedidos->where('metodo', '<>', 2);
         $totalPagado = $pagosConfirmados->where('estado', 1)->sum('monto');
+        $usadoEnAdornado = \App\Models\Adornado::where('pedido_id', $pedido->id)->exists();
 
         if ($totalCredito > 0) {
           $saldoPendiente = max($totalCredito - $totalPagado, 0);
@@ -35,6 +43,9 @@
 
       <div class="card-teal flex flex-col gap-4">
         <div class="flex flex-col gap-2">
+          @if($usadoEnAdornado)
+            <p class="text-red-600 font-bold">⚠ Este pedido ya fue usado en adornados</p>
+          @endif
           <p class="text-emerald-600 uppercase font-semibold">
             {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Sin cliente' }}
           </p>
@@ -102,7 +113,7 @@
             </svg>
             Ver mas
           </button>
-          <button wire:click="eliminarPedido({{ $pedido->id }})" class="btn-cyan" title="Eliminar">
+          <button wire:click="confirmarEliminarPedido({{ $pedido->id }})" class="btn-cyan" title="Eliminar">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-width="2">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -114,6 +125,7 @@
             </svg>
             Eliminar
           </button>
+
         </div>
       </div>
     @empty
@@ -140,9 +152,17 @@
                         Fecha: {{ $pago['fecha_pago'] }}
                       </p>
 
-                      <button type="button" wire:click="eliminarPagoPedido({{ $index }})" class="btn-circle btn-cyan"
-                        title="Eliminar">
-                        🗑
+                      <button type="button" wire:click="eliminarPagoPedido({{ $index }})" class="btn-cyan" title="Eliminar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor" stroke-width="2">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                          <path d="M4 7l16 0" />
+                          <path d="M10 11l0 6" />
+                          <path d="M14 11l0 6" />
+                          <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                          <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                        </svg>
+                        Eliminar pago
                       </button>
                     </div>
 
@@ -160,7 +180,7 @@
 
                           {{-- QR --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                                                      {{ $pagos[$index]['metodo'] === 0
+                                                                                                                                                                                                      {{ $pagos[$index]['metodo'] === 0
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             QR
@@ -168,7 +188,7 @@
 
                           {{-- Efectivo --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                                                      {{ $pagos[$index]['metodo'] === 1
+                                                                                                                                                                                                      {{ $pagos[$index]['metodo'] === 1
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             Efectivo
@@ -176,7 +196,7 @@
 
                           {{-- Crédito --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                                                      {{ $pagos[$index]['metodo'] === 2
+                                                                                                                                                                                                      {{ $pagos[$index]['metodo'] === 2
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             Crédito
@@ -192,7 +212,7 @@
                         <div class="flex justify-center mt-2">
                           <button type="button" wire:click="$set('pagos.{{ $index }}.estado', {{ $pago['estado'] ? 0 : 1 }})"
                             class="px-6 py-2 rounded-lg text-white font-semibold border shadow-md transition
-                                                                                                                                      {{ $pagos[$index]['estado']
+                                                                                                                                                                                                      {{ $pagos[$index]['estado']
               ? 'bg-green-600 border-green-700 hover:bg-green-700'
               : 'bg-gray-500 border-gray-600 hover:bg-gray-600' }}">
                             {{ $pagos[$index]['estado'] ? 'PAGADO' : 'NO PAGADO' }}
@@ -490,30 +510,45 @@
             @endif
           </div>
 
+          <div class="text-center mb-6">
+            <label class="font-semibold text-sm">Sucursal</label>
 
-
-          <div class="mb-6">
-            <div class="flex flex-wrap gap-3">
+            <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3 mt-2">
               @foreach($sucursales as $sucursal)
-                <button type="button" wire:click="$set('sucursal_id', {{ $sucursal->id }})"
-                  class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $sucursal_id == $sucursal->id ? 'bg-cyan-500 text-white shadow-lg border border-cyan-500' : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-cyan-50 hover:text-cyan-600 hover:border-cyan-400' }}">
-                  {{ $sucursal->nombre }}
-                </button>
+                      <button type="button" wire:click="$set('sucursal_id', {{ $sucursal->id }})" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                                                                          {{ $sucursal_id === $sucursal->id
+                ? 'bg-blue-700 text-white border-blue-800 shadow-md'
+                : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                        {{ $sucursal->nombre }}
+                      </button>
               @endforeach
             </div>
           </div>
+
+
           <div class="text-center mb-6">
-            <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
-              <button type="button" wire:click="$set('tipoProducto', 'producto')"
-                class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition {{ $tipoProducto == 'producto' ? 'bg-teal-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600' }}">
+            <label class="font-semibold text-sm">Tipo de Ítem</label>
+
+            <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3 mt-2">
+
+
+              <button type="button" wire:click="$set('tipoProducto', 'producto')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                            {{ $tipoProducto === 'producto'
+      ? 'bg-blue-700 text-white border-blue-800 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                 Productos
               </button>
-              <button type="button" wire:click="$set('tipoProducto', 'otro')"
-                class="flex-1 sm:flex-auto px-4 py-3 rounded-lg text-sm font-medium transition {{ $tipoProducto == 'otro' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-600' }}">
+
+              <button type="button" wire:click="$set('tipoProducto', 'otro')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                            {{ $tipoProducto === 'otro'
+      ? 'bg-green-500 text-white border-green-600 shadow-md'
+      : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                 Otros Ítems
               </button>
+
             </div>
           </div>
+
           <div class="grid grid-cols-1 gap-4 mb-6">
             <div
               class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
@@ -592,8 +627,15 @@
           </div>
           <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-6 w-full">
             <input type="number" wire:model="cantidadSeleccionada" class="input-minimal text-center" min="1"
-              placeholder="Cantidad" />
-            <button wire:click="agregarProducto" class="btn-cyan">Añadir Item</button>
+              placeholder="Coloca una Cantidad" />
+            <button wire:click="agregarProducto" class="btn-cyan"> <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path
+                  d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                <path
+                  d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+              </svg></button>
           </div>
           <div class="mb-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
@@ -635,7 +677,7 @@
               <div class="flex justify-center gap-3 mt-2">
                 {{-- Preparando --}}
                 <button type="button" wire:click="$set('estado_pedido', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                            {{ $estado_pedido === 0
+                                            {{ $estado_pedido === 0
       ? 'bg-blue-700 text-white border-blue-800 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   Preparando
@@ -643,7 +685,7 @@
 
                 {{-- En Revisión --}}
                 <button type="button" wire:click="$set('estado_pedido', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                            {{ $estado_pedido === 1
+                                            {{ $estado_pedido === 1
       ? 'bg-yellow-500 text-white border-yellow-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   En Revisión
@@ -651,7 +693,7 @@
 
                 {{-- Completado --}}
                 <button type="button" wire:click="$set('estado_pedido', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                            {{ $estado_pedido === 2
+                                            {{ $estado_pedido === 2
       ? 'bg-green-500 text-white border-green-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   Completado
@@ -731,7 +773,7 @@
                 <span class="label-info">Estado:</span>
                 <span
                   class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-                  {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
+                                  {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
                   {{ $pedidoDetalle->estado_pedido == 0 ? 'Preparando' : ($pedidoDetalle->estado_pedido == 1 ? 'En Revisión' : 'Completado') }}
                 </span>
               </div>
@@ -836,6 +878,41 @@
     </div>
   @endif
 
+  @if($modalEliminarPedido)
+    <div class="modal-overlay">
+      <div class="modal-box">
 
+        <div class="modal-content">
+          <div class="flex flex-col gap-4 text-center">
+            <h2 class="text-lg font-semibold">¿Eliminar pedido?</h2>
+            <p class="text-gray-600">
+              Esta acción no se puede deshacer.
+            </p>
+          </div>
+        </div>
 
+        <div class="modal-footer flex justify-center gap-2 mt-4">
+          <button type="button" wire:click="eliminarPedidoConfirmado" class="btn-cyan flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" />
+              <path d="M5 12l5 5l10 -10" />
+            </svg>
+            Confirmar
+          </button>
+
+          <button type="button" wire:click="$set('modalEliminarPedido', false)" class="btn-cyan flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke="none" d="M0 0h24v24H0z" />
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Cancelar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  @endif
 </div>

@@ -10,7 +10,7 @@
             <input type="text" wire:model.live="searchCodigo" placeholder="Buscar por código..."
                 class="input-minimal w-full" />
 
-            <button wire:click="abrirModal('create')" class="btn-cyan" title="Agregar preforma">
+            <button wire:click="abrirModal('create')" class="btn-cyan" title="Agregar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path
@@ -75,6 +75,35 @@
                 @endphp
 
                 <div class="flex flex-col gap-2">
+
+                    <p>
+                        <strong>Origen:</strong>
+                        @php
+                            $origen = 'Directo';
+                            $color = 'bg-gray-200 text-gray-800';
+
+                            if ($repo->soplados->count() > 0) {
+                                $origen = 'Soplado';
+                                $color = 'bg-emerald-100 text-emerald-800';
+                            } elseif ($repo->llenados->count() > 0) {
+                                $origen = 'Llenado';
+                                $color = 'bg-blue-100 text-blue-800';
+                            } elseif ($repo->adornados->count() > 0) {
+                                $origen = 'Adornado';
+                                $color = 'bg-pink-100 text-pink-800';
+                            } elseif ($repo->tieneTraspasos()) {
+                                $origen = 'Traspaso';
+                                $color = 'bg-yellow-100 text-yellow-800';
+                            }
+                        @endphp
+
+                        <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold {{ $color }}">
+                            {{ $origen }}
+                        </span>
+                    </p>
+
+
+
 
                     <p class="text-emerald-600 uppercase font-semibold">
                         {{ ucfirst($tipoModelo) }}: {{ $repo->existencia->existenciable->descripcion ?? 'sin descripcion' }}
@@ -145,8 +174,10 @@
                     @if(
                             !$repo->soplados()->exists() &&
                             !$repo->llenados()->exists() &&
-                            !$repo->adornados()->exists()
+                            !$repo->adornados()->exists() &&
+                            !$repo->tieneTraspasos()
                         )
+
 
                         @if(!$repo->estado_revision)
                             <button wire:click="confirmarEliminarReposicion({{ $repo->id }})" class="btn-cyan" title="Eliminar">
@@ -252,7 +283,7 @@
                                             @foreach($sucursales as $sucursal)
                                                             <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
                                                                 class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition 
-                                                                            {{ $filtroSucursalModal == $sucursal->id
+                                                                                                                                                                                                                                                                                                            {{ $filtroSucursalModal == $sucursal->id
                                                 ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600'
                                                 : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600 hover:border-cyan-600' }}">
                                                                 {{ $sucursal->nombre }}
@@ -411,60 +442,84 @@
         <div class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-content flex flex-col gap-4">
-                    <div class="grid grid-cols-1 gap-2 mt-2">
-                        @forelse($existencias as $ex)
-                            @php
-                                $tipo = class_basename($ex->existenciable_type);
-                                $cantidadDisponible = $ex->cantidad;
-                            @endphp
-                            <div class="w-full border rounded-lg p-4 bg-white shadow-sm flex flex-col gap-2">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex flex-col gap-1">
-                                        <span class="uppercase text-cyan-600 font-semibold">{{ $tipo }}</span>
-                                        <span class="font-medium">{{ $ex->existenciable->descripcion ?? 'Sin nombre' }}</span>
-                                        <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold w-max">
-                                            Disponible: {{ $cantidadDisponible }}
-                                        </span>
-                                    </div>
-                                    <div class="flex flex-col gap-1">
-                                        <label class="text-sm font-semibold">Sucursal (Opcional)</label>
-                                        <div class="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto">
-                                            <button type="button"
-                                                wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)"
-                                                class="w-full px-3 py-2 rounded-md border text-left text-sm transition
-                                                                        {{ $configExistencias[$ex->id]['sucursal_id'] === null ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                                Sin sucursal
-                                            </button>
-                                            @foreach($sucursales as $suc)
-                                                <button type="button"
-                                                    wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
-                                                    class="w-full px-3 py-2 rounded-md border text-left text-sm transition
-                                                                                        {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
-                                                    {{ $suc->nombre }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-gray-500 text-center py-4">No hay existencias disponibles para asignar a una
-                                sucursal.</p>
-                        @endforelse
-                    </div>
+                    <div class="grid grid-cols-1 gap-3 mt-2">
 
-                    <div class="modal-footer flex justify-end gap-2 mt-4">
-                        <button wire:click="guardarConfigGlobal" class="btn-cyan flex items-center gap-2">
+                        @forelse($existencias as $ex)
+                                    @php
+                                        $tipo = class_basename($ex->existenciable_type);
+                                        $cantidadDisponible = $ex->cantidad;
+                                    @endphp
+                                    <div class="w-full border rounded-lg p-4 bg-white shadow-sm flex flex-col gap-3">
+                                        <div class="flex flex-col gap-1">
+                                            <span class="uppercase text-cyan-600 font-semibold text-sm">{{ $tipo }}</span>
+                                            <span class="font-medium text-base">
+                                                {{ $ex->existenciable->descripcion ?? 'Sin nombre' }}
+                                            </span>
+                                            <span class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold w-max">
+                                                Disponible: {{ $cantidadDisponible }}
+                                            </span>
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <label class="text-sm font-semibold text-center">Sucursal (Opcional)</label>
+
+                                            <div class="flex flex-col gap-2 max-h-[150px] overflow-y-auto">
+                                                <button type="button"
+                                                    wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', null)" class="w-full px-3 py-2 rounded-lg border font-medium text-sm text-center transition
+                                                                                                                                                                            {{ $configExistencias[$ex->id]['sucursal_id'] === null
+                            ? 'bg-cyan-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                                    Sin sucursal
+                                                </button>
+                                                @foreach($sucursales as $suc)
+                                                                    <button type="button"
+                                                                        wire:click="$set('configExistencias.{{ $ex->id }}.sucursal_id', {{ $suc->id }})"
+                                                                        class="w-full px-3 py-2 rounded-lg border font-medium text-sm text-center transition
+                                                                                                                                                                                                                                                                                                                                                {{ $configExistencias[$ex->id]['sucursal_id'] == $suc->id
+                                                    ? 'bg-cyan-600 text-white shadow-md'
+                                                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                                                        {{ $suc->nombre }}
+                                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                        @empty
+                            <p class="text-gray-500 text-center py-4">
+                                No hay existencias disponibles para asignar a una sucursal.
+                            </p>
+                        @endforelse
+
+                    </div>
+                    <div class="modal-footer">
+                        <button wire:click="$set('modalConfigGlobal', false)" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
+                        </button>
+                        <button wire:click="guardarConfigGlobal" class="btn-cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
                             Guardar
                         </button>
-                        <button wire:click="$set('modalConfigGlobal', false)" class="btn-cyan flex items-center gap-2">
-                            Cerrar
-                        </button>
+
                     </div>
+
                 </div>
             </div>
         </div>
     @endif
+
 
     @if($modalPagos)
         <div class="modal-overlay">
@@ -646,6 +701,7 @@
             </div>
         </div>
     @endif
+
     @if($confirmingDeleteReposicionId)
         <div class="modal-overlay">
             <div class="modal-box">
@@ -659,28 +715,28 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" wire:click="eliminarReposicionConfirmado" class="btn-circle btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                            fill="currentColor">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path
-                                d="M18.333 2c1.96 0 3.56 1.537 3.662 3.472l.005 .195v12.666c0 1.96 -1.537 3.56 -3.472 3.662l-.195 .005h-12.666a3.667 3.667 0 0 1 -3.662 -3.472l-.005 -.195v-12.666c0 -1.96 1.537 -3.56 3.472 -3.662l.195 -.005h12.666zm-2.626 7.293a1 1 0 0 0 -1.414 0l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.32 1.497l2 2l.094 .083a1 1 0 0 0 1.32 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
-                        </svg>
-                    </button>
-
-                    <!-- Botón Cancelar -->
-                    <button type="button" wire:click="$set('confirmingDeleteReposicionId', null)"
-                        class="btn-circle btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                    <button type="button" wire:click="eliminarReposicionConfirmado" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10 10l4 4m0-4l-4 4" />
-                            <circle cx="12" cy="12" r="9" />
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 12l5 5l10 -10" />
                         </svg>
+                        Confirmar
+                    </button>
+                    <button type="button" wire:click="$set('confirmingDeleteReposicionId', null)" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Cancelar
                     </button>
                 </div>
             </div>
         </div>
     @endif
+
     @if($confirmingDeletePagoIndex !== null)
         <div class="modal-overlay">
             <div class="modal-box">

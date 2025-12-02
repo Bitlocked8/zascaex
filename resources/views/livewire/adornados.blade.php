@@ -236,7 +236,7 @@
 
                                             <button type="button" wire:click="$set('pedido_id', {{ $pedido->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col items-start text-left
-                                                                                            {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                                        {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 
                                                 <span class="font-semibold">{{ $pedido->codigo }}</span>
                                                 <span class="text-sm text-gray-700">Cliente:
@@ -258,6 +258,8 @@
                                                             @php
                                                                 $item = $detalle->producto ?? $detalle->otro;
                                                                 $itemDescripcion = $item?->descripcion ?? '-';
+                                                                $itemSucursal = $item?->existencias->first()?->sucursal?->nombre ?? 'N/A';
+
                                                                 $paquete = $item?->paquete ?? 1;
                                                                 $totalUnidades = $detalle->cantidad * $paquete;
 
@@ -268,13 +270,15 @@
                                                                 $etiquetaSucursal = $detalle->etiqueta?->existencias->first()?->sucursal?->nombre ?? '-';
                                                             @endphp
 
-                                                            <p class="text-xs text-gray-600">
+                                                            <p >
+                                                                Producto/Otro Sucursal: {{ $itemSucursal }}<br>
                                                                 <span class="font-semibold">{{ $itemDescripcion }}</span> x
                                                                 {{ $detalle->cantidad }} paquetes
                                                                 (Paquete: {{ $paquete }} unidades | Total: {{ $totalUnidades }}
                                                                 unidades)
                                                             </p>
-                                                            <p class="text-xs text-gray-500 ml-2">
+                                                                <p >
+
                                                                 Tapa: {{ $tapaDescripcion }} | Sucursal: {{ $tapaSucursal }}
                                                                 <br>
                                                                 Etiqueta: {{ $etiquetaDescripcion }} | Sucursal: {{ $etiquetaSucursal }}

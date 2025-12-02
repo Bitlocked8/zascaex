@@ -67,6 +67,7 @@ class Soplados extends Component
         $asignacionesQuery = Asignado::with('reposiciones.existencia.existenciable', 'reposiciones.existencia.sucursal')
             ->where('cantidad', '>', 0)
             ->whereDoesntHave('soplados')
+            ->whereDoesntHave('traspasos')
             ->whereHas('reposiciones.existencia', fn($q) => $q->whereIn('existenciable_type', [Preforma::class]));
 
         if ($rol === 4 && $personal) {
@@ -151,113 +152,113 @@ class Soplados extends Component
         $this->filtroSucursalElemento = $id;
     }
 
-  public function guardar()
-{
-    $this->validate();
+    public function guardar()
+    {
+        $this->validate();
 
-    $usuario = auth()->user();
-    $personal = $usuario->personal;
+        $usuario = auth()->user();
+        $personal = $usuario->personal;
 
-    if (!$personal) {
-        session()->flash('error', 'No tienes un registro de personal asociado.');
-        return;
-    }
-
-    $personalId = $personal->id;
-
-    $asignado = Asignado::with(['reposiciones.existencia.existenciable'])->findOrFail($this->asignado_id);
-    $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
-    $cantidadProducida = $this->cantidad ?? 0;
-
-    $materiales = $asignado->reposiciones->groupBy(fn($r) => class_basename($r->existencia->existenciable))
-        ->map(fn($g, $tipo) => [
-            'tipo' => $tipo,
-            'cantidad_total' => $g->sum('pivot.cantidad_original'),
-            'reposiciones' => $g
-        ]);
-
-    $cantidadMaximaProducible = $materiales->min('cantidad_total');
-    if ($cantidadProducida > $cantidadMaximaProducible) {
-        $this->addError('cantidad', "No puedes producir más de {$cantidadMaximaProducible} unidades.");
-        return;
-    }
-
-    $mermaTotal = 0;
-    foreach ($materiales as $m) {
-        $mermaTotal += $m['cantidad_total'] - $cantidadProducida;
-    }
-
-    DB::transaction(function () use ($asignado, $existenciaDestino, $cantidadProducida, $personalId, $mermaTotal) {
-
-        // Resetear cantidades en los pivots
-        foreach ($asignado->reposiciones as $reposicion) {
-            $asignado->reposiciones()->updateExistingPivot($reposicion->id, ['cantidad' => 0]);
+        if (!$personal) {
+            session()->flash('error', 'No tienes un registro de personal asociado.');
+            return;
         }
 
-        // Crear o actualizar reposicion
-        if ($this->accion === 'edit' && $this->sopladoSeleccionado && $this->sopladoSeleccionado->reposicion_id) {
-            $reposicionDestino = Reposicion::find($this->sopladoSeleccionado->reposicion_id);
-            $reposicionDestino->update([
-                'existencia_id' => $existenciaDestino->id,
-                'observaciones' => $this->observaciones ?? $reposicionDestino->observaciones,
-                'estado_revision' => 0
+        $personalId = $personal->id;
+
+        $asignado = Asignado::with(['reposiciones.existencia.existenciable'])->findOrFail($this->asignado_id);
+        $existenciaDestino = Existencia::findOrFail($this->existencia_destino_id);
+        $cantidadProducida = $this->cantidad ?? 0;
+
+        $materiales = $asignado->reposiciones->groupBy(fn($r) => class_basename($r->existencia->existenciable))
+            ->map(fn($g, $tipo) => [
+                'tipo' => $tipo,
+                'cantidad_total' => $g->sum('pivot.cantidad_original'),
+                'reposiciones' => $g
             ]);
-        } else {
-            $reposicionDestino = Reposicion::create([
-                'fecha' => now(),
-                'codigo' => 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
-                'cantidad' => 0,
-                'cantidad_inicial' => 0,
+
+        $cantidadMaximaProducible = $materiales->min('cantidad_total');
+        if ($cantidadProducida > $cantidadMaximaProducible) {
+            $this->addError('cantidad', "No puedes producir más de {$cantidadMaximaProducible} unidades.");
+            return;
+        }
+
+        $mermaTotal = 0;
+        foreach ($materiales as $m) {
+            $mermaTotal += $m['cantidad_total'] - $cantidadProducida;
+        }
+
+        DB::transaction(function () use ($asignado, $existenciaDestino, $cantidadProducida, $personalId, $mermaTotal) {
+
+            // Resetear cantidades en los pivots
+            foreach ($asignado->reposiciones as $reposicion) {
+                $asignado->reposiciones()->updateExistingPivot($reposicion->id, ['cantidad' => 0]);
+            }
+
+            // Crear o actualizar reposicion
+            if ($this->accion === 'edit' && $this->sopladoSeleccionado && $this->sopladoSeleccionado->reposicion_id) {
+                $reposicionDestino = Reposicion::find($this->sopladoSeleccionado->reposicion_id);
+                $reposicionDestino->update([
+                    'existencia_id' => $existenciaDestino->id,
+                    'observaciones' => $this->observaciones ?? $reposicionDestino->observaciones,
+                    'estado_revision' => 0
+                ]);
+            } else {
+                $reposicionDestino = Reposicion::create([
+                    'fecha' => now(),
+                    'codigo' => 'R-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                    'cantidad' => 0,
+                    'cantidad_inicial' => 0,
+                    'existencia_id' => $existenciaDestino->id,
+                    'personal_id' => $personalId,
+                    'observaciones' => $this->observaciones ?? 'Reposición creada desde soplado',
+                    'estado_revision' => 0
+                ]);
+            }
+
+            // Datos del soplado
+            $sopladoData = [
+                'codigo' => $this->accion === 'create'
+                    ? 'S-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT)
+                    : $this->codigo,
+                'asignado_id' => $asignado->id,
                 'existencia_id' => $existenciaDestino->id,
-                'personal_id' => $personalId,
-                'observaciones' => $this->observaciones ?? 'Reposición creada desde soplado',
-                'estado_revision' => 0
-            ]);
-        }
-
-        // Datos del soplado
-        $sopladoData = [
-            'codigo' => $this->accion === 'create'
-                ? 'S-' . now()->format('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT)
-                : $this->codigo,
-            'asignado_id' => $asignado->id,
-            'existencia_id' => $existenciaDestino->id,
-            'reposicion_id' => $reposicionDestino->id,
-            'cantidad' => $cantidadProducida,
-            'merma' => $mermaTotal,
-            'estado' => $this->estado,
-            'observaciones' => $this->observaciones,
-            'fecha' => now(),
-        ];
-
-        if ($this->accion === 'create') {
-            $sopladoData['personal_id'] = $personalId;
-        }
-
-        $soplado = Soplado::updateOrCreate(['id' => $this->soplado_id], $sopladoData);
-
-        // Ajustar cantidad en existencia si estamos editando un soplado previamente confirmado
-        if ($this->accion === 'edit' && $this->sopladoSeleccionado && $this->sopladoSeleccionado->estado == 2) {
-            $existenciaDestino->cantidad -= $this->sopladoSeleccionado->cantidad;
-        }
-
-        // Sumar nueva cantidad solo si el estado actual es confirmado
-        if ($this->estado == 2 && $cantidadProducida > 0) {
-            $existenciaDestino->cantidad += $cantidadProducida;
-            $reposicionDestino->update([
+                'reposicion_id' => $reposicionDestino->id,
                 'cantidad' => $cantidadProducida,
-                'cantidad_inicial' => $cantidadProducida,
-                'estado_revision' => true
-            ]);
-        }
+                'merma' => $mermaTotal,
+                'estado' => $this->estado,
+                'observaciones' => $this->observaciones,
+                'fecha' => now(),
+            ];
 
-        $existenciaDestino->save();
+            if ($this->accion === 'create') {
+                $sopladoData['personal_id'] = $personalId;
+            }
 
-    });
+            $soplado = Soplado::updateOrCreate(['id' => $this->soplado_id], $sopladoData);
 
-    $this->cerrarModal();
-    session()->flash('mensaje', 'Soplado ' . ($this->accion === 'create' ? 'guardado' : 'actualizado') . ' correctamente.');
-}
+            // Ajustar cantidad en existencia si estamos editando un soplado previamente confirmado
+            if ($this->accion === 'edit' && $this->sopladoSeleccionado && $this->sopladoSeleccionado->estado == 2) {
+                $existenciaDestino->cantidad -= $this->sopladoSeleccionado->cantidad;
+            }
+
+            // Sumar nueva cantidad solo si el estado actual es confirmado
+            if ($this->estado == 2 && $cantidadProducida > 0) {
+                $existenciaDestino->cantidad += $cantidadProducida;
+                $reposicionDestino->update([
+                    'cantidad' => $cantidadProducida,
+                    'cantidad_inicial' => $cantidadProducida,
+                    'estado_revision' => true
+                ]);
+            }
+
+            $existenciaDestino->save();
+
+        });
+
+        $this->cerrarModal();
+        session()->flash('mensaje', 'Soplado ' . ($this->accion === 'create' ? 'guardado' : 'actualizado') . ' correctamente.');
+    }
 
 
     public function cerrarModal()

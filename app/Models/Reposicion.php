@@ -80,4 +80,20 @@ class Reposicion extends Model
             ->withTimestamps();
     }
 
+    public function tieneTraspasos(): bool
+{
+    // Traspasos que vienen hacia esta reposición
+    $destino = Traspaso::where('reposicion_destino_id', $this->id);
+
+    // Traspasos que salen desde esta reposición a través de asignaciones
+    $origen = Traspaso::whereHas('asignacion.reposiciones', function ($q) {
+        $q->where('reposicions.id', $this->id);
+    });
+
+    return $destino->exists() || $origen->exists(); // ✅ query directamente
+}
+
+
+
+
 }

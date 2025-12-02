@@ -16,6 +16,7 @@ class Adornados extends Component
     public $solicitudPedidos = [];
     public $detallesSolicitud = [];
     public $search = '';
+    public $searchPedido = '';
     public $modal = false;
     public $modalDetalle = false;
     public $adornado_id = null;
@@ -51,9 +52,9 @@ class Adornados extends Component
 
         $pedidosQuery = Pedido::with([
             'personal',
-            'solicitudPedido',                   // ✅ agregar la relación padre
+            'solicitudPedido',
             'solicitudPedido.cliente',
-            'solicitudPedido.detalles',          // ✅ esta línea
+            'solicitudPedido.detalles',
             'solicitudPedido.detalles.producto',
             'solicitudPedido.detalles.tapa',
             'solicitudPedido.detalles.etiqueta',
@@ -65,6 +66,13 @@ class Adornados extends Component
         } else {
             $pedidosQuery->whereDoesntHave('adornados');
         }
+
+        $pedidosQuery->when($this->searchPedido, function ($query) {
+            $query->where('codigo', 'like', '%' . $this->searchPedido . '%')
+                ->orWhereHas('solicitudPedido.cliente', function ($q) {
+                    $q->where('nombre', 'like', '%' . $this->searchPedido . '%');
+                });
+        });
         $pedidos = $pedidosQuery->get();
 
         return view('livewire.adornados', [

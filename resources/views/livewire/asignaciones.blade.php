@@ -8,11 +8,14 @@
 
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <input type="text" wire:model.live="searchCodigo" placeholder="Buscar por código..."
-                class="input-minimal w-full" />
-            <button wire:click="abrirModal" class="btn-cyan flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor">
+                class="input-minimal" />
+            <button wire:click="abrirModal" class="btn-cyan" title="Agregar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path
                         d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
+                    <path
+                        d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
                 </svg>
                 Añadir
             </button>
@@ -20,34 +23,53 @@
 
         @forelse($asignaciones as $asignado)
             @php
-                $montoAsignado = $asignado->reposiciones->sum(fn($r) => $r->pivot->cantidad);
                 $cantidadPivote = $asignado->reposiciones->sum(fn($r) => $r->pivot->cantidad);
+
             @endphp
 
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        @if($asignado->soplados()->exists())
+                            <span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-full inline-block">
+                                Usado en Soplado
+                            </span>
+                        @endif
+
+                        @if($asignado->llenados()->exists())
+                            <span class="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full inline-block">
+                                Usado en Llenado
+                            </span>
+                        @endif
+
+                        @if($asignado->traspasos()->exists())
+                            <span class="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-full inline-block">
+                                Usado en Traspaso
+                            </span>
+                        @endif
+                    </div>
+
                     <p class="text-emerald-600 uppercase font-semibold">{{ $asignado->codigo ?? 'N/A' }}</p>
 
                     @foreach($asignado->reposiciones as $reposicion)
                         <p class="text-slate-600">
                             {{ class_basename($reposicion->existencia->existenciable ?? '') }}:
                             {{ $reposicion->existencia->existenciable->descripcion ?? 'N/A' }}
-                            (Cantidad: {{ $reposicion->pivot->cantidad }})
+                            (Cantidad restante: {{ $reposicion->pivot->cantidad }})
+                        </p>
+
+                        <p class="text-slate-600">
+                            {{ class_basename($reposicion->existencia->existenciable ?? '') }}:
+                            {{ $reposicion->existencia->existenciable->descripcion ?? 'N/A' }}
+                            ( Cantidad Asignada: {{ $reposicion->pivot->cantidad_original }})
                         </p>
                     @endforeach
 
-                    <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
-                    <p><strong>Cantidad total asignada:</strong> {{ $asignado->cantidad }}</p>
+                    <p><strong>Fecha de asignacion:</strong>
+                        {{ \Carbon\Carbon::parse($asignado->fecha)->format('d/m/Y H:i') }}</p>
+                    <p><strong>Cantidad de material combinado:</strong> {{ $asignado->cantidad }}</p>
 
-                    <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div
-                            class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-                            <span class="text-sm font-medium text-gray-700">Monto asignado:</span>
-                            <span class="text-sm font-semibold text-gray-900">
-                                {{ $montoAsignado > 0 ? number_format($montoAsignado, 2, ',', '.') . ' Bs' : '—' }}
-                            </span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
@@ -130,28 +152,34 @@
                     </div>
                     @php $usuario = auth()->user(); @endphp
                     @if($usuario && $usuario->rol_id === 1)
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold mb-2">Filtrar por Sucursal</label>
-                            <div class="flex flex-wrap gap-3">
-                                <button type="button" wire:click="filtrarSucursalModal(null)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $filtroSucursalModal === null ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600' }}">
-                                    Todas
-                                </button>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold mb-2">Filtrar por Sucursal</label>
 
-                                @foreach($sucursales as $sucursal)
-                                    <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})"
-                                        class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $filtroSucursalModal == $sucursal->id ? 'bg-cyan-600 text-white shadow-lg border border-cyan-600' : 'bg-gray-200 text-gray-700 border border-gray-300 hover:bg-cyan-100 hover:text-cyan-600' }}">
-                                        {{ $sucursal->nombre }}
-                                    </button>
-                                @endforeach
-                            </div>
+                                    <div class="flex flex-wrap justify-center gap-3 mt-2">
+                                        <button type="button" wire:click="filtrarSucursalModal(null)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                        {{ $filtroSucursalModal === null
+                            ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+                            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                            Todas
+                                        </button>
+                                        @foreach($sucursales as $sucursal)
+                                                        <button type="button" wire:click="filtrarSucursalModal({{ $sucursal->id }})" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                                            {{ $filtroSucursalModal == $sucursal->id
+                                                ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+                                                : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                                            {{ $sucursal->nombre }}
+                                                        </button>
+                                        @endforeach
 
-                            <div class="mt-3">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar existencia</label>
-                                <input type="text" wire:model.live="searchExistencia" class="input-minimal w-full"
-                                    placeholder="Escribe la descripción...">
-                            </div>
-                        </div>
+                                    </div>
+
+
+                                    <div class="mt-3">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar existencia</label>
+                                        <input type="text" wire:model.live="searchExistencia" class="input-minimal w-full"
+                                            placeholder="Escribe la descripción...">
+                                    </div>
+                                </div>
                     @endif
 
                     <div class="border rounded-lg p-3 bg-white">
@@ -367,22 +395,40 @@
         <div class="modal-overlay">
             <div class="modal-box">
 
-                <h2 class="text-lg font-bold">¿Eliminar asignación?</h2>
-                <p class="mt-2 mb-4 text-gray-700">
-                    Esta acción no se puede deshacer.
-                </p>
+                <div class="modal-content">
+                    <div class="flex flex-col gap-4 text-center">
+                        <h2 class="text-lg font-semibold">¿Eliminar asignación?</h2>
+                        <p class="text-gray-600">
+                            Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+                </div>
 
-                <div class="flex justify-end gap-3">
-                    <button class="btn" wire:click="$set('modalEliminar', false)">Cancelar</button>
+                <div class="modal-footer">
+                    <button type="button" wire:click="eliminarConfirmado" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path d="M5 12l5 5l10 -10" />
+                        </svg>
+                        Confirmar
+                    </button>
 
-                    <button class="btn-danger" wire:click="eliminarConfirmado">
-                        Eliminar
+                    <button type="button" wire:click="$set('modalEliminar', false)" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Cancelar
                     </button>
                 </div>
 
             </div>
         </div>
     @endif
+
 
 
 
