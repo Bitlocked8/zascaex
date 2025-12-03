@@ -9,69 +9,41 @@ use App\Models\Tapa;
 use App\Models\Etiqueta;
 use App\Models\SolicitudPedido;
 use App\Models\SolicitudPedidoDetalle;
+use App\Models\Sucursal;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Auth;
+
 class Hubclientes extends Component
 {
     use WithFileUploads;
+
     public $expandidoPedidos = [];
-
-    public $modalVerQR = false;
-    public $qrSeleccionado = null;
-
-    public $productos = [];
+    public $sucursalFiltro = null;
     public $carrito = [];
+    public $mostrarCarrito = false;
     public $modalProducto = false;
     public $productoSeleccionado = null;
-    public $mostrarCarrito = false;
-
     public $tapas = [];
     public $etiquetas = [];
     public $tapaSeleccionada = null;
     public $etiquetaSeleccionada = null;
     public $cantidadSeleccionada = 1;
-
     public $modalPedidosCliente = false;
     public $pedidosCliente = [];
     public $archivoPago;
-    public $pagoSeleccionado;
-    public function mount()
-    {
-        $productos = Producto::where('estado', 1)
-            ->with('existencias.sucursal')
-            ->orderBy('descripcion')
-            ->get();
-
-        foreach ($productos as $p) {
-            $this->productos[] = [
-                'uid' => 'producto_' . $p->id,
-                'modelo' => $p,
-                'tipo_modelo' => 'producto',
-            ];
-        }
-        $otros = Otro::where('estado', 1)
-            ->with('existencias.sucursal')
-            ->orderBy('descripcion')
-            ->get();
-
-        foreach ($otros as $o) {
-            $this->productos[] = [
-                'uid' => 'otro_' . $o->id,
-                'modelo' => $o,
-                'tipo_modelo' => 'otro',
-            ];
-        }
-    }
+    public $modalVerQR = false;
+    public $qrSeleccionado = null;
 
     public function abrirModalProducto($uid)
     {
-        $this->productoSeleccionado = collect($this->productos)->firstWhere('uid', $uid);
-        if (!$this->productoSeleccionado)
+        $producto = $this->productos()->firstWhere('uid', $uid);
+        if (!$producto)
             return;
 
-        $modelo = $this->productoSeleccionado['modelo'];
-        $sucursalId = $modelo->existencias->first()->sucursal->id ?? null;
+        $this->productoSeleccionado = $producto;
+
+        $sucursalId = $producto['modelo']->existencias->first()->sucursal->id ?? null;
 
         $this->tapas = Tapa::where('estado', 1)
             ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
@@ -108,6 +80,11 @@ class Hubclientes extends Component
         ];
 
         $this->modalProducto = false;
+    }
+
+    public function eliminarDelCarrito($uid)
+    {
+        unset($this->carrito[$uid]);
     }
 
     public function hacerPedido()
@@ -163,7 +140,6 @@ class Hubclientes extends Component
         $this->modalPedidosCliente = true;
     }
 
-
     public function eliminarSolicitud($id)
     {
         $solicitud = SolicitudPedido::find($id);
@@ -177,20 +153,6 @@ class Hubclientes extends Component
         $this->modalPedidosCliente = false;
     }
 
-    public function eliminarDelCarrito($uid)
-    {
-        unset($this->carrito[$uid]);
-    }
-
-    public function render()
-    {
-        return view('livewire.hubclientes', [
-            'productos' => $this->productos,
-            'carrito' => $this->carrito,
-            'pedidosCliente' => $this->pedidosCliente
-        ]);
-    }
-
     public function actualizarMetodoPago($pedidoId, $valor)
     {
         $pedido = SolicitudPedido::find($pedidoId);
@@ -201,9 +163,8 @@ class Hubclientes extends Component
         $pedido->save();
 
         foreach ($this->pedidosCliente as &$p) {
-            if ($p['id'] == $pedidoId) {
+            if ($p['id'] == $pedidoId)
                 $p['metodo_pago'] = $valor;
-            }
         }
     }
 
@@ -228,7 +189,6 @@ class Hubclientes extends Component
         $pago->save();
 
         $this->archivoPago = null;
-
         $this->verMisPedidos();
     }
 
@@ -249,15 +209,62 @@ class Hubclientes extends Component
 
         $this->verMisPedidos();
     }
+
     public function verQr($pagoId)
     {
         $pago = PagoPedido::with('sucursalPago')->find($pagoId);
-        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr) {
+        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr)
             return;
-        }
 
         $this->qrSeleccionado = $pago->sucursalPago->imagen_qr;
         $this->modalVerQR = true;
     }
 
+    // Método que devuelve todos los productos y "otros" unificados
+    public function productos()
+    {
+        $productos = Producto::where('estado', 1)
+            ->with('existencias.sucursal')
+            ->orderBy('descripcion')
+            ->get()
+            ->map(fn($p) => [
+                'uid' => 'producto_' . $p->id,
+                'modelo' => $p,
+                'tipo_modelo' => 'producto',
+            ]);
+
+        $otros = Otro::where('estado', 1)
+            ->with('existencias.sucursal')
+            ->orderBy('descripcion')
+            ->get()
+            ->map(fn($o) => [
+                'uid' => 'otro_' . $o->id,
+                'modelo' => $o,
+                'tipo_modelo' => 'otro',
+            ]);
+
+        return $productos->concat($otros);
+    }
+
+    public function render()
+    {
+        $sucursales = Sucursal::orderBy('nombre')->get();
+
+        $productos = $this->productos();
+
+        if ($this->sucursalFiltro) {
+            $productos = $productos->filter(
+                fn($item) =>
+                $item['modelo']->existencias->contains(fn($e) => $e->sucursal_id == $this->sucursalFiltro)
+            );
+        }
+
+        return view('livewire.hubclientes', [
+            'productos' => $productos,
+            'sucursales' => $sucursales,
+            'carrito' => $this->carrito,
+            'pedidosCliente' => $this->pedidosCliente,
+            'mostrarCarrito' => $this->mostrarCarrito,
+        ]);
+    }
 }
