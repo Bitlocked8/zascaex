@@ -14,13 +14,15 @@
     <div class="p-6">
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-u">Crear Nuevos Clientes</h1>
-            <a href="{{ route('home') }}"
-                class="btn-cyan" title="Cerrar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path d="M10 10l4 4m0 -4l-4 4" />
-                    <circle cx="12" cy="12" r="9" />
+            <a href="{{ route('home') }}" class="btn-cyan" title="Cerrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                    <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
                 </svg>
                 CERRAR
+
             </a>
         </div>
 
@@ -34,14 +36,12 @@
                         <label class="font-semibold text-sm">longitud y latitud (Automatico) </label>
                         <div class="mb-4">
                             <input type="text" id="latitud" name="latitud"
-                                value="{{ old('latitud', $cliente->latitud ?? '') }}"
-                                placeholder="Latitud"
+                                value="{{ old('latitud', $cliente->latitud ?? '') }}" placeholder="Latitud"
                                 class="input-minimal">
                         </div>
                         <div class="mb-4">
                             <input type="text" id="longitud" name="longitud"
-                                value="{{ old('longitud', $cliente->longitud ?? '') }}"
-                                placeholder="Longitud"
+                                value="{{ old('longitud', $cliente->longitud ?? '') }}" placeholder="Longitud"
                                 class="input-minimal">
                         </div>
                     </div>
@@ -56,18 +56,16 @@
                         </p>
 
                         <div class="mb-4">
-                            <label class="font-semibold text-sm">Nombre (Requerido)</label>
+                            <label class="font-semibold text-u">Nombre (Requerido)</label>
                             <input type="text" id="nombre" name="nombre"
-                                value="{{ old('nombre', $cliente->nombre ?? '') }}"
-                                placeholder="Nombre"
+                                value="{{ old('nombre', $cliente->nombre ?? '') }}" placeholder="Nombre"
                                 class="input-minimal">
                         </div>
 
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Nombre empresa (Opcional)</label>
                             <input type="text" id="empresa" name="empresa"
-                                value="{{ old('empresa', $cliente->empresa ?? '') }}"
-                                placeholder="Empresa"
+                                value="{{ old('empresa', $cliente->empresa ?? '') }}" placeholder="Empresa"
                                 class="input-minimal">
 
                         </div>
@@ -75,25 +73,21 @@
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Razon Social (Opcional)</label>
                             <input type="text" id="razonSocial" name="razonSocial"
-                                value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}"
-                                placeholder="Razón Social"
+                                value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}" placeholder="Razón Social"
                                 class="input-minimal">
 
                         </div>
 
                         <div class="mb-4">
                             <label class="font-semibold text-sm">NIT (Opcional)</label>
-                            <input type="text" id="nitCi" name="nitCi"
-                                value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
-                                placeholder="NIT/CI"
-                                class="input-minimal">
+                            <input type="text" id="nitCi" name="nitCi" value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
+                                placeholder="NIT/CI" class="input-minimal">
 
                         </div>
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Telefono (Opcional)</label>
                             <input type="text" id="telefono" name="telefono"
-                                value="{{ old('telefono', $cliente->telefono ?? '') }}"
-                                placeholder="Teléfono"
+                                value="{{ old('telefono', $cliente->telefono ?? '') }}" placeholder="Teléfono"
                                 class="input-minimal">
 
                         </div>
@@ -101,15 +95,13 @@
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Celular (Opcional)</label>
                             <input type="text" id="celular" name="celular"
-                                value="{{ old('celular', $cliente->celular ?? '') }}"
-                                placeholder="Celular"
+                                value="{{ old('celular', $cliente->celular ?? '') }}" placeholder="Celular"
                                 class="input-minimal">
                         </div>
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Direccion,Domcicilio (Opcional)</label>
                             <input type="text" id="direccion" name="direccion"
-                                value="{{ old('direccion', $cliente->direccion ?? '') }}"
-                                placeholder="Dirección"
+                                value="{{ old('direccion', $cliente->direccion ?? '') }}" placeholder="Dirección"
                                 class="input-minimal">
                         </div>
 
@@ -117,8 +109,7 @@
                             <label class="font-semibold text-sm">Nombre empresa (Opcional)</label>
                             <input type="text" id="ubicacion" name="ubicacion"
                                 value="{{ old('ubicacion', $cliente->ubicacion ?? '') }}"
-                                placeholder="Referencia / Ubicación"
-                                class="input-minimal">
+                                placeholder="Referencia / Ubicación" class="input-minimal">
 
                         </div>
 
@@ -126,8 +117,7 @@
                             <label class="font-semibold text-sm">Nombre empresa (Opcional)</label>
                             <input type="text" id="departamento_localidad" name="departamento_localidad"
                                 value="{{ old('departamento_localidad', $cliente->departamento_localidad ?? '') }}"
-                                placeholder="Departamento / Localidad"
-                                class="input-minimal">
+                                placeholder="Departamento / Localidad" class="input-minimal">
 
                         </div>
 
@@ -135,8 +125,7 @@
                             <label class="font-semibold text-sm">Establecimiento (Opcional)</label>
                             <input type="text" id="establecimiento" name="establecimiento"
                                 value="{{ old('establecimiento', $cliente->establecimiento ?? '') }}"
-                                placeholder="Casa. empresa ,edificio"
-                                class="input-minimal">
+                                placeholder="Casa. empresa ,edificio" class="input-minimal">
                         </div>
                     </div>
                     <div class="order-1 lg:order-1 w-full shadow-md sm:rounded-lg p-6 bg-white">
@@ -144,50 +133,37 @@
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Disponibilidad del cliente (Opcional)</label>
                             <input type="text" id="disponible" name="disponible"
-                                value="{{ old('disponible', $cliente->disponible ?? '') }}"
-                                placeholder="Disponibilidad"
+                                value="{{ old('disponible', $cliente->disponible ?? '') }}" placeholder="Disponibilidad"
                                 class="input-minimal">
                         </div>
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Movil de Entrega (Opcional)</label>
-                            <input type="text" id="movil" name="movil"
-                                value="{{ old('movil', $cliente->movil ?? '') }}"
-                                placeholder="Móvil asignado"
-                                class="input-minimal">
+                            <input type="text" id="movil" name="movil" value="{{ old('movil', $cliente->movil ?? '') }}"
+                                placeholder="Móvil asignado" class="input-minimal">
                         </div>
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Dias de atencion (Opcional)</label>
-                            <input type="text" id="dias" name="dias"
-                                value="{{ old('dias', $cliente->dias ?? '') }}"
-                                placeholder="Días de visita / atención"
-                                class="input-minimal">
+                            <input type="text" id="dias" name="dias" value="{{ old('dias', $cliente->dias ?? '') }}"
+                                placeholder="Días de visita / atención" class="input-minimal">
                         </div>
 
                         <div class="mb-4">
                             <label class="font-semibold text-sm">Bot (Opcional)</label>
-                            <input type="text" id="bot" name="bot"
-                                value="{{ old('bot', $cliente->bot ?? '') }}"
-                                placeholder="Bot / Fuente (opcional)"
-                                class="input-minimal">
+                            <input type="text" id="bot" name="bot" value="{{ old('bot', $cliente->bot ?? '') }}"
+                                placeholder="Bot / Fuente (opcional)" class="input-minimal">
                         </div>
                         <div class="mb-4">
-                            <label class="font-semibold text-sm">Correo de Ingreso (Requerido)</label>
-                            <input type="email" id="email" name="email"
-                                value="{{ old('email') }}"
-                                placeholder="Email de usuario"
-                                class="input-minimal"
-                                required>
+                            <label class="font-semibold text-u">Correo de Ingreso (Requerido)</label>
+                            <input type="email" id="email" name="email" value="{{ old('email') }}"
+                                placeholder="Email de usuario" class="input-minimal" required>
                         </div>
 
                         <div class="mb-4">
-                            <label class="font-semibold text-sm">Contraseña (Requerido)</label>
-                            <input type="password" id="password" name="password"
-                                placeholder="Contraseña"
-                                class="input-minimal"
-                                required>
+                            <label class="font-semibold text-u">Contraseña (Requerido)</label>
+                            <input type="password" id="password" name="password" placeholder="Contraseña"
+                                class="input-minimal" required>
 
                         </div>
-
                         <div class="mb-6 text-center">
                             <label class="font-semibold text-sm block mb-2">Categoría del cliente (Automático)</label>
                             <div class="flex gap-2">
@@ -228,6 +204,14 @@
                         <div class="mb-6 text-center">
                             <label class="font-semibold text-sm block mb-3">Estado del Cliente (Automático)</label>
                             <div class="inline-flex gap-3 justify-center">
+                                <input type="radio" id="estado1" name="estado" value="1" class="hidden peer/activo" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'checked' : '' }}>
+                                <label for="estado1"
+                                    class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
+                   peer-checked/activo:bg-green-600 peer-checked/activo:text-white
+                   hover:bg-green-100 hover:border-green-500">
+                                    Activo
+                                </label>
+
                                 <input type="radio" id="estado0" name="estado" value="0"
                                     class="hidden peer/inactivo"
                                     {{ old('estado', $cliente->estado ?? 1) == 0 ? 'checked' : '' }}>
@@ -236,29 +220,16 @@
                    peer-checked/inactivo:bg-red-500 peer-checked/inactivo:text-white
                    hover:bg-red-100 hover:border-red-500">
                                     Inactivo
-                                </label>
-
-                                <input type="radio" id="estado1" name="estado" value="1"
-                                    class="hidden peer/activo"
-                                    {{ old('estado', $cliente->estado ?? 1) == 1 ? 'checked' : '' }}>
-                                <label for="estado1"
-                                    class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
-                   peer-checked/activo:bg-green-600 peer-checked/activo:text-white
-                   hover:bg-green-100 hover:border-green-500">
-                                    Activo
-                                </label>
+                                </label>                            
                             </div>
                         </div>
-
-
-
                     </div>
                 </div>
 
                 <div class="flex justify-center mt-6">
-                    <button type="submit"
-                        class="btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="submit" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" />
                             <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
                             <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
@@ -277,16 +248,14 @@
         let map;
         let marcadorSeleccionado = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('Inicializando mapa en [-17.393993, -66.170568]');
             map = L.map('mapa').setView([-17.393993, -66.170568], 13);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
             }).addTo(map);
-
-            // Click para colocar marcador y actualizar campos
-            map.on('click', function(e) {
+            map.on('click', function (e) {
                 const {
                     lat,
                     lng
@@ -318,7 +287,7 @@
                 setTimeout(() => {
                     const btn = document.getElementById('btnCopiar');
                     if (btn) {
-                        btn.addEventListener('click', function(ev) {
+                        btn.addEventListener('click', function (ev) {
                             ev.preventDefault(); // Evita recargar
                             alert(`Coordenadas copiadas:\nLatitud: ${lat.toFixed(6)}, Longitud: ${lng.toFixed(6)}`);
                         });

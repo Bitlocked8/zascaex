@@ -202,6 +202,7 @@ class Asignaciones extends Component
 
                 $reposiciones = Reposicion::where('existencia_id', $existencia->id)
                     ->where('estado_revision', true)
+                    ->where('cantidad', '>', 0)
                     ->orderBy('fecha')
                     ->get();
 

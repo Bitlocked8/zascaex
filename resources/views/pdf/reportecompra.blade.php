@@ -4,187 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte Asignaciones por Area</title>
-    <style>
-        /* Estilos para PDF */
-        @page {
-            margin: 20px;
-            size: A4 landscape;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            font-size: 9px;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            line-height: 1.2;
-        }
-        
-        .container {
-            padding: 15px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #0d9488;
-            padding-bottom: 10px;
-        }
-        
-        .header h1 {
-            color: #0d9488;
-            font-size: 18px;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .header-info {
-            font-size: 10px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .filters-info {
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 15px;
-            font-size: 8px;
-        }
-        
-        .filter-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-        }
-        
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0 10px 0;
-            color: #374151;
-            background-color: #f3f4f6;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-            font-size: 8px;
-            page-break-inside: auto;
-        }
-        
-        table thead {
-            display: table-header-group;
-        }
-        
-        table th {
-            border: 1px solid #d1d5db;
-            padding: 4px 3px;
-            font-weight: bold;
-            text-align: center;
-            background-color: #e5e7eb;
-            font-size: 8px;
-        }
-        
-        table td {
-            border: 1px solid #d1d5db;
-            padding: 3px 2px;
-            text-align: center;
-        }
-        
-        .total-row {
-            background-color: #d9f99d !important;
-            font-weight: bold;
-        }
-        
-        .summary-section {
-            background-color: white;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 20px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .summary-section h3 {
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 15px;
-            color: #374151;
-        }
-        
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .summary-card {
-            background-color: #f3f4f6;
-            border-radius: 4px;
-            padding: 10px;
-            text-align: center;
-        }
-        
-        .summary-card .label {
-            font-size: 9px;
-            color: #6b7280;
-            margin-bottom: 3px;
-        }
-        
-        .summary-card .value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #0d9488;
-        }
-        
-        .summary-card .subtext {
-            font-size: 7px;
-            color: #9ca3af;
-            margin-top: 2px;
-        }
-        
-        .distribution-table {
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
-            color: #6b7280;
-            font-size: 8px;
-        }
-        
-        .page-break {
-            page-break-before: always;
-        }
-        
-        .no-border td {
-            border: none !important;
-        }
-        
-        /* Colores */
-        .text-teal-700 { color: #0f766e; }
-        .text-gray-600 { color: #4b5563; }
-        
-        /* Evitar rotura de filas */
-        tr { page-break-inside: avoid; }
-        
-        /* Ajustes para datos largos */
-        .break-word {
-            word-break: break-word;
-            max-width: 100px;
-        }
-    </style>
+   <style>
+    body {
+        font-family: DejaVu Sans, sans-serif;
+        font-size: 12px;
+        color: #000;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        font-size: 18px;
+        margin: 0;
+        color: #0d9488;
+    }
+
+    .header-info {
+        font-size: 10px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .filters-info {
+        margin-bottom: 15px;
+        font-size: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 5px;
+        padding: 8px;
+        background-color: #f9fafb;
+    }
+
+    .filter-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .section-title {
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        margin: 20px 0 10px 0;
+        padding: 5px;
+        border-radius: 4px;
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+        font-size: 11px;
+        page-break-inside: auto;
+    }
+
+    table thead {
+        display: table-header-group;
+    }
+
+    table th {
+        border: 1px solid #000;
+        padding: 5px;
+        font-weight: bold;
+        text-align: center;
+        background-color: #e5e7eb;
+    }
+
+    table td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: center;
+    }
+
+    .total-row {
+        background-color: #d9f99d;
+        font-weight: bold;
+    }
+
+    .no-border td {
+        border: none !important;
+    }
+
+    .break-word {
+        word-break: break-word;
+        max-width: 150px;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 9px;
+        color: #4b5563;
+    }
+
+    .page-break {
+        page-break-before: always;
+    }
+</style>
+
 </head>
 <body>
     <div class="container">

@@ -1,97 +1,187 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
+
 <head>
     <meta charset="UTF-8">
-    <title>Reporte de Stock y Asignaciones</title>
+    <title>Reporte de Stock</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #999; padding: 4px; text-align: left; }
-        th { background-color: #b2f5ea; font-weight: bold; }
-        .bg-gray { background-color: #f0f0f0; font-weight: bold; }
-        .bg-teal { background-color: #81e6d9; font-weight: bold; }
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 12px;
+            color: #000;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .header div {
+            margin: 2px 0;
+        }
+
+        .bg-green {
+            background-color: #d1fae5;
+        }
+
+        .bg-orange {
+            background-color: #ffedd5;
+        }
+
+        .bg-cyan {
+            background-color: #cffafe;
+        }
     </style>
 </head>
+
 <body>
-    <h2 style="text-align: center;">Reporte de Stock y Asignaciones</h2>
-    <table>
+
+    <h2 class="text-center">Reporte de Stock</h2>
+
+    <!-- Filtros aplicados -->
+    <div class="header">
+        <div><strong>Fecha Inicio:</strong> {{ $fecha_inicio ? $fecha_inicio->format('d/m/Y H:i') : 'No definida' }}</div>
+        <div><strong>Fecha Fin:</strong> {{ $fecha_fin ? $fecha_fin->format('d/m/Y H:i') : 'No definida' }}</div>
+        <div><strong>Existencia:</strong> {{ $existencia_nombre ?? 'Todos' }}</div>
+        <div><strong>Sucursal:</strong> {{ $sucursal_nombre ?? 'Todas' }}</div>
+        <div><strong>Personal:</strong> {{ $personal_nombre ?? 'Todo el personal' }}</div>
+    </div>
+
+    <!-- Tabla de stock -->
+    <h3 class="text-center">Reporte Stock</h3>
+    <table class="table">
         <thead>
             <tr>
                 <th>Código</th>
-                <th>Fecha</th>
-                @if(!$ocultar_cantidad) <th>Cantidad</th> @endif
-                <th>Proveedor</th>
-                <th>Material / Descripción</th>
-                @if(!$ocultar_monto) <th>Monto</th> @endif
-                <th>Precio Unidad</th>
                 <th>Personal</th>
+                <th>Existencia</th>
                 <th>Sucursal</th>
+                @if(!$ocultar_cantidad)
+                    <th>Cantidad</th>
+                @endif
+                @if(!$ocultar_monto)
+                    <th>Precio Unitario</th>
+                    <th>Monto Total</th>
+                @endif
             </tr>
         </thead>
         <tbody>
-            @foreach($reposiciones as $reposicion)
+            @foreach ($reposiciones as $rep)
                 @php
-                    $total_monto = $reposicion->comprobantes->sum('monto') ?? 0;
-                    $cantidad_total = $reposicion->cantidad_inicial > 0 ? $reposicion->cantidad_inicial : 1;
-                    $precio_por_unidad = $total_monto / $cantidad_total;
-                    $stock_restante = $reposicion->cantidad_inicial;
-                    $monto_restante = $total_monto;
-                    $existencia_repo = $reposicion->existencia ?? null;
-                    $tipo_material = $existencia_repo?->existenciable_type ? class_basename($existencia_repo->existenciable_type) : '-';
-                    $material_desc = $tipo_material . ' - ' . ($existencia_repo?->existenciable->descripcion ?? $existencia_repo?->descripcion ?? '-');
+                    $entrada = $rep->cantidad_inicial ?? $rep->cantidad ?? 0;
+                    $sucursal = $rep->existencia?->sucursal->nombre ?? 'N/A';
+                    $comprobante = $rep->comprobantePagos->first();
+                    $monto = $comprobante->monto ?? 0;
+                    $precio_unitario = $entrada ? $monto / $entrada : 0;
+                    $total_salida = $rep->asignadoReposicions->sum('cantidad_original');
+                    $cantidad_restante = max($entrada - $total_salida, 0);
+                    $monto_restante = $cantidad_restante * $precio_unitario;
                 @endphp
 
-                <tr class="bg-gray">
-                    <td>{{ $reposicion->codigo }}</td>
-                    <td>{{ $reposicion->fecha }}</td>
-                    @if(!$ocultar_cantidad) <td>{{ $reposicion->cantidad_inicial }}</td> @endif
-                    <td>{{ $reposicion->proveedor->razonSocial ?? '-' }}</td>
-                    <td>{{ $material_desc }}</td>
-                    @if(!$ocultar_monto) <td>{{ number_format($total_monto, 2) }}</td> @endif
-                    <td>{{ number_format($precio_por_unidad, 2) }}</td>
-                    <td>{{ $reposicion->personal->nombres ?? '-' }}</td>
-                    <td>{{ $existencia_repo?->sucursal->nombre ?? '-' }}</td>
+                {{-- Entrada --}}
+                <tr class="bg-green">
+                    <td>{{ $rep->codigo }}</td>
+                    <td>{{ $rep->personal->nombres ?? 'N/A' }}</td>
+                    <td>{{ $rep->existencia?->existenciable->descripcion ?? 'N/A' }}</td>
+                    <td>{{ $sucursal }}</td>
+                    @if(!$ocultar_cantidad)
+                        <td>{{ $entrada }}</td>
+                    @endif
+                    @if(!$ocultar_monto)
+                        <td>{{ number_format($precio_unitario, 2) }}</td>
+                        <td>{{ number_format($monto, 2) }}</td>
+                    @endif
                 </tr>
 
-                @foreach($reposicion->asignados as $asignado)
-                    @if($personal_id && $asignado->personal_id != $personal_id) @continue @endif
+                {{-- Salidas --}}
+                @foreach($rep->asignadoReposicions as $ar)
                     @php
-                        $detalle = $asignado->asignadoReposicions->where('reposicion_id', $reposicion->id)->first();
-                        if (!$detalle) continue;
-                        $cantidad_asignada = $detalle->cantidad_original ?? 0;
-                        $monto_asignacion = $cantidad_asignada * $precio_por_unidad;
-                        $stock_restante -= $cantidad_asignada;
-                        $monto_restante -= $monto_asignacion;
-                        $tipo_material_asig = $detalle->existencia?->existenciable_type ? class_basename($detalle->existencia->existenciable_type) : '-';
-                        $material_asignado = $tipo_material_asig . ' - ' . ($detalle->existencia?->existenciable->descripcion ?? $detalle->existencia?->descripcion ?? '-');
+                        $cantidad_asignada = $ar->cantidad_original ?? 0;
+                        $monto_total_ar = $cantidad_asignada * $precio_unitario;
                     @endphp
-
-                    <tr>
-                        <td>→ {{ $asignado->codigo }}</td>
-                        <td>{{ $asignado->fecha }}</td>
-                        @if(!$ocultar_cantidad) <td>{{ $cantidad_asignada }}</td> @endif
-                        <td>{{ $asignado->proveedor?->razonSocial ?? '-' }}</td>
-                        <td>{{ $material_asignado }}</td>
-                        @if(!$ocultar_monto) <td>{{ number_format($monto_asignacion, 2) }}</td> @endif
-                        <td>{{ number_format($precio_por_unidad, 2) }}</td>
-                        <td>{{ $asignado->personal->nombres ?? '-' }}</td>
-                        <td>{{ $detalle->existencia?->sucursal->nombre ?? '-' }}</td>
+                    <tr class="bg-orange">
+                        <td>{{ $ar->asignado->codigo ?? '-' }}</td>
+                        <td>{{ $ar->asignado->personal->nombres ?? '-' }}</td>
+                        <td>{{ $ar->existencia?->existenciable->descripcion ?? 'N/A' }}</td>
+                        <td>{{ $sucursal }}</td>
+                        @if(!$ocultar_cantidad)
+                            <td>{{ $cantidad_asignada }}</td>
+                        @endif
+                        @if(!$ocultar_monto)
+                            <td>{{ number_format($precio_unitario, 2) }}</td>
+                            <td>{{ number_format($monto_total_ar, 2) }}</td>
+                        @endif
                     </tr>
                 @endforeach
 
-                <tr class="bg-teal">
-                    <td>STOCK RESTANTE</td>
-                    <td>-</td>
-                    @if(!$ocultar_cantidad) <td>{{ $stock_restante }}</td> @endif
-                    <td>-</td>
-                    <td>-</td>
-                    @if(!$ocultar_monto) <td>{{ number_format($monto_restante, 2) }}</td> @endif
+                {{-- Total --}}
+                <tr class="bg-cyan font-bold">
+                    <td>Total</td>
                     <td>-</td>
                     <td>-</td>
-                    <td>-</td>
+                    <td>{{ $sucursal }}</td>
+                    @if(!$ocultar_cantidad)
+                        <td>{{ $cantidad_restante }}</td>
+                    @endif
+                    @if(!$ocultar_monto)
+                        <td>{{ number_format($precio_unitario, 2) }}</td>
+                        <td>{{ number_format($monto_restante, 2) }}</td>
+                    @endif
                 </tr>
             @endforeach
         </tbody>
     </table>
+
+    <!-- Resumen General -->
+    <div class="mt-6 p-4 bg-cyan rounded">
+        @php
+            $totalEntradas = 0;
+            $totalSalidas = 0;
+            $totalRestante = 0;
+
+            foreach ($reposiciones as $rep) {
+                $entrada = $rep->cantidad_inicial ?? $rep->cantidad;
+                $totalEntradas += $entrada;
+
+                $salidas = $rep->asignadoReposicions->sum('cantidad_original');
+                $totalSalidas += $salidas;
+
+                $totalRestante += max($entrada - $salidas, 0);
+            }
+        @endphp
+
+        <h3 class="text-center font-semibold mb-2">Resumen de Stock</h3>
+        <table class="table">
+            <tr>
+                <td>Total Entradas</td>
+                <td>{{ number_format($totalEntradas, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Total Salidas</td>
+                <td>{{ number_format($totalSalidas, 2) }}</td>
+            </tr>
+            <tr>
+                <td>Total Restante</td>
+                <td>{{ number_format($totalRestante, 2) }}</td>
+            </tr>
+        </table>
+    </div>
+
 </body>
 </html>

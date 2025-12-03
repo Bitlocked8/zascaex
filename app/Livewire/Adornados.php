@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class Adornados extends Component
 {
+    public $confirmingDeleteAdornadoId = null;
 
     public $solicitud_pedido_id;
     public $solicitudPedidos = [];
@@ -281,4 +282,18 @@ class Adornados extends Component
         $this->resetErrorBag();
         $this->resetValidation();
     }
+
+    public function confirmarEliminar($id)
+    {
+        $this->confirmingDeleteAdornadoId = $id;
+    }
+    public function eliminarAdornadoConfirmado()
+    {
+        if (!$this->confirmingDeleteAdornadoId)
+            return;
+
+        $this->eliminar($this->confirmingDeleteAdornadoId);
+        $this->confirmingDeleteAdornadoId = null;
+    }
+
 }

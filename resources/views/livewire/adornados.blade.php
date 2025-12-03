@@ -60,21 +60,8 @@
                         </svg>
                         Editar
                     </button>
-
-                    <button wire:click="modaldetalle({{ $adornado->id }})" class="btn-cyan flex items-center gap-1"
-                        title="Ver detalles">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <circle cx="12" cy="12" r="9" />
-                            <line x1="12" y1="16" x2="12" y2="16" />
-                            <line x1="12" y1="12" x2="12" y2="8" />
-                        </svg>
-                        Detalles
-                    </button>
-
-                    <button wire:click="eliminar({{ $adornado->id }})" class="btn-cyan flex items-center gap-1"
-                        title="Eliminar">
+                    <button type="button" wire:click="$set('confirmingDeleteAdornadoId', {{ $adornado->id }})"
+                        class="btn-cyan flex items-center gap-1" title="Eliminar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -86,6 +73,7 @@
                         </svg>
                         Eliminar
                     </button>
+
                 </div>
             </div>
         @empty
@@ -95,7 +83,41 @@
         @endforelse
     </div>
 
+    @if($confirmingDeleteAdornadoId)
+        <div class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-content">
+                    <div class="flex flex-col gap-4 text-center">
+                        <h2 class="text-lg font-semibold">¿Estás seguro?</h2>
+                        <p class="text-gray-600">
+                            El adornado seleccionado se eliminará y se revertirán los cambios en stock.
+                        </p>
+                    </div>
+                </div>
 
+                <div class="modal-footer flex justify-center gap-2 mt-4">
+                    <button type="button" wire:click="eliminarAdornadoConfirmado" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 12l5 5l10 -10" />
+                        </svg>
+                        Confirmar
+                    </button>
+
+                    <button type="button" wire:click="$set('confirmingDeleteAdornadoId', null)" class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @if($modal)
         <div class="modal-overlay">
@@ -143,7 +165,7 @@
                                             Personal: {{ $pedidoActual->personal?->nombres ?? 'Sin personal' }}
                                         </span>
 
-                                        <span class="text-xs font-semibold text-center">
+                                        <span class="text-xs font-semibold text-u">
                                             Fecha: {{ optional($pedidoActual->created_at)->format('d/m/Y') ?? 'N/A' }}
                                         </span>
 
@@ -236,14 +258,14 @@
 
                                             <button type="button" wire:click="$set('pedido_id', {{ $pedido->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col items-start text-left
-                                                                                                        {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                                                                                                                                                                                                                                        {{ $pedido_id == $pedido->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 
                                                 <span class="font-semibold">{{ $pedido->codigo }}</span>
                                                 <span class="text-sm text-gray-700">Cliente:
                                                     {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'N/A' }}</span>
                                                 <span class="text-sm text-gray-700">Personal:
                                                     {{ $pedido->personal?->nombres ?? 'N/A' }}</span>
-                                                <span class="text-xs text-gray-500">Fecha:
+                                                <span class="text-u">Fecha:
                                                     {{ optional($pedido->created_at)->format('d/m/Y') ?? 'N/A' }}</span>
                                                 <span class="mt-1 px-2 py-1 rounded-full text-xs font-semibold {{ $estadoColor }}">
                                                     {{ $pedido->estado_pedido == 0 ? 'Preparando' : ($pedido->estado_pedido == 1 ? 'En Revisión' : 'Completado') }}
@@ -270,14 +292,14 @@
                                                                 $etiquetaSucursal = $detalle->etiqueta?->existencias->first()?->sucursal?->nombre ?? '-';
                                                             @endphp
 
-                                                            <p >
+                                                            <p>
                                                                 Producto/Otro Sucursal: {{ $itemSucursal }}<br>
                                                                 <span class="font-semibold">{{ $itemDescripcion }}</span> x
                                                                 {{ $detalle->cantidad }} paquetes
                                                                 (Paquete: {{ $paquete }} unidades | Total: {{ $totalUnidades }}
                                                                 unidades)
                                                             </p>
-                                                                <p >
+                                                            <p>
 
                                                                 Tapa: {{ $tapaDescripcion }} | Sucursal: {{ $tapaSucursal }}
                                                                 <br>
@@ -307,7 +329,7 @@
                             </div>
 
                             <div class="mt-2">
-                                <label class="font-semibold text-sm">Reposiciones de Etiquetas disponibles</label>
+                                <label class="text-u">Reposiciones de Etiquetas disponibles (requerido)</label>
 
                                 <div
                                     class="grid grid-cols-1 gap-2 mt-1 max-h-[250px] overflow-y-auto p-2 border border-gray-300 rounded-xl bg-gray-50 shadow-inner">
@@ -398,6 +420,7 @@
                 </div>
             </div>
     @endif
+
 
 
     </div>

@@ -117,33 +117,31 @@
                                     Ahora
                                 </button>
                             </div>
-
                         </div>
-                        <div class="text-center">
+                        <div class="sm:col-span-2 text-center">
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
-                            <div class="flex justify-center gap-3">
-                                <button type="button" wire:click="$set('estado', 0)"
-                                    class="btn-cyan {{ $estado == 0 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="mr-1">
-                                        <path d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    en entrega
+
+                            <div class="flex justify-center gap-3 mt-2">
+                                <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                    {{ $estado == 0
+            ? 'bg-yellow-600 text-white border-yellow-700 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                    En entrega
                                 </button>
 
-                                <button type="button" wire:click="$set('estado', 1)"
-                                    class="btn-cyan {{ $estado == 1 ? 'ring-2 ring-cyan-200' : 'opacity-40' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="mr-1">
-                                        <path d="M18 6L6 18" />
-                                        <path d="M6 6l12 12" />
-                                    </svg>
-                                    Finalizados
+                                <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                    {{ $estado == 1
+            ? 'bg-emerald-500 text-white border-emerald-600 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                    Finalizado
                                 </button>
                             </div>
+
+                            @error('estado')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
+
 
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
@@ -404,18 +402,44 @@
     @endif
 
     @if($confirmingDeleteId)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded-xl shadow-lg w-96">
-                <h2 class="text-lg font-bold mb-4">Confirmar eliminación</h2>
-                <p class="mb-4">¿Estás seguro de que deseas eliminar esta distribución? Esta acción no se puede deshacer.
-                </p>
-                <div class="flex justify-end gap-2">
-                    <button wire:click="cancelarEliminar" class="btn-gray">Cancelar</button>
-                    <button wire:click="eliminarDistribucion" class="btn-red">Eliminar</button>
+        <div class="modal-overlay">
+            <div class="modal-box">
+
+                <div class="modal-content">
+                    <div class="flex flex-col gap-4 text-center">
+                        <h2 class="text-lg font-semibold">¿Eliminar distribución?</h2>
+                        <p class="text-gray-600">
+                            Esta acción no se puede deshacer.
+                        </p>
+                    </div>
                 </div>
+
+                <div class="modal-footer flex justify-center gap-2 mt-4">
+                    <button type="button" wire:click="eliminarDistribucion" class="btn-cyan flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <path d="M5 12l5 5l10 -10" />
+                        </svg>
+                        Confirmar
+                    </button>
+
+                    <button type="button" wire:click="$set('confirmingDeleteId', false)"
+                        class="btn-cyan flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <path stroke="none" d="M0 0h24v24H0z" />
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Cancelar
+                    </button>
+                </div>
+
             </div>
         </div>
     @endif
+
 
     @if($modalPedidos)
         <div class="modal-overlay">

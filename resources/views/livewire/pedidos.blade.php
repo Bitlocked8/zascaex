@@ -44,7 +44,7 @@
       <div class="card-teal flex flex-col gap-4">
         <div class="flex flex-col gap-2">
           @if($usadoEnAdornado)
-            <p class="text-red-600 font-bold">⚠ Este pedido ya fue usado en adornados</p>
+            <p class="text-indigo-600 font-bold">Este pedido ya tiene etiquetas y esta empacado</p>
           @endif
           <p class="text-emerald-600 uppercase font-semibold">
             {{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Sin cliente' }}

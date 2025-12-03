@@ -18,9 +18,6 @@ class ComprobantePago extends Model
         'observaciones',
     ];
 
-    /**
-     * Relación: Un comprobante pertenece a una reposición.
-     */
     public function reposicion()
     {
         return $this->belongsTo(Reposicion::class);
