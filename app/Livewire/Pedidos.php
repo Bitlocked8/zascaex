@@ -84,6 +84,140 @@ class Pedidos extends Component
         }
     }
 
+    public function render()
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+        $sucursalId = $personal->trabajos()->latest()->first()?->sucursal_id;
+
+        // Productos filtrados por sucursal si rol 2
+        $productos = Producto::whereHas('existencias', function ($q) use ($rol, $sucursalId) {
+            if ($this->sucursal_id) {
+                $q->where('sucursal_id', $this->sucursal_id);
+            } elseif ($rol === 2 && $sucursalId) {
+                $q->where('sucursal_id', $sucursalId);
+            }
+            $q->whereHas(
+                'reposiciones',
+                fn($query) =>
+                $query->where('estado_revision', 1)->where('cantidad', '>', 0)
+            );
+        })->with([
+                    'existencias' => function ($q) use ($rol, $sucursalId) {
+                        if ($this->sucursal_id) {
+                            $q->where('sucursal_id', $this->sucursal_id);
+                        } elseif ($rol === 2 && $sucursalId) {
+                            $q->where('sucursal_id', $sucursalId);
+                        }
+                        $q->whereHas(
+                            'reposiciones',
+                            fn($query) =>
+                            $query->where('estado_revision', 1)->where('cantidad', '>', 0)
+                        )->with('sucursal', 'reposiciones');
+                    }
+                ])->get();
+
+        // Otros filtrados por sucursal si rol 2
+        $otros = Otro::whereHas('existencias', function ($q) use ($rol, $sucursalId) {
+            if ($this->sucursal_id) {
+                $q->where('sucursal_id', $this->sucursal_id);
+            } elseif ($rol === 2 && $sucursalId) {
+                $q->where('sucursal_id', $sucursalId);
+            }
+            $q->whereHas(
+                'reposiciones',
+                fn($query) =>
+                $query->where('estado_revision', 1)->where('cantidad', '>', 0)
+            );
+        })->with([
+                    'existencias' => function ($q) use ($rol, $sucursalId) {
+                        if ($this->sucursal_id) {
+                            $q->where('sucursal_id', $this->sucursal_id);
+                        } elseif ($rol === 2 && $sucursalId) {
+                            $q->where('sucursal_id', $sucursalId);
+                        }
+                        $q->whereHas(
+                            'reposiciones',
+                            fn($query) =>
+                            $query->where('estado_revision', 1)->where('cantidad', '>', 0)
+                        )->with('sucursal', 'reposiciones');
+                    }
+                ])->get();
+
+        // Solicitudes de pedido
+        $solicitudPedidos = SolicitudPedido::with([
+            'cliente',
+            'detalles.producto.existencias.sucursal',
+            'detalles.otro.existencias.sucursal',
+            'detalles.tapa',
+            'detalles.etiqueta'
+        ])->whereDoesntHave('pedido')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $solicitudPedidos->each(function ($solicitud) {
+            $solicitud->detalles->each(function ($detalle) {
+                $item = $detalle->producto ?? $detalle->otro;
+                $existencia = $item->existencias->first();
+                $detalle->sucursal_nombre = $existencia?->sucursal->nombre ?? 'Sin sucursal';
+            });
+        });
+
+        if ($this->pedido->exists && $this->pedido->solicitud_pedido_id) {
+            $solicitudEdit = SolicitudPedido::with([
+                'cliente',
+                'detalles.producto.existencias.sucursal',
+                'detalles.otro.existencias.sucursal',
+                'detalles.tapa',
+                'detalles.etiqueta'
+            ])->find($this->pedido->solicitud_pedido_id);
+
+            if ($solicitudEdit) {
+                $solicitudEdit->detalles->each(function ($detalle) {
+                    $item = $detalle->producto ?? $detalle->otro;
+                    $existencia = $item->existencias->first();
+                    $detalle->sucursal_nombre = $existencia?->sucursal->nombre ?? 'Sin sucursal';
+                });
+
+                if (!$solicitudPedidos->contains('id', $solicitudEdit->id)) {
+                    $solicitudPedidos->prepend($solicitudEdit);
+                }
+            }
+        }
+
+        // Pedidos filtrados por rol 2 (solo de su sucursal)
+        $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles.existencia.sucursal'])
+            ->when(
+                $this->search,
+                fn($q) =>
+                $q->where('codigo', 'like', '%' . $this->search . '%')
+                    ->orWhereHas(
+                        'solicitudPedido.cliente',
+                        fn($query) =>
+                        $query->where('nombre', 'like', '%' . $this->search . '%')
+                    )
+            )
+            ->when(
+                $rol === 2 && $sucursalId,
+                fn($q) =>
+                $q->whereHas('detalles.existencia', fn($query) => $query->where('sucursal_id', $sucursalId))
+            )
+            ->latest()
+            ->get();
+
+        return view('livewire.pedidos', [
+            'pedidos' => $pedidos,
+            'productos' => $productos,
+            'otros' => $otros,
+            'detalles' => $this->detalles,
+            'sucursales' => Sucursal::orderBy('nombre')->get(),
+            'solicitudPedidos' => $solicitudPedidos,
+            'sucursalId' => null,
+        ]);
+    }
+
+
     public function abrirModal()
     {
         $this->modalPedido = true;
@@ -173,202 +307,10 @@ class Pedidos extends Component
         $this->tipoProducto = 'producto';
         $this->setMensaje('Item agregado correctamente', 'success');
     }
-
-    public function eliminarDetalle($index)
-    {
-        if (isset($this->detalles[$index]['id'])) {
-            $this->detalles[$index]['eliminar'] = true;
-        } else {
-            unset($this->detalles[$index]);
-        }
-        $this->detalles = array_values($this->detalles);
-        $this->setMensaje('Detalle eliminado correctamente', 'success');
-    }
-
-    public function guardarPedido()
-    {
-        if ($this->solicitud_pedido_id) {
-            $this->validate(['solicitud_pedido_id' => 'exists:solicitud_pedidos,id']);
-            $solicitud = SolicitudPedido::find($this->solicitud_pedido_id);
-            if ($solicitud->pedido && !$this->pedido->exists) {
-                $this->setMensaje('Esta solicitud ya tiene un pedido asociado', 'error');
-                return;
-            }
-        }
-
-        $pedido = $this->pedido;
-        if (!$pedido->exists) {
-            $pedido->personal_id = $this->personal_id ?? Auth::id();
-        }
-
-        $pedido->solicitud_pedido_id = $this->solicitud_pedido_id ?? null;
-        $pedido->estado_pedido = $this->estado_pedido;
-        $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
-        $pedido->observaciones = $this->observaciones;
-
-        if (!$pedido->exists) {
-            do {
-                $codigo = 'R-' . now()->format('YmdHis') . '-' . rand(100, 999);
-            } while (Pedido::where('codigo', $codigo)->exists());
-            $pedido->codigo = $codigo;
-        }
-
-        $pedido->save();
-        foreach ($this->detalles as $index => $pd) {
-            if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
-                $detalle = PedidoDetalle::find($pd['id']);
-                if ($detalle) {
-                    $lote = Reposicion::find($detalle->reposicion_id);
-                    if ($lote) {
-                        $lote->cantidad += $detalle->cantidad;
-                        $lote->save();
-                    }
-                    $detalle->delete();
-                }
-                unset($this->detalles[$index]);
-            }
-        }
-        foreach ($this->detalles as $pd) {
-            if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
-                $detalle = PedidoDetalle::create([
-                    'pedido_id' => $pedido->id,
-                    'existencia_id' => $pd['existencia_id'],
-                    'reposicion_id' => $pd['reposicion_id'],
-                    'cantidad' => $pd['cantidad'],
-                ]);
-
-                $lote = Reposicion::find($pd['reposicion_id']);
-                if ($lote) {
-                    $lote->cantidad -= $pd['cantidad'];
-                    $lote->save();
-                }
-            }
-        }
-
-        $this->setMensaje('Pedido guardado correctamente', 'success');
-        $this->cerrarModal();
-    }
-
-
     private function setMensaje($texto, $tipo = 'success')
     {
         $this->mensaje = $texto;
         $this->tipoMensaje = $tipo;
-    }
-
-    public function render()
-    {
-        $productos = Producto::whereHas('existencias', function ($q) {
-            if ($this->sucursal_id) {
-                $q->where('sucursal_id', $this->sucursal_id);
-            }
-            $q->whereHas(
-                'reposiciones',
-                fn($query) =>
-                $query->where('estado_revision', 1)
-                    ->where('cantidad', '>', 0)
-            );
-        })->with([
-                    'existencias' => function ($q) {
-                        if ($this->sucursal_id) {
-                            $q->where('sucursal_id', $this->sucursal_id);
-                        }
-                        $q->whereHas(
-                            'reposiciones',
-                            fn($query) =>
-                            $query->where('estado_revision', 1)
-                                ->where('cantidad', '>', 0)
-                        )->with('sucursal', 'reposiciones');
-                    }
-                ])->get();
-
-        $otros = Otro::whereHas('existencias', function ($q) {
-            if ($this->sucursal_id) {
-                $q->where('sucursal_id', $this->sucursal_id);
-            }
-            $q->whereHas(
-                'reposiciones',
-                fn($query) =>
-                $query->where('estado_revision', 1)
-                    ->where('cantidad', '>', 0)
-            );
-        })->with([
-                    'existencias' => function ($q) {
-                        if ($this->sucursal_id) {
-                            $q->where('sucursal_id', $this->sucursal_id);
-                        }
-                        $q->whereHas(
-                            'reposiciones',
-                            fn($query) =>
-                            $query->where('estado_revision', 1)
-                                ->where('cantidad', '>', 0)
-                        )->with('sucursal', 'reposiciones');
-                    }
-                ])->get();
-
-        $solicitudPedidos = SolicitudPedido::with([
-            'cliente',
-            'detalles.producto.existencias.sucursal',
-            'detalles.otro.existencias.sucursal',
-            'detalles.tapa',
-            'detalles.etiqueta'
-        ])->whereDoesntHave('pedido')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $solicitudPedidos->each(function ($solicitud) {
-            $solicitud->detalles->each(function ($detalle) {
-                $item = $detalle->producto ?? $detalle->otro;
-                $existencia = $item->existencias->first();
-                $detalle->sucursal_nombre = $existencia?->sucursal->nombre ?? 'Sin sucursal';
-            });
-        });
-
-        if ($this->pedido->exists && $this->pedido->solicitud_pedido_id) {
-            $solicitudEdit = SolicitudPedido::with([
-                'cliente',
-                'detalles.producto.existencias.sucursal',
-                'detalles.otro.existencias.sucursal',
-                'detalles.tapa',
-                'detalles.etiqueta'
-            ])->find($this->pedido->solicitud_pedido_id);
-
-            if ($solicitudEdit) {
-                $solicitudEdit->detalles->each(function ($detalle) {
-                    $item = $detalle->producto ?? $detalle->otro;
-                    $existencia = $item->existencias->first();
-                    $detalle->sucursal_nombre = $existencia?->sucursal->nombre ?? 'Sin sucursal';
-                });
-
-                if (!$solicitudPedidos->contains('id', $solicitudEdit->id)) {
-                    $solicitudPedidos->prepend($solicitudEdit);
-                }
-            }
-        }
-
-        $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles'])
-            ->when(
-                $this->search,
-                fn($q) =>
-                $q->where('codigo', 'like', '%' . $this->search . '%')
-                    ->orWhereHas(
-                        'solicitudPedido.cliente',
-                        fn($query) =>
-                        $query->where('nombre', 'like', '%' . $this->search . '%')
-                    )
-            )
-            ->latest()
-            ->get();
-
-        return view('livewire.pedidos', [
-            'pedidos' => $pedidos,
-            'productos' => $productos,
-            'otros' => $otros,
-            'detalles' => $this->detalles,
-            'sucursales' => Sucursal::orderBy('nombre')->get(),
-            'solicitudPedidos' => $solicitudPedidos,
-            'sucursalId' => null,
-        ]);
     }
     public function filtrarSucursalModal($id = null)
     {
@@ -408,7 +350,6 @@ class Pedidos extends Component
 
         $this->modalPedido = true;
     }
-
     public function abrirModalDetallePedido($pedido_id)
     {
         $this->pedidoDetalle = Pedido::with([
@@ -420,6 +361,103 @@ class Pedidos extends Component
 
         $this->modalDetallePedido = true;
     }
+    public function eliminarDetalle($index)
+    {
+        $detalle = $this->detalles[$index];
+
+        if (!empty($detalle['ultimo_por_sucursal'])) {
+            $this->setMensaje('No se puede eliminar el último ítem de la sucursal', 'error');
+            return;
+        }
+
+        if (isset($detalle['id'])) {
+            $this->detalles[$index]['eliminar'] = true;
+        } else {
+            unset($this->detalles[$index]);
+        }
+
+        $this->detalles = array_values($this->detalles);
+        $this->setMensaje('Detalle eliminado correctamente', 'success');
+    }
+
+
+  public function guardarPedido()
+{
+    if ($this->solicitud_pedido_id) {
+        $this->validate(['solicitud_pedido_id' => 'exists:solicitud_pedidos,id']);
+        $solicitud = SolicitudPedido::find($this->solicitud_pedido_id);
+        if ($solicitud->pedido && !$this->pedido->exists) {
+            $this->setMensaje('Esta solicitud ya tiene un pedido asociado', 'error');
+            return;
+        }
+    }
+
+    $detallesActivos = array_values(array_filter($this->detalles, function($d) {
+        return !isset($d['eliminar']) || !$d['eliminar'];
+    }));
+
+    if (empty($detallesActivos)) {
+        $this->setMensaje('No se puede guardar un pedido sin ítems', 'error');
+        return;
+    }
+
+    $pedido = $this->pedido;
+    if (!$pedido->exists) {
+        $pedido->personal_id = $this->personal_id ?? Auth::id();
+    }
+
+    $pedido->solicitud_pedido_id = $this->solicitud_pedido_id ?? null;
+    $pedido->estado_pedido = $this->estado_pedido;
+    $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
+    $pedido->observaciones = $this->observaciones;
+
+    if (!$pedido->exists) {
+        do {
+            $codigo = 'R-' . now()->format('YmdHis') . '-' . rand(100, 999);
+        } while (Pedido::where('codigo', $codigo)->exists());
+        $pedido->codigo = $codigo;
+    }
+
+    $pedido->save();
+
+    foreach ($this->detalles as $index => $pd) {
+        if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
+            $detalle = PedidoDetalle::find($pd['id']);
+            if ($detalle) {
+                $lote = Reposicion::find($detalle->reposicion_id);
+                if ($lote) {
+                    $lote->cantidad += $detalle->cantidad;
+                    $lote->save();
+                }
+                $detalle->delete();
+            }
+            unset($this->detalles[$index]);
+        }
+    }
+
+    foreach ($detallesActivos as $pd) {
+        if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
+            $detalle = PedidoDetalle::create([
+                'pedido_id' => $pedido->id,
+                'existencia_id' => $pd['existencia_id'],
+                'reposicion_id' => $pd['reposicion_id'],
+                'cantidad' => $pd['cantidad'],
+            ]);
+
+            $lote = Reposicion::find($pd['reposicion_id']);
+            if ($lote) {
+                $lote->cantidad -= $pd['cantidad'];
+                $lote->save();
+            }
+        }
+    }
+
+    $this->setMensaje('Pedido guardado correctamente', 'success');
+    $this->cerrarModal();
+}
+
+
+
     public function eliminarPedido($pedido_id, $eliminarSolicitud = false)
     {
         $pedido = Pedido::with('detalles')->find($pedido_id);
@@ -535,14 +573,14 @@ class Pedidos extends Component
     }
 
     public function eliminarPedidoConfirmado()
-{
-    if ($this->pedidoAEliminar) {
-        $this->eliminarPedido($this->pedidoAEliminar, $this->eliminarSolicitudAsociada);
-    }
+    {
+        if ($this->pedidoAEliminar) {
+            $this->eliminarPedido($this->pedidoAEliminar, $this->eliminarSolicitudAsociada);
+        }
 
-    $this->modalEliminarPedido = false;
-    $this->pedidoAEliminar = null;
-    $this->eliminarSolicitudAsociada = false;
-}
+        $this->modalEliminarPedido = false;
+        $this->pedidoAEliminar = null;
+        $this->eliminarSolicitudAsociada = false;
+    }
 
 }

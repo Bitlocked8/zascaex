@@ -180,7 +180,7 @@
 
                           {{-- QR --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                                                                                                                      {{ $pagos[$index]['metodo'] === 0
+                                                                                                                                                                                                              {{ $pagos[$index]['metodo'] === 0
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             QR
@@ -188,7 +188,7 @@
 
                           {{-- Efectivo --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                                                                                                                      {{ $pagos[$index]['metodo'] === 1
+                                                                                                                                                                                                              {{ $pagos[$index]['metodo'] === 1
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             Efectivo
@@ -196,7 +196,7 @@
 
                           {{-- Crédito --}}
                           <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                                                                                                                                                                                      {{ $pagos[$index]['metodo'] === 2
+                                                                                                                                                                                                              {{ $pagos[$index]['metodo'] === 2
               ? 'bg-blue-700 text-white border-blue-800 shadow-md'
               : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                             Crédito
@@ -212,7 +212,7 @@
                         <div class="flex justify-center mt-2">
                           <button type="button" wire:click="$set('pagos.{{ $index }}.estado', {{ $pago['estado'] ? 0 : 1 }})"
                             class="px-6 py-2 rounded-lg text-white font-semibold border shadow-md transition
-                                                                                                                                                                                                      {{ $pagos[$index]['estado']
+                                                                                                                                                                                                              {{ $pagos[$index]['estado']
               ? 'bg-green-600 border-green-700 hover:bg-green-700'
               : 'bg-gray-500 border-gray-600 hover:bg-gray-600' }}">
                             {{ $pagos[$index]['estado'] ? 'PAGADO' : 'NO PAGADO' }}
@@ -510,20 +510,23 @@
             @endif
           </div>
 
-          <div class="text-center mb-6">
-            <label class="font-semibold text-sm">Sucursal</label>
+          @if(auth()->user()->rol_id !== 2)
+            <div class="text-center mb-6">
+              <label class="font-semibold text-sm">Sucursal</label>
 
-            <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3 mt-2">
-              @foreach($sucursales as $sucursal)
+              <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3 mt-2">
+                @foreach($sucursales as $sucursal)
                       <button type="button" wire:click="$set('sucursal_id', {{ $sucursal->id }})" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                                                                          {{ $sucursal_id === $sucursal->id
-                ? 'bg-blue-700 text-white border-blue-800 shadow-md'
-                : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                              {{ $sucursal_id === $sucursal->id
+                  ? 'bg-blue-700 text-white border-blue-800 shadow-md'
+                  : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                         {{ $sucursal->nombre }}
                       </button>
-              @endforeach
+                @endforeach
+              </div>
             </div>
-          </div>
+          @endif
+
 
 
           <div class="text-center mb-6">
@@ -533,14 +536,14 @@
 
 
               <button type="button" wire:click="$set('tipoProducto', 'producto')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                            {{ $tipoProducto === 'producto'
+                              {{ $tipoProducto === 'producto'
       ? 'bg-blue-700 text-white border-blue-800 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                 Productos
               </button>
 
               <button type="button" wire:click="$set('tipoProducto', 'otro')" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                            {{ $tipoProducto === 'otro'
+                              {{ $tipoProducto === 'otro'
       ? 'bg-green-500 text-white border-green-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                 Otros Ítems
@@ -677,7 +680,7 @@
               <div class="flex justify-center gap-3 mt-2">
                 {{-- Preparando --}}
                 <button type="button" wire:click="$set('estado_pedido', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                            {{ $estado_pedido === 0
+                                              {{ $estado_pedido === 0
       ? 'bg-blue-700 text-white border-blue-800 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   Preparando
@@ -685,7 +688,7 @@
 
                 {{-- En Revisión --}}
                 <button type="button" wire:click="$set('estado_pedido', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                            {{ $estado_pedido === 1
+                                              {{ $estado_pedido === 1
       ? 'bg-yellow-500 text-white border-yellow-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   En Revisión
@@ -693,7 +696,7 @@
 
                 {{-- Completado --}}
                 <button type="button" wire:click="$set('estado_pedido', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition 
-                                            {{ $estado_pedido === 2
+                                              {{ $estado_pedido === 2
       ? 'bg-green-500 text-white border-green-600 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                   Completado
@@ -773,7 +776,7 @@
                 <span class="label-info">Estado:</span>
                 <span
                   class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-                                  {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
+                                    {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
                   {{ $pedidoDetalle->estado_pedido == 0 ? 'Preparando' : ($pedidoDetalle->estado_pedido == 1 ? 'En Revisión' : 'Completado') }}
                 </span>
               </div>

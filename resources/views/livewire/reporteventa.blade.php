@@ -29,40 +29,156 @@
             <input type="number" min="0" max="59" wire:model.live="fecha_fin_min" placeholder="Minuto"
                 class="w-16 p-2 rounded text-center border">
         </div>
-
         <div class="flex flex-wrap justify-center gap-4 mt-2">
             <input type="text" wire:model.live="producto" placeholder="Buscar por producto"
                 class="border p-2 rounded text-center w-40">
-            <select wire:model.live="cliente_id" class="border p-2 rounded text-center w-40">
-                <option value="">Todos los clientes</option>
-                @foreach($clientes as $cliente)
-                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                @endforeach
-            </select>
-            <select wire:model.live="personal_id" class="border p-2 rounded text-center w-40">
-                <option value="">Todos los vendedores</option>
-                @foreach($personales as $personal)
-                    <option value="{{ $personal->id }}">{{ $personal->nombres }}</option>
-                @endforeach
-            </select>
-            <select wire:model.live="filtroEstadoPago" class="border p-2 rounded text-center w-40">
-                <option value="">Todos los estados</option>
-                <option value="1">Pagados</option>
-                <option value="0">Sin pagar</option>
-            </select>
-            <select wire:model.live="filtroMetodoPago" class="border p-2 rounded text-center w-40">
-                <option value="">Todos los métodos</option>
-                <option value="0">QR</option>
-                <option value="1">Efectivo</option>
-                <option value="2">Crédito</option>
-            </select>
-            <select wire:model.live="sucursal_id" class="border p-2 rounded text-center w-40">
-                <option value="">Todas las sucursales</option>
-                @foreach($sucursales as $sucursal)
-                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                @endforeach
-            </select>
         </div>
+
+        <div class="flex flex-wrap justify-center gap-4 mt-2">
+
+
+            {{-- Cliente --}}
+            <div class="w-40">
+                <label class="font-semibold text-sm mb-2 block">Cliente</label>
+                <div
+                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto">
+
+                    <button type="button" wire:click="$set('cliente_id', '')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $cliente_id == ''
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        <p class="font-semibold text-sm">Todos</p>
+                    </button>
+
+                    @foreach($clientes as $cliente)
+                                    <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+                                    {{ $cliente_id == $cliente->id
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                        : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                        <p class="font-semibold text-sm">{{ $cliente->nombre }}</p>
+                                    </button>
+                    @endforeach
+
+                </div>
+            </div>
+
+            {{-- Vendedor / Personal --}}
+            <div class="w-40">
+                <label class="font-semibold text-sm mb-2 block">Vendedor</label>
+                <div
+                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto">
+
+                    <button type="button" wire:click="$set('personal_id', '')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $personal_id == ''
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        <p class="font-semibold text-sm">Todos</p>
+                    </button>
+
+                    @foreach($personales as $personal)
+                                    <button type="button" wire:click="$set('personal_id', {{ $personal->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+                                    {{ $personal_id == $personal->id
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                        : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                        <p class="font-semibold text-sm">{{ $personal->nombres }}</p>
+                                    </button>
+                    @endforeach
+
+                </div>
+            </div>
+
+            {{-- Estado de Pago --}}
+            <div class="w-40">
+                <label class="font-semibold text-sm mb-2 block">Estado Pago</label>
+                <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white">
+
+                    <button type="button" wire:click="$set('filtroEstadoPago', '')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroEstadoPago === ''
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        Todos
+                    </button>
+
+                    <button type="button" wire:click="$set('filtroEstadoPago', '1')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroEstadoPago === '1'
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        Pagados
+                    </button>
+
+                    <button type="button" wire:click="$set('filtroEstadoPago', '0')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroEstadoPago === '0'
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        Sin pagar
+                    </button>
+
+                </div>
+            </div>
+
+            {{-- Método de Pago --}}
+            <div class="w-40">
+                <label class="font-semibold text-sm mb-2 block">Método Pago</label>
+                <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white">
+
+                    <button type="button" wire:click="$set('filtroMetodoPago', '')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroMetodoPago === ''
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        Todos
+                    </button>
+
+                    <button type="button" wire:click="$set('filtroMetodoPago', '0')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroMetodoPago === '0'
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        QR
+                    </button>
+
+                    <button type="button" wire:click="$set('filtroMetodoPago', '1')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroMetodoPago === '1'
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        Efectivo
+                    </button>
+
+                    <button type="button" wire:click="$set('filtroMetodoPago', '2')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $filtroMetodoPago === '2'
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        Crédito
+                    </button>
+
+                </div>
+            </div>
+
+            {{-- Sucursal --}}
+            <div class="w-40">
+                <label class="font-semibold text-sm mb-2 block">Sucursal</label>
+                <div
+                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto">
+
+                    <button type="button" wire:click="$set('sucursal_id', '')" class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $sucursal_id == ''
+    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                        <p class="font-semibold text-sm">Todas</p>
+                    </button>
+
+                    @foreach($sucursales as $sucursal)
+                                    <button type="button" wire:click="$set('sucursal_id', {{ $sucursal->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+                                    {{ $sucursal_id == $sucursal->id
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                        : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                        <p class="font-semibold text-sm">{{ $sucursal->nombre }}</p>
+                                    </button>
+                    @endforeach
+
+                </div>
+            </div>
+
+        </div>
+
         <div class="flex justify-center mb-6">
             <button wire:click="descargarPDF"
                 class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">

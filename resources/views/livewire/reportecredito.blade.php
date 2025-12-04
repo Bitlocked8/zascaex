@@ -32,38 +32,136 @@
             <input type="number" min="0" max="59" wire:model.live="fecha_fin_min" placeholder="Minuto"
                 class="w-16 p-2 rounded text-center border">
         </div>
-
         <div class="flex flex-wrap justify-center gap-4 mt-2">
             <input type="text" wire:model.live="codigo" placeholder="Buscar código"
                 class="border p-2 rounded w-40 text-center">
-
-            <select wire:model.live="coche_id" class="border p-2 rounded w-40 text-center">
-                <option value="">Todos los vehículos</option>
-                @foreach($coches as $coche)
-                    <option value="{{ $coche->id }}">{{ $coche->placa }}</option>
-                @endforeach
-            </select>
-
-            <select wire:model.live="personal_id" class="border p-2 rounded w-40 text-center">
-                <option value="">Todo el personal</option>
-                @foreach($personales as $personal)
-                    <option value="{{ $personal->id }}">{{ $personal->nombres }}</option>
-                @endforeach
-            </select>
-
-            <select wire:model.live="sucursal_id" class="border p-2 rounded w-40 text-center">
-                <option value="">Todas las sucursales</option>
-                @foreach($sucursales as $sucursal)
-                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                @endforeach
-            </select>
-
-            <select wire:model.live="estado" class="border p-2 rounded w-40 text-center">
-                <option value="">Todos los estados</option>
-                <option value="0">Pendiente</option>
-                <option value="1">Entregado</option>
-            </select>
         </div>
+
+      <div class="flex flex-wrap justify-center gap-4 mt-2">
+
+    {{-- Filtro Vehículo --}}
+    <div class="w-40">
+        <label class="font-semibold text-sm mb-2 block">Vehículo</label>
+        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto grid grid-cols-1 gap-2">
+
+            {{-- Opción Todos --}}
+            <button type="button" wire:click="$set('coche_id', '')"
+                class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $coche_id == ''
+                    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                <p class="font-semibold text-sm">Todos</p>
+            </button>
+
+            {{-- Lista de vehículos --}}
+            @forelse($coches as $coche)
+                <button type="button" wire:click="$set('coche_id', {{ $coche->id }})"
+                    class="w-full px-3 py-2 rounded-md border text-left transition
+                    {{ $coche_id == $coche->id
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                        : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                    <p class="font-semibold text-sm">{{ $coche->placa }}</p>
+                </button>
+            @empty
+                <p class="text-center text-gray-500 py-3 text-sm">No hay vehículos</p>
+            @endforelse
+        </div>
+    </div>
+
+
+    {{-- Filtro Personal --}}
+    <div class="w-40">
+        <label class="font-semibold text-sm mb-2 block">Personal</label>
+        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto grid grid-cols-1 gap-2">
+
+            <button type="button" wire:click="$set('personal_id', '')"
+                class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $personal_id == ''
+                    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                <p class="font-semibold text-sm">Todos</p>
+            </button>
+
+            @forelse($personales as $p)
+                <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
+                    class="w-full px-3 py-2 rounded-md border text-left transition
+                    {{ $personal_id == $p->id
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                        : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                    <p class="font-semibold text-sm">{{ $p->nombres }}</p>
+                </button>
+            @empty
+                <p class="text-center text-gray-500 py-3 text-sm">No hay personal</p>
+            @endforelse
+        </div>
+    </div>
+
+
+    {{-- Filtro Sucursal --}}
+    <div class="w-40">
+        <label class="font-semibold text-sm mb-2 block">Sucursal</label>
+        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto grid grid-cols-1 gap-2">
+
+            <button type="button" wire:click="$set('sucursal_id', '')"
+                class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $sucursal_id == ''
+                    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                <p class="font-semibold text-sm">Todas</p>
+            </button>
+
+            @forelse($sucursales as $s)
+                <button type="button" wire:click="$set('sucursal_id', {{ $s->id }})"
+                    class="w-full px-3 py-2 rounded-md border text-left transition
+                    {{ $sucursal_id == $s->id
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                        : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                    <p class="font-semibold text-sm">{{ $s->nombre }}</p>
+                </button>
+            @empty
+                <p class="text-center text-gray-500 py-3 text-sm">No hay sucursales</p>
+            @endforelse
+        </div>
+    </div>
+
+
+    {{-- Filtro Estado --}}
+    <div class="w-40">
+        <label class="font-semibold text-sm mb-2 block">Estado</label>
+        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white max-h-[170px] overflow-y-auto grid grid-cols-1 gap-2">
+
+            {{-- Todos --}}
+            <button type="button" wire:click="$set('estado', '')"
+                class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $estado === ''
+                    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                <p class="font-semibold text-sm">Todos</p>
+            </button>
+
+            {{-- Pendiente --}}
+            <button type="button" wire:click="$set('estado', 0)"
+                class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $estado === 0
+                    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                <p class="font-semibold text-sm">Pendiente</p>
+            </button>
+
+            {{-- Entregado --}}
+            <button type="button" wire:click="$set('estado', 1)"
+                class="w-full px-3 py-2 rounded-md border text-left transition
+                {{ $estado === 1
+                    ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                    : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                <p class="font-semibold text-sm">Entregado</p>
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
         <div class="flex justify-center mb-6">
             <button wire:click="descargarPDF"
                 class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition">

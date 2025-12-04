@@ -23,20 +23,7 @@
         </div>
 
         @forelse($llenados as $llenado)
-            @php
-                $montoUsado = 0;
-                $montoMerma = 0;
 
-                if ($llenado->asignado) {
-                    foreach ($llenado->asignado->reposiciones as $reposicion) {
-                        $precioUnitario = $reposicion->cantidad_inicial > 0
-                            ? $reposicion->comprobantes->sum('monto') / $reposicion->cantidad_inicial
-                            : 0;
-                        $montoUsado += $precioUnitario * $llenado->cantidad;
-                        $montoMerma += $precioUnitario * ($llenado->merma ?? 0);
-                    }
-                }
-            @endphp
 
             <div class="card-teal flex flex-col gap-4">
                 <div class="flex flex-col gap-1">
@@ -55,24 +42,6 @@
                             {{ $llenado->estado == 0 ? 'Pendiente' : ($llenado->estado == 1 ? 'En Proceso' : 'Finalizado') }}
                         </span>
                     </p>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div
-                            class="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
-                            <span class="text-sm font-medium text-gray-700">Monto usado:</span>
-                            <span class="text-sm font-semibold text-gray-900">
-                                {{ (floor($montoUsado) == $montoUsado) ? number_format($montoUsado, 0, ',', '.') : number_format($montoUsado, 2, ',', '.') }}
-                                Bs
-                            </span>
-                        </div>
-                        <div
-                            class="flex justify-between items-center bg-red-50 border border-red-200 rounded-lg px-4 py-2 shadow-sm">
-                            <span class="text-sm font-medium text-red-700">Monto merma:</span>
-                            <span class="text-sm font-semibold text-red-900">
-                                {{ (floor($montoMerma) == $montoMerma) ? number_format($montoMerma, 0, ',', '.') : number_format($montoMerma, 2, ',', '.') }}
-                                Bs
-                            </span>
-                        </div>
-                    </div>
 
                 </div>
                 <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
@@ -200,7 +169,7 @@
                                         @foreach($asignaciones as $asignado)
                                             <button type="button" wire:click="seleccionarAsignacion({{ $asignado->id }})"
                                                 class="w-full p-4 rounded-lg border-2 transition flex flex-col gap-3 items-center text-center
-                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                                                            {{ $asignado_id == $asignado->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
 
                                                 @foreach($asignado->reposiciones as $reposicion)
                                                     @php
@@ -267,41 +236,65 @@
                             @else
                                 <div
                                     class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+
                                     @foreach($existenciasDestino as $existencia)
-                                        @php
-                                            $tipo = optional($existencia->existenciable) ? class_basename($existencia->existenciable_type) : 'Desconocido';
-                                            $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
-                                        @endphp
-                                        <button type="button" wire:click="$set('existencia_destino_id', {{ $existencia->id }})"
-                                            class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $existencia_destino_id == $existencia->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }}{{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                            @if($disabled) disabled @endif>
-                                            <span class="text-u font-medium">
-                                                {{ $tipo }}:
-                                                {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}
-                                            </span>
-                                            <div class="flex flex-wrap justify-center gap-3 mt-2">
-                                                <div class="flex flex-col items-center gap-1">
-                                                    <span
-                                                        class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                        Disponible: {{ $existencia->cantidad ?? 0 }}
-                                                    </span>
-                                                </div>
-                                                <div class="flex flex-col items-center gap-1">
-                                                    <span
-                                                        class="bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                                                        {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </button>
+                                                    @php
+                                                        $tipo = optional($existencia->existenciable) ? class_basename($existencia->existenciable_type) : 'Desconocido';
+                                                        $disabled = isset($existencia->existenciable->estado) && !$existencia->existenciable->estado;
+
+                                                        $tipoContenido = $existencia->existenciable->tipoContenido ?? null;
+                                                    @endphp
+
+                                                    <button type="button" wire:click="$set('existencia_destino_id', {{ $existencia->id }})"
+                                                        class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
+                                        {{ $existencia_destino_id == $existencia->id
+                                        ? 'border-cyan-600 text-cyan-600 bg-cyan-50'
+                                        : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50'
+                                        }}
+                                        {{ $disabled ? 'opacity-50 cursor-not-allowed' : '' }}" @if($disabled) disabled @endif>
+
+                                                        <span class="text-u font-medium">
+                                                            {{ $tipo }}:
+                                                            {{ optional($existencia->existenciable)->descripcion ?? 'Existencia #' . $existencia->id }}
+                                                        </span>
+
+                                                        {{-- Tipo Contenido (centrado y debajo de la descripción) --}}
+                                                        @if($tipoContenido)
+                                                            <span
+                                                                class="mt-1 bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                                                {{ $tipoContenido }}
+                                                            </span>
+                                                        @endif
+
+                                                        <div class="flex flex-wrap justify-center gap-3 mt-2">
+
+                                                            <div class="flex flex-col items-center gap-1">
+                                                                <span
+                                                                    class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                                                    Disponible: {{ $existencia->cantidad ?? 0 }}
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="flex flex-col items-center gap-1">
+                                                                <span
+                                                                    class="bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                                                                    {{ optional($existencia->sucursal)->nombre ?? 'Sin sucursal' }}
+                                                                </span>
+                                                            </div>
+
+                                                        </div>
+
+                                                    </button>
                                     @endforeach
+
                                 </div>
+
                             @endif
                             @error('existencia_destino_id')
                                 <span class="text-red-500">{{ $message }}</span>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="text-u">Cantidad a producir (Requerido)</label>
 
@@ -340,21 +333,39 @@
                         </div>
                         <div class="text-center">
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
+
                             <div class="flex flex-col sm:flex-row justify-center flex-wrap gap-3">
-                                <button type="button" wire:click="$set('estado', 0)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 0 ? 'bg-yellow-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-yellow-400' }}">
+
+                                <!-- En Proceso -->
+                                <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                            {{ $estado === 0
+            ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                            }}">
                                     En proceso
                                 </button>
-                                <button type="button" wire:click="$set('estado', 1)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 1 ? 'bg-blue-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-blue-400' }}">
+
+                                <!-- En Revisión -->
+                                <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                            {{ $estado === 1
+            ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                            }}">
                                     En revisión
                                 </button>
-                                <button type="button" wire:click="$set('estado', 2)"
-                                    class="flex-1 sm:flex-auto px-4 py-2 rounded-lg text-sm font-medium transition {{ $estado == 2 ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-green-400' }}">
+
+                                <!-- Confirmado -->
+                                <button type="button" wire:click="$set('estado', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
+                            {{ $estado === 2
+            ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300'
+                            }}">
                                     Confirmado
                                 </button>
+
                             </div>
                         </div>
+
 
                     </div>
                     <div class="modal-footer">

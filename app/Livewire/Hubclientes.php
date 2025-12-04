@@ -34,15 +34,14 @@ class Hubclientes extends Component
     public $archivoPago;
     public $modalVerQR = false;
     public $qrSeleccionado = null;
+    public $pagoSeleccionado = null;
 
     public function abrirModalProducto($uid)
     {
         $producto = $this->productos()->firstWhere('uid', $uid);
-        if (!$producto)
-            return;
+        if (!$producto) return;
 
         $this->productoSeleccionado = $producto;
-
         $sucursalId = $producto['modelo']->existencias->first()->sucursal->id ?? null;
 
         $this->tapas = Tapa::where('estado', 1)
@@ -63,8 +62,7 @@ class Hubclientes extends Component
 
     public function agregarAlCarritoDesdeModal()
     {
-        if (!$this->productoSeleccionado)
-            return;
+        if (!$this->productoSeleccionado) return;
 
         $modelo = $this->productoSeleccionado['modelo'];
         $uid = $this->productoSeleccionado['uid'] . '_' . ($this->tapaSeleccionada ?? '0') . '_' . ($this->etiquetaSeleccionada ?? '0');
@@ -89,12 +87,10 @@ class Hubclientes extends Component
 
     public function hacerPedido()
     {
-        if (empty($this->carrito))
-            return;
+        if (empty($this->carrito)) return;
 
         $clienteId = Auth::user()->cliente->id ?? null;
-        if (!$clienteId)
-            return;
+        if (!$clienteId) return;
 
         $solicitud = SolicitudPedido::create([
             'cliente_id' => $clienteId,
@@ -122,19 +118,23 @@ class Hubclientes extends Component
     public function verMisPedidos()
     {
         $cliente = Auth::user()->cliente ?? null;
-        if (!$cliente)
-            return;
+        if (!$cliente) return;
 
         $this->pedidosCliente = SolicitudPedido::where('cliente_id', $cliente->id)
             ->with([
-                'detalles.producto',
-                'detalles.otro',
+                'detalles.producto.existencias.sucursal',
+                'detalles.otro.existencias.sucursal',
                 'detalles.tapa',
                 'detalles.etiqueta',
                 'pedido.pagoPedidos.sucursalPago'
             ])
             ->orderBy('created_at', 'desc')
             ->get()
+            ->map(function($sp) {
+                $array = $sp->toArray();
+                $array['estado_real'] = $sp->pedido->estado_pedido ?? $sp->estado;
+                return $array;
+            })
             ->toArray();
 
         $this->modalPedidosCliente = true;
@@ -143,8 +143,7 @@ class Hubclientes extends Component
     public function eliminarSolicitud($id)
     {
         $solicitud = SolicitudPedido::find($id);
-        if (!$solicitud)
-            return;
+        if (!$solicitud) return;
 
         $solicitud->detalles()->delete();
         $solicitud->delete();
@@ -156,8 +155,7 @@ class Hubclientes extends Component
     public function actualizarMetodoPago($pedidoId, $valor)
     {
         $pedido = SolicitudPedido::find($pedidoId);
-        if (!$pedido)
-            return;
+        if (!$pedido) return;
 
         $pedido->metodo_pago = $valor;
         $pedido->save();
@@ -168,14 +166,33 @@ class Hubclientes extends Component
         }
     }
 
+    public function actualizarEstadoPedido($solicitudId, $nuevoEstado)
+    {
+        $solicitud = SolicitudPedido::find($solicitudId);
+        if (!$solicitud) return;
+
+        $solicitud->estado = $nuevoEstado;
+        $solicitud->save();
+
+        if ($solicitud->pedido) {
+            $solicitud->pedido->estado_pedido = $nuevoEstado;
+            $solicitud->pedido->save();
+        }
+
+        foreach ($this->pedidosCliente as &$p) {
+            if ($p['id'] == $solicitudId) {
+                $p['estado'] = $nuevoEstado;
+                $p['estado_real'] = $nuevoEstado;
+            }
+        }
+    }
+
     public function subirComprobante($pagoId)
     {
-        if (!$this->archivoPago)
-            return;
+        if (!$this->archivoPago) return;
 
         $pago = PagoPedido::find($pagoId);
-        if (!$pago)
-            return;
+        if (!$pago) return;
 
         if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
             \Storage::disk('public')->delete($pago->imagen_comprobante);
@@ -195,8 +212,7 @@ class Hubclientes extends Component
     public function eliminarComprobante($pagoId)
     {
         $pago = PagoPedido::find($pagoId);
-        if (!$pago)
-            return;
+        if (!$pago) return;
 
         if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
             \Storage::disk('public')->delete($pago->imagen_comprobante);
@@ -213,14 +229,12 @@ class Hubclientes extends Component
     public function verQr($pagoId)
     {
         $pago = PagoPedido::with('sucursalPago')->find($pagoId);
-        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr)
-            return;
+        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr) return;
 
         $this->qrSeleccionado = $pago->sucursalPago->imagen_qr;
         $this->modalVerQR = true;
     }
 
-    // Método que devuelve todos los productos y "otros" unificados
     public function productos()
     {
         $productos = Producto::where('estado', 1)
@@ -249,14 +263,10 @@ class Hubclientes extends Component
     public function render()
     {
         $sucursales = Sucursal::orderBy('nombre')->get();
-
         $productos = $this->productos();
 
         if ($this->sucursalFiltro) {
-            $productos = $productos->filter(
-                fn($item) =>
-                $item['modelo']->existencias->contains(fn($e) => $e->sucursal_id == $this->sucursalFiltro)
-            );
+            $productos = $productos->filter(fn($item) => $item['modelo']->existencias->contains(fn($e) => $e->sucursal_id == $this->sucursalFiltro));
         }
 
         return view('livewire.hubclientes', [

@@ -106,15 +106,25 @@
               @error('zona') <span class="error-message">{{ $message }}</span> @enderror
             </div>
             <div>
-              <label class="font-semibold text-sm mb-1 block">Empresa</label>
-              <select wire:model="empresa_id" class="input-minimal">
-                <option value="">-- Seleccionar Empresa --</option>
-                @foreach($empresas as $empresa)
-                  <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
-                @endforeach
-              </select>
-              @error('empresa_id') <span class="error-message">{{ $message }}</span> @enderror
+              <label class="font-semibold text-sm mb-2 block">Empresa</label>
+
+              <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white
+                 grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
+                @forelse($empresas as $empresa)
+                          <button type="button" wire:click="$set('empresa_id', {{ $empresa->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+                                {{ $empresa_id == $empresa->id
+                  ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                  : 'bg-gray-100 text-gray-800 hover:bg-cyan-100'
+                                }}">
+
+                            <p class="font-semibold text-sm">{{ $empresa->nombre }}</p>
+                          </button>
+                @empty
+                  <p class="text-center text-gray-500 py-3 text-sm">No hay empresas disponibles</p>
+                @endforelse
+              </div>
             </div>
+
           </div>
         </div>
         <div class="modal-footer">

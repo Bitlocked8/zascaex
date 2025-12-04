@@ -51,42 +51,43 @@ class Distribucion extends Component
         $this->loadDistribucionData();
     }
 
-   private function loadPedidosDisponibles($distribucion_id = null)
-{
-    $this->pedidos = Pedido::with([
-        'solicitudPedido.cliente',
-        'detalles.existencia.sucursal',
-        'detalles.existencia.existenciable',
-    ])
-    ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
-        if ($distribucion_id) {
-            $subquery->where('distribucions.id', '!=', $distribucion_id);
-        }
-    })
-    ->get();
-}
+    private function loadPedidosDisponibles($distribucion_id = null)
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $sucursalId = optional($usuario->personal->trabajos()->latest()->first())->sucursal_id;
 
-
+        $this->pedidos = Pedido::with([
+            'solicitudPedido.cliente',
+            'detalles.existencia.sucursal',
+            'detalles.existencia.existenciable',
+        ])
+        ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
+            if ($distribucion_id) {
+                $subquery->where('distribucions.id', '!=', $distribucion_id);
+            }
+        })
+        ->when($rol === 3 && $sucursalId, function ($query) use ($sucursalId) {
+            $query->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId));
+        })
+        ->get();
+    }
 
     private function loadDistribucionData()
     {
         if ($this->distribucionModel && $this->distribucionModel->exists) {
-
             $this->codigo = $this->distribucionModel->codigo;
             $this->fecha_asignacion = $this->distribucionModel->fecha_asignacion
                 ? Carbon::parse($this->distribucionModel->fecha_asignacion)->format('Y-m-d\TH:i:s')
                 : now()->format('Y-m-d\TH:i:s');
-
             $this->fecha_entrega = $this->distribucionModel->fecha_entrega
                 ? Carbon::parse($this->distribucionModel->fecha_entrega)->format('Y-m-d\TH:i:s')
                 : null;
-
             $this->coche_id = $this->distribucionModel->coche_id;
-            $this->personal_id = $this->distribucionModel->personal_id; // Se mantiene, no se sobrescribe
+            $this->personal_id = $this->distribucionModel->personal_id;
             $this->observaciones = $this->distribucionModel->observaciones;
             $this->estado = $this->distribucionModel->estado;
             $this->pedidos_seleccionados = $this->distribucionModel->pedidos->pluck('id')->toArray();
-
         } else {
             $this->reset([
                 'codigo',
@@ -96,7 +97,6 @@ class Distribucion extends Component
                 'pedidos_seleccionados',
                 'estado'
             ]);
-
             $this->fecha_asignacion = now()->format('Y-m-d\TH:i:s');
         }
     }
@@ -129,7 +129,6 @@ class Distribucion extends Component
             'pedidos_seleccionados',
             'estado',
         ]);
-
         $this->personal_id = optional(auth()->user()->personal)->id;
         $this->loadPedidosDisponibles();
     }
@@ -146,7 +145,6 @@ class Distribucion extends Component
         $this->pedidos_seleccionados = array_values(
             array_filter($this->pedidos_seleccionados, fn($id) => $id != $pedido_id)
         );
-
         $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
     }
 
@@ -168,14 +166,27 @@ class Distribucion extends Component
 
         if (!$dist->exists) {
             $dist->fecha_asignacion = now();
-            // 🔥 SOLO AL CREAR SE ASIGNA EL PERSONAL
             $dist->personal_id = auth()->user()->personal->id ?? null;
+        }
+
+        $rol = auth()->user()->rol_id;
+        $sucursalId = optional(auth()->user()->personal->trabajos()->latest()->first())->sucursal_id;
+
+        if ($rol === 3 && $sucursalId && !empty($this->pedidos_seleccionados)) {
+            $this->pedidos_seleccionados = Pedido::whereIn('id', $this->pedidos_seleccionados)
+                ->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
+                ->pluck('id')
+                ->toArray();
+        }
+
+        if (empty($this->pedidos_seleccionados)) {
+            session()->flash('message', 'No se puede guardar una distribución sin pedidos.');
+            return;
         }
 
         $dist->fecha_entrega = $this->fecha_entrega
             ? Carbon::parse($this->fecha_entrega)
             : null;
-
         $dist->coche_id = $this->coche_id;
         $dist->observaciones = $this->observaciones;
         $dist->estado = $this->estado;
@@ -197,14 +208,13 @@ class Distribucion extends Component
         $distribucion = DistribucionModel::with([
             'personal',
             'coche',
-            'pedidos.solicitudPedido.cliente', // carga el cliente a través de solicitudPedido
+            'pedidos.solicitudPedido.cliente',
         ])->find($id);
 
         $this->distribucionModel = $distribucion;
         $this->pedidosDeDistribucion = $distribucion ? $distribucion->pedidos : collect();
         $this->modalPedidos = true;
     }
-
 
     public function cerrarModalPedidos()
     {
@@ -229,7 +239,6 @@ class Distribucion extends Component
         });
 
         $this->confirmingDeleteId = null;
-
         session()->flash('message', 'Distribución eliminada correctamente.');
     }
 
