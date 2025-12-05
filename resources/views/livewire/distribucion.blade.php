@@ -88,49 +88,56 @@
             <div class="modal-box w-full max-w-3xl">
                 <div class="modal-content flex flex-col gap-4">
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
-                        <div>
-                            <span class="text-u">
-                                Código: {{ $codigo ?? 'Se generará automáticamente' }}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-u">
-                                Fecha asignado:
-                                {{ $fecha_asignacion ? \Carbon\Carbon::parse($fecha_asignacion)->format('d/m/Y H:i:s') : 'Se generará al guardar' }}
-                            </span>
-                        </div>
+                        <div class="flex flex-col items-center justify-center gap-4">
 
-                        <div>
-                            <label class="font-semibold text-sm mb-1 block">Fecha de Entrega</label>
-                            <div class="flex items-center gap-2">
-                                <input type="text" wire:model.lazy="fecha_entrega" class="input-minimal flex-1"
-                                    placeholder="MM/DD/YY HH:mm:ss">
-
-                                <button type="button" wire:click="establecerFechaActual" class="btn-cyan"
-                                    title="Usar fecha y hora actual">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" class="mr-1">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <polyline points="12 6 12 12 16 14" />
-                                    </svg>
-                                    Ahora
-                                </button>
+                            <div>
+                                <span class="text-u">
+                                    Código: {{ $codigo ?? 'Se generará automáticamente' }}
+                                </span>
                             </div>
+
+                            <div>
+                                <span class="text-u">
+                                    Fecha asignado:
+                                    {{ $fecha_asignacion ? \Carbon\Carbon::parse($fecha_asignacion)->format('d/m/Y H:i:s') : 'Se generará al guardar' }}
+                                </span>
+                            </div>
+
+                            <div class="w-full flex flex-col items-center">
+                                <label class="font-semibold text-sm mb-1 block text-center">Fecha de Entrega</label>
+
+                                <div class="flex items-center justify-center gap-2 w-full">
+                                    <input type="text" wire:model.lazy="fecha_entrega" class="input-minimal flex-1 max-w-xs"
+                                        placeholder="MM/DD/YY HH:mm:ss">
+
+                                    <button type="button" wire:click="establecerFechaActual" class="btn-cyan"
+                                        title="Usar fecha y hora actual">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="mr-1">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <polyline points="12 6 12 12 16 14" />
+                                        </svg>
+                                        Ahora
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
+
                         <div class="sm:col-span-2 text-center">
                             <label class="font-semibold text-sm mb-2 block">Estado</label>
 
                             <div class="flex justify-center gap-3 mt-2">
                                 <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                    {{ $estado == 0
+                        {{ $estado == 0
             ? 'bg-yellow-600 text-white border-yellow-700 shadow-md'
             : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                     En entrega
                                 </button>
 
                                 <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                    {{ $estado == 1
+                        {{ $estado == 1
             ? 'bg-emerald-500 text-white border-emerald-600 shadow-md'
             : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                     Finalizado
