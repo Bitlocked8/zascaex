@@ -36,20 +36,25 @@ class Distribucion extends Component
 
     public function mount($distribucion_id = null)
     {
+        $usuario = auth()->user();
+        $sucursalId = optional($usuario->personal->trabajos()->latest()->first())->sucursal_id;
+        $this->personals = Personal::where('estado', 1)
+            ->whereHas('user', fn($q) => $q->where('rol_id', 3))
+            ->when($usuario->rol_id != 1 && $sucursalId, fn($q) =>
+                $q->whereHas('trabajos', fn($t) => $t->where('sucursal_id', $sucursalId)))
+            ->get();
         $this->coches = Coche::where('estado', 1)->get();
-        $this->personals = Personal::where('estado', 1)->get();
         $this->loadPedidosDisponibles($distribucion_id);
-
         $this->distribucionModel = $distribucion_id
             ? DistribucionModel::with('pedidos')->find($distribucion_id)
             : new DistribucionModel();
-
         if (!$this->distribucionModel->exists) {
-            $this->personal_id = optional(auth()->user()->personal)->id;
+            $this->personal_id = optional($usuario->personal)->id;
         }
-
         $this->loadDistribucionData();
     }
+
+
 
     private function loadPedidosDisponibles($distribucion_id = null)
     {
@@ -62,15 +67,15 @@ class Distribucion extends Component
             'detalles.existencia.sucursal',
             'detalles.existencia.existenciable',
         ])
-        ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
-            if ($distribucion_id) {
-                $subquery->where('distribucions.id', '!=', $distribucion_id);
-            }
-        })
-        ->when($rol === 3 && $sucursalId, function ($query) use ($sucursalId) {
-            $query->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId));
-        })
-        ->get();
+            ->whereDoesntHave('distribuciones', function ($subquery) use ($distribucion_id) {
+                if ($distribucion_id) {
+                    $subquery->where('distribucions.id', '!=', $distribucion_id);
+                }
+            })
+            ->when($rol === 2 && $sucursalId, function ($query) use ($sucursalId) {
+                $query->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId));
+            })
+            ->get();
     }
 
     private function loadDistribucionData()
@@ -95,7 +100,7 @@ class Distribucion extends Component
                 'coche_id',
                 'observaciones',
                 'pedidos_seleccionados',
-                'estado'
+                'estado',
             ]);
             $this->fecha_asignacion = now()->format('Y-m-d\TH:i:s');
         }
@@ -125,6 +130,7 @@ class Distribucion extends Component
             'fecha_asignacion',
             'fecha_entrega',
             'coche_id',
+            'personal_id',
             'observaciones',
             'pedidos_seleccionados',
             'estado',
@@ -151,14 +157,14 @@ class Distribucion extends Component
     public function guardarDistribucion()
     {
         $this->validate([
-            'pedidos_seleccionados' => 'nullable|array',
+            'personal_id' => 'required|exists:personals,id',
+            'pedidos_seleccionados' => 'required|array|min:1',
+        ], [
+            'personal_id.required' => 'Debe seleccionar un personal.',
+            'pedidos_seleccionados.required' => 'Debe seleccionar al menos un pedido.',
         ]);
 
-        if (!$this->distribucionModel instanceof DistribucionModel) {
-            $this->distribucionModel = new DistribucionModel();
-        }
-
-        $dist = $this->distribucionModel;
+        $dist = $this->distribucionModel instanceof DistribucionModel ? $this->distribucionModel : new DistribucionModel();
 
         if (!$dist->exists || !$dist->codigo) {
             $dist->codigo = 'DIS-' . mt_rand(1000000000, 9999999999);
@@ -166,33 +172,16 @@ class Distribucion extends Component
 
         if (!$dist->exists) {
             $dist->fecha_asignacion = now();
-            $dist->personal_id = auth()->user()->personal->id ?? null;
         }
 
-        $rol = auth()->user()->rol_id;
-        $sucursalId = optional(auth()->user()->personal->trabajos()->latest()->first())->sucursal_id;
-
-        if ($rol === 3 && $sucursalId && !empty($this->pedidos_seleccionados)) {
-            $this->pedidos_seleccionados = Pedido::whereIn('id', $this->pedidos_seleccionados)
-                ->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId))
-                ->pluck('id')
-                ->toArray();
-        }
-
-        if (empty($this->pedidos_seleccionados)) {
-            session()->flash('message', 'No se puede guardar una distribución sin pedidos.');
-            return;
-        }
-
-        $dist->fecha_entrega = $this->fecha_entrega
-            ? Carbon::parse($this->fecha_entrega)
-            : null;
+        $dist->personal_id = $this->personal_id;
+        $dist->fecha_entrega = $this->fecha_entrega ? Carbon::parse($this->fecha_entrega) : null;
         $dist->coche_id = $this->coche_id;
         $dist->observaciones = $this->observaciones;
         $dist->estado = $this->estado;
 
         $dist->save();
-        $dist->pedidos()->sync($this->pedidos_seleccionados ?? []);
+        $dist->pedidos()->sync($this->pedidos_seleccionados);
 
         session()->flash('message', 'Distribución guardada correctamente.');
         $this->cerrarModal();
@@ -254,21 +243,34 @@ class Distribucion extends Component
 
     public function establecerFechaActual()
     {
-        $this->fecha_entrega = Carbon::now()->format('m/d/y H:i:s');
+        $this->fecha_entrega = Carbon::now()->format('Y-m-d\TH:i:s');
     }
 
     public function render()
     {
+        $usuario = auth()->user();
+        $sucursalId = optional($usuario->personal->trabajos()->latest()->first())->sucursal_id;
+
+        $distribucionesQuery = DistribucionModel::with(['pedidos', 'coche', 'personal']);
+
+        // Solo filtrar por sucursal si NO es admin
+        if ($usuario->rol_id != 1 && $sucursalId) {
+            $distribucionesQuery->whereHas('personal.trabajos', fn($q) => $q->where('sucursal_id', $sucursalId));
+        }
+
+        // Filtro de búsqueda
+        $distribucionesQuery->where(function ($q) {
+            $q->where('codigo', 'like', "%{$this->search}%")
+                ->orWhereHas('personal', fn($p) => $p->where('nombres', 'like', "%{$this->search}%"))
+                ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
+        });
+
         return view('livewire.distribucion', [
-            'distribuciones' => DistribucionModel::with(['pedidos', 'coche', 'personal'])
-                ->where(function ($q) {
-                    $q->where('codigo', 'like', "%{$this->search}%")
-                        ->orWhereHas('personal', fn($p) => $p->where('nombres', 'like', "%{$this->search}%"))
-                        ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
-                })
-                ->latest()
-                ->get(),
+            'distribuciones' => $distribucionesQuery->latest()->get(),
             'pedidosAsignados' => $this->pedidosAsignados,
+            'personals' => $this->personals,
         ]);
     }
+
+
 }

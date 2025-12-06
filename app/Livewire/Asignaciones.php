@@ -47,7 +47,7 @@ class Asignaciones extends Component
                 $q->where('estado_revision', true)
                     ->where('cantidad', '>', 0);
             });
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             if ($sucursal_id)
                 $query->where('sucursal_id', $sucursal_id);
@@ -163,7 +163,7 @@ class Asignaciones extends Component
         try {
             foreach ($this->items as $item) {
                 $existencia = Existencia::findOrFail($item['existencia_id']);
-                if ($rol === 2 && $existencia->sucursal_id != $sucursalEmpleado) {
+                if ($rol === 4 && $existencia->sucursal_id != $sucursalEmpleado) {
                     throw new \Exception("No puedes asignar existencias de otra sucursal: {$existencia->existenciable->descripcion}");
                 }
             }
@@ -301,7 +301,7 @@ class Asignaciones extends Component
 
         $query = Asignado::with(['reposiciones.existencia.existenciable', 'personal']);
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $query->whereHas('reposiciones.existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
