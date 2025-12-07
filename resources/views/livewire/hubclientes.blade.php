@@ -15,39 +15,48 @@
                 </svg>
                 Ver mis compras
             </button>
-            <button wire:click="$toggle('mostrarCarrito')"
-                class="btn-cyan flex items-center gap-2 justify-center w-full sm:w-auto" title="Agregar producto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor">
-                    <path stroke="none" d="M0 0h24v24H0z" />
+            <button wire:click="$toggle('mostrarCarrito')" class="btn-cyan" title="Agregar producto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path
-                        d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-                    <path
-                        d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
+                        d="M13 1a2 2 0 0 1 1.995 1.85l.005 .15v.5c0 1.317 .381 2.604 1.094 3.705l.17 .25l.05 .072a9.093 9.093 0 0 1 1.68 4.92l.006 .354v6.199a3 3 0 0 1 -2.824 2.995l-.176 .005h-6a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-6.2a9.1 9.1 0 0 1 1.486 -4.982l.2 -.292l.05 -.069a6.823 6.823 0 0 0 1.264 -3.957v-.5a2 2 0 0 1 1.85 -1.995l.15 -.005h2zm.362 5h-2.724a8.827 8.827 0 0 1 -1.08 2.334l-.194 .284l-.05 .069a7.091 7.091 0 0 0 -1.307 3.798l-.003 .125a3.33 3.33 0 0 1 1.975 -.61a3.4 3.4 0 0 1 2.833 1.417c.27 .375 .706 .593 1.209 .583a1.4 1.4 0 0 0 1.166 -.583a3.4 3.4 0 0 1 .81 -.8l.003 .183c0 -1.37 -.396 -2.707 -1.137 -3.852l-.228 -.332a8.827 8.827 0 0 1 -1.273 -2.616z" />
                 </svg>
                 Productos añadidos ({{ count($carrito) }})
             </button>
-            <button type="button" wire:click="$set('sucursalFiltro', null)" class="px-4 py-2 rounded-lg border text-sm font-semibold w-full sm:w-auto text-center transition
-        {{ is_null($sucursalFiltro) ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
-    : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                Todas las sucursales
-            </button>
+        </div>
+        <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap justify-center items-center gap-3 mb-4 col-span-full">
             @forelse($sucursales as $s)
-                    <button type="button" wire:click="$set('sucursalFiltro', {{ $s->id }})" class="px-4 py-2 rounded-lg border w-full sm:w-auto text-sm font-semibold transition text-center{{ $sucursalFiltro == $s->id ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
+                    <button type="button" wire:click="$set('sucursalFiltro', {{ $s->id }})" class="px-4 py-3 rounded-lg border w-full sm:w-auto text-sm font-semibold transition text-center
+                                                {{ $sucursalFiltro == $s->id
+                ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
                 : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
 
-                        <p class="font-semibold text-sm {{ $sucursalFiltro == $s->id ? 'text-white' : 'text-gray-800' }}">
-                            {{ $s->nombre }}
-                        </p>
-                        <p class="text-xs {{ $sucursalFiltro == $s->id ? 'text-cyan-100' : 'text-emerald-600' }}">
-                            {{ $s->empresa?->nombre ?? 'Sin empresa' }}
-                        </p>
-                        <p class="text-xs {{ $sucursalFiltro == $s->id ? 'text-cyan-100' : 'text-emerald-600' }}">
-                            {{ $s->telefono ?? 'Sin teléfono' }}
-                        </p>
+                        <div class="flex flex-col">
+                            <p class="font-semibold text-sm
+                                                        {{ $sucursalFiltro == $s->id ? 'text-white' : 'text-gray-800' }}">
+                                {{ $s->nombre }}
+                            </p>
+
+                            <p
+                                class="text-xs
+                                                        {{ $sucursalFiltro == $s->id ? 'text-cyan-100' : 'text-emerald-600' }}">
+                                {{ $s->empresa?->nombre ?? 'Sin empresa' }}
+                            </p>
+
+                            <p
+                                class="text-xs
+                                                        {{ $sucursalFiltro == $s->id ? 'text-cyan-100' : 'text-emerald-600' }}">
+                                {{ $s->telefono ?? 'Sin teléfono' }}
+                            </p>
+                        </div>
                     </button>
             @empty
-                <p class="text-center text-gray-500 py-3 text-sm">No hay sucursales disponibles</p>
+                <p class="text-center text-gray-500 py-3 text-sm">
+                    No hay sucursales disponibles
+                </p>
             @endforelse
+
 
         </div>
 
@@ -371,7 +380,7 @@
                                     $expandido = $expandidoPedidos[$pedidoId] ?? false;
 
                                     $estado = $pedido['estado_real'] ?? $pedido['estado'];
-                                    $estadoTexto = $estado == 0 ? 'Pendiente de pago' : ($estado == 1 ? 'En Revisión' : ($estado == 2 ? 'Completado' : 'Desconocido'));
+                                    $estadoTexto = $estado == 0 ? 'En Revisión' : ($estado == 1 ? 'Asignacion de Pagos' : ($estado == 2 ? 'Completado' : 'Desconocido'));
                                     $estadoColor = $estado == 0 ? 'text-yellow-800' : ($estado == 1 ? 'text-blue-800' : ($estado == 2 ? 'text-green-800' : 'text-gray-800'));
                                 @endphp
 
@@ -385,8 +394,20 @@
                                             </span>
                                         </div>
 
-                                        <button wire:click="$toggle('expandidoPedidos.{{ $pedidoId }}')"
-                                            class="px-3 py-1 bg-teal-500 text-white rounded hover:bg-teal-600 transition">
+                                        <button wire:click="$toggle('expandidoPedidos.{{ $pedidoId }}')" class="btn-cyan">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M13 5h8" />
+                                                <path d="M13 9h5" />
+                                                <path d="M13 15h8" />
+                                                <path d="M13 19h5" />
+                                                <path
+                                                    d="M3 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                                <path
+                                                    d="M3 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                            </svg>
                                             {{ $expandido ? 'Ocultar detalles' : 'Ver detalles' }}
                                         </button>
                                     </div>
@@ -395,7 +416,8 @@
                                         <div class="mt-4 flex flex-col gap-4">
                                             @if($estado == 0)
                                                 <div class="flex flex-col gap-2 items-center">
-                                                    <p class="text-sm font-medium text-gray-600 text-center">Selecciona un método de pago:
+                                                    <p class="text-sm font-medium text-gray-600 text-center">Selecciona un método de pago
+                                                        inicial:
                                                     </p>
 
                                                     <div class="flex flex-wrap gap-2 justify-center">
@@ -474,64 +496,97 @@
                                             @endif
 
                                             @if(!empty($pedido['pedido']['pago_pedidos']))
-                                                <div class="flex flex-col gap-3 pt-4 border-t">
-                                                    <h4 class="font-semibold text-gray-700">Pagos realizados:</h4>
+                                                <div class="flex flex-col gap-3 pt-4 border-t items-center w-full">
+                                                    <h4 class="font-semibold text-gray-700 text-center w-full">Pagos realizados:</h4>
+
                                                     @foreach($pedido['pedido']['pago_pedidos'] as $pago)
                                                         @php
-                                                            $pagoEstadoTexto = $pago['estado'] == 0 ? 'Pendiente' : 'Pagado';
+                                                            $pagoEstadoTexto = $pago['estado'] == 0 ? 'Pago En revision' : 'Pagado';
                                                             $pagoEstadoColor = $pago['estado'] == 0 ? 'text-yellow-800' : 'text-green-800';
                                                         @endphp
 
-                                                        <div class="flex flex-col gap-3 bg-gray-100 p-3 rounded-lg shadow-sm">
+                                                        <div class="flex flex-col gap-3 bg-gray-100 p-3 rounded-lg shadow-sm w-full max-w-2xl">
                                                             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                                                                <div class="flex items-center gap-3 flex-wrap">
-                                                                    <p class="text-sm font-medium">Monto: {{ number_format($pago['monto'], 2) }}
+
+                                                                <div
+                                                                    class="flex items-center gap-3 flex-wrap justify-center md:justify-start w-full">
+                                                                    <p class="text-u font-bold">Monto: {{ number_format($pago['monto'], 2) }}
                                                                     </p>
-                                                                    <p class="text-sm text-gray-600">Método:
+                                                                    
+
+                                                                    <p class="text-sm text-gray-600">
+                                                                        Método:
                                                                         {{ $pago['metodo'] == 0 ? 'QR' : ($pago['metodo'] == 1 ? 'Efectivo' : 'Crédito') }}
                                                                     </p>
-                                                                    <p class="text-sm font-semibold {{ $pagoEstadoColor }}">Estado:
-                                                                        {{ $pagoEstadoTexto }}
+
+                                                                    <p class="text-sm font-semibold {{ $pagoEstadoColor }}">
+                                                                        Estado: {{ $pagoEstadoTexto }}
                                                                     </p>
+
                                                                     @if(!empty($pago['imagen_comprobante']))
-                                                                        <img src="{{ asset('storage/' . $pago['imagen_comprobante']) }}"
-                                                                            class="w-full md:w-1/3 max-h-[400px] rounded-lg border object-contain"
-                                                                            alt="Comprobante">
+                                                                        <div class="w-full flex justify-center">
+                                                                            <img src="{{ asset('storage/' . $pago['imagen_comprobante']) }}"
+                                                                                class="w-full md:w-1/2 max-h-[400px] rounded-lg border object-contain"
+                                                                                alt="Comprobante">
+                                                                        </div>
+                                                                    @endif
+
+                                                                    @if($pago['metodo'] == 0 && !empty($pago['sucursal_pago']['imagen_qr']))
+                                                                        <button wire:click="verQr({{ $pago['id'] }})" class="btn-cyan">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                                                <path d="M13 5h8" />
+                                                                                <path d="M13 9h5" />
+                                                                                <path d="M13 15h8" />
+                                                                                <path d="M13 19h5" />
+                                                                                <path
+                                                                                    d="M3 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                                                                <path
+                                                                                    d="M3 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                                                            </svg>
+                                                                            Ver QR
+                                                                        </button>
                                                                     @endif
                                                                 </div>
-                                                                @if($pago['metodo'] == 0 && !empty($pago['sucursal_pago']['imagen_qr']))
-                                                                    <button wire:click="verQr({{ $pago['id'] }})"
-                                                                        class="px-4 py-2 bg-blue-500 text-white rounded text-sm mt-2 md:mt-0">
-                                                                        Ver QR
-                                                                    </button>
-                                                                @endif
+
+
                                                             </div>
+
                                                             @if($pago['metodo'] == 0 && $pago['estado'] == 0)
-                                                                <div class="flex flex-wrap gap-2 mt-2 items-center">
+                                                                <div class="flex flex-wrap gap-2 mt-2 items-center justify-center">
                                                                     @if(empty($pago['imagen_comprobante']))
                                                                         <input type="file" wire:model="archivoPago"
                                                                             wire:click="$set('pagoSeleccionado', {{ $pago['id'] }})" class="text-sm">
                                                                         <button wire:click="subirComprobante({{ $pago['id'] }})"
-                                                                            class="px-3 py-1 bg-green-500 text-white rounded text-sm">Subir
-                                                                            imagen</button>
+                                                                            class="px-3 py-1 bg-green-500 text-white rounded text-sm">
+                                                                            Subir imagen
+                                                                        </button>
                                                                     @else
                                                                         <button wire:click="eliminarComprobante({{ $pago['id'] }})"
-                                                                            class="px-3 py-1 bg-red-500 text-white rounded text-sm">Eliminar
-                                                                            imagen</button>
-                                                                        <div class="flex items-center gap-2">
+                                                                            class="px-3 py-1 bg-red-500 text-white rounded text-sm">
+                                                                            Eliminar imagen
+                                                                        </button>
+
+                                                                        <div class="flex items-center gap-2 justify-center">
                                                                             <input type="file" wire:model="archivoPago"
                                                                                 wire:click="$set('pagoSeleccionado', {{ $pago['id'] }})"
                                                                                 class="text-sm">
                                                                             <button wire:click="subirComprobante({{ $pago['id'] }})"
-                                                                                class="px-3 py-1 bg-blue-500 text-white rounded text-sm">Reemplazar</button>
+                                                                                class="px-3 py-1 bg-blue-500 text-white rounded text-sm">
+                                                                                Reemplazar
+                                                                            </button>
                                                                         </div>
                                                                     @endif
                                                                 </div>
                                                             @endif
+
                                                         </div>
                                                     @endforeach
                                                 </div>
                                             @endif
+
 
 
                                             @if($estado == 0)
@@ -568,32 +623,46 @@
             </div>
         </div>
     @endif
+
     @if($modalVerQR && $qrSeleccionado)
         <div class="modal-overlay">
-            <div class="modal-box max-w-3xl w-full p-6 flex flex-col items-center gap-4">
+            <div class="modal-box">
+                <div class="modal-content flex flex-col gap-4">
+                    <h3 class="text-2xl font-bold text-teal-700 text-center">
+                        QR de Pago
+                    </h3>
+                    <div class="w-full flex justify-center">
+                        <img src="{{ asset('storage/' . $qrSeleccionado) }}"
+                            class="w-100 h-100 object-contain rounded-xl shadow-md border border-cyan-300" alt="QR de Pago">
+                    </div>
 
-                <h3 class="text-2xl font-bold text-teal-700 text-center">QR de Pago</h3>
-
-                <div class="w-full flex justify-center">
-                    <img src="{{ asset('storage/' . $qrSeleccionado) }}"
-                        class="w-full max-w-[500px] max-h-[500px] object-contain border rounded-lg shadow-lg"
-                        alt="QR de Pago">
                 </div>
-
-                <div class="flex gap-4 mt-4">
-                    <button wire:click="$set('modalVerQR', false)"
-                        class="px-6 py-2 bg-cyan-500 text-white font-semibold rounded-lg hover:bg-cyan-600 transition">
-                        Cerrar
+                <div class="modal-footer">
+                    <button type="button" wire:click="$set('modalVerQR', false)" class="btn-cyan" title="Cerrar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                        </svg>
+                        CERRAR
                     </button>
-
-                    <a href="{{ asset('storage/' . $qrSeleccionado) }}" download
-                        class="px-6 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition">
+                    <a href="{{ asset('storage/' . $qrSeleccionado) }}" download class="btn-cyan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                            <path d="M12 17v-6" />
+                            <path d="M9.5 14.5l2.5 2.5l2.5 -2.5" />
+                        </svg>
                         Descargar QR
                     </a>
-                </div>
 
+                </div>
             </div>
         </div>
     @endif
+
 
 </div>
