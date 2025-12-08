@@ -51,14 +51,18 @@
 
     <!-- Filtros seleccionados -->
     <div class="header">
-        <div><strong>Fecha Inicio:</strong> {{ $fecha_inicio ?? 'No definida' }} </div>
-        <div><strong>Fecha Fin:</strong> {{ $fecha_fin ?? 'No definida' }} </div>
-        <div><strong>Cliente:</strong> {{ $cliente_nombre ?? 'Todos los clientes' }} </div>
-        <div><strong>Vendedor:</strong> {{ $personal_nombre ?? 'Todos los vendedores' }} </div>
-        <div><strong>Sucursal:</strong> {{ $sucursal_nombre ?? 'Todas las sucursales' }} </div>
-        <div><strong>Producto:</strong> {{ $producto ?: 'Todos los productos' }} </div>
-        <div><strong>Estado de Pago:</strong> {{ $estado_pago_texto ?? 'Todos' }} </div>
-        <div><strong>Método de Pago:</strong> {{ $metodo_pago_texto ?? 'Todos' }} </div>
+        <div><strong>Fecha Pedido Inicio:</strong> {{ $fecha_inicio ?? 'No definida' }}</div>
+        <div><strong>Fecha Pedido Fin:</strong> {{ $fecha_fin ?? 'No definida' }}</div>
+
+        <div><strong>Fecha Pago Inicio:</strong> {{ $fecha_pago_inicio ?? 'No definida' }}</div>
+        <div><strong>Fecha Pago Fin:</strong> {{ $fecha_pago_fin ?? 'No definida' }}</div>
+
+        <div><strong>Cliente:</strong> {{ $cliente_nombre }}</div>
+        <div><strong>Vendedor:</strong> {{ $personal_nombre }}</div>
+        <div><strong>Sucursal:</strong> {{ $sucursal_nombre }}</div>
+        <div><strong>Producto:</strong> {{ $producto }}</div>
+        <div><strong>Estado de Pago:</strong> {{ $estado_pago_texto }}</div>
+        <div><strong>Método de Pago:</strong> {{ $metodo_pago_texto }}</div>
     </div>
 
     <!-- Productos por Pedido -->
@@ -69,7 +73,7 @@
                 <th>Código</th>
                 <th>Cliente</th>
                 <th>Vendedor</th>
-                <th>Fecha</th>
+                <th>Fecha Pedido</th>
                 <th>Producto</th>
                 <th>Cantidad</th>
                 <th>Sucursal</th>
@@ -111,6 +115,7 @@
                 <th>Monto</th>
                 <th>Estado Pago</th>
                 <th>Método Pago</th>
+                <th>Fecha Pago</th> <!-- NUEVA COLUMNA -->
                 <th>Deuda Crédito</th>
             </tr>
         </thead>
@@ -121,6 +126,7 @@
                     $pagosNoCredito = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
                     $deudaTotalCredito = max($creditoBase - $pagosNoCredito, 0);
                 @endphp
+
                 @foreach($pedido->pagoPedidos as $pago)
                     <tr>
                         <td>{{ $pedido->codigo }}</td>
@@ -132,6 +138,12 @@
                             @elseif($pago->metodo == 2) Crédito
                             @endif
                         </td>
+
+                        <!-- NUEVA COLUMNA FECHA -->
+                        <td>
+                            {{ $pago->fecha_pago ? date('d/m/Y H:i', strtotime($pago->fecha_pago)) : 'N/D' }}
+                        </td>
+
                         <td>{{ $pago->metodo == 2 ? 'Bs ' . number_format($deudaTotalCredito, 2) : '-' }}</td>
                     </tr>
                 @endforeach
@@ -146,8 +158,7 @@
     <div class="summary-box"><strong>QR:</strong> Bs {{ number_format($resumenMetodos['QR'], 2) }}</div>
     <div class="summary-box"><strong>Efectivo:</strong> Bs {{ number_format($resumenMetodos['Efectivo'], 2) }}</div>
     <div class="summary-box"><strong>Crédito:</strong> Bs {{ number_format($resumenMetodos['Crédito'], 2) }}</div>
-    <div class="summary-box"><strong>Deuda (Crédito pendiente):</strong> Bs {{ number_format($totalDeudaCredito, 2) }}
-    </div>
+    <div class="summary-box"><strong>Deuda Pendiente (Crédito):</strong> Bs {{ number_format($totalDeudaCredito, 2) }}</div>
 
 </body>
 

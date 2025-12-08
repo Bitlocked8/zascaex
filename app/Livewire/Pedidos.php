@@ -381,80 +381,80 @@ class Pedidos extends Component
     }
 
 
-  public function guardarPedido()
-{
-    if ($this->solicitud_pedido_id) {
-        $this->validate(['solicitud_pedido_id' => 'exists:solicitud_pedidos,id']);
-        $solicitud = SolicitudPedido::find($this->solicitud_pedido_id);
-        if ($solicitud->pedido && !$this->pedido->exists) {
-            $this->setMensaje('Esta solicitud ya tiene un pedido asociado', 'error');
+    public function guardarPedido()
+    {
+        if ($this->solicitud_pedido_id) {
+            $this->validate(['solicitud_pedido_id' => 'exists:solicitud_pedidos,id']);
+            $solicitud = SolicitudPedido::find($this->solicitud_pedido_id);
+            if ($solicitud->pedido && !$this->pedido->exists) {
+                $this->setMensaje('Esta solicitud ya tiene un pedido asociado', 'error');
+                return;
+            }
+        }
+
+        $detallesActivos = array_values(array_filter($this->detalles, function ($d) {
+            return !isset($d['eliminar']) || !$d['eliminar'];
+        }));
+
+        if (empty($detallesActivos)) {
+            $this->setMensaje('No se puede guardar un pedido sin ítems', 'error');
             return;
         }
-    }
 
-    $detallesActivos = array_values(array_filter($this->detalles, function($d) {
-        return !isset($d['eliminar']) || !$d['eliminar'];
-    }));
+        $pedido = $this->pedido;
+        if (!$pedido->exists) {
+            $pedido->personal_id = $this->personal_id ?? Auth::id();
+        }
 
-    if (empty($detallesActivos)) {
-        $this->setMensaje('No se puede guardar un pedido sin ítems', 'error');
-        return;
-    }
+        $pedido->solicitud_pedido_id = $this->solicitud_pedido_id ?? null;
+        $pedido->estado_pedido = $this->estado_pedido;
+        $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
+        $pedido->observaciones = $this->observaciones;
 
-    $pedido = $this->pedido;
-    if (!$pedido->exists) {
-        $pedido->personal_id = $this->personal_id ?? Auth::id();
-    }
+        if (!$pedido->exists) {
+            do {
+                $codigo = 'R-' . now()->format('YmdHis') . '-' . rand(100, 999);
+            } while (Pedido::where('codigo', $codigo)->exists());
+            $pedido->codigo = $codigo;
+        }
 
-    $pedido->solicitud_pedido_id = $this->solicitud_pedido_id ?? null;
-    $pedido->estado_pedido = $this->estado_pedido;
-    $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
-    $pedido->observaciones = $this->observaciones;
+        $pedido->save();
 
-    if (!$pedido->exists) {
-        do {
-            $codigo = 'R-' . now()->format('YmdHis') . '-' . rand(100, 999);
-        } while (Pedido::where('codigo', $codigo)->exists());
-        $pedido->codigo = $codigo;
-    }
+        foreach ($this->detalles as $index => $pd) {
+            if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
+                $detalle = PedidoDetalle::find($pd['id']);
+                if ($detalle) {
+                    $lote = Reposicion::find($detalle->reposicion_id);
+                    if ($lote) {
+                        $lote->cantidad += $detalle->cantidad;
+                        $lote->save();
+                    }
+                    $detalle->delete();
+                }
+                unset($this->detalles[$index]);
+            }
+        }
 
-    $pedido->save();
+        foreach ($detallesActivos as $pd) {
+            if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
+                $detalle = PedidoDetalle::create([
+                    'pedido_id' => $pedido->id,
+                    'existencia_id' => $pd['existencia_id'],
+                    'reposicion_id' => $pd['reposicion_id'],
+                    'cantidad' => $pd['cantidad'],
+                ]);
 
-    foreach ($this->detalles as $index => $pd) {
-        if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
-            $detalle = PedidoDetalle::find($pd['id']);
-            if ($detalle) {
-                $lote = Reposicion::find($detalle->reposicion_id);
+                $lote = Reposicion::find($pd['reposicion_id']);
                 if ($lote) {
-                    $lote->cantidad += $detalle->cantidad;
+                    $lote->cantidad -= $pd['cantidad'];
                     $lote->save();
                 }
-                $detalle->delete();
-            }
-            unset($this->detalles[$index]);
-        }
-    }
-
-    foreach ($detallesActivos as $pd) {
-        if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
-            $detalle = PedidoDetalle::create([
-                'pedido_id' => $pedido->id,
-                'existencia_id' => $pd['existencia_id'],
-                'reposicion_id' => $pd['reposicion_id'],
-                'cantidad' => $pd['cantidad'],
-            ]);
-
-            $lote = Reposicion::find($pd['reposicion_id']);
-            if ($lote) {
-                $lote->cantidad -= $pd['cantidad'];
-                $lote->save();
             }
         }
-    }
 
-    $this->setMensaje('Pedido guardado correctamente', 'success');
-    $this->cerrarModal();
-}
+        $this->setMensaje('Pedido guardado correctamente', 'success');
+        $this->cerrarModal();
+    }
 
 
 
@@ -505,7 +505,12 @@ class Pedidos extends Component
             ->map(fn($p) => [
                 'id' => $p->id,
                 'codigo_pago' => $p->codigo_pago ?? 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-                'fecha_pago' => $p->fecha_pago ? Carbon::parse($p->fecha_pago)->format('Y-m-d') : now()->format('Y-m-d'),
+
+                // FECHA COMPLETA
+                'fecha_pago' => $p->fecha_pago
+                    ? Carbon::parse($p->fecha_pago)->format('Y-m-d H:i:s')
+                    : now()->format('Y-m-d H:i:s'),
+
                 'monto' => $p->monto,
                 'observaciones' => $p->observaciones,
                 'imagen_comprobante' => $p->imagen_comprobante,
@@ -522,7 +527,16 @@ class Pedidos extends Component
     public function guardarPagosPedido()
     {
         foreach ($this->pagos as $index => $pago) {
+
+            // ✔ SOLO VALIDAR QUE EL MONTO ES OBLIGATORIO
+            $this->validate([
+                "pagos.$index.monto" => "required",
+            ], [
+                "pagos.$index.monto.required" => "El monto es obligatorio.",
+            ]);
+
             $imagenPath = $pago['imagen_comprobante'];
+
             if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
                 $imagenPath = $imagenPath->store('pagos_pedido', 'public');
             }
@@ -533,7 +547,7 @@ class Pedidos extends Component
                     'pedido_id' => $this->pedidoParaPago,
                     'codigo_pago' => $pago['codigo_pago'],
                     'monto' => $pago['monto'],
-                    'fecha_pago' => $pago['fecha_pago'],
+                    'fecha_pago' => Carbon::parse($pago['fecha_pago']),
                     'observaciones' => $pago['observaciones'],
                     'imagen_comprobante' => $imagenPath,
                     'metodo' => (int) $pago['metodo'],
@@ -547,12 +561,17 @@ class Pedidos extends Component
         $this->reset(['pagos']);
         $this->modalPagos = false;
     }
+
+
     public function agregarPagoPedido()
     {
         $this->pagos[] = [
             'id' => null,
             'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-            'fecha_pago' => now()->format('Y-m-d'),
+
+            // FECHA COMPLETA NUEVA
+            'fecha_pago' => now()->format('Y-m-d H:i:s'),
+
             'monto' => null,
             'observaciones' => null,
             'imagen_comprobante' => null,
@@ -562,6 +581,7 @@ class Pedidos extends Component
             'sucursal_pago_id' => null,
         ];
     }
+
     public function eliminarPagoPedido($index)
     {
         $pago = $this->pagos[$index] ?? null;

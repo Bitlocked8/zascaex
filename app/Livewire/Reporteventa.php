@@ -9,7 +9,7 @@ use App\Models\Personal;
 use App\Models\Sucursal;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Collection;
+
 class Reporteventa extends Component
 {
     public $cliente_id = null;
@@ -21,6 +21,7 @@ class Reporteventa extends Component
     public $producto = '';
     public $sucursal_id = '';
 
+    // Fechas de pedidos
     public $fecha_inicio_dia;
     public $fecha_inicio_mes;
     public $fecha_inicio_ano;
@@ -32,6 +33,18 @@ class Reporteventa extends Component
     public $fecha_fin_ano;
     public $fecha_fin_hora;
     public $fecha_fin_min;
+
+    public $fecha_pago_inicio_dia;
+    public $fecha_pago_inicio_mes;
+    public $fecha_pago_inicio_ano;
+    public $fecha_pago_inicio_hora;
+    public $fecha_pago_inicio_min;
+
+    public $fecha_pago_fin_dia;
+    public $fecha_pago_fin_mes;
+    public $fecha_pago_fin_ano;
+    public $fecha_pago_fin_hora;
+    public $fecha_pago_fin_min;
 
     public $totalCantidad = 0;
     public $totalMonto = 0;
@@ -67,6 +80,7 @@ class Reporteventa extends Component
             'pagoPedidos',
         ])->orderBy('fecha_pedido', 'desc');
 
+        // Filtros básicos
         if ($this->codigo !== '') {
             $query->where('codigo', 'like', "%{$this->codigo}%");
         }
@@ -87,6 +101,7 @@ class Reporteventa extends Component
             $query->whereHas('detalles.existencia.existenciable', fn($q) => $q->where('descripcion', 'like', "%{$this->producto}%"));
         }
 
+        // Fechas de pedidos
         $fecha_inicio = $this->crearFecha(
             $this->fecha_inicio_ano,
             $this->fecha_inicio_mes,
@@ -110,12 +125,40 @@ class Reporteventa extends Component
 
         $pedidos = $query->get();
 
-        $pedidos = $pedidos->map(function ($pedido) {
+        // Fechas de pagos
+        $fecha_pago_inicio = $this->crearFecha(
+            $this->fecha_pago_inicio_ano,
+            $this->fecha_pago_inicio_mes,
+            $this->fecha_pago_inicio_dia,
+            $this->fecha_pago_inicio_hora,
+            $this->fecha_pago_inicio_min
+        );
+
+        $fecha_pago_fin = $this->crearFecha(
+            $this->fecha_pago_fin_ano,
+            $this->fecha_pago_fin_mes,
+            $this->fecha_pago_fin_dia,
+            $this->fecha_pago_fin_hora,
+            $this->fecha_pago_fin_min
+        );
+
+        // Filtrar detalles y pagos
+        $pedidos = $pedidos->map(function ($pedido) use ($fecha_pago_inicio, $fecha_pago_fin) {
+            // Detalles por sucursal
             $pedido->detalles = $pedido->detalles->filter(function ($detalle) {
                 return $this->sucursal_id === '' || ($detalle->existencia?->sucursal?->id == $this->sucursal_id);
             });
+
+            // Pagos por fecha
+            $pedido->pagoPedidos = $pedido->pagoPedidos->filter(function ($pago) use ($fecha_pago_inicio, $fecha_pago_fin) {
+                $fecha_pago = Carbon::parse($pago->fecha_pago);
+                if ($fecha_pago_inicio && $fecha_pago < $fecha_pago_inicio) return false;
+                if ($fecha_pago_fin && $fecha_pago > $fecha_pago_fin) return false;
+                return true;
+            });
+
             return $pedido;
-        })->filter(fn($pedido) => $pedido->detalles->isNotEmpty());
+        })->filter(fn($pedido) => $pedido->detalles->isNotEmpty() && $pedido->pagoPedidos->isNotEmpty());
 
         return $pedidos;
     }
@@ -133,73 +176,127 @@ class Reporteventa extends Component
     }
 
     public function descargarPDF()
-    {
-        $pedidos = $this->filtrarPedidos();
+{
+    $pedidos = $this->filtrarPedidos();
 
-        $cliente_nombre = $this->cliente_id ? Cliente::find($this->cliente_id)?->nombre : 'Todos los clientes';
-        $personal_nombre = $this->personal_id ? Personal::find($this->personal_id)?->nombres : 'Todos los vendedores';
-        $sucursal_nombre = $this->sucursal_id ? Sucursal::find($this->sucursal_id)?->nombre : 'Todas las sucursales';
-        $producto = $this->producto ?: 'Todos los productos';
-        $estado_pago_texto = $this->filtroEstadoPago === '' ? 'Todos' : ($this->filtroEstadoPago == 1 ? 'Pagado' : 'Sin pagar');
-        $metodo_pago_texto = match ($this->filtroMetodoPago) {
-            '' => 'Todos',
-            0 => 'QR',
-            1 => 'Efectivo',
-            2 => 'Crédito',
-        };
+    // === FECHAS DE PEDIDO ===
+    $fecha_inicio = ($this->fecha_inicio_ano && $this->fecha_inicio_mes && $this->fecha_inicio_dia)
+        ? Carbon::create(
+            $this->fecha_inicio_ano,
+            $this->fecha_inicio_mes,
+            $this->fecha_inicio_dia,
+            $this->fecha_inicio_hora ?? 0,
+            $this->fecha_inicio_min ?? 0,
+            0
+        )
+        : null;
 
-        $totalPagado = 0;
-        $totalSinPagar = 0;
-        $totalDeudaCredito = 0;
-        $resumenMetodos = ['QR' => 0, 'Efectivo' => 0, 'Crédito' => 0];
+    $fecha_fin = ($this->fecha_fin_ano && $this->fecha_fin_mes && $this->fecha_fin_dia)
+        ? Carbon::create(
+            $this->fecha_fin_ano,
+            $this->fecha_fin_mes,
+            $this->fecha_fin_dia,
+            $this->fecha_fin_hora ?? 23,
+            $this->fecha_fin_min ?? 59,
+            59
+        )
+        : null;
 
-        foreach ($pedidos as $pedido) {
-            $creditoBase = $pedido->pagoPedidos->where('metodo', 2)->sum('monto');
-            $pagosRealizados = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
-            $totalDeudaCredito += max($creditoBase - $pagosRealizados, 0);
+    // === FECHAS DE PAGO ===
+    $fecha_pago_inicio = ($this->fecha_pago_inicio_ano && $this->fecha_pago_inicio_mes && $this->fecha_pago_inicio_dia)
+        ? Carbon::create(
+            $this->fecha_pago_inicio_ano,
+            $this->fecha_pago_inicio_mes,
+            $this->fecha_pago_inicio_dia,
+            $this->fecha_pago_inicio_hora ?? 0,
+            $this->fecha_pago_inicio_min ?? 0,
+            0
+        )
+        : null;
 
-            foreach ($pedido->pagoPedidos as $pago) {
-                if (
-                    ($this->filtroEstadoPago === '' || $pago->estado == (int) $this->filtroEstadoPago) &&
-                    ($this->filtroMetodoPago === '' || $pago->metodo == (int) $this->filtroMetodoPago)
-                ) {
-                    if ($pago->estado == 1 && $pago->metodo != 2) {
-                        $totalPagado += $pago->monto;
-                    } elseif ($pago->estado == 0) {
-                        $totalSinPagar += $pago->monto;
-                    }
+    $fecha_pago_fin = ($this->fecha_pago_fin_ano && $this->fecha_pago_fin_mes && $this->fecha_pago_fin_dia)
+        ? Carbon::create(
+            $this->fecha_pago_fin_ano,
+            $this->fecha_pago_fin_mes,
+            $this->fecha_pago_fin_dia,
+            $this->fecha_pago_fin_hora ?? 23,
+            $this->fecha_pago_fin_min ?? 59,
+            59
+        )
+        : null;
 
-                    if ($pago->metodo == 0)
-                        $resumenMetodos['QR'] += $pago->monto;
-                    if ($pago->metodo == 1)
-                        $resumenMetodos['Efectivo'] += $pago->monto;
-                    if ($pago->metodo == 2)
-                        $resumenMetodos['Crédito'] += $pago->monto;
+
+    // === FILTROS DEL REPORTE ===
+    $cliente_nombre = $this->cliente_id ? Cliente::find($this->cliente_id)?->nombre : 'Todos los clientes';
+    $personal_nombre = $this->personal_id ? Personal::find($this->personal_id)?->nombres : 'Todos los vendedores';
+    $sucursal_nombre = $this->sucursal_id ? Sucursal::find($this->sucursal_id)?->nombre : 'Todas las sucursales';
+    $producto = $this->producto ?: 'Todos los productos';
+    $estado_pago_texto = $this->filtroEstadoPago === '' ? 'Todos' : ($this->filtroEstadoPago == 1 ? 'Pagado' : 'Sin pagar');
+    $metodo_pago_texto = match ($this->filtroMetodoPago) {
+        '' => 'Todos',
+        0 => 'QR',
+        1 => 'Efectivo',
+        2 => 'Crédito',
+    };
+
+    // === RESÚMENES ===
+    $totalPagado = 0;
+    $totalSinPagar = 0;
+    $totalDeudaCredito = 0;
+    $resumenMetodos = ['QR' => 0, 'Efectivo' => 0, 'Crédito' => 0];
+
+    foreach ($pedidos as $pedido) {
+        $creditoBase = $pedido->pagoPedidos->where('metodo', 2)->sum('monto');
+        $pagosRealizados = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
+        $totalDeudaCredito += max($creditoBase - $pagosRealizados, 0);
+
+        foreach ($pedido->pagoPedidos as $pago) {
+            if (
+                ($this->filtroEstadoPago === '' || $pago->estado == (int) $this->filtroEstadoPago) &&
+                ($this->filtroMetodoPago === '' || $pago->metodo == (int) $this->filtroMetodoPago)
+            ) {
+                if ($pago->estado == 1 && $pago->metodo != 2) {
+                    $totalPagado += $pago->monto;
+                } elseif ($pago->estado == 0) {
+                    $totalSinPagar += $pago->monto;
                 }
+
+                if ($pago->metodo == 0)
+                    $resumenMetodos['QR'] += $pago->monto;
+                if ($pago->metodo == 1)
+                    $resumenMetodos['Efectivo'] += $pago->monto;
+                if ($pago->metodo == 2)
+                    $resumenMetodos['Crédito'] += $pago->monto;
             }
         }
-
-        $pdf = Pdf::loadView('pdf.reporteventa', [
-            'pedidos' => $pedidos,
-            'cliente_nombre' => $cliente_nombre,
-            'personal_nombre' => $personal_nombre,
-            'sucursal_nombre' => $sucursal_nombre,
-            'producto' => $producto,
-            'estado_pago_texto' => $estado_pago_texto,
-            'metodo_pago_texto' => $metodo_pago_texto,
-            'totalPagado' => $totalPagado,
-            'totalSinPagar' => $totalSinPagar,
-            'resumenMetodos' => $resumenMetodos,
-            'totalDeudaCredito' => $totalDeudaCredito,
-        ]);
-
-        $filename = 'Reporte_Ventas_' . now()->format('Ymd_His') . '.pdf';
-
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, $filename);
     }
 
+    // === ENVIAR TODO AL PDF ===
+    $pdf = Pdf::loadView('pdf.reporteventa', [
+        'pedidos' => $pedidos,
+        'cliente_nombre' => $cliente_nombre,
+        'personal_nombre' => $personal_nombre,
+        'sucursal_nombre' => $sucursal_nombre,
+        'producto' => $producto,
+        'estado_pago_texto' => $estado_pago_texto,
+        'metodo_pago_texto' => $metodo_pago_texto,
+        'totalPagado' => $totalPagado,
+        'totalSinPagar' => $totalSinPagar,
+        'totalDeudaCredito' => $totalDeudaCredito,
+        'resumenMetodos' => $resumenMetodos,
 
+        // 🔵 NUEVO: FECHAS A MANDAR AL PDF
+        'fecha_pedido_inicio' => $fecha_inicio?->format('d/m/Y H:i') ?? 'No especificado',
+        'fecha_pedido_fin' => $fecha_fin?->format('d/m/Y H:i') ?? 'No especificado',
+        'fecha_pago_inicio' => $fecha_pago_inicio?->format('d/m/Y H:i') ?? 'No especificado',
+        'fecha_pago_fin' => $fecha_pago_fin?->format('d/m/Y H:i') ?? 'No especificado',
+    ]);
+
+    $filename = 'Reporte_Ventas_' . now()->format('Ymd_His') . '.pdf';
+
+    return response()->streamDownload(function () use ($pdf) {
+        echo $pdf->output();
+    }, $filename);
+}
 
 }

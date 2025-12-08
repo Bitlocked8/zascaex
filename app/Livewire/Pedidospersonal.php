@@ -43,7 +43,12 @@ class Pedidospersonal extends Component
             ->map(fn($p) => [
                 'id' => $p->id,
                 'codigo_pago' => $p->codigo_pago ?? 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-                'fecha_pago' => $p->fecha_pago ? Carbon::parse($p->fecha_pago)->format('Y-m-d') : now()->format('Y-m-d'),
+
+                // FECHA COMPLETA
+                'fecha_pago' => $p->fecha_pago
+                    ? Carbon::parse($p->fecha_pago)->format('Y-m-d H:i:s')
+                    : now()->format('Y-m-d H:i:s'),
+
                 'monto' => $p->monto,
                 'observaciones' => $p->observaciones,
                 'imagen_comprobante' => $p->imagen_comprobante,
@@ -57,28 +62,16 @@ class Pedidospersonal extends Component
         $this->modalPagos = true;
     }
 
-    public function agregarPagoPedido()
-    {
-        $this->pagos[] = [
-            'id' => null,
-            'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-            'fecha_pago' => now()->format('Y-m-d'),
-            'monto' => null,
-            'observaciones' => null,
-            'imagen_comprobante' => null,
-            'metodo' => null,
-            'referencia' => null,
-            'estado' => 0,
-            'sucursal_pago_id' => null,
-        ];
-    }
-
     public function guardarPagosPedido()
     {
-        $this->validate();
+        foreach ($this->pagos as $index => $pago) {
+            $this->validate([
+                "pagos.$index.monto" => "required",
+            ], [
+                "pagos.$index.monto.required" => "El monto es obligatorio.",
+            ]);
 
-        foreach ($this->pagos as $pago) {
-            $imagenPath = $pago['imagen_comprobante'] ?? null;
+            $imagenPath = $pago['imagen_comprobante'];
 
             if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
                 $imagenPath = $imagenPath->store('pagos_pedido', 'public');
@@ -88,21 +81,39 @@ class Pedidospersonal extends Component
                 ['id' => $pago['id'] ?? 0],
                 [
                     'pedido_id' => $this->pedidoParaPago,
-                    'codigo_pago' => $pago['codigo_pago'] ?? 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
+                    'codigo_pago' => $pago['codigo_pago'],
                     'monto' => $pago['monto'],
-                    'fecha_pago' => $pago['fecha_pago'] ?? now()->format('Y-m-d'),
-                    'observaciones' => $pago['observaciones'] ?? null,
+                    'fecha_pago' => Carbon::parse($pago['fecha_pago']),
+                    'observaciones' => $pago['observaciones'],
                     'imagen_comprobante' => $imagenPath,
-                    'metodo' => isset($pago['metodo']) ? (int) $pago['metodo'] : 0,
-                    'referencia' => $pago['referencia'] ?? null,
-                    'estado' => isset($pago['estado']) ? (bool) $pago['estado'] : false,
-                    'sucursal_pago_id' => $pago['sucursal_pago_id'] ?? null,
+                    'metodo' => (int) $pago['metodo'],
+                    'referencia' => $pago['referencia'],
+                    'estado' => (bool) $pago['estado'],
+                    'sucursal_pago_id' => $pago['sucursal_pago_id'],
                 ]
             );
         }
+
+        $this->reset(['pagos']);
         $this->modalPagos = false;
-        $this->pagos = [];
-        $this->pedidoParaPago = null;
+    }
+
+
+    public function agregarPagoPedido()
+    {
+        $this->pagos[] = [
+            'id' => null,
+            'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
+            'fecha_pago' => now()->format('Y-m-d H:i:s'),
+
+            'monto' => null,
+            'observaciones' => null,
+            'imagen_comprobante' => null,
+            'metodo' => null,
+            'referencia' => null,
+            'estado' => 0,
+            'sucursal_pago_id' => null,
+        ];
     }
 
 

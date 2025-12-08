@@ -2,8 +2,9 @@
     <h2 class="text-2xl font-bold mb-6 text-center text-teal-700">Reporte de Ventas</h2>
 
     <div class="flex flex-col gap-4 mb-6">
-        <div class="flex flex-wrap justify-center gap-2">
-            <label class="font-semibold w-full text-center mb-1">Fecha Inicio:</label>
+        <!-- Fechas de PEDIDOS -->
+        <div class="flex flex-wrap justify-center gap-2 mt-4">
+            <label class="font-semibold w-full text-center mb-1">Fecha Inicio Pedido:</label>
             <input type="number" min="1" max="31" wire:model.live="fecha_inicio_dia" placeholder="Día"
                 class="w-16 p-2 rounded text-center border">
             <input type="number" min="1" max="12" wire:model.live="fecha_inicio_mes" placeholder="Mes"
@@ -16,8 +17,8 @@
                 class="w-16 p-2 rounded text-center border">
         </div>
 
-        <div class="flex flex-wrap justify-center gap-2">
-            <label class="font-semibold w-full text-center mb-1">Fecha Fin:</label>
+        <div class="flex flex-wrap justify-center gap-2 mt-2">
+            <label class="font-semibold w-full text-center mb-1">Fecha Fin Pedido:</label>
             <input type="number" min="1" max="31" wire:model.live="fecha_fin_dia" placeholder="Día"
                 class="w-16 p-2 rounded text-center border">
             <input type="number" min="1" max="12" wire:model.live="fecha_fin_mes" placeholder="Mes"
@@ -29,15 +30,41 @@
             <input type="number" min="0" max="59" wire:model.live="fecha_fin_min" placeholder="Minuto"
                 class="w-16 p-2 rounded text-center border">
         </div>
+
+        <div class="flex flex-wrap justify-center gap-2 mt-6">
+            <label class="font-semibold w-full text-center mb-1">Fecha Inicio Pago:</label>
+            <input type="number" min="1" max="31" wire:model.live="fecha_pago_inicio_dia" placeholder="Día"
+                class="w-16 p-2 rounded text-center border">
+            <input type="number" min="1" max="12" wire:model.live="fecha_pago_inicio_mes" placeholder="Mes"
+                class="w-16 p-2 rounded text-center border">
+            <input type="number" min="2000" max="2100" wire:model.live="fecha_pago_inicio_ano" placeholder="Año"
+                class="w-20 p-2 rounded text-center border">
+            <input type="number" min="0" max="23" wire:model.live="fecha_pago_inicio_hora" placeholder="Hora"
+                class="w-16 p-2 rounded text-center border">
+            <input type="number" min="0" max="59" wire:model.live="fecha_pago_inicio_min" placeholder="Minuto"
+                class="w-16 p-2 rounded text-center border">
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-2 mt-2">
+            <label class="font-semibold w-full text-center mb-1">Fecha Fin Pago:</label>
+            <input type="number" min="1" max="31" wire:model.live="fecha_pago_fin_dia" placeholder="Día"
+                class="w-16 p-2 rounded text-center border">
+            <input type="number" min="1" max="12" wire:model.live="fecha_pago_fin_mes" placeholder="Mes"
+                class="w-16 p-2 rounded text-center border">
+            <input type="number" min="2000" max="2100" wire:model.live="fecha_pago_fin_ano" placeholder="Año"
+                class="w-20 p-2 rounded text-center border">
+            <input type="number" min="0" max="23" wire:model.live="fecha_pago_fin_hora" placeholder="Hora"
+                class="w-16 p-2 rounded text-center border">
+            <input type="number" min="0" max="59" wire:model.live="fecha_pago_fin_min" placeholder="Minuto"
+                class="w-16 p-2 rounded text-center border">
+        </div>
+
         <div class="flex flex-wrap justify-center gap-4 mt-2">
             <input type="text" wire:model.live="producto" placeholder="Buscar por producto"
                 class="border p-2 rounded text-center w-40">
         </div>
 
         <div class="flex flex-wrap justify-center gap-4 mt-2">
-
-
-            {{-- Cliente --}}
             <div class="w-40">
                 <label class="font-semibold text-sm mb-2 block">Cliente</label>
                 <div
@@ -52,7 +79,7 @@
 
                     @foreach($clientes as $cliente)
                                     <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
-                                    {{ $cliente_id == $cliente->id
+                                                    {{ $cliente_id == $cliente->id
                         ? 'bg-cyan-600 text-white border-cyan-700 shadow'
                         : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                         <p class="font-semibold text-sm">{{ $cliente->nombre }}</p>
@@ -61,8 +88,6 @@
 
                 </div>
             </div>
-
-            {{-- Vendedor / Personal --}}
             <div class="w-40">
                 <label class="font-semibold text-sm mb-2 block">Vendedor</label>
                 <div
@@ -77,7 +102,7 @@
 
                     @foreach($personales as $personal)
                                     <button type="button" wire:click="$set('personal_id', {{ $personal->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
-                                    {{ $personal_id == $personal->id
+                                                    {{ $personal_id == $personal->id
                         ? 'bg-cyan-600 text-white border-cyan-700 shadow'
                         : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                         <p class="font-semibold text-sm">{{ $personal->nombres }}</p>
@@ -86,8 +111,6 @@
 
                 </div>
             </div>
-
-            {{-- Estado de Pago --}}
             <div class="w-40">
                 <label class="font-semibold text-sm mb-2 block">Estado Pago</label>
                 <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white">
@@ -151,8 +174,6 @@
 
                 </div>
             </div>
-
-            {{-- Sucursal --}}
             <div class="w-40">
                 <label class="font-semibold text-sm mb-2 block">Sucursal</label>
                 <div
@@ -167,7 +188,7 @@
 
                     @foreach($sucursales as $sucursal)
                                     <button type="button" wire:click="$set('sucursal_id', {{ $sucursal->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
-                                    {{ $sucursal_id == $sucursal->id
+                                                    {{ $sucursal_id == $sucursal->id
                         ? 'bg-cyan-600 text-white border-cyan-700 shadow'
                         : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                                         <p class="font-semibold text-sm">{{ $sucursal->nombre }}</p>
@@ -255,10 +276,12 @@
                     <th class="px-4 py-2 border">Código Pedido</th>
                     <th class="px-4 py-2 border">Monto</th>
                     <th class="px-4 py-2 border">Estado Pago</th>
+                    <th class="px-4 py-2 border">Fecha Pago</th> <!-- NUEVA -->
                     <th class="px-4 py-2 border">Método Pago</th>
                     <th class="px-4 py-2 border">Deuda Crédito</th>
                 </tr>
             </thead>
+
             <tbody>
                 @forelse($pedidos as $pedido)
                     @php
@@ -266,22 +289,30 @@
                         $pagosNoCredito = $pedido->pagoPedidos->where('metodo', '!=', 2)->where('estado', 1)->sum('monto');
                         $deudaTotalCredito = max($creditoBase - $pagosNoCredito, 0);
                     @endphp
+
                     @foreach($pedido->pagoPedidos as $pago)
                         @if(
                                 ($this->filtroEstadoPago === '' || $pago->estado == (int) $this->filtroEstadoPago) &&
                                 ($this->filtroMetodoPago === '' || $pago->metodo == (int) $this->filtroMetodoPago)
                             )
                             <tr class="text-sm">
-                                <td class="px-2 py-1 border text-center">{{ $pedido->codigo }}</td>
-                                <td class="px-2 py-1 border text-center">Bs {{ number_format($pago->monto, 2) }}</td>
-                                <td class="px-2 py-1 border text-center">
+                                <td class="px-2 py-1 border">{{ $pedido->codigo }}</td>
+                                <td class="px-2 py-1 border">Bs {{ number_format($pago->monto, 2) }}</td>
+
+                                <td class="px-2 py-1 border">
                                     @if($pago->estado == 0)
                                         <span class="px-2 py-1 rounded bg-red-500 text-white text-xs">Sin pagar</span>
                                     @else
                                         <span class="px-2 py-1 rounded bg-green-500 text-white text-xs">Pagado</span>
                                     @endif
                                 </td>
+
+                                <!-- FECHA DE PAGO -->
                                 <td class="px-2 py-1 border text-center">
+                                    {{ $pago->fecha_pago ? \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y H:i') : '-' }}
+                                </td>
+
+                                <td class="px-2 py-1 border">
                                     @if($pago->metodo == 0)
                                         <span class="px-2 py-1 rounded bg-cyan-500 text-white text-xs">QR</span>
                                     @elseif($pago->metodo == 1)
@@ -290,7 +321,8 @@
                                         <span class="px-2 py-1 rounded bg-purple-500 text-white text-xs">Crédito</span>
                                     @endif
                                 </td>
-                                <td class="px-2 py-1 border text-center">
+
+                                <td class="px-2 py-1 border">
                                     @if($pago->metodo == 2)
                                         Bs {{ number_format($deudaTotalCredito, 2) }}
                                     @else
@@ -302,11 +334,12 @@
                     @endforeach
                 @empty
                     <tr>
-                        <td colspan="5" class="text-center text-gray-500 py-2">No hay pagos</td>
+                        <td colspan="6" class="text-center text-gray-500 py-2">No hay pagos</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
+
     </div>
 
 
