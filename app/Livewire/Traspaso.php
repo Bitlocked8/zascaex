@@ -46,12 +46,12 @@ class Traspaso extends Component
 
     private function cargarReposiciones($usuario)
     {
-        $sucursalId = $usuario->rol_id == 2
+        $sucursalId = $usuario->rol_id == 4
             ? optional($usuario->personal->trabajos()->where('estado', 1)->first())->sucursal_id
             : null;
 
         $query = Asignado::with('reposiciones.existencia')
-            ->when($usuario->rol_id == 2, function ($q) use ($sucursalId) {
+            ->when($usuario->rol_id == 4, function ($q) use ($sucursalId) {
                 $q->whereHas(
                     'reposiciones.existencia',
                     fn($q2) =>
@@ -256,7 +256,7 @@ class Traspaso extends Component
             'reposicionDestino.existencia',
         ]);
 
-        if ($usuario->rol_id == 2) {
+        if ($usuario->rol_id == 4) {
             $query->where('personal_id', $usuario->personal->id);
         }
 

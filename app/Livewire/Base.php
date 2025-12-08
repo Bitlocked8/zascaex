@@ -6,7 +6,7 @@ use Livewire\Component;
 
 class Base extends Component
 {
-    public $seleccion = 'Reporteventa';
+    public $seleccion = 'Pruebaestilo';
     public $roles = ['', 'Super administrador', 'Administrador', 'Distribuidor', 'Planta', 'Cliente'];
     public function render()
     {
