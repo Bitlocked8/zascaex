@@ -263,8 +263,7 @@
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
                         @foreach([1 => 'Cliente Nuevo', 2 => 'Cliente Regular', 3 => 'Cliente Antiguo'] as $key => $label)
                             <button type="button" wire:click="$set('categoria', {{ $key }})"
-                                class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-                                                                      {{ $categoria == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                                class="px-4 py-2 rounded-full text-sm flex items-center justify-center {{ $categoria == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
                                 {{ $label }}
                             </button>
                         @endforeach
@@ -273,12 +272,47 @@
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
                         @foreach([1 => 'Activo', 0 => 'Inactivo'] as $key => $label)
                             <button type="button" wire:click="$set('estado', {{ $key }})"
-                                class="px-4 py-2 rounded-full text-sm flex items-center justify-center
-                                                                      {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                                class="px-4 py-2 rounded-full text-sm flex items-center justify-center {{ $estado == $key ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
                                 {{ $label }}
                             </button>
                         @endforeach
                     </div>
+
+                    <div class="grid grid-cols-1 gap-2 mt-2">
+                        <div>
+                            <label class="font-semibold text-sm mb-2 block">Personal asignado (Opcional)</label>
+                            <div
+                                class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[150px]">
+
+                                @forelse($personales as $personal)
+                                    <button type="button" wire:click="$set('personal_id', {{ $personal->id }})"
+                                        class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center {{ $personal_id == $personal->id ? 'border-cyan-600 text-cyan-600 bg-cyan-50' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600 hover:bg-cyan-50' }}">
+
+                                        <span class="text-u font-medium">
+                                            {{ $personal->user->name ?? $personal->nombres }}
+                                        </span>
+
+                                    </button>
+                                @empty
+                                    <p class="text-gray-500 text-sm text-center py-2 col-span-full">
+                                        No hay personales disponibles
+                                    </p>
+                                @endforelse
+
+                            </div>
+                            @error('personal_id') <span class="error-message">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+
+
+                    <div class="mt-2 flex justify-center">
+                        <button type="button" wire:click="$set('fijar_personal', {{ $fijar_personal ? 0 : 1 }})"
+                            class="px-4 py-2 rounded-full text-sm 
+                                   {{ $fijar_personal ? 'bg-cyan-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                            {{ $fijar_personal ? 'Personal Fijado' : 'No fijado' }}
+                        </button>
+                    </div>
+
 
                 </div>
                 <div class="modal-footer">
@@ -306,7 +340,7 @@
                 @if($showAlert)
                     <div
                         class="px-4 py-2 mb-2 rounded text-white
-                                                            {{ $alertType == 'success' ? 'bg-green-500' : ($alertType == 'error' ? 'bg-red-500' : 'bg-yellow-500') }}">
+                                                                                            {{ $alertType == 'success' ? 'bg-green-500' : ($alertType == 'error' ? 'bg-red-500' : 'bg-yellow-500') }}">
                         {{ $alertMessage }}
                     </div>
                 @endif

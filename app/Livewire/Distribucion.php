@@ -38,23 +38,26 @@ class Distribucion extends Component
     {
         $usuario = auth()->user();
         $sucursalId = optional($usuario->personal->trabajos()->latest()->first())->sucursal_id;
+
         $this->personals = Personal::where('estado', 1)
             ->whereHas('user', fn($q) => $q->where('rol_id', 3))
             ->when($usuario->rol_id != 1 && $sucursalId, fn($q) =>
                 $q->whereHas('trabajos', fn($t) => $t->where('sucursal_id', $sucursalId)))
             ->get();
+
         $this->coches = Coche::where('estado', 1)->get();
         $this->loadPedidosDisponibles($distribucion_id);
+
         $this->distribucionModel = $distribucion_id
             ? DistribucionModel::with('pedidos')->find($distribucion_id)
             : new DistribucionModel();
+
         if (!$this->distribucionModel->exists) {
             $this->personal_id = optional($usuario->personal)->id;
         }
+
         $this->loadDistribucionData();
     }
-
-
 
     private function loadPedidosDisponibles($distribucion_id = null)
     {
@@ -72,9 +75,7 @@ class Distribucion extends Component
                     $subquery->where('distribucions.id', '!=', $distribucion_id);
                 }
             })
-            ->when($rol === 2 && $sucursalId, function ($query) use ($sucursalId) {
-                $query->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId));
-            })
+            ->when($rol === 2 && $sucursalId, fn($query) => $query->whereHas('detalles.existencia', fn($q) => $q->where('sucursal_id', $sucursalId)))
             ->get();
     }
 
@@ -118,6 +119,7 @@ class Distribucion extends Component
         }
 
         $this->loadDistribucionData();
+        $this->autoAsignarPedidos();
         $this->modalDistribucion = true;
     }
 
@@ -152,6 +154,23 @@ class Distribucion extends Component
             array_filter($this->pedidos_seleccionados, fn($id) => $id != $pedido_id)
         );
         $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
+    }
+
+    public function updatedPersonalId($personal_id)
+    {
+        $this->autoAsignarPedidos();
+    }
+
+    private function autoAsignarPedidos()
+    {
+        if (!$this->personal_id) return;
+
+        $this->pedidos_seleccionados = $this->pedidos->filter(function($pedido) {
+            $cliente = $pedido->solicitudPedido?->cliente;
+            if (!$cliente) return false;
+
+            return $cliente->fijar_personal || $cliente->personal_id == $this->personal_id;
+        })->pluck('id')->toArray();
     }
 
     public function guardarDistribucion()
@@ -218,8 +237,7 @@ class Distribucion extends Component
 
     public function eliminarDistribucion()
     {
-        if (!$this->confirmingDeleteId)
-            return;
+        if (!$this->confirmingDeleteId) return;
 
         DB::transaction(function () {
             $distribucion = DistribucionModel::with('pedidos')->findOrFail($this->confirmingDeleteId);
@@ -253,16 +271,14 @@ class Distribucion extends Component
 
         $distribucionesQuery = DistribucionModel::with(['pedidos', 'coche', 'personal']);
 
-        // Solo filtrar por sucursal si NO es admin
         if ($usuario->rol_id != 1 && $sucursalId) {
             $distribucionesQuery->whereHas('personal.trabajos', fn($q) => $q->where('sucursal_id', $sucursalId));
         }
 
-        // Filtro de búsqueda
         $distribucionesQuery->where(function ($q) {
             $q->where('codigo', 'like', "%{$this->search}%")
-                ->orWhereHas('personal', fn($p) => $p->where('nombres', 'like', "%{$this->search}%"))
-                ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
+              ->orWhereHas('personal', fn($p) => $p->where('nombres', 'like', "%{$this->search}%"))
+              ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
         });
 
         return view('livewire.distribucion', [
@@ -270,7 +286,15 @@ class Distribucion extends Component
             'pedidosAsignados' => $this->pedidosAsignados,
             'personals' => $this->personals,
         ]);
-    }
+    }public function seleccionarPersonal($id)
+{
+    $this->personal_id = $id;
+
+    // recarga los pedidos disponibles antes de filtrar
+    $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
+
+    $this->autoAsignarPedidos();
+}
 
 
 }

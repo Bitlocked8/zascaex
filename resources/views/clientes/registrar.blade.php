@@ -164,34 +164,49 @@
                                 class="input-minimal" required>
 
                         </div>
+
+                        <div class="mb-6">
+                            <label class="font-semibold text-sm block mb-2">Asignar Personal (Opcional)</label>
+                            <select name="personal_id" class="input-minimal">
+                                <option value="">— Seleccione un personal —</option>
+                                @foreach ($personales as $personal)
+                                    <option value="{{ $personal->id }}" {{ old('personal_id', $cliente->personal_id ?? '') == $personal->id ? 'selected' : '' }}>
+                                        {{ $personal->nombres }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-6 flex items-center gap-2">
+                            <input type="checkbox" id="fijar_personal" name="fijar_personal" value="1" {{ old('fijar_personal', $cliente->fijar_personal ?? false) ? 'checked' : '' }}
+                                class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500">
+                            <label for="fijar_personal" class="text-sm font-semibold">
+                                Fijar personal asignado
+                            </label>
+                        </div>
+
                         <div class="mb-6 text-center">
                             <label class="font-semibold text-sm block mb-2">Categoría del cliente (Automático)</label>
                             <div class="flex gap-2">
-                                <input type="radio" id="categoria1" name="categoria" value="1"
-                                    class="hidden peer/cat1"
+                                <input type="radio" id="categoria1" name="categoria" value="1" class="hidden peer/cat1"
                                     {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'checked' : '' }}>
-                                <label for="categoria1"
-                                    class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
+                                <label for="categoria1" class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
                    peer-checked/cat1:bg-cyan-600 peer-checked/cat1:text-white
                    hover:bg-cyan-100 hover:border-cyan-500">
                                     Cliente Nuevo
                                 </label>
 
-                                <input type="radio" id="categoria2" name="categoria" value="2"
-                                    class="hidden peer/cat2"
+                                <input type="radio" id="categoria2" name="categoria" value="2" class="hidden peer/cat2"
                                     {{ old('categoria', $cliente->categoria ?? 1) == 2 ? 'checked' : '' }}>
-                                <label for="categoria2"
-                                    class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
+                                <label for="categoria2" class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
                    peer-checked/cat2:bg-cyan-600 peer-checked/cat2:text-white
                    hover:bg-cyan-100 hover:border-cyan-500">
                                     Cliente Regular
                                 </label>
 
-                                <input type="radio" id="categoria3" name="categoria" value="3"
-                                    class="hidden peer/cat3"
+                                <input type="radio" id="categoria3" name="categoria" value="3" class="hidden peer/cat3"
                                     {{ old('categoria', $cliente->categoria ?? 1) == 3 ? 'checked' : '' }}>
-                                <label for="categoria3"
-                                    class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
+                                <label for="categoria3" class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
                    peer-checked/cat3:bg-cyan-600 peer-checked/cat3:text-white
                    hover:bg-cyan-100 hover:border-cyan-500">
                                     Cliente antiguo
@@ -205,22 +220,18 @@
                             <label class="font-semibold text-sm block mb-3">Estado del Cliente (Automático)</label>
                             <div class="inline-flex gap-3 justify-center">
                                 <input type="radio" id="estado1" name="estado" value="1" class="hidden peer/activo" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'checked' : '' }}>
-                                <label for="estado1"
-                                    class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
+                                <label for="estado1" class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
                    peer-checked/activo:bg-green-600 peer-checked/activo:text-white
                    hover:bg-green-100 hover:border-green-500">
                                     Activo
                                 </label>
 
-                                <input type="radio" id="estado0" name="estado" value="0"
-                                    class="hidden peer/inactivo"
-                                    {{ old('estado', $cliente->estado ?? 1) == 0 ? 'checked' : '' }}>
-                                <label for="estado0"
-                                    class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
+                                <input type="radio" id="estado0" name="estado" value="0" class="hidden peer/inactivo" {{ old('estado', $cliente->estado ?? 1) == 0 ? 'checked' : '' }}>
+                                <label for="estado0" class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
                    peer-checked/inactivo:bg-red-500 peer-checked/inactivo:text-white
                    hover:bg-red-100 hover:border-red-500">
                                     Inactivo
-                                </label>                            
+                                </label>
                             </div>
                         </div>
                     </div>

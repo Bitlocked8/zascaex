@@ -6,12 +6,10 @@ use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\User;
+use App\Models\Personal;
 
 class MapaClienteController extends Controller
 {
-    /**
-     * Muestra clientes con coordenadas registradas en un mapa.
-     */
     public function mostrar()
     {
         $clientes = Cliente::whereNotNull('latitud')
@@ -21,26 +19,26 @@ class MapaClienteController extends Controller
         return view('clientes.mapa', compact('clientes'));
     }
 
-    /**
-     * Muestra el formulario para registrar un nuevo cliente con mapa.
-     */
     public function mostrarFormularioMapa()
     {
-        return view('clientes.registrar');
+        $personales = Personal::whereHas('user', function ($q) {
+            $q->where('rol_id', 3);
+        })->get();
+
+        return view('clientes.registrar', compact('personales'));
     }
 
-    /**
-     * Lista todos los clientes paginados.
-     */
     public function index()
     {
+        $personales = Personal::whereHas('user', function ($q) {
+            $q->where('rol_id', 3);
+        })->get();
+
         $clientes = Cliente::paginate(5);
-        return view('clientes.index', compact('clientes'));
+
+        return view('clientes.index', compact('clientes', 'personales'));
     }
 
-    /**
-     * Registra un nuevo cliente y su usuario asociado.
-     */
     public function store(Request $request)
     {
         $rules = [
@@ -65,18 +63,18 @@ class MapaClienteController extends Controller
             'categoria' => 'required|integer|in:1,2,3',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
+            'personal_id' => 'nullable|exists:personals,id',
+            'fijar_personal' => 'nullable|boolean',
         ];
 
         $validated = $request->validate($rules);
 
         try {
-            // 📷 Subir foto si existe
             $fotoPath = null;
             if ($request->hasFile('foto')) {
                 $fotoPath = $request->file('foto')->store('clientes', 'public');
             }
 
-            // 👤 Crear usuario asociado
             $user = User::create([
                 'email' => $validated['email'],
                 'password' => bcrypt($validated['password']),
@@ -84,12 +82,10 @@ class MapaClienteController extends Controller
                 'estado' => 1,
             ]);
 
-            // 🔢 Generar código único para el cliente
             $ultimoCliente = Cliente::latest('id')->first();
             $codigo = 'C-' . str_pad(($ultimoCliente->id ?? 0) + 1, 4, '0', STR_PAD_LEFT);
 
-            // 🧾 Crear cliente
-            $cliente = Cliente::create([
+            Cliente::create([
                 'codigo' => $codigo,
                 'nombre' => $validated['nombre'],
                 'empresa' => $validated['empresa'] ?? null,
@@ -111,6 +107,8 @@ class MapaClienteController extends Controller
                 'estado' => $validated['estado'],
                 'categoria' => $validated['categoria'],
                 'user_id' => $user->id,
+                'personal_id' => $validated['personal_id'] ?? null,
+                'fijar_personal' => $validated['fijar_personal'] ?? false,
             ]);
 
             return Redirect::route('home')->with('success', "Cliente registrado con éxito. Código: $codigo");
@@ -122,9 +120,6 @@ class MapaClienteController extends Controller
         }
     }
 
-    /**
-     * Actualiza coordenadas (latitud/longitud) de un cliente.
-     */
     public function actualizarCoordenadas(Request $request, $id)
     {
         $validated = $request->validate([
@@ -151,18 +146,17 @@ class MapaClienteController extends Controller
         }
     }
 
-    /**
-     * Muestra formulario de edición de cliente.
-     */
     public function editar($id)
     {
         $cliente = Cliente::findOrFail($id);
-        return view('clientes.editar', compact('cliente'));
+
+        $personales = Personal::whereHas('user', function ($q) {
+            $q->where('rol_id', 3);
+        })->get();
+
+        return view('clientes.editar', compact('cliente', 'personales'));
     }
 
-    /**
-     * Muestra la vista de un cliente individual en el mapa.
-     */
     public function showMapClient(Request $request)
     {
         $cliente = Cliente::findOrFail($request->id);

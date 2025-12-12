@@ -33,12 +33,10 @@ class Cliente extends Model
         'verificado',
         'user_id',
         'categoria',
+        'personal_id',
+        'fijar_personal',
     ];
 
-
-    /**
-     * Relación 1:N con Venta.
-     */
     public function ventas()
     {
         return $this->hasMany(Venta::class);
@@ -47,7 +45,10 @@ class Cliente extends Model
     {
         return $this->belongsTo(User::class);
     }
-
+    public function personal()
+    {
+        return $this->belongsTo(Personal::class);
+    }
     public function itemPromos()
     {
         return $this->hasMany(ItemPromo::class);

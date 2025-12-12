@@ -5,9 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('clientes', function (Blueprint $table) {
@@ -33,13 +31,15 @@ return new class extends Migration {
             $table->string('foto')->nullable();
             $table->boolean('estado')->default(1);
             $table->boolean('verificado')->default(1);
+            $table->foreignId('personal_id')->nullable()->constrained('personals')->nullOnDelete();
+            $table->boolean('fijar_personal')->default(false);
+
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+
     }
-    /**
-     * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('clientes');

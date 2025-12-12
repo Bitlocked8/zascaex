@@ -7,12 +7,14 @@ use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use App\Models\Cliente as ModeloCliente;
 use App\Models\User;
+use App\Models\Personal;
 use Illuminate\Support\Facades\Storage;
 
 class Cliente extends Component
 {
     use WithFileUploads;
     use WithPagination;
+
     public $clienteId = null;
     public $nombre = '';
     public $empresa = '';
@@ -34,11 +36,13 @@ class Cliente extends Component
     public $estado = 1;
     public $categoria = 1;
 
-    // 🔹 Campos del usuario asociado
     public $email = '';
     public $password = '';
 
-    // 🔹 Campos auxiliares
+    public $personal_id = null;
+    public $fijar_personal = false;
+    public $personales = [];
+
     public $search = '';
     public $modal = false;
     public $detalleModal = false;
@@ -47,7 +51,6 @@ class Cliente extends Component
     public $coordenadas;
     public $cantidad = 50;
 
-    // 🔹 Alertas
     public $alertMessage = '';
     public $alertType = '';
     public $showAlert = false;
@@ -63,9 +66,14 @@ class Cliente extends Component
                 ->orWhere('telefono', 'like', '%' . $this->search . '%')
                 ->orWhere('celular', 'like', '%' . $this->search . '%');
         })
-            ->orderBy('id', 'desc')
-            ->take($this->cantidad)
-            ->get();
+        ->orderBy('id', 'desc')
+        ->take($this->cantidad)
+        ->get();
+
+       $this->personales = Personal::whereHas('user', function ($q) {
+    $q->where('rol_id', 3);
+})->get();
+
 
         return view('livewire.cliente', compact('clientes'));
     }
@@ -110,6 +118,8 @@ class Cliente extends Component
         $this->categoria = $cliente->categoria;
         $this->email = $cliente->user->email ?? '';
         $this->password = '';
+        $this->personal_id = $cliente->personal_id;
+        $this->fijar_personal = $cliente->fijar_personal;
         $this->accion = 'edit';
         $this->modal = true;
         $this->detalleModal = false;
@@ -146,6 +156,8 @@ class Cliente extends Component
                 : 'nullable|image|max:2048',
             'estado' => 'required|boolean',
             'categoria' => 'required|integer|min:1',
+            'personal_id' => 'nullable|exists:personals,id',
+            'fijar_personal' => 'boolean',
         ];
 
         if ($this->accion === 'create') {
@@ -159,7 +171,6 @@ class Cliente extends Component
             if ($this->accion === 'edit' && $this->clienteId) {
                 $cliente = ModeloCliente::findOrFail($this->clienteId);
 
-                // ✅ Actualizar usuario asociado
                 if ($this->email && $cliente->user) {
                     $emailExiste = User::where('email', $this->email)
                         ->where('id', '!=', $cliente->user->id)
@@ -175,7 +186,6 @@ class Cliente extends Component
                     $cliente->user->update($userData);
                 }
 
-                // ✅ Manejo de imagen
                 if (is_object($this->foto)) {
                     $rutaFoto = $this->foto->store('clientes', 'public');
                     if ($cliente->foto && Storage::disk('public')->exists($cliente->foto)) {
@@ -185,7 +195,6 @@ class Cliente extends Component
                     $rutaFoto = $this->foto;
                 }
 
-                // ✅ Actualizar datos
                 $cliente->update([
                     'nombre' => $this->nombre,
                     'empresa' => $this->empresa,
@@ -206,13 +215,15 @@ class Cliente extends Component
                     'foto' => $rutaFoto,
                     'estado' => $this->estado,
                     'categoria' => $this->categoria,
+                    'personal_id' => $this->personal_id,
+                    'fijar_personal' => $this->fijar_personal ? 1 : 0,
                 ]);
 
                 $this->mostrarAlerta('Cliente actualizado con éxito.', 'success');
             }
 
             if ($this->accion === 'create') {
-                // 👉 Aquí puedes agregar la lógica de creación de cliente y usuario si la usas
+                // Aquí puedes agregar la lógica de creación si es necesario
             }
 
             $this->cerrarModal();
@@ -243,15 +254,13 @@ class Cliente extends Component
     public function toggleVerificado($clienteId)
     {
         $cliente = ModeloCliente::findOrFail($clienteId);
-        $cliente->verificado = !$cliente->verificado; // alterna true/false
+        $cliente->verificado = !$cliente->verificado;
         $cliente->save();
-
         $this->mostrarAlerta(
             'Cliente ' . $cliente->nombre . ' ' . ($cliente->verificado ? 'verificado' : 'no verificado'),
             'success'
         );
     }
-
 
     private function resetCampos()
     {
@@ -278,6 +287,8 @@ class Cliente extends Component
             'categoria',
             'email',
             'password',
+            'personal_id',
+            'fijar_personal',
             'clienteSeleccionado',
         ]);
     }
