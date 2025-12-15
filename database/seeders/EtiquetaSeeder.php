@@ -11,22 +11,11 @@ class EtiquetaSeeder extends Seeder
     public function run(): void
     {
         $etiquetas = [
-            ['descripcion' => 'normal', 'capacidad' => '250', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/normal_250.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '330', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/normal_330.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '400', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/normal_400.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '500', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/normal_500.jpg'],
-            ['descripcion' => 'con gas', 'capacidad' => '530', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/congas_530.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '600', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/normal_600.jpg'],
-            ['descripcion' => 'alcalina', 'capacidad' => '600', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/alcalina_600.jpg'],
-            ['descripcion' => 'bicentenario normal', 'capacidad' => '600', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/bicentenarioe.jpg'],
-            ['descripcion' => 'bicentenario alcalina', 'capacidad' => '600', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/bicentenario_alcalina_600.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '750', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/normal_750.jpg'],
-            ['descripcion' => 'alcalina', 'capacidad' => '750', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/alcalina_750.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '1', 'unidad' => 'l', 'tipo' => 1, 'imagen' => 'etiquetas/normal_1l.jpg'],
-            ['descripcion' => 'alcalina', 'capacidad' => '1', 'unidad' => 'l', 'tipo' => 1, 'imagen' => 'etiquetas/alcalina_1l.jpg'],
-            ['descripcion' => 'normal', 'capacidad' => '1.5', 'unidad' => 'l', 'tipo' => 1, 'imagen' => 'etiquetas/normal_1_5l.jpg'],
-            ['descripcion' => 'alcalina', 'capacidad' => '1.5', 'unidad' => 'l', 'tipo' => 1, 'imagen' => 'etiquetas/alcalina_1_5l.jpg'],
-            ['descripcion' => 'dispenser', 'capacidad' => '20', 'unidad' => 'l', 'tipo' => 2, 'imagen' => 'etiquetas/dispenser_20l.jpg'],
+            ['descripcion' => 'San valentin', 'capacidad' => '250', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/et1.png'],
+            ['descripcion' => 'Marino', 'capacidad' => '330', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/et2.png'],
+            ['descripcion' => 'Espacial', 'capacidad' => '400', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/et3.png'],
+            ['descripcion' => 'Espacial', 'capacidad' => '400', 'unidad' => 'ml', 'tipo' => 1, 'imagen' => 'etiquetas/et4.png'],
+
         ];
 
         foreach ($etiquetas as $data) {

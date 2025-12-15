@@ -8,22 +8,56 @@ use App\Models\Existencia;
 
 class OtroSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+  
     public function run(): void
     {
         $productos = [
-            ['descripcion' => 'Hielo 2,5', 'tipoContenido' => 'hielo', 'tipoProducto' => null, 'capacidad' => 2.5, 'unidad' => 'Kgs', 'precioReferencia' => 4.0, 'tipo' => null],
-            ['descripcion' => 'Hielo 5', 'tipoContenido' => 'hielo', 'tipoProducto' => null, 'capacidad' => 5, 'unidad' => 'Kgs', 'precioReferencia' => 7.0, 'tipo' => null],
-            ['descripcion' => 'Dispensador frio caliente de escritorio', 'tipoContenido' => null, 'tipoProducto' => 'dispenser', 'capacidad' => null, 'unidad' => null, 'precioReferencia' => 500, 'tipo' => 'Plastico'],
-            ['descripcion' => 'Dispensador frio caliente alto', 'tipoContenido' => null, 'tipoProducto' => 'dispenser', 'capacidad' => null, 'unidad' => null, 'precioReferencia' => 900, 'tipo' => 'Plastico'],
+            [
+                'descripcion' => 'Hielo 2,5',
+                'tipoContenido' => 'hielo',
+                'tipoProducto' => null,
+                'capacidad' => 2.5,
+                'unidad' => 'Kgs',
+                'precioReferencia' => 4.0,
+                'tipo' => null,
+                'imagen' => 'otros/hielov.png', 
+            ],
+            [
+                'descripcion' => 'Hielo 5',
+                'tipoContenido' => 'hielo',
+                'tipoProducto' => null,
+                'capacidad' => 5,
+                'unidad' => 'Kgs',
+                'precioReferencia' => 7.0,
+                'tipo' => null,
+                'imagen' => 'otros/hielov.png',
+            ],
+            [
+                'descripcion' => 'Dispensador frio caliente de escritorio',
+                'tipoContenido' => null,
+                'tipoProducto' => 'dispenser',
+                'capacidad' => null,
+                'unidad' => null,
+                'precioReferencia' => 500,
+                'tipo' => 'Plastico',
+                'imagen' => 'otros/dispenserv.png', 
+            ],
+            [
+                'descripcion' => 'Dispensador frio caliente alto',
+                'tipoContenido' => null,
+                'tipoProducto' => 'dispenser',
+                'capacidad' => null,
+                'unidad' => null,
+                'precioReferencia' => 900,
+                'tipo' => 'Plastico',
+                'imagen' => 'otros/dispenserv.png', 
+            ],
         ];
 
         foreach ($productos as $data) {
             foreach ([1, 2] as $sucursal_id) {
                 $otro = Otro::create([
-                    'imagen' => 'otros/default.jpg',
+                    'imagen' => $data['imagen'],
                     'unidad' => $data['unidad'],
                     'descripcion' => $data['descripcion'],
                     'tipoContenido' => $data['tipoContenido'],
