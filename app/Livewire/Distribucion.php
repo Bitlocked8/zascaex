@@ -163,11 +163,13 @@ class Distribucion extends Component
 
     private function autoAsignarPedidos()
     {
-        if (!$this->personal_id) return;
+        if (!$this->personal_id)
+            return;
 
-        $this->pedidos_seleccionados = $this->pedidos->filter(function($pedido) {
+        $this->pedidos_seleccionados = $this->pedidos->filter(function ($pedido) {
             $cliente = $pedido->solicitudPedido?->cliente;
-            if (!$cliente) return false;
+            if (!$cliente)
+                return false;
 
             return $cliente->fijar_personal || $cliente->personal_id == $this->personal_id;
         })->pluck('id')->toArray();
@@ -237,7 +239,8 @@ class Distribucion extends Component
 
     public function eliminarDistribucion()
     {
-        if (!$this->confirmingDeleteId) return;
+        if (!$this->confirmingDeleteId)
+            return;
 
         DB::transaction(function () {
             $distribucion = DistribucionModel::with('pedidos')->findOrFail($this->confirmingDeleteId);
@@ -277,8 +280,8 @@ class Distribucion extends Component
 
         $distribucionesQuery->where(function ($q) {
             $q->where('codigo', 'like', "%{$this->search}%")
-              ->orWhereHas('personal', fn($p) => $p->where('nombres', 'like', "%{$this->search}%"))
-              ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
+                ->orWhereHas('personal', fn($p) => $p->where('nombres', 'like', "%{$this->search}%"))
+                ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
         });
 
         return view('livewire.distribucion', [
@@ -286,15 +289,16 @@ class Distribucion extends Component
             'pedidosAsignados' => $this->pedidosAsignados,
             'personals' => $this->personals,
         ]);
-    }public function seleccionarPersonal($id)
-{
-    $this->personal_id = $id;
+    }
+    public function seleccionarPersonal($id)
+    {
+        $this->personal_id = $id;
 
-    // recarga los pedidos disponibles antes de filtrar
-    $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
 
-    $this->autoAsignarPedidos();
-}
+        $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
+
+        $this->autoAsignarPedidos();
+    }
 
 
 }

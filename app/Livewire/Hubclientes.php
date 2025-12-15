@@ -10,13 +10,19 @@ use App\Models\Etiqueta;
 use App\Models\SolicitudPedido;
 use App\Models\SolicitudPedidoDetalle;
 use App\Models\Sucursal;
+use App\Models\Empresa;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class Hubclientes extends Component
 {
     use WithFileUploads;
+    public $modalCotizacion = false;
+    public $cotizacion = [
+        'subtotal' => 0,
+        'total' => 0,
+    ];
 
     public $expandidoPedidos = [];
     public $sucursalFiltro = null;
@@ -39,7 +45,8 @@ class Hubclientes extends Component
     public function abrirModalProducto($uid)
     {
         $producto = $this->productos()->firstWhere('uid', $uid);
-        if (!$producto) return;
+        if (!$producto)
+            return;
 
         $this->productoSeleccionado = $producto;
         $sucursalId = $producto['modelo']->existencias->first()->sucursal->id ?? null;
@@ -62,7 +69,8 @@ class Hubclientes extends Component
 
     public function agregarAlCarritoDesdeModal()
     {
-        if (!$this->productoSeleccionado) return;
+        if (!$this->productoSeleccionado)
+            return;
 
         $modelo = $this->productoSeleccionado['modelo'];
         $uid = $this->productoSeleccionado['uid'] . '_' . ($this->tapaSeleccionada ?? '0') . '_' . ($this->etiquetaSeleccionada ?? '0');
@@ -87,10 +95,12 @@ class Hubclientes extends Component
 
     public function hacerPedido()
     {
-        if (empty($this->carrito)) return;
+        if (empty($this->carrito))
+            return;
 
         $clienteId = Auth::user()->cliente->id ?? null;
-        if (!$clienteId) return;
+        if (!$clienteId)
+            return;
 
         $solicitud = SolicitudPedido::create([
             'cliente_id' => $clienteId,
@@ -118,7 +128,8 @@ class Hubclientes extends Component
     public function verMisPedidos()
     {
         $cliente = Auth::user()->cliente ?? null;
-        if (!$cliente) return;
+        if (!$cliente)
+            return;
 
         $this->pedidosCliente = SolicitudPedido::where('cliente_id', $cliente->id)
             ->with([
@@ -130,7 +141,7 @@ class Hubclientes extends Component
             ])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function($sp) {
+            ->map(function ($sp) {
                 $array = $sp->toArray();
                 $array['estado_real'] = $sp->pedido->estado_pedido ?? $sp->estado;
                 return $array;
@@ -143,7 +154,8 @@ class Hubclientes extends Component
     public function eliminarSolicitud($id)
     {
         $solicitud = SolicitudPedido::find($id);
-        if (!$solicitud) return;
+        if (!$solicitud)
+            return;
 
         $solicitud->detalles()->delete();
         $solicitud->delete();
@@ -155,7 +167,8 @@ class Hubclientes extends Component
     public function actualizarMetodoPago($pedidoId, $valor)
     {
         $pedido = SolicitudPedido::find($pedidoId);
-        if (!$pedido) return;
+        if (!$pedido)
+            return;
 
         $pedido->metodo_pago = $valor;
         $pedido->save();
@@ -169,7 +182,8 @@ class Hubclientes extends Component
     public function actualizarEstadoPedido($solicitudId, $nuevoEstado)
     {
         $solicitud = SolicitudPedido::find($solicitudId);
-        if (!$solicitud) return;
+        if (!$solicitud)
+            return;
 
         $solicitud->estado = $nuevoEstado;
         $solicitud->save();
@@ -189,10 +203,12 @@ class Hubclientes extends Component
 
     public function subirComprobante($pagoId)
     {
-        if (!$this->archivoPago) return;
+        if (!$this->archivoPago)
+            return;
 
         $pago = PagoPedido::find($pagoId);
-        if (!$pago) return;
+        if (!$pago)
+            return;
 
         if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
             \Storage::disk('public')->delete($pago->imagen_comprobante);
@@ -212,7 +228,8 @@ class Hubclientes extends Component
     public function eliminarComprobante($pagoId)
     {
         $pago = PagoPedido::find($pagoId);
-        if (!$pago) return;
+        if (!$pago)
+            return;
 
         if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
             \Storage::disk('public')->delete($pago->imagen_comprobante);
@@ -229,7 +246,8 @@ class Hubclientes extends Component
     public function verQr($pagoId)
     {
         $pago = PagoPedido::with('sucursalPago')->find($pagoId);
-        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr) return;
+        if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr)
+            return;
 
         $this->qrSeleccionado = $pago->sucursalPago->imagen_qr;
         $this->modalVerQR = true;
@@ -276,5 +294,48 @@ class Hubclientes extends Component
             'pedidosCliente' => $this->pedidosCliente,
             'mostrarCarrito' => $this->mostrarCarrito,
         ]);
+    }
+
+    public function cotizar()
+    {
+        if (empty($this->carrito))
+            return;
+
+        $subtotal = 0;
+
+        foreach ($this->carrito as $item) {
+            $modelo = $item['modelo'];
+
+            $precioUnitario = $modelo->precioReferencia ?? 0;
+            $unidadesPorPaquete = $modelo->paquete ?? 1;
+            $cantidadPaquetes = $item['cantidad'];
+
+            $subtotal += $precioUnitario * $unidadesPorPaquete * $cantidadPaquetes;
+        }
+
+        $this->cotizacion = [
+            'subtotal' => $subtotal,
+            'total' => $subtotal,
+        ];
+
+        $this->modalCotizacion = true;
+    }
+    public function descargarCotizacionPdf()
+    {
+        if (empty($this->carrito)) {
+            return;
+        }
+        $empresa = Empresa::with('sucursales')->find(1);
+        $sucursal = $empresa->sucursales->first();
+        $pdf = Pdf::loadView('pdf.cotizacion', [
+            'carrito' => $this->carrito,
+            'cotizacion' => $this->cotizacion,
+            'empresa' => $empresa,
+            'sucursal' => $sucursal,
+        ])->setPaper('letter', 'portrait');
+        return response()->streamDownload(
+            fn() => print ($pdf->output()),
+            'cotizacion.pdf'
+        );
     }
 }

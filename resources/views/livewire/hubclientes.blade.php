@@ -26,48 +26,66 @@
         </div>
         <div
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap justify-center items-center gap-3 mb-4 col-span-full">
+
             @forelse($sucursales as $s)
                     <button type="button" wire:click="$set('sucursalFiltro', {{ $s->id }})" class="px-4 py-3 rounded-lg border w-full sm:w-auto text-sm font-semibold transition text-center
-                                                {{ $sucursalFiltro == $s->id
-                ? 'bg-cyan-600 text-white border-cyan-700 shadow-md'
-                : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                        {{ $sucursalFiltro == $s->id
+                ? 'bg-slate-800 text-white border-slate-900 shadow-md'
+                : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300' }}">
 
                         <div class="flex flex-col">
                             <p class="font-semibold text-sm
-                                                        {{ $sucursalFiltro == $s->id ? 'text-white' : 'text-gray-800' }}">
+                                            {{ $sucursalFiltro == $s->id ? 'text-white' : 'text-slate-900' }}">
                                 {{ $s->nombre }}
                             </p>
 
-                            <p
-                                class="text-xs
-                                                        {{ $sucursalFiltro == $s->id ? 'text-cyan-100' : 'text-emerald-600' }}">
+                            <p class="text-xs
+                                            {{ $sucursalFiltro == $s->id ? 'text-slate-200' : 'text-slate-600' }}">
                                 {{ $s->empresa?->nombre ?? 'Sin empresa' }}
                             </p>
 
-                            <p
-                                class="text-xs
-                                                        {{ $sucursalFiltro == $s->id ? 'text-cyan-100' : 'text-emerald-600' }}">
+                            <p class="text-xs
+                                            {{ $sucursalFiltro == $s->id ? 'text-slate-200' : 'text-slate-600' }}">
                                 {{ $s->telefono ?? 'Sin teléfono' }}
                             </p>
                         </div>
                     </button>
             @empty
-                <p class="text-center text-gray-500 py-3 text-sm">
+                <p class="text-center text-slate-500 py-3 text-sm">
                     No hay sucursales disponibles
                 </p>
             @endforelse
 
-
         </div>
 
 
-        <div class="flex justify-center items-center gap-2 mb-4 col-span-full">
-            <p class=" text-u font-semiboldp-2 rounded-md shadow mt-2 text-xl">
-                Selecciona la sucursal Cochabamba para envíos a todos los departamentos excepto Beni,
-                y Santa Cruz solo para envíos a Beni.
-            </p>
 
+        <div class="flex justify-center col-span-full mb-4">
+            <ul class="flex flex-col gap-3 max-w-3xl w-full">
+                <li class="w-full text-center px-4 py-3 rounded-full font-semibold text-sm sm:text-base
+                   bg-cyan-900 text-cyan-100 border  shadow
+                   hover:bg-cyan-800 transition">
+                    Selecciona Sucursal <span class="font-bold">Cochabamba</span>:
+                    envíos a todos los departamentos excepto
+                    <span class="font-bold">Beni y Santa Cruz</span>.
+                </li>
+                <li class="w-full text-center px-4 py-3 rounded-full font-semibold text-sm sm:text-base
+                   bg-amber-900 text-amber-100 border shadow
+                   hover:bg-amber-800 transition">
+                    Selecciona Sucursal <span class="font-bold">Santa Cruz</span>:
+                    envíos únicamente a los departamentos de
+                    <span class="font-bold">Beni y Santa Cruz</span>.
+                </li>
+                <li class="w-full text-center px-4 py-3 rounded-full font-semibold text-sm sm:text-base
+                   bg-emerald-900 text-emerald-100 border shadow
+                   hover:bg-emerald-800 transition">
+                    Horario de atención de Pedidos:
+                    <span class="font-bold">08:00 a 14:00</span>
+                </li>
+
+            </ul>
         </div>
+
 
 
         @forelse ($productos as $p)
@@ -176,7 +194,7 @@
                         </p>
                     </div>
                     <div>
-                        <label class="text-u text-center font-medium">coloca una Cantidad de paquetes:</label>
+                        <label class="text-u text-center font-bold">coloca una Cantidad de paquetes(minimo 7):</label>
                         <input type="number" wire:model="cantidadSeleccionada" class="input-minimal">
                     </div>
                     <div class="border rounded-lg p-3 bg-white">
@@ -332,6 +350,14 @@
                                 </svg>
                                 CERRAR
                             </button>
+                            <button wire:click="cotizar" class="btn-cyan">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m0 0l-6-6m6 6H3" />
+                                </svg>
+                                Cotizar
+                            </button>
+
                             <button wire:click="hacerPedido" class="btn-cyan">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -512,7 +538,7 @@
                                                                     class="flex items-center gap-3 flex-wrap justify-center md:justify-start w-full">
                                                                     <p class="text-u font-bold">Monto: {{ number_format($pago['monto'], 2) }}
                                                                     </p>
-                                                                    
+
 
                                                                     <p class="text-sm text-gray-600">
                                                                         Método:
@@ -663,6 +689,89 @@
             </div>
         </div>
     @endif
+
+    @if($modalCotizacion)
+        <div class="modal-overlay">
+            <div class="modal-box max-w-lg">
+                <div class="modal-content flex flex-col gap-4">
+
+                    <h2 class="text-xl font-bold text-center text-slate-800">
+                        Cotización
+                    </h2>
+
+                    {{-- Detalle de productos --}}
+                    <div class="flex flex-col gap-4 max-h-80 overflow-y-auto">
+                        @foreach($carrito as $item)
+                            @php
+                                $modelo = $item['modelo'];
+                                $cantidadPaquetes = $item['cantidad'];
+                                $unidadesPorPaquete = $modelo->paquete ?? 1;
+                                $precioUnitario = $modelo->precioReferencia ?? 0;
+                                $precioPaquete = $precioUnitario * $unidadesPorPaquete;
+                                $totalItem = $precioPaquete * $cantidadPaquetes;
+                            @endphp
+
+                            <div class="flex flex-col border rounded-lg p-3 bg-gray-50 gap-2">
+                                <span class="font-semibold text-sm">{{ $modelo->descripcion }}</span>
+                                <span class="text-xs text-gray-600">Sucursal:
+                                    {{ $modelo->existencias->first()->sucursal->nombre ?? 'Sin sucursal' }}</span>
+                                <span class="text-xs text-gray-600">Contenido: {{ $modelo->tipoContenido ?? '-' }}</span>
+                                <span class="text-xs text-gray-600">Tipo de producto: {{ $modelo->tipoProducto ?? '-' }}</span>
+                                <span class="text-xs text-gray-600">Capacidad:
+                                    {{ number_format($modelo->capacidad ?? 0, 2) }}</span>
+                                <span class="text-xs text-gray-600">Precio unitario aproximado: Bs
+                                    {{ number_format($precioUnitario, 2) }}</span>
+                                <span class="text-xs text-gray-600">Unidades por paquete: {{ $unidadesPorPaquete }}</span>
+                                <span class="text-xs text-gray-600">Precio aproximado por paquete: Bs
+                                    {{ number_format($precioPaquete, 2) }}</span>
+                                <span class="text-xs text-gray-600">Observaciones:
+                                    {{ $modelo->observaciones ?? 'Sin observaciones' }}</span>
+                                <span class="text-xs text-gray-600">Cantidad de paquetes: {{ $cantidadPaquetes }}</span>
+                                <span class="font-semibold text-right text-slate-800">Total: Bs
+                                    {{ number_format($totalItem, 2) }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Resumen --}}
+                    <div class="border-t pt-4 flex flex-col gap-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium text-gray-600">Subtotal</span>
+                            <span class="font-semibold">
+                                Bs {{ number_format($cotizacion['subtotal'], 2) }}
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between text-lg font-bold text-slate-900">
+                            <span>Total</span>
+                            <span>
+                                Bs {{ number_format($cotizacion['total'], 2) }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-3 mt-4">
+                        <button wire:click="$set('modalCotizacion', false)"
+                            class="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition">
+                            Cerrar
+                        </button>
+
+                        <button wire:click="descargarCotizacionPdf"
+                            class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 16v-4m0 0V8m0 4h4m-4 0H8m10 4a2 2 0 002-2V7a2 2 0 00-2-2h-4l-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2h12z" />
+                            </svg>
+
+                            Descargar PDF
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    @endif
+
 
 
 </div>

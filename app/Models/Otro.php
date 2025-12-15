@@ -24,9 +24,6 @@ class Otro extends Model
         'tipo',
     ];
 
-    /**
-     * Relación 1:N polimórfica con Existencia.
-     */
     public function existencias(): MorphMany
     {
         return $this->morphMany(Existencia::class, 'existenciable');
