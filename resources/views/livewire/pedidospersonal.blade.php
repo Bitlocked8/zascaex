@@ -1,7 +1,8 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <h3 class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
+        <h3
+            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
             Mis Pedidos Asignados
         </h3>
 
@@ -66,21 +67,68 @@
                         <p><strong>Coche:</strong> {{ $dist->coche->placa ?? 'N/A' }}</p>
 
                         <div class="mt-2">
-                            <h5 class="font-semibold text-teal-600">Productos:</h5>
-                            @foreach($pedido->detalles as $detalle)
-                                <div class="mt-1 p-2 border-b">
-                                    <p><strong>Producto:</strong> {{ $detalle->existencia->existenciable->descripcion ?? 'N/A' }}</p>
-                                    <p><strong>Cantidad:</strong> {{ $detalle->cantidad }}</p>
-                                    <p><strong>Tipo:</strong> {{ class_basename($detalle->existencia->existenciable_type ?? 'N/A') }}</p>
-                                    <p><strong>Sucursal:</strong> {{ $detalle->existencia->sucursal->nombre ?? 'N/A' }}</p>
-                                </div>
-                            @endforeach
+                            <div class="w-full mt-2">
+                                <p class="font-semibold text-teal-600 mb-1">Productos:</p>
+
+                                <ul class="text-gray-600 max-h-32 overflow-y-auto space-y-2">
+                                    @foreach($pedido->solicitudPedido->detalles as $detalle)
+                                        <li class="border-b pb-2">
+
+                                            <div class="font-semibold text-gray-800">
+                                                @if($detalle->producto)
+                                                    {{ $detalle->producto->descripcion }} {{ $detalle->producto->unidad }}
+                                                @elseif($detalle->otro)
+                                                    {{ $detalle->otro->descripcion }}
+                                                @else
+                                                    Producto base N/A
+                                                @endif
+                                            </div>
+
+                                            <div class="text-sm text-gray-500 ml-2">
+                                                @if($detalle->tapa)
+                                                    • Tapa: {{ $detalle->tapa->descripcion }}
+                                                @endif
+
+                                                @if($detalle->etiqueta)
+                                                    <br>• Etiqueta: {{ $detalle->etiqueta->descripcion }}
+                                                @endif
+
+                                                @if($detalle->otro)
+                                                    <br>• Otro: {{ $detalle->otro->descripcion }}
+                                                @endif
+                                            </div>
+
+                                            @php
+                                                $paquetes = $detalle->cantidad;
+                                                $unidadesPorPaquete = $detalle->producto->paquete ?? 1;
+                                                $totalUnidades = $paquetes * $unidadesPorPaquete;
+                                            @endphp
+
+
+                                            <div class="mt-1 text-sm">
+                                                Paquetes:
+                                                <span class="font-semibold">{{ $paquetes }}</span>
+
+                                                <span class="text-gray-400 mx-1">|</span>
+
+                                                Total unidades:
+                                                <span class="font-semibold text-teal-700">
+                                                    {{ $totalUnidades }}                                                
+                                                </span>
+                                            </div>
+
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+
 
                             <p><strong>Pagos:</strong>
                                 @if($pagosConfirmados->count())
                                     <ul class="flex flex-wrap gap-2 mt-1">
                                         @foreach($pagosConfirmados as $pago)
-                                            <li class="px-2 py-1 rounded-full font-bold {{ $pago->estado ? 'text-emerald-700' : 'text-red-600' }}">
+                                            <li
+                                                class="px-2 py-1 rounded-full font-bold {{ $pago->estado ? 'text-emerald-700' : 'text-red-600' }}">
                                                 Bs {{ number_format($pago->monto, 2) }}
                                                 ({{ $pago->metodo == 0 ? 'QR' : ($pago->metodo == 1 ? 'Efectivo' : 'Otro') }})
                                                 {{ $pago->estado ? 'Pagado' : 'No pagado' }}
@@ -88,8 +136,8 @@
                                         @endforeach
                                     </ul>
                                 @else
-                                    Bs 0.00
-                                @endif
+                                Bs 0.00
+                            @endif
                             </p>
 
                             <p><strong>Saldo Pendiente:</strong>
@@ -102,29 +150,30 @@
                         <div class="flex gap-2 mt-3">
                             <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 0)"
                                 class="px-3 py-1 rounded-lg text-sm font-semibold border transition
-                                {{ $pedido->estado_pedido == 0 ? 'bg-yellow-500 text-white border-yellow-600 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                                        {{ $pedido->estado_pedido == 0 ? 'bg-yellow-500 text-white border-yellow-600 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                 Preparando
                             </button>
                             <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 1)"
                                 class="px-3 py-1 rounded-lg text-sm font-semibold border transition
-                                {{ $pedido->estado_pedido == 1 ? 'bg-blue-500 text-white border-blue-600 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                                        {{ $pedido->estado_pedido == 1 ? 'bg-blue-500 text-white border-blue-600 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                 En Revisión
                             </button>
                             <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 2)"
                                 class="px-3 py-1 rounded-lg text-sm font-semibold border transition
-                                {{ $pedido->estado_pedido == 2 ? 'bg-green-600 text-white border-green-700 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                                        {{ $pedido->estado_pedido == 2 ? 'bg-green-600 text-white border-green-700 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                 Completado
                             </button>
                         </div>
 
                         <div class="flex justify-center mt-2">
-                            <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-cyan" title="Ver/Agregar Pagos">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/>
-                                    <path d="M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1"/>
-                                    <path d="M12 7v10"/>
+                            <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-cyan"
+                                title="Ver/Agregar Pagos">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                    <path d="M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1" />
+                                    <path d="M12 7v10" />
                                 </svg>
                                 Pagos
                             </button>

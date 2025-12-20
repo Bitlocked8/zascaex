@@ -83,181 +83,259 @@
         @endforelse
     </div>
 
-@if($modalDistribucion)
-    <div class="modal-overlay">
-        <div class="modal-box w-full max-w-3xl">
-            <div class="modal-content flex flex-col gap-4">
+    @if($modalDistribucion)
+        <div class="modal-overlay">
+            <div class="modal-box w-full max-w-3xl">
+                <div class="modal-content flex flex-col gap-4">
+                    <div class="grid grid-cols-1 gap-4 mb-4">
+                        <div class="flex flex-col items-center justify-center gap-4">
+                            <div>
+                                <span class="text-u">Código: {{ $codigo ?? 'Se generará automáticamente' }}</span>
+                            </div>
 
-                {{-- Información general --}}
-                <div class="grid grid-cols-1 gap-4 mb-4">
-                    <div class="flex flex-col items-center justify-center gap-4">
-                        <div>
-                            <span class="text-u">Código: {{ $codigo ?? 'Se generará automáticamente' }}</span>
-                        </div>
+                            <div>
+                                <span class="text-u">
+                                    Fecha asignado:
+                                    {{ $fecha_asignacion ? \Carbon\Carbon::parse($fecha_asignacion)->format('d/m/Y H:i:s') : 'Se generará al guardar' }}
+                                </span>
+                            </div>
 
-                        <div>
-                            <span class="text-u">
-                                Fecha asignado: {{ $fecha_asignacion ? \Carbon\Carbon::parse($fecha_asignacion)->format('d/m/Y H:i:s') : 'Se generará al guardar' }}
-                            </span>
-                        </div>
-
-                        <div class="w-full flex flex-col items-center">
-                            <label class="font-semibold text-sm mb-1 block text-center">Fecha de Entrega</label>
-                            <div class="flex items-center justify-center gap-2 w-full">
-                                <input type="text" wire:model.lazy="fecha_entrega" class="input-minimal flex-1 max-w-xs" placeholder="MM/DD/YY HH:mm:ss">
-                                <button type="button" wire:click="establecerFechaActual" class="btn-cyan" title="Usar fecha y hora actual">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
-                                        <circle cx="12" cy="12" r="10" />
-                                        <polyline points="12 6 12 12 16 14" />
-                                    </svg>
-                                    Ahora
-                                </button>
+                            <div class="w-full flex flex-col items-center">
+                                <label class="font-semibold text-sm mb-1 block text-center">Fecha de Entrega</label>
+                                <div class="flex items-center justify-center gap-2 w-full">
+                                    <input type="text" wire:model.lazy="fecha_entrega" class="input-minimal flex-1 max-w-xs"
+                                        placeholder="MM/DD/YY HH:mm:ss">
+                                    <button type="button" wire:click="establecerFechaActual" class="btn-cyan"
+                                        title="Usar fecha y hora actual">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="mr-1">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <polyline points="12 6 12 12 16 14" />
+                                        </svg>
+                                        Ahora
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Estado --}}
-                    <div class="sm:col-span-2 text-center">
-                        <label class="font-semibold text-sm mb-2 block">Estado</label>
-                        <div class="flex justify-center gap-3 mt-2">
-                            <button type="button" wire:click="$set('estado', 0)"
+                        <div class="sm:col-span-2 text-center">
+                            <label class="font-semibold text-sm mb-2 block">Estado</label>
+                            <div class="flex justify-center gap-3 mt-2">
+                                <button type="button" wire:click="$set('estado', 0)"
                                     class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                                    {{ $estado == 0 ? 'bg-yellow-600 text-white border-yellow-700 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                En entrega
-                            </button>
-                            <button type="button" wire:click="$set('estado', 1)"
+                                                    {{ $estado == 0 ? 'bg-yellow-600 text-white border-yellow-700 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                    En entrega
+                                </button>
+                                <button type="button" wire:click="$set('estado', 1)"
                                     class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                                    {{ $estado == 1 ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                Finalizado
-                            </button>
-                        </div>
-                        @error('estado')<span class="error-message">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-
-                {{-- Selección de coche y personal --}}
-                <div class="grid grid-cols-1 gap-4 mb-4">
-                    {{-- Coche --}}
-                    <div>
-                        <label class="font-semibold text-sm mb-2 block">Coche (requerido)</label>
-                        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
-                            @foreach($coches as $c)
-                                <button type="button" wire:click="$set('coche_id', {{ $c->id }})"
-                                        class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                        {{ $coche_id == $c->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                                    <span class="font-semibold text-u">{{ $c->placa }}</span>
-                                    <span class="text-sm text-gray-600">{{ $c->marca }} {{ $c->modelo }}</span>
-                                    @if($c->color)<span class="text-gray-500">Color: {{ $c->color }}</span>@endif
+                                                    {{ $estado == 1 ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                    Finalizado
                                 </button>
-                            @endforeach
+                            </div>
+                            @error('estado')<span class="error-message">{{ $message }}</span>@enderror
                         </div>
                     </div>
-
-                    {{-- Personal --}}
-                    <div>
-                        <label class="font-semibold text-sm mb-2 block">Personal asignado (requerido)</label>
-                        <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
-                            @foreach($personals as $p)
-                                <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
+                    <div class="grid grid-cols-1 gap-4 mb-4">
+                        <div>
+                            <label class="font-semibold text-sm mb-2 block">Coche (requerido)</label>
+                            <div
+                                class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
+                                @foreach($coches as $c)
+                                    <button type="button" wire:click="$set('coche_id', {{ $c->id }})"
                                         class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                        {{ $personal_id == $p->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
-                                    <span class="font-semibold text-u">{{ $p->nombres }} {{ $p->apellidos }}</span>
-                                    @if($p->cargo)<span class="text-sm text-gray-600">({{ $p->cargo }})</span>@endif
-                                    @if(optional($p->trabajos->last())->sucursal)
-                                        <span class="text-sm text-gray-500">Sucursal: {{ $p->trabajos->last()->sucursal->nombre }}</span>
-                                    @endif
-                                </button>
-                            @endforeach
+                                                                        {{ $coche_id == $c->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                        <span class="font-semibold text-u">{{ $c->placa }}</span>
+                                        <span class="text-sm text-gray-600">{{ $c->marca }} {{ $c->modelo }}</span>
+                                        @if($c->color)<span class="text-gray-500">Color: {{ $c->color }}</span>@endif
+                                    </button>
+                                @endforeach
+                            </div>
                         </div>
-                        @error('personal_id')<span class="error-message text-red-500 text-sm mt-1 block">{{ $message }}</span>@enderror
-                    </div>
-                </div>
-
-                {{-- Pedidos disponibles --}}
-                @php
-                    $pedidosDisponibles = $pedidos->filter(fn($p) => !in_array($p->id, $pedidos_seleccionados))->values();
-                @endphp
-                <div class="grid grid-cols-1 gap-2 mt-4">
-                    <label class="font-semibold text-sm mb-2 block">Pedidos disponibles</label>
-                    <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
-                        @forelse($pedidosDisponibles as $pedido)
-                            <div class="w-full p-4 rounded-lg border-2 transition flex flex-col items-start text-left hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
-                                <div class="mb-2">
-                                    <span class="font-semibold text-u">{{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}</span>
-                                    <div class="text-gray-500 mt-1">Código: {{ $pedido->codigo }}</div>
-                                    <div class="text-gray-500 mt-1">Fecha: {{ $pedido->fecha_pedido ?? 'N/D' }}</div>
-                                    <div class="text-u mt-1">Ubicación: {{ $pedido->solicitudPedido?->cliente?->departamento_localidad ?? 'Sin ubicación' }}</div>
-                                </div>
-                                <div class="w-full mt-2">
-                                    <p class="font-semibold text-sm mb-1">Productos:</p>
-                                    <ul class="text-gray-600 list-disc list-inside max-h-32 overflow-y-auto">
-                                        @foreach($pedido->detalles as $detalle)
-                                            <li class="mb-1">
-                                                {{ $detalle->existencia?->existenciable?->descripcion ?? 'Producto N/A' }}
-                                                @if($detalle->cantidad) - Cantidad: {{ number_format($detalle->cantidad, 2) }}@endif
-                                                @if(isset($detalle->precio)) - Precio: {{ number_format($detalle->precio, 2) }}@endif
-                                                <br>
-                                                <span class="text-gray-400">Sucursal: {{ $detalle->existencia?->sucursal?->nombre ?? 'Sin sucursal' }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                                <button wire:click.prevent="agregarPedido({{ $pedido->id }})" class="btn-cyan mt-3 self-center w-full flex items-center justify-center gap-2">Añadir</button>
+                        <div>
+                            <label class="font-semibold text-sm mb-2 block">Personal asignado (requerido)</label>
+                            <div
+                                class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 overflow-y-auto max-h-[500px]">
+                                @foreach($personals as $p)
+                                    <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
+                                        class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
+                                                                        {{ $personal_id == $p->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                        <span class="font-semibold text-u">{{ $p->nombres }} {{ $p->apellidos }}</span>
+                                        @if($p->cargo)<span class="text-sm text-gray-600">({{ $p->cargo }})</span>@endif
+                                        @if(optional($p->trabajos->last())->sucursal)
+                                            <span class="text-sm text-gray-500">Sucursal:
+                                                {{ $p->trabajos->last()->sucursal->nombre }}</span>
+                                        @endif
+                                    </button>
+                                @endforeach
                             </div>
-                        @empty
-                            <p class="text-gray-500 text-sm text-center py-2 col-span-full">No hay pedidos disponibles</p>
-                        @endforelse
+                            @error('personal_id')<span
+                            class="error-message text-red-500 text-sm mt-1 block">{{ $message }}</span>@enderror
+                        </div>
                     </div>
-                </div>
 
-                {{-- Pedidos asignados --}}
-                <div class="grid grid-cols-1 gap-4 mt-4">
-                    <label class="font-semibold text-sm mb-2 block">Pedidos asignados</label>
-                    <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
-                        @forelse($pedidosAsignados as $pedido)
-                            <div class="w-full p-4 rounded-lg border-2 transition flex flex-col text-left hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
-                                <span class="font-semibold text-u">{{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}</span>
-                                <div class="text-u mt-1">Ubicación: {{ $pedido->solicitudPedido?->cliente?->departamento_localidad ?? 'Sin ubicación' }}</div>
-                                <span class="mt-1">Código: {{ $pedido->codigo }}</span>
-                                <span class="text-gray-500 mt-1">Fecha: {{ $pedido->fecha_pedido ? date('d/m/Y', strtotime($pedido->fecha_pedido)) : 'N/D' }}</span>
-                                <div class="w-full mt-3">
-                                    <p class="font-semibold mb-1">Productos:</p>
-                                    <ul class="text-gray-600 max-h-32 overflow-y-auto space-y-1">
-                                        @foreach($pedido->detalles as $detalle)
-                                            <li class="border-b pb-1">
-                                                <span class="font-semibold">{{ $detalle->existencia?->existenciable?->descripcion ?? 'Producto N/A' }}</span>
-                                                <div class="text-gray-500">Sucursal: <span class="font-semibold">{{ $detalle->existencia?->sucursal?->nombre ?? 'Sin sucursal' }}</span></div>
-                                                @if($detalle->cantidad)<div>Cantidad: <span class="font-semibold">{{ number_format($detalle->cantidad, 2) }}</span></div>@endif
-                                                @if(isset($detalle->precio))<div>Precio: <span class="font-semibold">Bs {{ number_format($detalle->precio, 2) }}</span></div>@endif
-                                                @if(isset($detalle->precio) && isset($detalle->cantidad))<div>Total item: <span class="font-semibold">Bs {{ number_format($detalle->cantidad * $detalle->precio, 2) }}</span></div>@endif
-                                            </li>
-                                        @endforeach
-                                    </ul>
+                    @php
+                        $pedidosDisponibles = $pedidos->filter(fn($p) => !in_array($p->id, $pedidos_seleccionados))->values();
+                    @endphp
+                    <div class="grid grid-cols-1 gap-2 mt-4">
+                        <label class="font-semibold text-sm mb-2 block">Pedidos disponibles</label>
+                        <div
+                            class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
+                            @forelse($pedidosDisponibles as $pedido)
+                                <div
+                                    class="w-full p-4 rounded-lg border-2 transition flex flex-col items-start text-left hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
+                                    <div class="mb-2">
+                                        <span
+                                            class="font-semibold text-u">{{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}</span>
+                                        <div class="text-gray-500 mt-1">Código: {{ $pedido->codigo }}</div>
+                                        <div class="text-gray-500 mt-1">Fecha: {{ $pedido->fecha_pedido ?? 'N/D' }}</div>
+                                        <div class="text-u mt-1">Ubicación:
+                                            {{ $pedido->solicitudPedido?->cliente?->departamento_localidad ?? 'Sin ubicación' }}
+                                        </div>
+                                    </div>
+                                    <div class="w-full mt-2">
+                                        <p class="font-semibold text-sm mb-1">Productos:</p>
+                                        <ul class="text-gray-600 space-y-1">
+                                            @foreach($pedido->solicitudPedido->detalles as $detalle)
+                                                <li class="border-b pb-1">
+                                                    <div class="font-semibold">
+                                                        @if($detalle->producto)
+                                                            {{ $detalle->producto->descripcion }}
+                                                        @elseif($detalle->otro)
+                                                            {{ $detalle->otro->descripcion }}
+                                                        @else
+                                                            Producto base N/A
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="text-sm text-gray-500 ml-2">
+                                                        @if($detalle->tapa)
+                                                            • Tapa: {{ $detalle->tapa->descripcion }}
+                                                        @endif
+
+                                                        @if($detalle->etiqueta)
+                                                            <br>• Etiqueta: {{ $detalle->etiqueta->descripcion }}
+                                                        @endif
+
+                                                        @if($detalle->otro)
+                                                            <br>• Otro: {{ $detalle->otro->descripcion }}
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="mt-1">
+                                                        Cantidad de paquetes: <span class="font-semibold">{{ $detalle->cantidad }}
+                                                        </span>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+
+                                    </div>
+                                    <button wire:click.prevent="agregarPedido({{ $pedido->id }})"
+                                        class="btn-cyan mt-3 self-center w-full flex items-center justify-center gap-2">Añadir</button>
                                 </div>
-                                <button type="button" wire:click="quitarPedido({{ $pedido->id }})" class="absolute top-2 right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow transition" title="Eliminar">X</button>
-                            </div>
-                        @empty
-                            <p class="text-gray-500 text-sm text-center py-2 col-span-full">No hay pedidos asignados</p>
-                        @endforelse
+                            @empty
+                                <p class="text-gray-500 text-sm text-center py-2 col-span-full">No hay pedidos disponibles</p>
+                            @endforelse
+                        </div>
                     </div>
-                </div>
 
-                {{-- Observaciones --}}
-                <div>
-                    <label class="font-semibold text-sm mb-2 block">Observaciones</label>
-                    <textarea wire:model="observaciones" rows="3" class="w-full border-2 border-gray-300 rounded-lg p-3 text-sm text-gray-800 bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200 transition resize-none" placeholder="Sin observaciones..."></textarea>
-                </div>
+                    <div class="grid grid-cols-1 gap-4 mt-4">
+                        <label class="font-semibold text-sm mb-2 block">Pedidos asignados</label>
+                        <div
+                            class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[500px]">
+                            @forelse($pedidosAsignados as $pedido)
+                                <div
+                                    class="w-full p-4 rounded-lg border-2 transition flex flex-col text-left hover:border-cyan-600 hover:text-cyan-600 border-gray-300 bg-white shadow-sm relative">
+                                    <span
+                                        class="font-semibold text-u">{{ $pedido->solicitudPedido?->cliente?->nombre ?? 'Cliente N/A' }}</span>
+                                    <div class="text-u mt-1">Ubicación:
+                                        {{ $pedido->solicitudPedido?->cliente?->departamento_localidad ?? 'Sin ubicación' }}
+                                    </div>
+                                    <span class="mt-1">Código: {{ $pedido->codigo }}</span>
+                                    <span class="text-gray-500 mt-1">Fecha:
+                                        {{ $pedido->fecha_pedido ? date('d/m/Y', strtotime($pedido->fecha_pedido)) : 'N/D' }}</span>
+                                    <div class="w-full mt-3">
+                                        <p class="font-semibold mb-1">Productos:</p>
+                                        <ul class="text-gray-600 max-h-32 overflow-y-auto space-y-1">
+                                            @foreach($pedido->solicitudPedido->detalles as $detalle)
+                                                <li class="border-b pb-1">
+                                                    <div class="font-semibold">
+                                                        @if($detalle->producto)
+                                                            {{ $detalle->producto->descripcion }}
+                                                        @elseif($detalle->otro)
+                                                            {{ $detalle->otro->descripcion }}
+                                                        @else
+                                                            Producto base N/A
+                                                        @endif
+                                                    </div>
 
-                {{-- Footer --}}
-                <div class="modal-footer flex justify-end gap-2 mt-4">
-                    <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">CERRAR</button>
-                    <button wire:click="guardarDistribucion" class="btn-cyan">Guardar</button>
-                </div>
+                                                    <div class="text-sm text-gray-500 ml-2">
+                                                        @if($detalle->tapa)
+                                                            • Tapa: {{ $detalle->tapa->descripcion }}
+                                                        @endif
 
+                                                        @if($detalle->etiqueta)
+                                                            <br>• Etiqueta: {{ $detalle->etiqueta->descripcion }}
+                                                        @endif
+
+                                                        @if($detalle->otro)
+                                                            <br>• Otro: {{ $detalle->otro->descripcion }}
+                                                        @endif
+                                                    </div>
+
+                                                    <div class="mt-1">
+                                                        Cantidad de paquetes:
+                                                        <span class="font-semibold">{{ $detalle->cantidad }}</span>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+
+                                    </div>
+                                    <button type="button" wire:click="quitarPedido({{ $pedido->id }})"
+                                        class="absolute top-2 right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow transition"
+                                        title="Eliminar">X</button>
+                                </div>
+                            @empty
+                                <p class="text-gray-500 text-sm text-center py-2 col-span-full">No hay pedidos asignados</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="font-semibold text-sm mb-2 block">Observaciones</label>
+                        <textarea wire:model="observaciones" rows="3"
+                            class="w-full border-2 border-gray-300 rounded-lg p-3 text-sm text-gray-800 bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-200 transition resize-none"
+                            placeholder="Sin observaciones..."></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
+                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
+                            </svg>
+                            CERRAR
+                        </button>
+                        <button wire:click="guardarDistribucion" class="btn-cyan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Guardar
+                        </button>
+                    </div>
+
+                </div>
             </div>
         </div>
-    </div>
-@endif
+    @endif
 
 
     @if($confirmingDeleteId)
