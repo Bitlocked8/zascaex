@@ -37,7 +37,7 @@
                     🚚 <strong>Santa Cruz:</strong> solo Beni y Santa Cruz
                 </span>
                 <span>
-                    ⏰ <strong>Horario:</strong> 08:00 a 14:00
+                    ⏰ <strong>Horario de atencion:</strong> 08:00 a 14:00
                 </span>
             </div>
 

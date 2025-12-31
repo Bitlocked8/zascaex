@@ -56,10 +56,16 @@ class Hubclientes extends Component
             ->orderBy('descripcion')
             ->get();
 
+        $clienteId = Auth::user()->cliente->id ?? null;
+
         $this->etiquetas = Etiqueta::where('estado', 1)
-            ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
+            ->where('cliente_id', $clienteId)
+            ->whereHas('existencias', function ($q) use ($sucursalId) {
+                $q->where('sucursal_id', $sucursalId);
+            })
             ->orderBy('descripcion')
             ->get();
+
 
         $this->tapaSeleccionada = null;
         $this->etiquetaSeleccionada = null;
