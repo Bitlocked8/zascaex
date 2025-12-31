@@ -18,9 +18,6 @@
     @apply border-cyan-500 bg-white;
   }
 
-
-
-
   @layer components {
     .modal-overlay {
       @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4;
@@ -56,12 +53,12 @@
 
 
     .btn-cyan {
-      @apply flex items-center justify-center gap-2 px-4 py-2 bg-slate-600 text-white font-medium rounded-md shadow-sm hover:bg-slate-700 active:scale-95 transition-all duration-150 ease-in-out focus:outline-none;
+      @apply flex items-center justify-center gap-2 px-4 py-2 bg-cyan-500 text-white font-medium rounded-md shadow-sm hover:bg-cyan-600 active:scale-95 transition-all duration-150 ease-in-out focus:outline-none;
     }
 
 
     .card-teal {
-      @apply bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center border-b-4 border-teal-500 mb-4;
+      @apply bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center border-b-4 border-cyan-500 mb-4;
     }
 
     .text-u {

@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Verzasca</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
@@ -14,14 +13,17 @@
 </head>
 
 <body class="font-sans antialiased dark:bg-black dark:text-white/50">
+    <!-- Fondo video -->
     <div class="fixed top-0 left-0 w-full h-full z-0 overflow-hidden">
         <video autoplay muted loop class="w-full h-full object-cover">
             <source src="/0501.mp4" type="video/mp4">
             Tu navegador no soporta videos HTML5.
         </video>
     </div>
+
+    <!-- Contenido principal -->
     <div class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
-        <h1 class="text-4xl md:text-6xl font-bold text-white mb-8 drop-shadow-lg inline-flex items-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-8 drop-shadow-lg inline-flex items-center text-cyan-600">
             Verzasca
             <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 w-16 h-16" viewBox="0 0 24 24" fill="currentColor">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -34,16 +36,14 @@
             <div class="flex flex-col md:flex-row gap-4">
                 @auth
                     <a href="{{ url('/home') }}"
-                        class="rounded-md px-5 py-2 bg-white/80 text-black font-medium hover:bg-white hover:text-black transition">
+                        class="rounded-md px-5 py-2 bg-cyan-600 text-white font-medium hover:bg-cyan-700 transition">
                         Regresar al Menu
                     </a>
                 @else
                     <a href="{{ route('login') }}"
-                        class="rounded-md px-5 py-2 bg-white/80 text-black font-medium hover:bg-white hover:text-black transition">
+                        class="rounded-md px-5 py-2 bg-cyan-600 text-white font-medium hover:bg-cyan-700 transition">
                         Ingresar
                     </a>
-
-
                 @endauth
             </div>
         @endif

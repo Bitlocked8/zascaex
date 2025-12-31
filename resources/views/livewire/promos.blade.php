@@ -1,7 +1,5 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- Botón Crear Promo -->
         <div class="flex items-center gap-2 mb-4 col-span-full">
             <button wire:click="abrirModal('create')"
                 class="bg-cyan-500 hover:bg-cyan-600 rounded-xl px-4 py-2 flex items-center justify-center">
@@ -15,12 +13,8 @@
             </button>
 
         </div>
-
-        <!-- Cards de Promos -->
         @forelse ($promos as $promo)
         <div class="bg-white shadow rounded-lg p-4 grid grid-cols-12 gap-4 items-center">
-
-            <!-- Información de la Promo -->
             <div class="flex flex-col items-center md:items-start text-center md:text-left col-span-8">
                 <h3 class="text-lg font-semibold uppercase text-cyan-600">{{ $promo->nombre }}</h3>
                 <p class="text-cyan-950"><strong>Tipo:</strong> {{ ucfirst($promo->tipo_descuento) }}</p>

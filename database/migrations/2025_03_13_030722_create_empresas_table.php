@@ -6,28 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('empresas', function (Blueprint $table) {
-            $table->id(); // Clave primaria
-            $table->string('nombre'); // Nombre de la empresa
-            $table->string('slogan')->nullable(); // Slogan de la empresa
-            $table->text('mision')->nullable(); // Misión de la empresa
-            $table->text('vision')->nullable(); // Visión de la empresa
-            $table->string('nroContacto', 15); // Número de contacto
-            $table->string('facebook')->nullable(); // URL de Facebook
-            $table->string('instagram')->nullable(); // URL de Instagram
-            $table->string('tiktok')->nullable(); // URL de TikTok
-            $table->timestamps(); // Campos created_at y updated_at
+            $table->id();
+            $table->string('nombre');
+            $table->string('slogan')->nullable();
+            $table->text('mision')->nullable();
+            $table->text('vision')->nullable();
+            $table->string('nroContacto', 15);
+            $table->string('correo')->unique();
+            $table->string('facebook')->nullable();
+            $table->string('instagram')->nullable();
+            $table->string('tiktok')->nullable();
+            $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('empresas');

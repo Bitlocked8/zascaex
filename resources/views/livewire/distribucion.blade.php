@@ -124,12 +124,12 @@
                             <div class="flex justify-center gap-3 mt-2">
                                 <button type="button" wire:click="$set('estado', 0)"
                                     class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                                                    {{ $estado == 0 ? 'bg-yellow-600 text-white border-yellow-700 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                                        {{ $estado == 0 ? 'bg-yellow-600 text-white border-yellow-700 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                     En entrega
                                 </button>
                                 <button type="button" wire:click="$set('estado', 1)"
                                     class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                                                    {{ $estado == 1 ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
+                                                        {{ $estado == 1 ? 'bg-emerald-500 text-white border-emerald-600 shadow-md' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                                     Finalizado
                                 </button>
                             </div>
@@ -144,7 +144,7 @@
                                 @foreach($coches as $c)
                                     <button type="button" wire:click="$set('coche_id', {{ $c->id }})"
                                         class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                                                        {{ $coche_id == $c->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                {{ $coche_id == $c->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
                                         <span class="font-semibold text-u">{{ $c->placa }}</span>
                                         <span class="text-sm text-gray-600">{{ $c->marca }} {{ $c->modelo }}</span>
                                         @if($c->color)<span class="text-gray-500">Color: {{ $c->color }}</span>@endif
@@ -159,7 +159,7 @@
                                 @foreach($personals as $p)
                                     <button type="button" wire:click="$set('personal_id', {{ $p->id }})"
                                         class="w-full p-4 rounded-lg border-2 transition flex flex-col items-center text-center
-                                                                        {{ $personal_id == $p->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
+                                                                                {{ $personal_id == $p->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800 hover:border-cyan-600 hover:text-cyan-600' }} bg-white">
                                         <span class="font-semibold text-u">{{ $p->nombres }} {{ $p->apellidos }}</span>
                                         @if($p->cargo)<span class="text-sm text-gray-600">({{ $p->cargo }})</span>@endif
                                         @if(optional($p->trabajos->last())->sucursal)

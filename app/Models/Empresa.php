@@ -15,14 +15,12 @@ class Empresa extends Model
         'mision',
         'vision',
         'nroContacto',
+        'correo',
         'facebook',
         'instagram',
         'tiktok',
     ];
 
-    /**
-     * Relación 1:N con Sucursal.
-     */
     public function sucursales()
     {
         return $this->hasMany(Sucursal::class);

@@ -11,15 +11,11 @@ return new class extends Migration {
             $table->id();
 
             $table->unsignedBigInteger('solicitud_pedido_id');
-
-            // Relación con los elementos solicitados
-            $table->unsignedBigInteger('producto_id')->nullable(); 
-            $table->unsignedBigInteger('otro_id')->nullable(); 
+            $table->unsignedBigInteger('producto_id')->nullable();
+            $table->unsignedBigInteger('otro_id')->nullable();
             $table->unsignedBigInteger('tapa_id')->nullable();
             $table->unsignedBigInteger('etiqueta_id')->nullable();
-
-            // Cantidad solicitada
-            $table->integer('cantidad')->default(1);
+            $table->integer('cantidad')->default(7);
 
             $table->timestamps();
 

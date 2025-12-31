@@ -1,6 +1,6 @@
 <div>
     <header
-        class="bg-gradient-to-r from-teal-600 via-teal-500 to-teal-400 bg-opacity-95 backdrop-blur-md rounded-full px-6 py-2 shadow-xl w-[95%] max-w-[1700px] mx-auto fixed top-3 left-0 right-0 z-20 transition-all duration-300">
+        class="bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 bg-opacity-95 backdrop-blur-md rounded-full px-6 py-2 shadow-xl w-[95%] max-w-[1700px] mx-auto fixed top-3 left-0 right-0 z-20 transition-all duration-300">
 
         <div class="flex justify-between items-center">
             <button id="menu-toggle"
@@ -162,7 +162,7 @@
                                                 d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Bases</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Envases de botellas</span>
                                 </button>
                                 <button type="button" wire:click="$set('seleccion', 'Tapas')"
                                     class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Tapas' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
@@ -214,7 +214,7 @@
                                                 d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Productos</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Precios y nuevos productos</span>
                                 </button>
                                 <button type="button" wire:click="$set('seleccion', 'Otros')"
                                     class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Otros' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
@@ -227,7 +227,7 @@
                                                 d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Otros Productos</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Precios de Equipos y hielos</span>
                                 </button>
 
                             </div>
@@ -253,7 +253,7 @@
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">Proovedores</span>
                                 </button>
-                                  <button type="button" wire:click="$set('seleccion', 'Cliente')"
+                                <button type="button" wire:click="$set('seleccion', 'Cliente')"
                                     class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Cliente' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                     <div
                                         class="p-3 rounded-full{{ $seleccion == 'Cliente' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
@@ -264,7 +264,8 @@
                                                 d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Clientes</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Registro y edicion de
+                                        Clientes</span>
                                 </button>
                                 <button type="button" wire:click="$set('seleccion', 'Stocks')"
                                     class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Stocks' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
@@ -279,7 +280,7 @@
                                             <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Almacen de items</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Almacen o deposito de items</span>
                                 </button>
 
                                 <button type="button" wire:click="$set('seleccion', 'Pedidos')"
@@ -310,7 +311,8 @@
                                             <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Distribucion de Pedidos</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Distribucion de Pedidos al
+                                        distribuidor</span>
                                 </button>
                             </div>
                         </div>
@@ -337,7 +339,7 @@
                                         </svg>
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">
-                                        Reporte ingreso de items
+                                        Reporte de compra e ingreso items
                                     </span>
                                 </button>
 
@@ -357,7 +359,7 @@
                                         </svg>
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">
-                                        Reporte Asignacion de area
+                                        Egreso de material para produccion
                                     </span>
                                 </button>
                             </div>
@@ -384,7 +386,7 @@
                                             <path d="M21 6l0 13" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Reporte de Ventas y pagos</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Recaudacion</span>
                                 </button>
                                 <button type="button" wire:click="$set('seleccion', 'Reportecredito')"
                                     class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Reportecredito' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
@@ -401,8 +403,7 @@
                                             <path d="M21 6l0 13" />
                                         </svg>
                                     </div>
-                                    <span class="mt-2 text-sm font-semibold text-center">Reporte Distribucion de
-                                        pedidos</span>
+                                    <span class="mt-2 text-sm font-semibold text-center">Registro de pedidos</span>
                                 </button>
                             </div>
                         </div>
@@ -595,13 +596,28 @@
                                     <div
                                         class="p-3 rounded-full{{ $seleccion == 'Hubclientes' ? 'bg-slate-100 text-slate-700' : 'bg-gray-100 text-gray-700' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                            fill="currentColor">
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                             <path
-                                                d="M17.997 4.17a3 3 0 0 1 2.003 2.83v12a3 3 0 0 1 -3 3h-10a3 3 0 0 1 -3 -3v-12a3 3 0 0 1 2.003 -2.83a4 4 0 0 0 3.997 3.83h4a4 4 0 0 0 3.98 -3.597zm-8.997 7.83a1 1 0 0 0 -1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0 -1 -1m3 3a1 1 0 0 0 -1 1v1a1 1 0 0 0 1 1l.117 -.007a1 1 0 0 0 .883 -.993v-1a1 1 0 0 0 -1 -1m3 -1a1 1 0 0 0 -1 1v2a1 1 0 0 0 2 0v-2a1 1 0 0 0 -1 -1m-1 -12a2 2 0 1 1 0 4h-4a2 2 0 1 1 0 -4z" />
+                                                d="M6.331 8h11.339a2 2 0 0 1 1.977 2.304l-1.255 8.152a3 3 0 0 1 -2.966 2.544h-6.852a3 3 0 0 1 -2.965 -2.544l-1.255 -8.152a2 2 0 0 1 1.977 -2.304z" />
+                                            <path d="M9 11v-5a3 3 0 0 1 6 0v5" />
                                         </svg>
                                     </div>
                                     <span class="mt-2 text-sm font-semibold text-center">Mis pedidos</span>
+                                </button>
+                                <button type="button" wire:click="$set('seleccion', 'Cliente-etiquetas')"
+                                    class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Cliente-etiquetas' ? 'border-slate-600 shadow-lg text-slate-700' : 'border-gray-200 text-gray-700 hover:border-slate-600 hover:text-slate-600 hover:shadow-md' }}">
+                                    <div
+                                        class="p-3 rounded-full{{ $seleccion == 'Cliente-etiquetas' ? 'bg-slate-100 text-slate-700' : 'bg-gray-100 text-gray-700' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="currentColor">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path
+                                                d="M19 4a3 3 0 0 1 3 3v10a3 3 0 0 1 -3 3h-14a3 3 0 0 1 -3 -3v-10a3 3 0 0 1 3 -3zm-4 4h-1a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h1a3 3 0 0 0 3 -3v-2a3 3 0 0 0 -3 -3m-6.5 0a2.5 2.5 0 0 0 -2.5 2.5v4.5a1 1 0 0 0 2 0v-1h1v1a1 1 0 0 0 .883 .993l.117 .007a1 1 0 0 0 1 -1v-4.5a2.5 2.5 0 0 0 -2.5 -2.5m6.5 2a1 1 0 0 1 1 1v2a1 1 0 0 1 -.883 .993l-.117 .007zm-6.5 0a.5 .5 0 0 1 .5 .5v1.5h-1v-1.5a.5 .5 0 0 1 .41 -.492z" />
+                                        </svg>
+                                    </div>
+                                    <span class="mt-2 text-sm font-semibold text-center">Mis etiquetas</span>
                                 </button>
                             @endif
                             <button type="button" wire:click="$set('seleccion', 'Pruebaestilo')"
@@ -737,11 +753,9 @@
             @if ($seleccion == 'Pedidospersonal')
                 @livewire('pedidospersonal')
             @endif
-
-
-
-
-
+            @if ($seleccion == 'Cliente-etiquetas')
+                @livewire('cliente-etiquetas')
+            @endif
         </div>
     </main>
 

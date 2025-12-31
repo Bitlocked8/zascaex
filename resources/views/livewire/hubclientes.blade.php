@@ -1,145 +1,106 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="w-full max-w-screen-xl mx-auto px-4">
+        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6
+                    bg-cyan-600 text-white rounded-3xl px-6 py-5 shadow-lg">
+            <div class="flex flex-wrap justify-center xl:justify-start gap-3">
+                <button wire:click="verMisPedidos"
+                    class="px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 transition font-semibold shadow">
+                    Ver mis compras
+                </button>
 
-        <div
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap justify-center items-center gap-3 mb-4 col-span-full">
-            <button wire:click="verMisPedidos" class="btn-cyan flex items-center gap-2 justify-center w-full sm:w-auto"
-                title="Ver detalle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" />
-                    <path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                    <path d="M11.5 17h-5.5v-14h-2" />
-                    <path d="M6 5l14 1l-1 7h-13" />
-                    <path d="M15 19l2 2l4 -4" />
-                </svg>
-                Ver mis compras
-            </button>
-            <button wire:click="$toggle('mostrarCarrito')" class="btn-cyan" title="Agregar producto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path
-                        d="M13 1a2 2 0 0 1 1.995 1.85l.005 .15v.5c0 1.317 .381 2.604 1.094 3.705l.17 .25l.05 .072a9.093 9.093 0 0 1 1.68 4.92l.006 .354v6.199a3 3 0 0 1 -2.824 2.995l-.176 .005h-6a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-6.2a9.1 9.1 0 0 1 1.486 -4.982l.2 -.292l.05 -.069a6.823 6.823 0 0 0 1.264 -3.957v-.5a2 2 0 0 1 1.85 -1.995l.15 -.005h2zm.362 5h-2.724a8.827 8.827 0 0 1 -1.08 2.334l-.194 .284l-.05 .069a7.091 7.091 0 0 0 -1.307 3.798l-.003 .125a3.33 3.33 0 0 1 1.975 -.61a3.4 3.4 0 0 1 2.833 1.417c.27 .375 .706 .593 1.209 .583a1.4 1.4 0 0 0 1.166 -.583a3.4 3.4 0 0 1 .81 -.8l.003 .183c0 -1.37 -.396 -2.707 -1.137 -3.852l-.228 -.332a8.827 8.827 0 0 1 -1.273 -2.616z" />
-                </svg>
-                Productos añadidos ({{ count($carrito) }})
-            </button>
+                <button wire:click="$toggle('mostrarCarrito')"
+                    class="px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 transition font-semibold shadow">
+                    Productos añadidos ({{ count($carrito) }})
+                </button>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3">
+                @forelse($sucursales as $s)
+                            <button type="button" wire:click="$set('sucursalFiltro', {{ $s->id }})" class="px-4 py-3 rounded-xl border border-white/40 text-sm font-semibold transition
+                                                            {{ $sucursalFiltro == $s->id
+                    ? 'bg-white text-cyan-700 shadow-lg'
+                    : 'bg-cyan-700 text-white hover:bg-cyan-800' }}">
+                                <div class="flex flex-col text-center">
+                                    <span class="font-bold">{{ $s->nombre }}</span>
+                                    <span class="text-xs opacity-90">{{ $s->empresa?->correo ?? 'Sin empresa' }}</span>
+                                    <span class="text-xs opacity-90">{{ $s->telefono ?? 'Sin teléfono' }}</span>
+                                </div>
+                            </button>
+                @empty
+                    <span class="text-sm opacity-80">No hay sucursales</span>
+                @endforelse
+            </div>
+            <div class="flex flex-col gap-2 text-center xl:text-right text-sm font-semibold">
+                <span>
+                    📦 <strong>Cochabamba:</strong> envíos excepto Beni y Santa Cruz
+                </span>
+                <span>
+                    🚚 <strong>Santa Cruz:</strong> solo Beni y Santa Cruz
+                </span>
+                <span>
+                    ⏰ <strong>Horario:</strong> 08:00 a 14:00
+                </span>
+            </div>
+
         </div>
-        <div
-            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap justify-center items-center gap-3 mb-4 col-span-full">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6">
 
-            @forelse($sucursales as $s)
-                    <button type="button" wire:click="$set('sucursalFiltro', {{ $s->id }})" class="px-4 py-3 rounded-lg border w-full sm:w-auto text-sm font-semibold transition text-center
-                                        {{ $sucursalFiltro == $s->id
-                ? 'bg-slate-800 text-white border-slate-900 shadow-md'
-                : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300' }}">
+            @forelse ($productos as $p)
+                @php
+                    $modelo = $p['modelo'];
+                    $existencia = $modelo->existencias->firstWhere('sucursal_id', $sucursalFiltro);
+                    $sucursal = $existencia->sucursal->nombre
+                        ?? $modelo->existencias->first()?->sucursal->nombre
+                        ?? 'Sin sucursal';
 
-                        <div class="flex flex-col">
-                            <p class="font-semibold text-sm
-                                            {{ $sucursalFiltro == $s->id ? 'text-white' : 'text-slate-900' }}">
-                                {{ $s->nombre }}
-                            </p>
+                    $precioAprox = ($modelo->precioReferencia && $modelo->paquete)
+                        ? $modelo->precioReferencia * $modelo->paquete
+                        : null;
+                @endphp
 
-                            <p class="text-xs
-                                            {{ $sucursalFiltro == $s->id ? 'text-slate-200' : 'text-slate-600' }}">
-                                {{ $s->empresa?->nombre ?? 'Sin empresa' }}
-                            </p>
+                <div class="bg-white rounded-3xl shadow-md border border-cyan-100
+                                hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col">
 
-                            <p class="text-xs
-                                            {{ $sucursalFiltro == $s->id ? 'text-slate-200' : 'text-slate-600' }}">
-                                {{ $s->telefono ?? 'Sin teléfono' }}
-                            </p>
-                        </div>
-                    </button>
+                    <div class="flex justify-center items-center h-44 bg-cyan-50">
+                        @if($modelo->imagen)
+                            <img src="{{ asset('storage/' . $modelo->imagen) }}" class="h-full object-contain p-4">
+                        @else
+                            <span class="text-cyan-300 text-sm font-semibold">Sin imagen</span>
+                        @endif
+                    </div>
+
+                    <div class="p-4 text-center flex flex-col gap-3 flex-1">
+                        <h2 class="font-extrabold text-cyan-700 text-lg leading-tight">
+                            {{ $modelo->descripcion }}
+                            <span class="text-cyan-500 text-sm">{{ $modelo->unidad }}</span>
+                        </h2>
+
+                        <p class="text-sm font-semibold text-cyan-800">
+                            Precio aprox:
+                            <span class="block text-gray-800 text-base font-bold">
+                                {{ $precioAprox ? number_format($precioAprox, 2) . ' Bs' : '-' }}
+                            </span>
+                        </p>
+
+                        <p class="text-xs text-gray-600">
+                            Sucursal: <span class="font-semibold">{{ $sucursal }}</span>
+                        </p>
+
+                        <button wire:click="abrirModalProducto('{{ $p['uid'] }}')" class="mt-auto w-full bg-cyan-500 text-white py-2 rounded-xl
+                                        hover:bg-cyan-600 transition font-semibold">
+                            Seleccionar
+                        </button>
+                    </div>
+                </div>
+
             @empty
-                <p class="text-center text-slate-500 py-3 text-sm">
-                    No hay sucursales disponibles
+                <p class="col-span-full text-center text-gray-500 text-lg">
+                    No hay productos disponibles
                 </p>
             @endforelse
 
         </div>
-
-
-
-        <div class="flex justify-center col-span-full mb-4">
-            <ul class="flex flex-col gap-3 max-w-3xl w-full">
-                <li class="w-full text-center px-4 py-3 rounded-full font-semibold text-sm sm:text-base
-                   bg-cyan-900 text-cyan-100 border  shadow
-                   hover:bg-cyan-800 transition">
-                    Selecciona Sucursal <span class="font-bold">Cochabamba</span>:
-                    envíos a todos los departamentos excepto
-                    <span class="font-bold">Beni y Santa Cruz</span>.
-                </li>
-                <li class="w-full text-center px-4 py-3 rounded-full font-semibold text-sm sm:text-base
-                   bg-amber-900 text-amber-100 border shadow
-                   hover:bg-amber-800 transition">
-                    Selecciona Sucursal <span class="font-bold">Santa Cruz</span>:
-                    envíos únicamente a los departamentos de
-                    <span class="font-bold">Beni y Santa Cruz</span>.
-                </li>
-                <li class="w-full text-center px-4 py-3 rounded-full font-semibold text-sm sm:text-base
-                   bg-emerald-900 text-emerald-100 border shadow
-                   hover:bg-emerald-800 transition">
-                    Horario de atención de Pedidos:
-                    <span class="font-bold">08:00 a 14:00</span>
-                </li>
-
-            </ul>
-        </div>
-
-
-
-        @forelse ($productos as $p)
-            @php
-                $modelo = $p['modelo'];
-                $existencia = $modelo->existencias->firstWhere('sucursal_id', $sucursalFiltro);
-                $sucursal = $existencia->sucursal->nombre ?? $modelo->existencias->first()->sucursal->nombre ?? 'Sin sucursal';
-
-                $precioAprox = ($modelo->precioReferencia && $modelo->paquete)
-                    ? $modelo->precioReferencia * $modelo->paquete
-                    : null;
-            @endphp
-
-            <div
-                class="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition transform hover:-translate-y-1 flex flex-col">
-                <div class="flex justify-center items-center h-48 bg-gray-50">
-                    @if(!empty($modelo->imagen))
-                        <img src="{{ asset('storage/' . $modelo->imagen) }}" class="h-full object-contain">
-                    @else
-                        <span class="text-gray-400">Sin imagen</span>
-                    @endif
-                </div>
-                <div class="p-5 text-center flex flex-col gap-2 flex-1">
-                    <h2 class="font-bold text-u text-3xl">{{ $modelo->descripcion }} {{ $modelo->unidad }}</h2>
-
-                    <p class="text-sm text-u font-semibold">
-                        Precio Aproximado por paquete:
-                        <span class="text-gray-800 font-bold">
-                            @if($precioAprox)
-                                {{ number_format($precioAprox, 2) }} Bs
-                            @else
-                                -
-                            @endif
-                        </span>
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        Tipo de contenido: <span class="font-semibold">{{ $modelo->tipoContenido ?? '-' }}</span>
-                    </p>
-
-                    <p class="text-sm text-gray-600">
-                        Sucursal: <span class="font-semibold">{{ $sucursal }}</span>
-                    </p>
-
-                    <button wire:click="abrirModalProducto('{{ $p['uid'] }}')"
-                        class="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2 mt-3">
-                        Seleccionar
-                    </button>
-                </div>
-            </div>
-        @empty
-            <p class="col-span-full text-center text-gray-500 mt-10 text-lg">No hay productos disponibles</p>
-        @endforelse
-
     </div>
+
 
 
 
@@ -391,6 +352,14 @@
     @if($modalPedidosCliente)
         <div class="modal-overlay">
             <div class="modal-box">
+                <button wire:click="$set('modalPedidosCliente', false)" class="absolute top-4 right-4 text-cyan-600 hover:text-red-600
+                   bg-white rounded-full p-2 shadow transition" title="Cerrar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18" />
+                        <path d="M6 6l12 12" />
+                    </svg>
+                </button>
                 <div class="modal-content flex flex-col gap-4">
 
                     <h2 class="text-2xl font-bold text-center text-teal-700 mb-4">
@@ -698,8 +667,6 @@
                     <h2 class="text-xl font-bold text-center text-slate-800">
                         Cotización
                     </h2>
-
-                    {{-- Detalle de productos --}}
                     <div class="flex flex-col gap-4 max-h-80 overflow-y-auto">
                         @foreach($carrito as $item)
                             @php
@@ -732,8 +699,6 @@
                             </div>
                         @endforeach
                     </div>
-
-                    {{-- Resumen --}}
                     <div class="border-t pt-4 flex flex-col gap-2">
                         <div class="flex justify-between text-sm">
                             <span class="font-medium text-gray-600">Subtotal</span>
