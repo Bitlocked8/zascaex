@@ -14,10 +14,10 @@ class PersonalSeeder extends Seeder
     public function run(): void
     {
         $personalesSucursal1 = [
-            4 => ['Tatiana Paola','Bruno','Abraham','Anais','Raquel','David','Kevin','Jaime','Andrés','Luis','Roberto'],
-            3 => ['Walter','Waldo'],
-            2 => ['Enrique','María'],
-            1 => ['Osvaldo Martinez','Mónica Quintanilla','Ricardo Martinez'],
+            4 => ['Tatiana Paola', 'Bruno', 'Abraham', 'Anais', 'Raquel', 'Kevin', 'Andrés', 'Luis', 'Roberto'],
+            3 => ['Walter', 'Waldo'],
+            2 => ['Enrique', 'María', 'David', 'Jaime'],
+            1 => ['Osvaldo Martinez', 'Mónica Quintanilla', 'Ricardo Martinez'],
         ];
 
         $sucursal1_id = 1;
@@ -54,7 +54,7 @@ class PersonalSeeder extends Seeder
         $email = $emailBase . '@mail.com';
 
         $contador = 1;
-        while(User::where('email', $email)->exists()) {
+        while (User::where('email', $email)->exists()) {
             $email = $emailBase . $contador . '@mail.com';
             $contador++;
         }
@@ -90,7 +90,7 @@ class PersonalSeeder extends Seeder
         $email = $emailBase . '@mail.com';
 
         $contador = 1;
-        while(User::where('email', $email)->exists()) {
+        while (User::where('email', $email)->exists()) {
             $email = $emailBase . $contador . '@mail.com';
             $contador++;
         }

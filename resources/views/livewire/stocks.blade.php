@@ -106,12 +106,13 @@
 
 
                     <p class="text-emerald-600 uppercase font-semibold">
-                        {{ ucfirst($tipoModelo) }}: {{ $repo->existencia->existenciable->descripcion ?? 'sin descripcion' }}
+                        {{ ucfirst($tipoModelo) }}: {{ $repo->existencia->existenciable->descripcion ?? 'sin descripcion' }}-       {{ $repo->existencia->existenciable->color ?? '' }}
                     </p>
 
                     <p class="text-slate-600">{{ $repo->codigo ?? 'N/A' }}</p>
                     <p><strong>Capacidad:</strong> {{ $repo->existencia->existenciable->capacidad ?? 'no tiene' }}
                         {{ $repo->existencia->existenciable->unidad ?? '' }}
+                   
                     </p>
                     <p><strong>Cantidad inicial:</strong> {{ $repo->cantidad_inicial }}</p>
                     <p><strong>Cantidad disponible:</strong> {{ $repo->cantidad }}</p>

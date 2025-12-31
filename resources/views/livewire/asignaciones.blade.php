@@ -187,16 +187,18 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto">
                             @forelse($existencias as $existencia)
-                                @php
-                                    $tipo = class_basename($existencia->existenciable_type);
-                                    $cantidadDisponible = $existencia->reposiciones->where('estado_revision', true)->sum('cantidad');
-                                    $descripcion = $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id;
+                              @php
+    $tipo = class_basename($existencia->existenciable_type);
+    $cantidadDisponible = $existencia->reposiciones->where('estado_revision', true)->sum('cantidad');
+    $descripcion = $existencia->existenciable->descripcion ?? 'Existencia #' . $existencia->id;
 
-                                    $selectedIndex = collect($items)->search(fn($i) => $i['existencia_id'] === $existencia->id);
-                                    $selected = $selectedIndex !== false;
+    $selectedIndex = collect($items)->search(fn($i) => $i['existencia_id'] === $existencia->id);
+    $selected = $selectedIndex !== false;
 
-                                    $sucursal = $existencia->sucursal->nombre ?? 'Sin sucursal';
-                                @endphp
+    $sucursal = $existencia->sucursal->nombre ?? 'Sin sucursal';
+
+    $color = $tipo === 'Tapa' ? ($existencia->existenciable->color ?? null) : null;
+@endphp
 
                                 <div
                                     class="p-4 rounded-lg border-2 transition text-center bg-white {{ $selected ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 hover:border-cyan-600 hover:text-cyan-600' }}">
@@ -204,7 +206,12 @@
                                     <span class="block text-xs mt-1 text-gray-500">
                                         Sucursal: <strong>{{ $sucursal }}</strong>
                                     </span>
-
+@if($color)
+    <span class="block text-xs mt-1">
+        Color:
+        <strong>{{ ucfirst($color) }}</strong>
+    </span>
+@endif
                                     <span
                                         class="bg-teal-600 text-white text-xs px-2 py-1 rounded-full font-semibold inline-block mt-2">
                                         {{ $cantidadDisponible }} disponibles
