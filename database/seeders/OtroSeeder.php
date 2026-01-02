@@ -20,7 +20,7 @@ class OtroSeeder extends Seeder
                 'unidad' => 'Kgs',
                 'precioReferencia' => 4.0,
                 'tipo' => null,
-                'imagen' => 'otros/hielov.png', 
+                'imagen' => 'otros/hielo25.jpeg', 
             ],
             [
                 'descripcion' => 'Hielo 5',
@@ -30,7 +30,7 @@ class OtroSeeder extends Seeder
                 'unidad' => 'Kgs',
                 'precioReferencia' => 7.0,
                 'tipo' => null,
-                'imagen' => 'otros/hielov.png',
+                'imagen' => 'otros/hielo25.jpeg',
             ],
             [
                 'descripcion' => 'Dispensador frio caliente de escritorio',

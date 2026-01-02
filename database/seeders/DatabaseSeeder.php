@@ -11,8 +11,6 @@ use App\Models\Cliente;
 use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\User;
-
-
 class DatabaseSeeder extends Seeder
 {
 
@@ -76,7 +74,5 @@ class DatabaseSeeder extends Seeder
         $this->call(PersonalSeeder::class);
         // $this->call(ClienteSeeder::class);
         $this->call(ProveedorSeeder::class);
-
-
     }
 }

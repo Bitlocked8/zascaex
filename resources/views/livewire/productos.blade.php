@@ -1,97 +1,75 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="w-full max-w-screen-xl">
 
-        <h3
-            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
+        <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
             Productos
         </h3>
 
-        <div class="flex items-center gap-2 mb-4 col-span-full">
+        <!-- Buscador y botón -->
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
             <input type="text" wire:model.live="search" placeholder="Buscar por descripción o tipo..."
-                class="input-minimal w-full" />
-
-            <button wire:click="abrirModal('create')" class="btn-cyan" title="Agregar producto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path
-                        d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-                    <path
-                        d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-                </svg>
-                Añadir
-            </button>
+                class="input-minimal w-full sm:w-auto flex-1" />
+            <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
         </div>
 
-        @forelse($productos as $producto)
-            <div class="card-teal flex flex-col gap-4 p-4">
-                <div class="flex flex-col gap-2">
-                    <p class="text-emerald-600 uppercase font-semibold">
-                        {{ $producto->descripcion ?? 'Sin descripción' }}
-                    </p>
-                    <p><strong>Tipo:</strong> {{ $producto->tipo ?? 'N/A' }}</p>
-                    <p><strong>Unidad:</strong> {{ $producto->unidad ?? 'N/A' }}</p>
-                    <p><strong>Capacidad:</strong> {{ $producto->capacidad ?? 'N/A' }}</p>
-                    <p><strong>Precio Ref.:</strong> {{ $producto->precioReferencia ?? 'N/A' }} Bs</p>
-
-                    <p class="mt-1 text-sm font-semibold">
-                        <span class="{{ $producto->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
-                            {{ $producto->estado == 0 ? 'Inactivo' : 'Activo' }}
-                        </span>
-                    </p>
-
-                    @if($producto->existencias->isEmpty())
-                        <p class="text-gray-500 text-sm font-medium">
-                            N/A
-                        </p>
-                    @else
-                        @foreach($producto->existencias as $existencia)
-                            <p class="text-cyan-700 text-sm font-semibold">
-                                <span class="block">Sucursal: {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}</span>
-                                <span class="block">Cantidad: {{ $existencia->cantidad }}</span>
-                                <span class="block">Mínima: {{ $existencia->cantidadMinima ?? 0 }}</span>
-                            </p>
-                        @endforeach
-                    @endif
-                </div>
-
-                <div class="flex justify-center items-center mt-2">
-                    @if($producto->imagen)
-                        <img src="{{ asset('storage/' . $producto->imagen) }}" alt="Imagen"
-                            class="w-24 h-24 object-cover rounded-lg border border-cyan-300">
-                    @else
-                        <div class="w-24 h-24 flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg text-xs">
-                            Sin imagen
-                        </div>
-                    @endif
-                </div>
-
-                <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="modaldetalle({{ $producto->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver Detalles">
-                        Ver más
-                    </button>
-
-                    <button wire:click="abrirModal('edit', {{ $producto->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
-                        Editar
-                    </button>
-                </div>
-            </div>
-        @empty
-            <div class="col-span-full text-center py-4 text-gray-600">
-                No hay registros de productos.
-            </div>
-        @endforelse
-
+        <!-- Tabla scrollable -->
+        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-teal-50 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Descripción</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Tipo</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Unidad</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Capacidad</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Precio Ref.</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Existencias</th>
+                        <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($productos as $producto)
+                        <tr class="hover:bg-teal-50">
+                            <td class="px-4 py-2">{{ $producto->descripcion ?? 'Sin descripción' }}</td>
+                            <td class="px-4 py-2">{{ $producto->tipo ?? 'N/A' }}</td>
+                            <td class="px-4 py-2">{{ $producto->unidad ?? 'N/A' }}</td>
+                            <td class="px-4 py-2">{{ $producto->capacidad ?? 'N/A' }}</td>
+                            <td class="px-4 py-2">{{ $producto->precioReferencia ?? 'N/A' }} Bs</td>
+                            <td class="px-4 py-2">
+                                <span class="{{ $producto->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
+                                    {{ $producto->estado == 0 ? 'Inactivo' : 'Activo' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">
+                                @if($producto->existencias->isEmpty())
+                                    N/A
+                                @else
+                                    @foreach($producto->existencias as $existencia)
+                                        <div class="text-sm text-cyan-700">
+                                            {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}: {{ $existencia->cantidad }}
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </td>
+                            <td class="px-4 py-2 flex justify-center gap-1">
+                                <button wire:click="modaldetalle({{ $producto->id }})" class="btn-cyan" title="Ver Detalles">Ver más</button>
+                                <button wire:click="abrirModal('edit', {{ $producto->id }})" class="btn-cyan" title="Editar">Editar</button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-gray-600">No hay registros de productos.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
-
 
     @if($modal)
         <div class="modal-overlay">
             <div class="modal-box max-w-3xl">
                 <div class="modal-content flex flex-col gap-4">
-
-                    {{-- IMAGEN --}}
                     <div>
                         <label>Imagen</label>
                         <input type="file" wire:model="imagen" class="input-minimal">
@@ -227,7 +205,8 @@
                                 <span>Descripción:</span><span>{{ $productoSeleccionado->descripcion ?? '-' }}</span>
                             </div>
                             <div class="flex gap-2">
-                                <span>Unidad:</span><span>{{ $productoSeleccionado->unidad ?? '-' }}</span></div>
+                                <span>Unidad:</span><span>{{ $productoSeleccionado->unidad ?? '-' }}</span>
+                            </div>
                             <div class="flex gap-2">
                                 <span>Capacidad:</span><span>{{ $productoSeleccionado->capacidad ?? '-' }}</span>
                             </div>

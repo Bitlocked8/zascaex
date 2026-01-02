@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class Stocks extends Component
 {
     use WithFileUploads;
-
+    public $cantidadReposiciones = 50;
     public $modalNotificaciones = false;
     public $alertasBajoStock;
     public $estado_revision = 0;
@@ -60,6 +60,69 @@ class Stocks extends Component
         'fecha' => 'required|date',
         'observaciones' => 'nullable|string|max:500',
     ];
+
+    public function render()
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+
+        $queryExistencias = Existencia::with('existenciable')
+            ->where('cantidad', '>', 0)
+            ->where('existenciable_type', '!=', \App\Models\Producto::class)
+            ->when($this->filtroSucursal, fn($q) => $q->where('sucursal_id', $this->filtroSucursal))
+            ->orderBy('id');
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $queryExistencias->where('sucursal_id', $sucursal_id);
+        }
+
+        $existencias = $queryExistencias->get();
+
+        $queryReposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
+            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
+            ->when(
+                $this->filtroSucursal,
+                fn($q) =>
+                $q->whereHas('existencia', fn($sub) => $sub->where('sucursal_id', $this->filtroSucursal))
+            );
+
+        if ($rol === 2 && $personal) {
+            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
+            $queryReposiciones->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
+        }
+
+        $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')
+            ->take($this->cantidadReposiciones)
+            ->get();
+
+        $personalList = Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
+            ->with([
+                'trabajos' => fn($q) => $q->where('estado', 1)
+                    ->latest('fechaInicio')
+                    ->with('sucursal')
+            ])
+            ->get();
+
+        return view('livewire.stocks', [
+            'existencias' => $existencias,
+            'reposiciones' => $reposiciones,
+            'personal' => $personalList,
+            'proveedores' => Proveedor::where('estado', 1)->get(),
+            'sucursales' => Sucursal::all(),
+        ]);
+    }
+
+    public function aumentarCantidad()
+    {
+        $this->cantidadReposiciones += 50;
+    }
+
+    public function disminuirCantidad()
+    {
+        $this->cantidadReposiciones = max(50, $this->cantidadReposiciones - 50);
+    }
 
     public function cargarExistencias()
     {
@@ -337,56 +400,7 @@ class Stocks extends Component
         $this->modalPagos = false;
     }
 
-    public function render()
-    {
-        $usuario = auth()->user();
-        $rol = $usuario->rol_id;
-        $personal = $usuario->personal;
 
-        $queryExistencias = Existencia::with('existenciable')
-            ->where('cantidad', '>', 0)
-            ->where('existenciable_type', '!=', \App\Models\Producto::class)
-            ->when($this->filtroSucursal, fn($q) => $q->where('sucursal_id', $this->filtroSucursal))
-            ->orderBy('id');
-
-        if ($rol === 2 && $personal) {
-            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $queryExistencias->where('sucursal_id', $sucursal_id);
-        }
-
-        $existencias = $queryExistencias->get();
-
-        $queryReposiciones = Reposicion::with(['existencia.existenciable', 'personal', 'proveedor'])
-            ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
-            ->when(
-                $this->filtroSucursal,
-                fn($q) =>
-                $q->whereHas('existencia', fn($sub) => $sub->where('sucursal_id', $this->filtroSucursal))
-            );
-
-        if ($rol === 2 && $personal) {
-            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $queryReposiciones->whereHas('existencia', fn($q) => $q->where('sucursal_id', $sucursal_id));
-        }
-
-        $reposiciones = $queryReposiciones->orderBy('fecha', 'desc')->get();
-
-        $personalList = Personal::whereHas('trabajos', fn($q) => $q->where('estado', 1))
-            ->with([
-                'trabajos' => fn($q) => $q->where('estado', 1)
-                    ->latest('fechaInicio')
-                    ->with('sucursal')
-            ])
-            ->get();
-
-        return view('livewire.stocks', [
-            'existencias' => $existencias,
-            'reposiciones' => $reposiciones,
-            'personal' => $personalList,
-            'proveedores' => Proveedor::where('estado', 1)->get(),
-            'sucursales' => Sucursal::all(),
-        ]);
-    }
     public function eliminarReposicion($id)
     {
         $reposicion = Reposicion::with('existencia', 'asignados')->find($id);

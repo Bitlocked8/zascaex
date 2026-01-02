@@ -66,16 +66,26 @@ class Cliente extends Component
                 ->orWhere('telefono', 'like', '%' . $this->search . '%')
                 ->orWhere('celular', 'like', '%' . $this->search . '%');
         })
-        ->orderBy('id', 'desc')
-        ->take($this->cantidad)
-        ->get();
+            ->orderBy('id', 'desc')
+            ->take($this->cantidad)
+            ->get();
 
-       $this->personales = Personal::whereHas('user', function ($q) {
-    $q->where('rol_id', 3);
-})->get();
+        $this->personales = Personal::whereHas('user', function ($q) {
+            $q->where('rol_id', 3);
+        })->get();
 
 
         return view('livewire.cliente', compact('clientes'));
+    }
+
+    public function cargarMas()
+    {
+        $this->cantidad += 50;
+    }
+
+    public function cargarMenos()
+    {
+        $this->cantidad = max(50, $this->cantidad - 50);
     }
 
     public function updatingSearch()

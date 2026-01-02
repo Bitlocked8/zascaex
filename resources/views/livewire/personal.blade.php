@@ -1,74 +1,62 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="w-full max-w-screen-xl">
         <h3
-            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto shadow-sm">
+            class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto shadow-sm mb-4">
             Personal
         </h3>
-        <div class="flex items-center gap-2 mb-4 col-span-full">
+
+        <div class="flex items-center gap-2 mb-4">
             <input type="text" wire:model.live="search" placeholder="Buscar por nombre, apellido o celular..."
                 class="input-minimal w-full" />
             <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path
-                        d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-                    <path
-                        d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-                </svg>
                 Añadir
             </button>
         </div>
-        @forelse($personales as $personal)
-            <div class="card-teal flex flex-col gap-4">
 
-                <div class="flex flex-col gap-2">
-                    <p class="text-emerald-600 uppercase font-semibold">{{ $personal->nombres }} {{ $personal->apellidos }}
-                    </p>
-                    <p class="text-slate-600 text-sm">{{ $personal->user->rol->nombre ?? 'Sin rol' }}</p>
-
-                    <p class="mt-1 text-sm font-semibold">
-                        <span class="{{ $personal->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
-                            {{ $personal->estado == 0 ? 'Inactivo' : 'Activo' }}
-                        </span>
-                    </p>
-
-                    <p><strong>Celular:</strong> {{ $personal->celular ?? 'N/A' }}</p>
-                    <p><strong>Email:</strong> {{ $personal->user->email ?? 'N/A' }}</p>
-                </div>
-                <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="abrirModal('edit', {{ $personal->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                            <path d="M16 5l3 3" />
-                        </svg>
-                        Editar
-                    </button>
-
-                    <button wire:click="verDetalle({{ $personal->id }})" class="btn-cyan" title="Ver detalle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                            <path d="M8 12l0 .01" />
-                            <path d="M12 12l0 .01" />
-                            <path d="M16 12l0 .01" />
-                        </svg>
-                        Ver mas
-                    </button>
-                </div>
-
-            </div>
-        @empty
-            <div class="col-span-full text-center py-4 text-gray-600">
-                No hay personal registrado.
-            </div>
-        @endforelse
+        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-teal-50 sticky top-0">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Nombre</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Rol</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Celular</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Email</th>
+                        <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($personales as $personal)
+                        <tr class="hover:bg-teal-50">
+                            <td class="px-4 py-2">{{ $personal->nombres }} {{ $personal->apellidos }}</td>
+                            <td class="px-4 py-2">{{ $personal->user->rol->nombre ?? 'Sin rol' }}</td>
+                            <td class="px-4 py-2">
+                                <span class="{{ $personal->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
+                                    {{ $personal->estado == 0 ? 'Inactivo' : 'Activo' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">{{ $personal->celular ?? 'N/A' }}</td>
+                            <td class="px-4 py-2">{{ $personal->user->email ?? 'N/A' }}</td>
+                            <td class="px-4 py-2 flex justify-center gap-1">
+                                <button wire:click="abrirModal('edit', {{ $personal->id }})" class="btn-cyan" title="Editar">
+                                    Editar
+                                </button>
+                                <button wire:click="verDetalle({{ $personal->id }})" class="btn-cyan" title="Ver detalle">
+                                    Ver
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-gray-600">No hay personal registrado.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
     </div>
+
 
 
 

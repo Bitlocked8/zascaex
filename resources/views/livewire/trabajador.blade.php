@@ -1,88 +1,55 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-  <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    <h3
-      class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto shadow-sm">
+  <div class="w-full max-w-screen-xl">
+    <h3 class="text-center text-2xl font-bold uppercase text-white bg-cyan-600 px-6 py-2 rounded-full mx-auto shadow-sm mb-4">
       Trabajos
     </h3>
-    <div class="flex items-center gap-2 mb-4 col-span-full">
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
       <input type="text" wire:model.live="search" placeholder="Buscar por sucursal o personal..."
-        class="input-minimal w-full" />
+        class="input-minimal w-full sm:w-auto flex-1" />
 
-      <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path
-            d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-          <path
-            d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-        </svg>
-        Añadir
-      </button>
-
-      <button wire:click="abrirModalLabores" class="btn-cyan flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path
-            d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-          <path
-            d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-        </svg>
-        Labores
-      </button>
+      <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
+      <button wire:click="abrirModalLabores" class="btn-cyan flex items-center gap-1">Labores</button>
     </div>
-    @forelse($trabajos as $trabajo)
-      <div class="card-teal flex flex-col gap-4">
-        <div class="flex flex-col gap-1">
-          <p class="text-emerald-600 uppercase font-semibold">
-            {{ $trabajo->personal->nombres ?? 'No asignado' }}
-          </p>
-          <p class="text-slate-600 text-sm">
-            {{ $trabajo->sucursal->nombre ?? 'Sin Sucursal' }}
-          </p>
 
-          <p><strong>Fecha inicio:</strong> {{ \Carbon\Carbon::parse($trabajo->fechaInicio)->format('d/m/Y H:i') }}</p>
-          <p><strong>Fecha final:</strong>
-            {{ $trabajo->fechaFinal ? \Carbon\Carbon::parse($trabajo->fechaFinal)->format('d/m/Y H:i') : 'N/A' }}</p>
-
-          <p class="mt-1 text-sm font-semibold">
-            <span class="{{ $trabajo->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
-              {{ $trabajo->estado == 0 ? 'Inactivo' : 'Activo' }}
-            </span>
-          </p>
-
-        </div>
-        <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-          <button wire:click="abrirModal('edit', {{ $trabajo->id }})" class="btn-cyan" title="Editar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-              <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-              <path d="M16 5l3 3" />
-            </svg>
-            Editar
-          </button>
-
-          <button wire:click="modaldetalle({{ $trabajo->id }})" class="btn-cyan" title="Ver detalle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-              <path d="M8 12l0 .01" />
-              <path d="M12 12l0 .01" />
-              <path d="M16 12l0 .01" />
-            </svg>
-            Ver mas
-          </button>
-        </div>
-      </div>
-    @empty
-      <div class="col-span-full text-center py-4 text-gray-600">
-        No hay trabajos registrados.
-      </div>
-    @endforelse
-
+    <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-teal-50 sticky top-0">
+          <tr>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Personal</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Sucursal</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Fecha inicio</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Fecha final</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
+            <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          @forelse($trabajos as $trabajo)
+            <tr class="hover:bg-teal-50">
+              <td class="px-4 py-2">{{ $trabajo->personal->nombres ?? 'No asignado' }}</td>
+              <td class="px-4 py-2">{{ $trabajo->sucursal->nombre ?? 'Sin Sucursal' }}</td>
+              <td class="px-4 py-2">{{ \Carbon\Carbon::parse($trabajo->fechaInicio)->format('d/m/Y H:i') }}</td>
+              <td class="px-4 py-2">{{ $trabajo->fechaFinal ? \Carbon\Carbon::parse($trabajo->fechaFinal)->format('d/m/Y H:i') : 'N/A' }}</td>
+              <td class="px-4 py-2">
+                <span class="{{ $trabajo->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
+                  {{ $trabajo->estado == 0 ? 'Inactivo' : 'Activo' }}
+                </span>
+              </td>
+              <td class="px-4 py-2 flex justify-center gap-1 flex-wrap">
+                <button wire:click="abrirModal('edit', {{ $trabajo->id }})" class="btn-cyan" title="Editar">Editar</button>
+                <button wire:click="modaldetalle({{ $trabajo->id }})" class="btn-cyan" title="Ver detalle">Ver</button>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="6" class="text-center py-4 text-gray-600">No hay trabajos registrados.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
   </div>
+
 
 
 
@@ -108,13 +75,13 @@
 
             <div class="flex justify-center gap-3 mt-2">
               <button type="button" wire:click="$set('estado', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                        {{ $estado == 1
+                          {{ $estado == 1
       ? 'bg-green-600 text-white border-green-700 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                 Activo
               </button>
               <button type="button" wire:click="$set('estado', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition
-                        {{ $estado == 0
+                          {{ $estado == 0
       ? 'bg-red-600 text-white border-red-700 shadow-md'
       : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
                 Inactivo
@@ -135,10 +102,10 @@
 
               @forelse($sucursales as $s)
                       <button type="button" wire:click="$set('sucursal_id', {{ $s->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
-                                    {{ $sucursal_id == $s->id
+                                              {{ $sucursal_id == $s->id
                 ? 'bg-cyan-600 text-white border-cyan-700 shadow'
                 : 'bg-gray-100 text-gray-800 hover:bg-cyan-100'
-                                    }}">
+                                              }}">
                         <p class="font-semibold text-sm">{{ $s->nombre }}</p>
                         <p class="text-xs text-gray-600 {{ $sucursal_id == $s->id ? 'text-cyan-100' : '' }}">
                           {{ $s->empresa?->nombre ?? 'Sin empresa' }}
@@ -170,10 +137,10 @@
 
               @forelse($personales as $p)
                       <button type="button" wire:click="$set('personal_id', {{ $p->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
-                                                        {{ $personal_id == $p->id
+                                                                  {{ $personal_id == $p->id
                 ? 'bg-cyan-600 text-white border-cyan-700 shadow'
                 : 'bg-gray-100 text-gray-800 hover:bg-cyan-100'
-                                                        }}">
+                                                                  }}">
                         <p class="font-semibold text-sm">
                           {{ $p->nombres }} {{ $p->apellidos }}
                         </p>
@@ -205,7 +172,7 @@
               @forelse(\App\Models\Labor::where('estado', 1)->get() as $l)
                 <button type="button" wire:click="$set('labor_id', {{ $l->id }})"
                   class="w-full px-3 py-2 rounded-md border text-sm text-left transition
-                                    {{ $labor_id == $l->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
+                                        {{ $labor_id == $l->id ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-800 hover:bg-cyan-100' }}">
                   {{ $l->nombre }}
                 </button>
 

@@ -12,6 +12,7 @@ class Pedido extends Model
     protected $fillable = [
         'codigo',
         'solicitud_pedido_id',
+        'cliente_id',
         'personal_id',
         'estado_pedido',
         'observaciones',
@@ -37,6 +38,12 @@ class Pedido extends Model
     {
         return $this->hasMany(PagoPedido::class, 'pedido_id');
     }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
 
     public function distribuciones()
     {

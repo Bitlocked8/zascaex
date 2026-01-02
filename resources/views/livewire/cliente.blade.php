@@ -1,136 +1,75 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <h3
-            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto shadow-sm">
-            Clientes
-        </h3>
-        <div class="flex items-center gap-2 mb-4 col-span-full">
-            <input type="text" wire:model.live="search" placeholder="Buscar por nombre o empresa..."
-                class="input-minimal w-full" />
+     <div class="w-full max-w-screen-xl">
 
-            <a href="{{ route('cliente.registrar') }}" class="btn-cyan flex items-center gap-1" title="Agregar cliente">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path
-                        d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-                    <path
-                        d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-                </svg>
-                Añadir
-            </a>
-        </div>
-        @forelse($clientes as $cliente)
-            <div class="card-teal flex flex-col gap-4 p-4">
-                <div class="flex flex-col gap-2">
-                    <p class="text-emerald-600 uppercase font-semibold">
-                        {{ $cliente->nombre }}
-                    </p>
-                    <p class="text-slate-600"> {{ $cliente->codigo ?? 'N/A' }}</p>
-                    <p><strong>Empresa:</strong> {{ $cliente->empresa ?? 'Sin empresa' }}</p>
-                    <p><strong>Dirección:</strong> {{ $cliente->direccion ?? 'Sin direccion' }}</p>
-                    <p class="mt-1 text-sm font-semibold">
-
-                        <span
-                            class="{{ $cliente->categoria == 1 ? 'text-cyan-600' : ($cliente->categoria == 2 ? 'text-indigo-600' : ($cliente->categoria == 3 ? 'text-purple-600' : 'text-gray-500')) }}">
-                            {{ $cliente->categoria == 1 ? 'Nuevo Cliente' : ($cliente->categoria == 2 ? 'Cliente Regular' : ($cliente->categoria == 3 ? 'Cliente Antiguo' : 'N/A')) }}
-                        </span>
-                    </p>
-                    <p class="mt-1 text-sm font-semibold">
-                        <span class="{{ $cliente->estado == 1 ? 'text-green-600' : 'text-red-600' }}">
-                            {{ $cliente->estado == 1 ? 'Cliente Activo' : 'Cliente Inactivo' }}
-                        </span>
-                    </p>
-                    <p class="mt-1 text-sm font-semibold">
-                        <span class="{{ $cliente->verificado ? 'text-cyan-600' : 'text-cyan-400' }}">
-                            {{ $cliente->verificado ? 'Cliente verficado' : 'No verficado' }}
-                        </span>
-                    </p>
-                </div>
-                <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-                    <button wire:click="verDetalle({{ $cliente->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver detalles">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                            <path d="M8 12l0 .01" />
-                            <path d="M12 12l0 .01" />
-                            <path d="M16 12l0 .01" />
-                        </svg>
-                        Ver más
-                    </button>
-
-                    <button wire:click="editarCliente({{ $cliente->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-                            <path d="M16 5l3 3" />
-                        </svg>
-                        Editar
-                    </button>
-
-                    <a href="{{ route('clientes.map', $cliente->id) }}"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Ver mapa">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v7.5" />
-                            <path d="M9 4v13" />
-                            <path d="M15 7v5.5" />
-                        </svg>
-                        Dirección del cliente
-                    </a>
-
-                    <a href="{{ route('clientes.editar', $cliente->id) }}"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar coordenadas">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v8" />
-                            <path d="M9 4v13" />
-                            <path d="M15 7v6.5" />
-                        </svg>
-                        Editar direccion
-                    </a>
-
-                    <button wire:click="toggleVerificado({{ $cliente->id }})"
-                        class="btn-cyan flex items-center gap-1 flex-shrink-0 {{ $cliente->verificado ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}"
-                        title="Cambiar verificación">
-                        @if($cliente->verificado)
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 12l5 5l10 -10" />
-                            </svg>
-                            Verificado
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M18 6l-12 12" />
-                                <path d="M6 6l12 12" />
-                            </svg>
-                            No verificado
-                        @endif
-                    </button>
-                </div>
-            </div>
-        @empty
-            <div class="col-span-full text-center py-4 text-gray-600">
-                No hay clientes registrados.
-            </div>
-        @endforelse
-        @if($clientes->count() >= $cantidad)
-            <div class="col-span-full text-center mt-4">
-                <button wire:click="$set('cantidad', {{ $cantidad + 50 }})" class="btn-cyan px-4 py-2 rounded">
-                    Cargar más
-                </button>
-            </div>
-        @endif
+    <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full shadow-sm mb-4">
+      Clientes
+    </h3>
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
+      <input type="text" wire:model.live="search" placeholder="Buscar por nombre o empresa..."
+        class="input-minimal w-full sm:w-auto flex-1" />
+      <a href="{{ route('cliente.registrar') }}" class="btn-cyan flex items-center gap-1">Añadir</a>
     </div>
+    <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-teal-50 sticky top-0 z-10">
+          <tr>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Nombre</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Código</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Empresa</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Dirección</th>
+            <th class="px-4 py-2 text-left text-teal-700 font-semibold">Categoría</th>
+            <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          @forelse($clientes as $cliente)
+            <tr class="hover:bg-teal-50">
+              <td class="px-4 py-2">{{ $cliente->nombre }}</td>
+              <td class="px-4 py-2">{{ $cliente->codigo ?? 'N/A' }}</td>
+              <td class="px-4 py-2">{{ $cliente->empresa ?? 'Sin empresa' }}</td>
+              <td class="px-4 py-2">{{ $cliente->direccion ?? 'Sin dirección' }}</td>
+              <td class="px-4 py-2">
+                <span class="{{ $cliente->categoria == 1 ? 'text-cyan-600' : ($cliente->categoria == 2 ? 'text-indigo-600' : ($cliente->categoria == 3 ? 'text-purple-600' : 'text-gray-500')) }}">
+                  {{ $cliente->categoria == 1 ? 'Nuevo Cliente' : ($cliente->categoria == 2 ? 'Cliente Regular' : ($cliente->categoria == 3 ? 'Cliente Antiguo' : 'N/A')) }}
+                </span>
+              </td>            
+              <td class="px-4 py-2 flex flex-wrap justify-center gap-1">
+                <button wire:click="verDetalle({{ $cliente->id }})" class="btn-cyan text-xs">Ver más</button>
+                <button wire:click="editarCliente({{ $cliente->id }})" class="btn-cyan text-xs">Editar</button>
+                <a href="{{ route('clientes.map', $cliente->id) }}" class="btn-cyan text-xs">Mapa</a>
+                <a href="{{ route('clientes.editar', $cliente->id) }}" class="btn-cyan text-xs">Editar Coord.</a>
+                <button wire:click="toggleVerificado({{ $cliente->id }})"
+                  class="text-xs px-2 py-1 rounded {{ $cliente->verificado ? 'bg-cyan-600 text-white' : 'bg-white text-cyan-600 border border-cyan-600' }}">
+                  {{ $cliente->verificado ? 'Verificado' : 'No verificado' }}
+                </button>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="8" class="text-center py-4 text-gray-600">No hay clientes registrados.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+
+  <div class="col-span-full text-center mt-4 flex justify-center gap-2">
+    @if($clientes->count() >= $cantidad)
+        <button wire:click="cargarMas" class="btn-cyan px-4 py-2 rounded">
+            Cargar más
+        </button>
+    @endif
+
+    @if($cantidad > 50)
+        <button wire:click="cargarMenos" class="btn-cyan px-4 py-2 rounded">
+            Cargar menos
+        </button>
+    @endif
+</div>
+
+
+  </div>
+
 
     @if($modal)
         <div class="modal-overlay">

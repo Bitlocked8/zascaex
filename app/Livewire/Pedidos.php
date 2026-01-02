@@ -12,13 +12,17 @@ use App\Models\Otro;
 use App\Models\Reposicion;
 use App\Models\SolicitudPedido;
 use App\Models\Sucursal;
+use App\Models\Cliente;
+
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SucursalPago;
+
 class Pedidos extends Component
 {
     use WithFileUploads;
-
+    public $cliente_id = null;
+    public $cantidad = 50;
     public $observaciones;
     public $sucursal_id = null;
     public $modalDetallePedido = false;
@@ -51,9 +55,9 @@ class Pedidos extends Component
     {
         $this->solicitudSeleccionadaId = null;
         $this->solicitud_pedido_id = null;
-        $this->detalles = [];
-    }
 
+        $this->setMensaje('Solicitud eliminada del pedido, los detalles se conservan', 'success');
+    }
 
     public function mount($pedido_id = null)
     {
@@ -61,6 +65,7 @@ class Pedidos extends Component
         $this->personal_id = $this->pedido->personal_id ?? Auth::id();
         $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
         $this->solicitud_pedido_id = $this->pedido->solicitud_pedido_id;
+        $this->cliente_id = $this->pedido->cliente_id ?? null;
         $this->solicitudSeleccionadaId = $this->pedido->solicitud_pedido_id;
         $this->estado_pedido = $this->pedido->estado_pedido ?? 0;
         $this->observaciones = $this->pedido->observaciones ?? null;
@@ -83,15 +88,12 @@ class Pedidos extends Component
             })->toArray();
         }
     }
-
     public function render()
     {
         $usuario = auth()->user();
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
         $sucursalId = $personal->trabajos()->latest()->first()?->sucursal_id;
-
-        // Productos filtrados por sucursal si rol 2
         $productos = Producto::whereHas('existencias', function ($q) use ($rol, $sucursalId) {
             if ($this->sucursal_id) {
                 $q->where('sucursal_id', $this->sucursal_id);
@@ -104,21 +106,19 @@ class Pedidos extends Component
                 $query->where('estado_revision', 1)->where('cantidad', '>', 0)
             );
         })->with([
-                    'existencias' => function ($q) use ($rol, $sucursalId) {
-                        if ($this->sucursal_id) {
-                            $q->where('sucursal_id', $this->sucursal_id);
-                        } elseif ($rol === 2 && $sucursalId) {
-                            $q->where('sucursal_id', $sucursalId);
-                        }
-                        $q->whereHas(
-                            'reposiciones',
-                            fn($query) =>
-                            $query->where('estado_revision', 1)->where('cantidad', '>', 0)
-                        )->with('sucursal', 'reposiciones');
-                    }
-                ])->get();
-
-        // Otros filtrados por sucursal si rol 2
+            'existencias' => function ($q) use ($rol, $sucursalId) {
+                if ($this->sucursal_id) {
+                    $q->where('sucursal_id', $this->sucursal_id);
+                } elseif ($rol === 2 && $sucursalId) {
+                    $q->where('sucursal_id', $sucursalId);
+                }
+                $q->whereHas(
+                    'reposiciones',
+                    fn($query) =>
+                    $query->where('estado_revision', 1)->where('cantidad', '>', 0)
+                )->with('sucursal', 'reposiciones');
+            }
+        ])->get();
         $otros = Otro::whereHas('existencias', function ($q) use ($rol, $sucursalId) {
             if ($this->sucursal_id) {
                 $q->where('sucursal_id', $this->sucursal_id);
@@ -131,21 +131,20 @@ class Pedidos extends Component
                 $query->where('estado_revision', 1)->where('cantidad', '>', 0)
             );
         })->with([
-                    'existencias' => function ($q) use ($rol, $sucursalId) {
-                        if ($this->sucursal_id) {
-                            $q->where('sucursal_id', $this->sucursal_id);
-                        } elseif ($rol === 2 && $sucursalId) {
-                            $q->where('sucursal_id', $sucursalId);
-                        }
-                        $q->whereHas(
-                            'reposiciones',
-                            fn($query) =>
-                            $query->where('estado_revision', 1)->where('cantidad', '>', 0)
-                        )->with('sucursal', 'reposiciones');
-                    }
-                ])->get();
+            'existencias' => function ($q) use ($rol, $sucursalId) {
+                if ($this->sucursal_id) {
+                    $q->where('sucursal_id', $this->sucursal_id);
+                } elseif ($rol === 2 && $sucursalId) {
+                    $q->where('sucursal_id', $sucursalId);
+                }
+                $q->whereHas(
+                    'reposiciones',
+                    fn($query) =>
+                    $query->where('estado_revision', 1)->where('cantidad', '>', 0)
+                )->with('sucursal', 'reposiciones');
+            }
+        ])->get();
 
-        // Solicitudes de pedido
         $solicitudPedidos = SolicitudPedido::with([
             'cliente',
             'detalles.producto.existencias.sucursal',
@@ -185,8 +184,6 @@ class Pedidos extends Component
                 }
             }
         }
-
-        // Pedidos filtrados por rol 2 (solo de su sucursal)
         $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles.existencia.sucursal'])
             ->when(
                 $this->search,
@@ -204,7 +201,11 @@ class Pedidos extends Component
                 $q->whereHas('detalles.existencia', fn($query) => $query->where('sucursal_id', $sucursalId))
             )
             ->latest()
+            ->take($this->cantidad)
             ->get();
+
+
+        $clientes = Cliente::orderBy('nombre')->get();
 
         return view('livewire.pedidos', [
             'pedidos' => $pedidos,
@@ -213,10 +214,22 @@ class Pedidos extends Component
             'detalles' => $this->detalles,
             'sucursales' => Sucursal::orderBy('nombre')->get(),
             'solicitudPedidos' => $solicitudPedidos,
+            'clientes' => $clientes,
             'sucursalId' => null,
         ]);
     }
 
+    public function cargarMas()
+    {
+        $this->cantidad += 50;
+    }
+
+    public function cargarMenos()
+    {
+        if ($this->cantidad > 50) {
+            $this->cantidad -= 50;
+        }
+    }
 
     public function abrirModal()
     {
@@ -233,6 +246,7 @@ class Pedidos extends Component
         $this->solicitudSeleccionadaId = null;
         $this->personal_id = null;
         $this->estado_pedido = 0;
+        $this->cliente_id = null;
         $this->pedido = new Pedido();
     }
     public function seleccionarSolicitud($id = null)
@@ -240,8 +254,12 @@ class Pedidos extends Component
         $this->solicitudSeleccionadaId = $id;
         $this->solicitud_pedido_id = $id;
 
-        if (!$id) {
+        if ($id) {
+            $solicitud = SolicitudPedido::with('cliente')->find($id);
+            $this->cliente_id = $solicitud?->cliente_id;
+        } else {
             $this->detalles = [];
+            $this->cliente_id = null;
         }
     }
     public function agregarProducto()
@@ -330,6 +348,7 @@ class Pedidos extends Component
         $this->estado_pedido = $this->pedido->estado_pedido;
         $this->fecha_pedido = $this->pedido->fecha_pedido ?? now();
         $this->observaciones = $this->pedido->observaciones;
+        $this->cliente_id = $this->pedido->cliente_id;
 
         $this->detalles = $this->pedido->detalles->map(function ($detalle) {
             $existenciable = $detalle->existencia->existenciable ?? null;
@@ -379,8 +398,6 @@ class Pedidos extends Component
         $this->detalles = array_values($this->detalles);
         $this->setMensaje('Detalle eliminado correctamente', 'success');
     }
-
-
     public function guardarPedido()
     {
         if ($this->solicitud_pedido_id) {
@@ -410,10 +427,12 @@ class Pedidos extends Component
         $pedido->estado_pedido = $this->estado_pedido;
         $pedido->fecha_pedido = $pedido->fecha_pedido ?? $this->fecha_pedido ?? now();
         $pedido->observaciones = $this->observaciones;
+        $pedido->cliente_id = $this->cliente_id;
+
 
         if (!$pedido->exists) {
             do {
-                $codigo = 'R-' . now()->format('YmdHis') . '-' . rand(100, 999);
+                $codigo = 'P-' . now()->format('YmdHis') . '-' . rand(100, 999);
             } while (Pedido::where('codigo', $codigo)->exists());
             $pedido->codigo = $codigo;
         }
@@ -455,9 +474,6 @@ class Pedidos extends Component
         $this->setMensaje('Pedido guardado correctamente', 'success');
         $this->cerrarModal();
     }
-
-
-
     public function eliminarPedido($pedido_id, $eliminarSolicitud = false)
     {
         $pedido = Pedido::with('detalles')->find($pedido_id);
@@ -492,8 +508,6 @@ class Pedidos extends Component
         $this->eliminarSolicitudAsociada = $eliminarSolicitud;
         $this->modalEliminarPedido = true;
     }
-
-
     public function abrirModalPagosPedido($pedido_id)
     {
         $this->pedidoParaPago = $pedido_id;
@@ -523,7 +537,6 @@ class Pedidos extends Component
 
         $this->modalPagos = true;
     }
-
     public function guardarPagosPedido()
     {
         foreach ($this->pagos as $index => $pago) {
@@ -561,22 +574,17 @@ class Pedidos extends Component
         $this->reset(['pagos']);
         $this->modalPagos = false;
     }
-
-
     public function agregarPagoPedido()
     {
         $this->pagos[] = [
             'id' => null,
             'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-
-            // FECHA COMPLETA NUEVA
             'fecha_pago' => now()->format('Y-m-d H:i:s'),
-
-            'monto' => null,
-            'observaciones' => null,
+            'monto' => 0,
+            'observaciones' => '',
             'imagen_comprobante' => null,
-            'metodo' => null,
-            'referencia' => null,
+            'metodo' => 0,
+            'referencia' => '',
             'estado' => 0,
             'sucursal_pago_id' => null,
         ];
@@ -591,7 +599,6 @@ class Pedidos extends Component
         unset($this->pagos[$index]);
         $this->pagos = array_values($this->pagos);
     }
-
     public function eliminarPedidoConfirmado()
     {
         if ($this->pedidoAEliminar) {
@@ -602,5 +609,4 @@ class Pedidos extends Component
         $this->pedidoAEliminar = null;
         $this->eliminarSolicitudAsociada = false;
     }
-
 }

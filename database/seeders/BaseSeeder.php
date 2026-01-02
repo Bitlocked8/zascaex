@@ -14,20 +14,29 @@ class BaseSeeder extends Seeder
     public function run(): void
     {
         $bases = [
-            ['descripcion' => 'cuello corto', 'capacidad' => 250, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 17.6'],
-            ['descripcion' => 'cuello largo', 'capacidad' => 250, 'tipo' => 'Alto', 'compatibilidad' => 'Pet Preform 16 gr'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 330, 'tipo' => 'Normal', 'compatibilidad' => 'Pet Preform 16 gr'],
-            ['descripcion' => '', 'capacidad' => 400, 'tipo' => 'Normal', 'compatibilidad' => 'Pet Preform 42 gr'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 500, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 530, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 600, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 600, 'tipo' => 'Bic.', 'compatibilidad' => 'Preforsa 20.1'],
-            ['descripcion' => 'cuello corto', 'capacidad' => 750, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1'],
-            ['descripcion' => '', 'capacidad' => 400, 'tipo' => 'Santa Cruz', 'compatibilidad' => 'Pet Preform 42 gr'],
-            ['descripcion' => '', 'capacidad' => 1000, 'tipo' => 'Normal', 'compatibilidad' => 'Marecbol 35.5'],
-            ['descripcion' => '', 'capacidad' => 1000, 'tipo' => 'Alcalina', 'compatibilidad' => 'Marecbol 35.5'],
-            ['descripcion' => '', 'capacidad' => 1500, 'tipo' => 'Normal', 'compatibilidad' => 'Marecbol 35.5'],
-            ['descripcion' => '', 'capacidad' => 600, 'tipo' => 'Alcalina', 'compatibilidad' => 'Preforsa 20.1'],
+            ['descripcion' => 'Normal 500 ml', 'capacidad' => 500, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1 y marecbol 20.5 '],
+            ['descripcion' => 'Normal 530 ml', 'capacidad' => 530, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1 y marecbol 20.5 '],
+            ['descripcion' => 'Normal 600 ml', 'capacidad' => 600, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1 y marecbol 20.5 '],
+            ['descripcion' => 'Bicentenario 600 ml', 'capacidad' => 600, 'tipo' => 'Bicentenario', 'compatibilidad' => 'Preforsa 20.1 y marecbol 20.5 '],
+            ['descripcion' => 'Normal 750 ml', 'capacidad' => 750, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1 y marecbol 20.5 '],
+            ['descripcion' => 'Normal 400 ml', 'capacidad' => 400, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 20.1 y marecbol 20.5 '],
+
+            ['descripcion' => 'Normal 1 litro ', 'capacidad' => 1000, 'tipo' => 'Normal', 'compatibilidad' => 'Marecbol 35.5'],
+            ['descripcion' => 'Normal 1.5 litros ', 'capacidad' => 1500, 'tipo' => 'Normal', 'compatibilidad' => 'Marecbol 35.5'],
+
+
+            ['descripcion' => 'Normal 250 ml bajo', 'capacidad' => 250, 'tipo' => 'Normal', 'compatibilidad' => 'Preforsa 17.6'],
+
+            ['descripcion' => 'Normal 330 ml alto', 'capacidad' => 330, 'tipo' => 'Normal', 'compatibilidad' => 'Preforma base alta'],
+            ['descripcion' => 'Normal 250 ml alto', 'capacidad' => 250, 'tipo' => 'Normal', 'compatibilidad' => 'Preforma base alta'],
+
+            ['descripcion' => 'Normal 400 ml vidrio', 'capacidad' => 400, 'tipo' => 'Normal', 'compatibilidad' => 'vidrio'],
+
+            ['descripcion' => 'Normal 400 ml vip', 'capacidad' => 400, 'tipo' => 'Normal', 'compatibilidad' => 'vip'],
+            
+            ['descripcion' => 'Normal 1 litro azul', 'capacidad' => 1000, 'tipo' => 'Normal', 'compatibilidad' => 'Preforma azul'],
+            ['descripcion' => 'Normal 600 ml azul ', 'capacidad' => 600, 'tipo' => 'Normal', 'compatibilidad' => 'Preforma azul'],
+
         ];
 
         foreach ($bases as $data) {

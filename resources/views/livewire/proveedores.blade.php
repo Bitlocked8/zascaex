@@ -1,73 +1,62 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-  <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="w-full max-w-screen-xl">
 
-    <h3
-      class="col-span-full text-center text-2xl font-bold uppercase text-cyan-700 bg-cyan-100 px-6 py-2 rounded-full mx-auto">
+    <h3 class="text-center text-2xl font-bold uppercase text-cyan-700 bg-cyan-100 px-6 py-2 rounded-full mx-auto mb-4">
       Proveedores
     </h3>
 
-    <div class="flex items-center gap-2 mb-4 col-span-full">
+    <!-- Buscador y botón -->
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
       <input type="text" wire:model.live="search" placeholder="Buscar por razón social, contacto o correo..."
-        class="input-minimal w-full" />
-
-      <button wire:click="abrirModal('create')" class="btn-cyan">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path
-            d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-          <path
-            d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-        </svg>
-        Añadir
-      </button>
+        class="input-minimal w-full sm:w-auto flex-1" />
+      <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
     </div>
 
-    @forelse($proveedores as $proveedor)
-      <div class="card-teal flex flex-col gap-4 p-4">
-        <div class="flex flex-col gap-2">
-          <p class="text-emerald-600 uppercase font-semibold">
-            {{ $proveedor->razonSocial }}
-          </p>
-          <p class="text-slate-600"> {{ $proveedor->nombreContacto ?? 'N/A' }}</p>
-          <p><strong>Teléfono:</strong> {{ $proveedor->telefono ?? 'N/A' }}</p>
-          <p><strong>Correo:</strong> {{ $proveedor->correo ?? 'N/A' }}</p>
-          <p><strong>Tipo:</strong> {{ ucfirst($proveedor->tipo) }}</p>
-          <p><strong>Servicio:</strong> {{ ucfirst($proveedor->servicio) }}</p>
-          <p class="mt-1 text-sm font-semibold">
-            <span class="{{ $proveedor->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
-              {{ $proveedor->estado == 0 ? 'Inactivo' : 'Activo' }}
-            </span>
-          </p>
+    <!-- Tabla scrollable -->
+    <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-cyan-50 sticky top-0 z-10">
+          <tr>
+            <th class="px-4 py-2 text-left text-cyan-700 font-semibold">Razón Social</th>
+            <th class="px-4 py-2 text-left text-cyan-700 font-semibold">Contacto</th>
+            <th class="px-4 py-2 text-left text-cyan-700 font-semibold">Teléfono</th>
+            <th class="px-4 py-2 text-left text-cyan-700 font-semibold">Correo</th>
+            <th class="px-4 py-2 text-left text-cyan-700 font-semibold">Tipo / Servicio</th>
+            <th class="px-4 py-2 text-left text-cyan-700 font-semibold">Estado</th>
+            <th class="px-4 py-2 text-center text-cyan-700 font-semibold">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          @forelse($proveedores as $proveedor)
+            <tr class="hover:bg-cyan-50">
+              <td class="px-4 py-2">{{ $proveedor->razonSocial }}</td>
+              <td class="px-4 py-2">{{ $proveedor->nombreContacto ?? 'N/A' }}</td>
+              <td class="px-4 py-2">{{ $proveedor->telefono ?? 'N/A' }}</td>
+              <td class="px-4 py-2">{{ $proveedor->correo ?? 'N/A' }}</td>
+              <td class="px-4 py-2">
+                {{ ucfirst($proveedor->tipo) ?? 'N/A' }} / {{ ucfirst($proveedor->servicio) ?? 'N/A' }}
+              </td>
+              <td class="px-4 py-2">
+                <span class="{{ $proveedor->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
+                  {{ $proveedor->estado == 0 ? 'Inactivo' : 'Activo' }}
+                </span>
+              </td>
+              <td class="px-4 py-2 flex justify-center gap-1">
+                <button wire:click="verDetalle({{ $proveedor->id }})" class="btn-cyan" title="Ver detalle">Ver más</button>
+                <button wire:click="editarProveedor({{ $proveedor->id }})" class="btn-cyan" title="Editar">Editar</button>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="7" class="text-center py-4 text-gray-600">No hay proveedores registrados.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
 
-        </div>
-
-        <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-          <button wire:click="verDetalle({{ $proveedor->id }})" class="btn-cyan" title="Ver detalle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M8 12h.01M12 12h.01M16 12h.01" />
-            </svg>
-            Ver más
-          </button>
-
-          <button wire:click="editarProveedor({{ $proveedor->id }})" class="btn-cyan" title="Editar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-              <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-              <path d="M16 5l3 3" />
-            </svg>
-            Editar
-          </button>
-        </div>
-      </div>
-    @empty
-      <div class="col-span-full text-center py-4 text-gray-600">
-        No hay proveedores registrados.
-      </div>
-    @endforelse
   </div>
+
 
 
 

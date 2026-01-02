@@ -11,6 +11,10 @@ return new class extends Migration {
             $table->id();
             $table->string('codigo')->unique();
             $table->foreignId('solicitud_pedido_id')->nullable()->constrained('solicitud_pedidos')->onDelete('set null');
+            $table->foreignId('cliente_id')
+                ->nullable()
+                ->constrained('clientes')
+                ->onDelete('set null');
             $table->foreignId('personal_id')->nullable()->constrained('personals')->onDelete('cascade');
             $table->tinyInteger('estado_pedido')->default(0);
             $table->text('observaciones')->nullable();

@@ -1,103 +1,63 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-  <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="w-full max-w-screen-xl">
 
-  <h3
-      class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
-      Preformas
-    </h3>
+        <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
+            Preformas
+        </h3>
 
-    <div class="flex items-center gap-2 mb-4 col-span-full">
-      <input type="text" wire:model.live="search" placeholder="Buscar por descripción o detalle..."
-        class="input-minimal w-full" />
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
+            <input type="text" wire:model.live="search" placeholder="Buscar por descripción o detalle..."
+                class="input-minimal w-full sm:w-auto flex-1" />
+            <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
+        </div>
 
-      <button wire:click="abrirModal('create')" class="btn-cyan" title="Agregar preforma">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path
-            d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-          <path
-            d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-        </svg>
-        Añadir
-      </button>
+        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-teal-50 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Descripción</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Color</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Existencias</th>
+                        <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($preformas as $preforma)
+                        <tr class="hover:bg-teal-50">
+                            <td class="px-4 py-2">{{ $preforma->descripcion ?? 'Sin descripción' }}</td>
+                            <td class="px-4 py-2">{{ $preforma->color ?? 'N/A' }}</td>
+                            <td class="px-4 py-2">
+                                <span class="{{ $preforma->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
+                                    {{ $preforma->estado == 0 ? 'Inactivo' : 'Activo' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2">
+                                @if($preforma->existencias->isEmpty())
+                                    N/A
+                                @else
+                                    @foreach($preforma->existencias as $existencia)
+                                        <div class="text-sm text-cyan-700">
+                                            {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}: {{ $existencia->cantidad }}
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </td>
+                            <td class="px-4 py-2 flex justify-center gap-1">
+                                <button wire:click="modaldetalle({{ $preforma->id }})" class="btn-cyan" title="Ver Detalles">Ver más</button>
+                                <button wire:click="abrirModal('edit', {{ $preforma->id }})" class="btn-cyan" title="Editar">Editar</button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-gray-600">No hay preformas registradas.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
     </div>
-
-    @forelse($preformas as $preforma)
-      <div class="card-teal flex flex-col gap-4 p-4">
-        <div class="flex flex-col gap-2">
-          <p class="text-emerald-600 uppercase font-semibold">
-            {{ $preforma->descripcion ?? 'Sin descripción' }}
-          </p>
-          <p><strong>Insumo en el que es usado :</strong> {{ $preforma->insumo ?? 'N/A' }}</p>
-          <p><strong>Capacidad en ml.:</strong> {{ $preforma->capacidad ?? 'N/A' }}</p>
-          <p><strong>Color de preforma:</strong> {{ $preforma->color ?? 'N/A' }}</p>
-
-          <p class="mt-1 text-sm font-semibold">
-            <span class="{{ $preforma->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
-              {{ $preforma->estado == 0 ? 'Inactivo' : 'Activo' }}
-            </span>
-          </p>
-
-          @if($preforma->existencias->isEmpty())
-            <p class="text-gray-500 text-sm font-medium">
-              N/A
-            </p>
-          @else
-            @foreach($preforma->existencias as $existencia)
-              <p class="text-cyan-700 text-sm font-semibold">
-                <span class="block">Sucursal: {{ $existencia->sucursal->nombre ?? 'Sin sucursal' }}</span>
-                <span class="block">Cantidad: {{ $existencia->cantidad }}</span>
-                <span class="block">Mínima: {{ $existencia->cantidadMinima ?? 0 }}</span>
-              </p>
-            @endforeach
-          @endif
-        </div>
-
-        <div class="flex justify-center items-center mt-2">
-          @if($preforma->imagen)
-            <img src="{{ asset('storage/' . $preforma->imagen) }}" alt="Imagen de preforma"
-              class="w-24 h-24 object-cover rounded-lg border border-cyan-300">
-          @else
-            <div class="w-24 h-24 flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg text-xs">
-              Sin imagen
-            </div>
-          @endif
-        </div>
-
-        <div class="flex flex-wrap justify-center md:justify-center gap-2 border-t border-gray-200 pt-3 pb-2">
-          <button wire:click="modaldetalle({{ $preforma->id }})" class="btn-cyan flex items-center gap-1 flex-shrink-0"
-            title="Ver Detalles">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-              <path d="M8 12l0 .01" />
-              <path d="M12 12l0 .01" />
-              <path d="M16 12l0 .01" />
-            </svg>
-            Ver más
-          </button>
-
-          <button wire:click="abrirModal('edit', {{ $preforma->id }})"
-            class="btn-cyan flex items-center gap-1 flex-shrink-0" title="Editar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
-              <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
-              <path d="M16 5l3 3" />
-            </svg>
-            Editar
-          </button>
-        </div>
-      </div>
-    @empty
-      <div class="col-span-full text-center py-4 text-gray-600">
-        No hay preformas registradas.
-      </div>
-    @endforelse
-
-  </div>
 
 
 
