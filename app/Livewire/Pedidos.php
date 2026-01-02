@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\PagoPedido;
 use App\Models\Pedido;
 use App\Models\PedidoDetalle;
 use App\Models\Producto;
@@ -13,10 +12,9 @@ use App\Models\Reposicion;
 use App\Models\SolicitudPedido;
 use App\Models\Sucursal;
 use App\Models\Cliente;
-
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use App\Models\SucursalPago;
+
 
 class Pedidos extends Component
 {
@@ -43,10 +41,6 @@ class Pedidos extends Component
     public $estado_pedido = 0;
     public $fecha_pedido;
     public $solicitudSeleccionadaId = null;
-    public $pedidoParaPago;
-    public $pagos = [];
-    public $sucursalesPago = [];
-    public $modalPagos = false;
     public $modalEliminarPedido = false;
     public $pedidoAEliminar = null;
     public $eliminarSolicitudAsociada = false;
@@ -507,97 +501,6 @@ class Pedidos extends Component
         $this->pedidoAEliminar = $pedido_id;
         $this->eliminarSolicitudAsociada = $eliminarSolicitud;
         $this->modalEliminarPedido = true;
-    }
-    public function abrirModalPagosPedido($pedido_id)
-    {
-        $this->pedidoParaPago = $pedido_id;
-
-        $this->sucursalesPago = SucursalPago::where('estado', 1)->get();
-
-        $this->pagos = PagoPedido::where('pedido_id', $pedido_id)
-            ->get()
-            ->map(fn($p) => [
-                'id' => $p->id,
-                'codigo_pago' => $p->codigo_pago ?? 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-
-                // FECHA COMPLETA
-                'fecha_pago' => $p->fecha_pago
-                    ? Carbon::parse($p->fecha_pago)->format('Y-m-d H:i:s')
-                    : now()->format('Y-m-d H:i:s'),
-
-                'monto' => $p->monto,
-                'observaciones' => $p->observaciones,
-                'imagen_comprobante' => $p->imagen_comprobante,
-                'metodo' => $p->metodo,
-                'referencia' => $p->referencia,
-                'estado' => $p->estado,
-                'sucursal_pago_id' => $p->sucursal_pago_id,
-            ])
-            ->toArray();
-
-        $this->modalPagos = true;
-    }
-    public function guardarPagosPedido()
-    {
-        foreach ($this->pagos as $index => $pago) {
-
-            // ✔ SOLO VALIDAR QUE EL MONTO ES OBLIGATORIO
-            $this->validate([
-                "pagos.$index.monto" => "required",
-            ], [
-                "pagos.$index.monto.required" => "El monto es obligatorio.",
-            ]);
-
-            $imagenPath = $pago['imagen_comprobante'];
-
-            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
-                $imagenPath = $imagenPath->store('pagos_pedido', 'public');
-            }
-
-            PagoPedido::updateOrCreate(
-                ['id' => $pago['id'] ?? 0],
-                [
-                    'pedido_id' => $this->pedidoParaPago,
-                    'codigo_pago' => $pago['codigo_pago'],
-                    'monto' => $pago['monto'],
-                    'fecha_pago' => Carbon::parse($pago['fecha_pago']),
-                    'observaciones' => $pago['observaciones'],
-                    'imagen_comprobante' => $imagenPath,
-                    'metodo' => (int) $pago['metodo'],
-                    'referencia' => $pago['referencia'],
-                    'estado' => (bool) $pago['estado'],
-                    'sucursal_pago_id' => $pago['sucursal_pago_id'],
-                ]
-            );
-        }
-
-        $this->reset(['pagos']);
-        $this->modalPagos = false;
-    }
-    public function agregarPagoPedido()
-    {
-        $this->pagos[] = [
-            'id' => null,
-            'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-            'fecha_pago' => now()->format('Y-m-d H:i:s'),
-            'monto' => 0,
-            'observaciones' => '',
-            'imagen_comprobante' => null,
-            'metodo' => 0,
-            'referencia' => '',
-            'estado' => 0,
-            'sucursal_pago_id' => null,
-        ];
-    }
-
-    public function eliminarPagoPedido($index)
-    {
-        $pago = $this->pagos[$index] ?? null;
-        if ($pago && isset($pago['id']) && $pago['id']) {
-            PagoPedido::find($pago['id'])?->delete();
-        }
-        unset($this->pagos[$index]);
-        $this->pagos = array_values($this->pagos);
     }
     public function eliminarPedidoConfirmado()
     {
