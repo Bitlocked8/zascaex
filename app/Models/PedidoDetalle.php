@@ -15,22 +15,20 @@ class PedidoDetalle extends Model
         'existencia_id',
         'cantidad',
     ];
-
-    // Relación con Pedido
     public function pedido()
     {
         return $this->belongsTo(Pedido::class);
     }
-
-    // Relación con Reposicion (lote físico)
     public function reposicion()
     {
         return $this->belongsTo(Reposicion::class);
     }
-
-    // Relación con Existencia (producto)
     public function existencia()
     {
         return $this->belongsTo(Existencia::class);
+    }
+    public function pagoDetalles()
+    {
+        return $this->hasMany(PagoDetalle::class, 'pedido_detalle_id');
     }
 }

@@ -22,9 +22,6 @@
           <tr>
             <th class="px-4 py-2 text-left text-teal-700 font-semibold">Cliente</th>
             <th class="px-4 py-2 text-left text-teal-700 font-semibold">Código</th>
-            <th class="px-4 py-2 text-right text-teal-700 font-semibold">Crédito</th>
-            <th class="px-4 py-2 text-right text-teal-700 font-semibold">Pagado</th>
-            <th class="px-4 py-2 text-right text-teal-700 font-semibold">Saldo</th>
             <th class="px-4 py-2 text-center text-teal-700 font-semibold">Estado</th>
             <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
           </tr>
@@ -33,78 +30,71 @@
         <tbody class="bg-white divide-y divide-gray-200">
           @forelse($pedidos as $pedido)
           @php
-          $pagos = $pedido->pagoPedidos ?? collect();
-          $credito = $pagos->where('metodo', 2)->sum('monto');
-          $pagado = $pagos->where('estado', 1)->where('metodo', '<>', 2)->sum('monto');
-            $saldo = max($credito - $pagado, 0);
-            $empacado = \App\Models\Adornado::where('pedido_id', $pedido->id)->exists();
-            @endphp
-
-            <tr class="hover:bg-teal-50">
-              <td class="px-4 py-2 font-semibold text-teal-700">
+          $empacado = \App\Models\Adornado::where('pedido_id', $pedido->id)->exists();
+          @endphp
+          <tr class="hover:bg-teal-50">
+            <td class="px-4 py-2">
+              <div class="font-semibold text-teal-700 truncate">
                 {{ $pedido->cliente?->nombre ?? $pedido->solicitudPedido?->cliente?->nombre ?? 'Sin cliente' }}
+              </div>
 
-              </td>
-
-              <td class="px-4 py-2">
-                {{ $pedido->codigo }}
-              </td>
-
-              <td class="px-4 py-2 text-right">
-                Bs {{ number_format($credito, 2) }}
-              </td>
-
-              <td class="px-4 py-2 text-right">
-                Bs {{ number_format($pagado, 2) }}
-              </td>
-
-              <td class="px-4 py-2 text-right font-bold {{ $saldo > 0 ? 'text-indigo-600' : 'text-emerald-600' }}">
-                Bs {{ number_format($saldo, 2) }}
-              </td>
-
-              <td class="px-4 py-2 text-center">
-                @if($pedido->estado_pedido === 0)
-                <span class="px-2 py-1 text-xs rounded-full bg-blue-700 text-white font-semibold">
-                  Preparando productos
+              @if($pedido->personal?->nombres)
+              <div class="mt-1">
+                <span class="text-xs text-gray-500">Personal:</span>
+                <span class="inline-block text-xs text-blue-700 font-semibold">
+                  {{ $pedido->personal->nombres }}
                 </span>
-                @elseif($pedido->estado_pedido === 1)
-                <span class="px-2 py-1 text-xs rounded-full bg-orange-500 text-white font-semibold">
-                  Espera de pago
-                </span>
-                @elseif($pedido->estado_pedido === 2)
-                <span class="px-2 py-1 text-xs rounded-full bg-green-500 text-white font-semibold">
-                  Pedido Completado
-                </span>
-                @else
-                <span class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700 font-semibold">
-                  Desconocido
-                </span>
-                @endif
-              </td>
+              </div>
+              @endif
+            </td>
 
+            <td class="px-4 py-2">
+              {{ $pedido->codigo }}<br>
+              <span class="text-gray-500 text-sm">
+                {{ $pedido->fecha_pedido ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') : 'Sin fecha' }}
+              </span>
+            </td>
 
-              <td class="px-4 py-2 flex flex-wrap justify-center gap-1">
-                <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan text-xs">
-                  Editar
-                </button>
-                <button wire:click="abrirModalDetallePedido({{ $pedido->id }})" class="btn-cyan text-xs">
-                  Ver
-                </button>
-                @if($pedido->estado_pedido === 0)
-                <button
-                  wire:click="confirmarEliminarPedido({{ $pedido->id }})" class="btn-cyan text-xs">
-                  Eliminar
-                </button>
-                @endif
-              </td>
-            </tr>
-            @empty
-            <tr>
-              <td colspan="7" class="text-center py-4 text-gray-600">
-                No hay pedidos registrados.
-              </td>
-            </tr>
-            @endforelse
+            <td class="px-4 py-2 text-center">
+              @if($pedido->estado_pedido === 0)
+              <span class="px-2 py-1 text-xs rounded-full bg-blue-700 text-white font-semibold">
+                Preparando productos
+              </span>
+              @elseif($pedido->estado_pedido === 1)
+              <span class="px-2 py-1 text-xs rounded-full bg-orange-500 text-white font-semibold">
+                Espera de pago
+              </span>
+              @elseif($pedido->estado_pedido === 2)
+              <span class="px-2 py-1 text-xs rounded-full bg-green-500 text-white font-semibold">
+                Pedido Completado
+              </span>
+              @else
+              <span class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700 font-semibold">
+                Desconocido
+              </span>
+              @endif
+            </td>
+            <td class="px-4 py-2 flex flex-wrap justify-center gap-1">
+              <button wire:click="editarPedido({{ $pedido->id }})" class="btn-cyan text-xs">
+                Editar
+              </button>
+              <button wire:click="abrirModalDetallePedido({{ $pedido->id }})" class="btn-cyan text-xs">
+                Ver
+              </button>
+              @if($pedido->estado_pedido === 0)
+              <button wire:click="confirmarEliminarPedido({{ $pedido->id }})" class="btn-cyan text-xs">
+                Eliminar
+              </button>
+              @endif
+            </td>
+          </tr>
+          @empty
+          <tr>
+            <td colspan="4" class="text-center py-4 text-gray-600">
+              No hay pedidos registrados.
+            </td>
+          </tr>
+          @endforelse
         </tbody>
       </table>
     </div>
@@ -115,7 +105,6 @@
         Cargar más
       </button>
       @endif
-
       @if($cantidad > 50)
       <button wire:click="cargarMenos" class="btn-cyan px-4 py-2 rounded">
         Cargar menos
@@ -126,10 +115,12 @@
   </div>
 
 
+
   @if($modalPedido)
   <div class="modal-overlay">
     <div class="modal-box">
       <div class="modal-content flex flex-col gap-4">
+        @if(auth()->user()->rol_id != 3)
         <div class="sm:w-full w-auto">
           <label class="text-sm font-semibold text-gray-700">Solicitud de Pedido</label>
 
@@ -247,7 +238,7 @@
           </div>
           @endif
         </div>
-
+        @endif
 
 
         @if(!$solicitud_pedido_id)
@@ -298,7 +289,7 @@
         @endif
 
 
-        @if(auth()->user()->rol_id !== 2)
+        @if(auth()->user()->rol_id === 1)
         <div class="text-center mb-6">
           <label class="font-semibold text-sm">Sucursal</label>
 
@@ -528,7 +519,9 @@
     <div class="modal-box max-w-3xl">
 
       <div class="modal-content flex flex-col gap-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+
           <div class="flex flex-col gap-3">
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Código:</span>
@@ -548,8 +541,7 @@
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Departamento:</span>
-              <span
-                class="badge-info">{{ $pedidoDetalle->solicitudPedido->cliente->departamento_localidad ?? '-' }}</span>
+              <span class="badge-info">{{ $pedidoDetalle->solicitudPedido->cliente->departamento_localidad ?? '-' }}</span>
             </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Personal de atención:</span>
@@ -558,17 +550,19 @@
           </div>
 
           <div class="flex flex-col gap-3">
-            <span
-              class="badge-info">{{ \Carbon\Carbon::parse($pedidoDetalle->fecha_pedido)->format('d M Y, H:i') }}</span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span class="label-info">Fecha del pedido:</span>
+              <span class="badge-info">{{ \Carbon\Carbon::parse($pedidoDetalle->fecha_pedido)->format('d M Y, H:i') }}</span>
+            </div>
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
               <span class="label-info">Estado:</span>
-              <span
-                class="inline-block px-2 py-1 rounded-full text-sm font-semibold
-                                    {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
+              <span class="inline-block px-2 py-1 rounded-full text-sm font-semibold
+                  {{ $pedidoDetalle->estado_pedido == 0 ? 'bg-blue-700 text-white' : ($pedidoDetalle->estado_pedido == 1 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white') }}">
                 {{ $pedidoDetalle->estado_pedido == 0 ? 'Preparando' : ($pedidoDetalle->estado_pedido == 1 ? 'En Revisión' : 'Completado') }}
               </span>
             </div>
           </div>
+
         </div>
 
         <hr class="my-2">
@@ -583,19 +577,13 @@
           $totalProducto = $precioUnitario * $detalle->cantidad;
           $totalProductos += $totalProducto;
           @endphp
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center py-2">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2">
             <div class="flex flex-col gap-1">
               <span class="font-medium">{{ $producto->descripcion ?? 'Sin nombre' }}</span>
-              <span class="font-medium">Precio unitario: {{ number_format($precioUnitario, 2) }} BS</span>
-              <span class="font-medium">Total: {{ number_format($totalProducto, 2) }} BS</span>
+              <span class="text-sm text-gray-600">Precio unitario: {{ number_format($precioUnitario, 2) }} BS</span>
+              <span class="text-sm text-gray-600">Total: {{ number_format($totalProducto, 2) }} BS</span>
               <span class="text-sm text-gray-500">Sucursal: {{ $sucursal->nombre ?? 'N/A' }}</span>
-              @if(isset($producto->imagen))
-              <img src="{{ asset('storage/' . $producto->imagen) }}" class="w-60 h-60 object-cover rounded shadow"
-                alt="Imagen Producto">
-              @endif
-            </div>
-            <div class="mt-2 md:mt-0">
-              <span class="badge-info">Cantidad: {{ $detalle->cantidad }}</span>
+              <span class="text-sm text-gray-500">Cantidad: {{ $detalle->cantidad }}</span>
             </div>
           </div>
           @endforeach
@@ -606,68 +594,24 @@
           <span class="font-semibold text-lg">{{ number_format($totalProductos, 2) }} BS</span>
         </div>
 
-        @php
-        $pagoPedidos = $pedidoDetalle->pagoPedidos ?? collect();
-        $creditos = $pagoPedidos->where('metodo', 2);
-        $totalCredito = $creditos->sum('monto');
-        $pagosConfirmados = $pagoPedidos->where('metodo', '<>', 2);
-          $totalPagado = $pagosConfirmados->where('estado', 1)->sum('monto');
-          $saldoPendiente = $totalCredito > 0 ? max($totalCredito - $totalPagado, 0) : 0;
-          $baseSaldo = $totalCredito > 0 ? $totalCredito : 0;
-          @endphp
-
-          @if($pagoPedidos->count())
-          <div class="mt-6 border-t pt-4">
-            <h3 class="font-semibold text-lg mb-2">Pagos del Pedido</h3>
-
-            <p><strong>Créditos registrados (base):</strong> Bs {{ number_format($totalCredito, 2) }}</p>
-
-            <p><strong>Pagos:</strong></p>
-            @if($pagosConfirmados->count())
-            <ul class="flex flex-wrap gap-2 mt-1">
-              @foreach($pagosConfirmados as $pago)
-              <li
-                class="px-2 py-1 rounded-full text-xs {{ $pago->estado ? 'bg-green-600 text-white' : 'bg-red-600 text-white' }}">
-                Bs {{ number_format($pago->monto, 2) }}
-                ({{ $pago->metodo == 0 ? 'QR' : ($pago->metodo == 1 ? 'Efectivo' : 'Otro') }})
-                {{ $pago->estado ? 'Pagado' : 'No pagado' }}
-              </li>
-              @endforeach
-            </ul>
-            @else
-            Bs 0.00
-            @endif
-
-            <div class="mt-3">
-              <span class="font-semibold">Saldo Pendiente:</span>
-              <span class="text-indigo-600 font-bold">Bs {{ number_format($saldoPendiente, 2) }}</span>
-              <span class="text-gray-500 text-xs">(Base: Bs {{ number_format($baseSaldo, 2) }})</span>
-            </div>
+        <div>
+          <span class="label-info block mb-1">Observaciones:</span>
+          <div class="bg-gray-100 rounded p-2 text-sm text-gray-700">
+            {{ $pedidoDetalle->observaciones ?? 'Sin observaciones' }}
           </div>
-          @endif
-          <div>
-            <span class="label-info block mb-1">Observaciones:</span>
-            <div class="bg-gray-100 rounded p-2 text-sm text-gray-700">
-              {{ $pedidoDetalle->observaciones ?? 'Sin observaciones' }}
-            </div>
-          </div>
+        </div>
 
       </div>
-      <div class="modal-footer">
-        <button wire:click="$set('modalDetallePedido', false)" class="btn-cyan" title="Cerrar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-            <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-          </svg>
+
+      <div class="modal-footer mt-4">
+        <button wire:click="$set('modalDetallePedido', false)" class="btn-cyan w-full sm:w-auto" title="Cerrar">
           CERRAR
         </button>
       </div>
-
     </div>
   </div>
   @endif
+
 
   @if($modalEliminarPedido)
   <div class="modal-overlay">

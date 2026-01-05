@@ -5,14 +5,11 @@
             Productos
         </h3>
 
-        <!-- Buscador y botón -->
         <div class="flex items-center gap-2 mb-4 flex-wrap">
             <input type="text" wire:model.live="search" placeholder="Buscar por descripción o tipo..."
                 class="input-minimal w-full sm:w-auto flex-1" />
             <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
         </div>
-
-        <!-- Tabla scrollable -->
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-teal-50 sticky top-0 z-10">
@@ -81,69 +78,55 @@
                             </div>
                         @endif
                     </div>
-
-                    {{-- DESCRIPCIÓN --}}
                     <div>
                         <label class="text-u">Nombre (Requerido)</label>
                         <input wire:model="descripcion" class="input-minimal" placeholder="Descripción">
                     </div>
 
-                    {{-- UNIDAD --}}
                     <div>
                         <label>Unidad (Opcional)</label>
                         <input wire:model="unidad" class="input-minimal" placeholder="Litros, ml, etc">
                     </div>
 
-                    {{-- TIPO CONTENIDO --}}
                     <div>
                         <label class="text-u">Tipo de Contenido (Requerido)</label>
                         <input wire:model="tipoContenido" class="input-minimal" placeholder="Contenido">
                     </div>
-
-                    {{-- TIPO PRODUCTO --}}
                     <div>
                         <label class="text-u">Tipo de Producto (Requerido)</label>
                         <input wire:model="tipoProducto" class="input-minimal" placeholder="Botella, botellón, etc">
                     </div>
 
-                    {{-- MATERIAL / TIPO --}}
                     <div>
                         <label>Tipo / Material (Opcional)</label>
                         <input wire:model="tipo" class="input-minimal" placeholder="Material">
                     </div>
 
-                    {{-- CAPACIDAD --}}
                     <div>
                         <label class="text-u">Capacidad (Requerido)</label>
                         <input type="number" wire:model="capacidad" class="input-minimal" min="0" step="0.01"
                             placeholder="Litros">
                     </div>
 
-                    {{-- PAQUETE --}}
                     <div>
                         <label>Paquete (Opcional)</label>
                         <input wire:model="paquete" class="input-minimal" placeholder="Paquete(s)">
                     </div>
 
-                    {{-- PRECIO REF --}}
                     <div>
                         <label class="text-u">Precio de Referencia (Bs) (Requerido)</label>
                         <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" min="0">
                     </div>
 
-                    {{-- OBS --}}
                     <div>
                         <label>Observaciones (Opcional)</label>
                         <textarea wire:model="observaciones" class="input-minimal" rows="2"></textarea>
                     </div>
 
-                    {{-- CANTIDAD MÍNIMA --}}
                     <div>
                         <label>Cantidad Mínima (Opcional)</label>
                         <input type="number" wire:model="cantidadMinima" class="input-minimal" min="0">
                     </div>
-
-                    {{-- ESTADO --}}
                     <div>
                         <label>Estado</label>
 
@@ -156,10 +139,7 @@
                             @endforeach
                         </div>
                     </div>
-
                 </div>
-
-                {{-- FOOTER --}}
                 <div class="modal-footer">
                     <button type="button" wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

@@ -9,19 +9,25 @@ return new class extends Migration {
     {
         Schema::create('pago_pedidos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pedido_id')->constrained('pedidos')->onDelete('cascade');
-            $table->foreignId('sucursal_pago_id')->nullable()->constrained('sucursal_pagos')->onDelete('set null');
+            $table->foreignId('pedido_id')
+                ->constrained('pedidos')
+                ->onDelete('cascade');
 
-            $table->decimal('monto', 10, 2);
-            $table->tinyInteger('metodo')->default(0)->comment('0=QR, 1=Efectivo, 2=Crédito');
-            $table->boolean('estado')->default(false)->comment('false=pendiente, true=pagado');
-            $table->string('codigo_pago')->nullable()->unique();
+            $table->foreignId('sucursal_pago_id')
+                ->nullable()
+                ->constrained('sucursal_pagos');
+            $table->decimal('monto', 10, 2)->default(0);
+            $table->tinyInteger('metodo')->default(0);
+            $table->boolean('estado')->default(false);
+
             $table->string('referencia')->nullable();
-            $table->dateTime('fecha_pago')->nullable();
-            $table->string('imagen_comprobante')->nullable();
+            $table->string('codigo_factura')->nullable()->unique();
+            $table->datetime('fecha')->nullable();
+            $table->string('archivo_factura')->nullable();
+            $table->string('archivo_comprobante')->nullable();
             $table->text('observaciones')->nullable();
-            $table->timestamps();
 
+            $table->timestamps();
         });
     }
 

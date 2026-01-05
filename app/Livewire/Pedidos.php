@@ -91,7 +91,7 @@ class Pedidos extends Component
         $productos = Producto::whereHas('existencias', function ($q) use ($rol, $sucursalId) {
             if ($this->sucursal_id) {
                 $q->where('sucursal_id', $this->sucursal_id);
-            } elseif ($rol === 2 && $sucursalId) {
+            } elseif (in_array($rol, [2, 3]) && $sucursalId) {
                 $q->where('sucursal_id', $sucursalId);
             }
             $q->whereHas(
@@ -103,7 +103,7 @@ class Pedidos extends Component
             'existencias' => function ($q) use ($rol, $sucursalId) {
                 if ($this->sucursal_id) {
                     $q->where('sucursal_id', $this->sucursal_id);
-                } elseif ($rol === 2 && $sucursalId) {
+                } elseif (in_array($rol, [2, 3]) && $sucursalId) {
                     $q->where('sucursal_id', $sucursalId);
                 }
                 $q->whereHas(
@@ -116,7 +116,7 @@ class Pedidos extends Component
         $otros = Otro::whereHas('existencias', function ($q) use ($rol, $sucursalId) {
             if ($this->sucursal_id) {
                 $q->where('sucursal_id', $this->sucursal_id);
-            } elseif ($rol === 2 && $sucursalId) {
+            } elseif (in_array($rol, [2, 3]) && $sucursalId) {
                 $q->where('sucursal_id', $sucursalId);
             }
             $q->whereHas(
@@ -128,7 +128,7 @@ class Pedidos extends Component
             'existencias' => function ($q) use ($rol, $sucursalId) {
                 if ($this->sucursal_id) {
                     $q->where('sucursal_id', $this->sucursal_id);
-                } elseif ($rol === 2 && $sucursalId) {
+                } elseif (in_array($rol, [2, 3]) && $sucursalId) {
                     $q->where('sucursal_id', $sucursalId);
                 }
                 $q->whereHas(
@@ -179,24 +179,33 @@ class Pedidos extends Component
             }
         }
         $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles.existencia.sucursal'])
-            ->when(
-                $this->search,
-                fn($q) =>
+            ->when($this->search, function ($q) {
                 $q->where('codigo', 'like', '%' . $this->search . '%')
                     ->orWhereHas(
                         'solicitudPedido.cliente',
-                        fn($query) =>
-                        $query->where('nombre', 'like', '%' . $this->search . '%')
-                    )
-            )
-            ->when(
-                $rol === 2 && $sucursalId,
-                fn($q) =>
-                $q->whereHas('detalles.existencia', fn($query) => $query->where('sucursal_id', $sucursalId))
-            )
+                        fn($c) =>
+                        $c->where('nombre', 'like', '%' . $this->search . '%')
+                    );
+            })
+            ->when($rol === 3, function ($q) use ($personal, $sucursalId) {
+                $q->where('personal_id', $personal->id)
+                    ->whereHas(
+                        'detalles.existencia',
+                        fn($e) =>
+                        $e->where('sucursal_id', $sucursalId)
+                    );
+            })
+            ->when($rol === 2, function ($q) use ($sucursalId) {
+                $q->whereHas(
+                    'detalles.existencia',
+                    fn($e) =>
+                    $e->where('sucursal_id', $sucursalId)
+                );
+            })
             ->latest()
             ->take($this->cantidad)
             ->get();
+
 
 
         $clientes = Cliente::orderBy('nombre')->get();

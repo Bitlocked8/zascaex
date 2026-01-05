@@ -23,7 +23,7 @@ class Distribucion extends Component
     public $personal_id;
     public $observaciones;
     public $estado = 0;
-
+    public $cantidadDistribuciones = 50;
     public $pedidos_seleccionados = [];
     public $pedidosDeDistribucion = [];
 
@@ -42,7 +42,7 @@ class Distribucion extends Component
         $this->personals = Personal::where('estado', 1)
             ->whereHas('user', fn($q) => $q->where('rol_id', 3))
             ->when($usuario->rol_id != 1 && $sucursalId, fn($q) =>
-                $q->whereHas('trabajos', fn($t) => $t->where('sucursal_id', $sucursalId)))
+            $q->whereHas('trabajos', fn($t) => $t->where('sucursal_id', $sucursalId)))
             ->get();
 
         $this->coches = Coche::where('estado', 1)->get();
@@ -163,18 +163,21 @@ class Distribucion extends Component
 
     private function autoAsignarPedidos()
     {
-        if (!$this->personal_id)
-            return;
+        if (!$this->personal_id) return;
 
         $this->pedidos_seleccionados = $this->pedidos->filter(function ($pedido) {
-            $cliente = $pedido->solicitudPedido?->cliente;
-            if (!$cliente)
-                return false;
+            $clienteSolicitud = $pedido->solicitudPedido?->cliente;
+            $clientePedido = $pedido->cliente;
+            $clientes = collect([$clienteSolicitud, $clientePedido])->filter();
+            foreach ($clientes as $cliente) {
+                if ($cliente->personal_id && $cliente->personal_id == $this->personal_id) {
+                    return true;
+                }
+            }
 
-            return $cliente->fijar_personal || $cliente->personal_id == $this->personal_id;
+            return false;
         })->pluck('id')->toArray();
     }
-
     public function guardarDistribucion()
     {
         $this->validate([
@@ -249,6 +252,7 @@ class Distribucion extends Component
         });
 
         $this->confirmingDeleteId = null;
+        $this->loadPedidosDisponibles();
         session()->flash('message', 'Distribución eliminada correctamente.');
     }
 
@@ -284,6 +288,8 @@ class Distribucion extends Component
                 ->orWhereHas('coche', fn($c) => $c->where('placa', 'like', "%{$this->search}%"));
         });
 
+        $distribuciones = $distribucionesQuery->latest()->take($this->cantidadDistribuciones)->get();
+
         return view('livewire.distribucion', [
             'distribuciones' => $distribucionesQuery->latest()->get(),
             'pedidosAsignados' => $this->pedidosAsignados,
@@ -293,12 +299,7 @@ class Distribucion extends Component
     public function seleccionarPersonal($id)
     {
         $this->personal_id = $id;
-
-
         $this->loadPedidosDisponibles($this->distribucionModel->id ?? null);
-
         $this->autoAsignarPedidos();
     }
-
-
 }

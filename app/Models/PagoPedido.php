@@ -11,25 +11,28 @@ class PagoPedido extends Model
 
     protected $fillable = [
         'pedido_id',
-        'monto',
         'sucursal_pago_id',
+        'monto',
         'metodo',
-        'referencia',
-        'fecha_pago',
-        'imagen_comprobante',
         'estado',
+        'referencia',
+        'codigo_factura',
+        'fecha',
+        'archivo_factura',
+        'archivo_comprobante',
         'observaciones',
-        'codigo_pago',
     ];
-
 
     public function pedido()
     {
         return $this->belongsTo(Pedido::class);
     }
-
     public function sucursalPago()
     {
-        return $this->belongsTo(SucursalPago::class, 'sucursal_pago_id');
+        return $this->belongsTo(SucursalPago::class);
+    }
+    public function detalles()
+    {
+        return $this->hasMany(PagoDetalle::class);
     }
 }

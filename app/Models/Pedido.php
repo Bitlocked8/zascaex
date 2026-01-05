@@ -33,17 +33,14 @@ class Pedido extends Model
     {
         return $this->hasMany(PedidoDetalle::class);
     }
-
-    public function pagoPedidos()
-    {
-        return $this->hasMany(PagoPedido::class, 'pedido_id');
-    }
-
     public function cliente()
     {
         return $this->belongsTo(Cliente::class);
     }
-
+    public function pagos()
+    {
+        return $this->hasMany(PagoPedido::class);
+    }
 
     public function distribuciones()
     {
