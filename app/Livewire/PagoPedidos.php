@@ -120,37 +120,54 @@ class PagoPedidos extends Component
         ];
     }
 
-    public function eliminarPago($index)
-    {
-        unset($this->pagos[$index]);
-        $this->pagos = array_values($this->pagos);
+   public function eliminarPago($index)
+{
+    $pago = $this->pagos[$index] ?? null;
+
+    if ($pago && isset($pago['id']) && $pago['id']) {
+        PagoPedido::find($pago['id'])?->delete();
     }
+
+    unset($this->pagos[$index]);
+    $this->pagos = array_values($this->pagos);
+}
+
 
     public function guardarPagos()
     {
         if (!$this->pedidoSeleccionado) return;
 
         foreach ($this->pagos as $pago) {
-            $archivoFacturaPath = $pago['archivoFactura']?->store('pagos/facturas', 'public');
-            $archivoComprobantePath = $pago['archivoComprobante']?->store('pagos/comprobantes', 'public');
 
-            PagoPedido::create([
-                'pedido_id' => $this->pedidoSeleccionado->id,
-                'sucursal_pago_id' => $pago['sucursal_pago_id'],
-                'monto' => $pago['monto'],
-                'metodo' => $pago['metodo'],
-                'estado' => true,
-                'referencia' => $pago['referencia'],
-                'codigo_factura' => $pago['codigo_factura'],
-                'fecha' => $pago['fecha'],
-                'archivo_factura' => $archivoFacturaPath,
-                'archivo_comprobante' => $archivoComprobantePath,
-                'observaciones' => $pago['observaciones'],
-            ]);
+            $archivoFacturaPath = $pago['archivoFactura']
+                ? $pago['archivoFactura']->store('pagos/facturas', 'public')
+                : $pago['archivoFactura'];
+
+            $archivoComprobantePath = $pago['archivoComprobante']
+                ? $pago['archivoComprobante']->store('pagos/comprobantes', 'public')
+                : $pago['archivoComprobante'];
+
+            PagoPedido::updateOrCreate(
+                ['id' => $pago['id']],
+                [
+                    'pedido_id' => $this->pedidoSeleccionado->id,
+                    'sucursal_pago_id' => $pago['sucursal_pago_id'],
+                    'monto' => $pago['monto'] ?? 0,
+                    'metodo' => $pago['metodo'] ?? 0,
+                    'estado' => true,
+                    'referencia' => $pago['referencia'],
+                    'codigo_factura' => $pago['codigo_factura'],
+                    'fecha' => $pago['fecha'],
+                    'archivo_factura' => $archivoFacturaPath,
+                    'archivo_comprobante' => $archivoComprobantePath,
+                    'observaciones' => $pago['observaciones'],
+                ]
+            );
         }
 
         $this->cerrarModalPagoPedido();
     }
+
 
     public function cerrarModalPagoPedido()
     {

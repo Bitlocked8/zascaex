@@ -44,6 +44,7 @@ class Pedidos extends Component
     public $modalEliminarPedido = false;
     public $pedidoAEliminar = null;
     public $eliminarSolicitudAsociada = false;
+    public $searchCliente = '';
 
     public function quitarSolicitud()
     {
@@ -208,7 +209,11 @@ class Pedidos extends Component
 
 
 
-        $clientes = Cliente::orderBy('nombre')->get();
+        $clientes = Cliente::when($this->searchCliente, function ($q) {
+            $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
+        })
+            ->orderBy('nombre')
+            ->get();
 
         return view('livewire.pedidos', [
             'pedidos' => $pedidos,

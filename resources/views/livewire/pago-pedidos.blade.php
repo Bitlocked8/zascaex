@@ -109,57 +109,146 @@
     <div class="modal-overlay">
         <div class="modal-box max-w-3xl overflow-auto">
             <div class="modal-content flex flex-col gap-4">
-                <h3 class="text-xl font-bold mb-4">Registrar Pagos de {{ $pedidoSeleccionado->codigo }}</h3>
 
-                <div class="space-y-4">
-                    @foreach($pagos as $index => $pago)
-                    <div class="border p-4 rounded flex flex-col gap-2">
-                        <div class="flex justify-between items-center">
-                            <strong>Código: {{ $pago['codigo_factura'] ?? 'PAGO-' . ($index + 1) }}</strong>
-                            <p class="text-sm text-gray-600">Fecha: {{ $pago['fecha'] }}</p>
-                            <button type="button" wire:click="eliminarPago({{ $index }})" class="btn-circle btn-cyan">X</button>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                            <div class="sm:col-span-2">
-                                <label>Monto</label>
-                                <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal" min="0">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label>Observaciones</label>
-                                <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label>Archivo Factura</label>
-                                <input type="file" wire:model="pagos.{{ $index }}.archivoFactura" class="input-minimal">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label>Comprobante</label>
-                                <input type="file" wire:model="pagos.{{ $index }}.archivoComprobante" class="input-minimal">
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
+                <h3 class="text-xl font-bold">
+                    Registrar Pagos de {{ $pedidoSeleccionado->codigo }}
+                </h3>
 
-                {{-- Mostrar total de subtotales --}}
                 @php
                 $totalSubtotales = 0;
                 foreach($pedidoSeleccionado->detalles as $detalle){
                 $cantidad = (float) $detalle->cantidad;
-                $precioAplicado = $detallesPago[$detalle->id]['precio_aplicado'] ?? ((float)$detalle->existencia->existenciable->precioReferencia ?? 0);
-                if($precioAplicado <= 0) $precioAplicado=(float)$detalle->existencia->existenciable->precioReferencia ?? 0;
-                    $totalSubtotales += $cantidad * $precioAplicado;
+                $precio = $detallesPago[$detalle->id]['precio_aplicado']
+                ?? ((float)$detalle->existencia->existenciable->precioReferencia ?? 0);
+                if($precio <= 0){
+                    $precio=(float)$detalle->existencia->existenciable->precioReferencia ?? 0;
+                    }
+                    $totalSubtotales += $cantidad * $precio;
                     }
                     @endphp
-                    <div class="mt-2 text-right font-bold text-lg">
-                        Total de Subtotales: {{ number_format($totalSubtotales, 2) }}
+
+                    <div class="text-right font-bold text-lg text-teal-700">
+                        Total a pagar: Bs {{ number_format($totalSubtotales, 2) }}
+                    </div>
+
+                    <div class="space-y-4">
+                        @foreach($pagos as $index => $pago)
+                        <div class="border p-4 rounded flex flex-col gap-3">
+
+                            <div class="flex justify-between items-center">
+                                <strong>{{ $pago['codigo_factura'] ?? 'PAGO-' . ($index + 1) }}</strong>
+                                <button type="button"
+                                    wire:click="eliminarPago({{ $index }})"
+                                    class="btn-circle btn-cyan">
+                                    X
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+                                <div>
+                                    <label>Monto</label>
+                                    <input type="number" min="0" step="0.01"
+                                        wire:model="pagos.{{ $index }}.monto"
+                                        class="input-minimal">
+                                </div>
+
+                                <div>
+                                    <label>Fecha</label>
+                                    <input type="datetime-local"
+                                        wire:model="pagos.{{ $index }}.fecha"
+                                        class="input-minimal">
+                                </div>
+
+                                <div>
+                                    <label>Código Factura</label>
+                                    <input type="text"
+                                        wire:model="pagos.{{ $index }}.codigo_factura"
+                                        class="input-minimal">
+                                </div>
+
+                                <div>
+                                    <label>Referencia</label>
+                                    <input type="text"
+                                        wire:model="pagos.{{ $index }}.referencia"
+                                        class="input-minimal">
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label>Método de Pago</label>
+                                    <div class="flex gap-2">
+                                        <button type="button"
+                                            wire:click="$set('pagos.{{ $index }}.metodo', 1)"
+                                            class="btn-cyan {{ ($pago['metodo'] ?? 0) == 1 ? 'opacity-100' : 'opacity-50' }}">
+                                            QR
+                                        </button>
+                                        <button type="button"
+                                            wire:click="$set('pagos.{{ $index }}.metodo', 2)"
+                                            class="btn-cyan {{ ($pago['metodo'] ?? 0) == 2 ? 'opacity-100' : 'opacity-50' }}">
+                                            Efectivo
+                                        </button>
+                                        <button type="button"
+                                            wire:click="$set('pagos.{{ $index }}.metodo', 3)"
+                                            class="btn-cyan {{ ($pago['metodo'] ?? 0) == 3 ? 'opacity-100' : 'opacity-50' }}">
+                                            Transferencia
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label>Estado</label>
+                                    <div class="flex gap-2">
+                                        <button type="button"
+                                            wire:click="$set('pagos.{{ $index }}.estado', 1)"
+                                            class="btn-green {{ ($pago['estado'] ?? false) ? 'opacity-100' : 'opacity-50' }}">
+                                            Pagado
+                                        </button>
+                                        <button type="button"
+                                            wire:click="$set('pagos.{{ $index }}.estado', 0)"
+                                            class="btn-cyan {{ !($pago['estado'] ?? false) ? 'opacity-100' : 'opacity-50' }}">
+                                            Pendiente
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label>Archivo Factura</label>
+                                    <input type="file"
+                                        wire:model="pagos.{{ $index }}.archivo_factura"
+                                        class="input-minimal">
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label>Comprobante</label>
+                                    <input type="file"
+                                        wire:model="pagos.{{ $index }}.archivo_comprobante"
+                                        class="input-minimal">
+                                </div>
+
+                                <div class="sm:col-span-2">
+                                    <label>Observaciones</label>
+                                    <input type="text"
+                                        wire:model="pagos.{{ $index }}.observaciones"
+                                        class="input-minimal">
+                                </div>
+
+                            </div>
+                        </div>
+                        @endforeach
                     </div>
 
                     <div class="modal-footer flex gap-2 mt-4">
-                        <button type="button" wire:click="agregarPago" class="btn-cyan flex items-center gap-1">Añadir Pago</button>
-                        <button type="button" wire:click="guardarPagos" class="btn-green flex items-center gap-1">Guardar Pagos</button>
-                        <button type="button" wire:click="$set('modalPagoPedido', false)" class="btn-cyan">Cerrar</button>
+                        <button type="button" wire:click="agregarPago" class="btn-cyan">
+                            Añadir Pago
+                        </button>
+                        <button type="button" wire:click="guardarPagos" class="btn-green">
+                            Guardar Pagos
+                        </button>
+                        <button type="button" wire:click="$set('modalPagoPedido', false)" class="btn-cyan">
+                            Cerrar
+                        </button>
                     </div>
+
             </div>
         </div>
     </div>

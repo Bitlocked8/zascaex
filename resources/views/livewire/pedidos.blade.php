@@ -120,6 +120,7 @@
   <div class="modal-overlay">
     <div class="modal-box">
       <div class="modal-content flex flex-col gap-4">
+
         @if(auth()->user()->rol_id != 3)
         <div class="sm:w-full w-auto">
           <label class="text-sm font-semibold text-gray-700">Solicitud de Pedido</label>
@@ -244,6 +245,11 @@
         @if(!$solicitud_pedido_id)
         <div class="mb-6">
           <label class="font-semibold text-sm mb-2 block">Cliente (Requerido)</label>
+          <input
+            type="text"
+            wire:model.live="searchCliente"
+            placeholder="Buscar cliente..."
+            class="input-minimal w-full mb-2" />
           <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto">
             <button type="button" wire:click="$set('cliente_id', null)"
               class="w-full px-3 py-3 rounded-lg border-2 text-left transition-all
@@ -261,10 +267,10 @@
                     : 'bg-gray-50 text-gray-800 border-gray-300 hover:bg-cyan-50 hover:border-cyan-500 hover:text-cyan-700' }}">
 
               <p class="font-semibold text-sm">{{ $cliente->nombre }}</p>
-              <p class="text-xs text-gray-500 {{ $cliente_id == $cliente->id ? 'text-cyan-200' : '' }}">
+              <p class="text-sm text-white {{ $cliente_id == $cliente->id ? 'text-cyan-200' : '' }}">
                 {{ $cliente->empresa?->nombre ?? 'Sin empresa' }}
               </p>
-              <p class="text-xs text-gray-500 {{ $cliente_id == $cliente->id ? 'text-cyan-200' : '' }}">
+              <p class="text-sm text-white {{ $cliente_id == $cliente->id ? 'text-cyan-200' : '' }}">
                 {{ $cliente->telefono ?? 'Sin teléfono' }}
               </p>
             </button>
@@ -282,6 +288,7 @@
         @else
         <div class="mb-6">
           <label class="font-semibold text-sm">Cliente</label>
+
           <input type="text" disabled
             class="w-full border border-gray-300 rounded-md p-2 bg-gray-100 text-sm font-medium text-gray-800"
             value="{{ $solicitud->cliente->nombre ?? 'Sin cliente' }}">
