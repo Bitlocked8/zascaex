@@ -20,7 +20,7 @@
                 <input
                     name="email"
                     type="text"
-                    pattern="[A-Za-z0-9]+"
+                
                     inputmode="text"
                     autocomplete="username"
                     class="bg-transparent text-white form-input w-full px-4 py-2 border rounded-md

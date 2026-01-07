@@ -23,7 +23,7 @@
                     </div>
                 @endif
                 <div class="mt-6">
-                    <label class="block mb-1 font-semibold text-cyan-700">Actualizar Correo</label>
+                    <label class="block mb-1 font-semibold text-cyan-700">Actualizar numero</label>
                     <input type="email" wire:model.defer="nuevo_correo"
                         class="border border-cyan-300 p-2 w-full rounded focus:ring-2 focus:ring-cyan-400">
                     @error('nuevo_correo')
