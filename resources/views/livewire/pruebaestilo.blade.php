@@ -8,8 +8,7 @@
 
             @if($usuario)
                 <div class="space-y-2 text-gray-700">
-                    <p><span class="font-semibold text-cyan-600">Email:</span> {{ $usuario->email ?? 'N/A' }}</p>
-                    <p><span class="font-semibold text-cyan-600">Rol:</span> {{ $usuario->rol->nombre ?? 'N/A' }}</p>
+                    <p><span class="font-semibold text-cyan-600">Usuario:</span> {{ $usuario->email ?? 'N/A' }}</p>
                     <p><span class="font-semibold text-cyan-600">Creación:</span>
                         {{ $usuario->created_at->format('d/m/Y H:i') }}
                     </p>

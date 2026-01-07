@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Cliente;
 use App\Models\User;
 use App\Models\Personal;
+use Illuminate\Support\Str;
 
 class ClienteSeeder extends Seeder
 {
@@ -16,10 +17,10 @@ class ClienteSeeder extends Seeder
 
         foreach ($clientes as $cliente) {
             $nombreUsuario = strtolower(str_replace(' ', '', $cliente['nombre']));
-            $email = $nombreUsuario . '@mail.com';
+            $codigo = $nombreUsuario . rand(1000, 9999) . Str::lower(Str::random(1));
 
             $user = User::firstOrCreate(
-                ['email' => $email],
+                ['email' => $codigo],
                 [
                     'password' => bcrypt('verzasca1234'),
                     'rol_id' => 5,
@@ -35,6 +36,7 @@ class ClienteSeeder extends Seeder
                 $cliente['latitud'] = null;
                 $cliente['longitud'] = null;
             }
+
             $cliente['user_id'] = $user->id;
             $cliente['personal_id'] = $personales->random();
             $cliente['fijar_personal'] = 0;

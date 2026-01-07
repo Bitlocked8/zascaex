@@ -46,7 +46,7 @@ class Bases extends Component
                 ->orWhere('observaciones', 'like', "%{$this->search}%")
                 ->orWhere('tipo', 'like', "%{$this->search}%"));
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $basesQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
@@ -59,8 +59,16 @@ class Bases extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'base_id', 'capacidad', 'estado', 'descripcion', 'tipo',
-            'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada', 'cantidadMinima'
+            'base_id',
+            'capacidad',
+            'estado',
+            'descripcion',
+            'tipo',
+            'observaciones',
+            'imagen',
+            'imagenExistente',
+            'baseSeleccionada',
+            'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -130,7 +138,7 @@ class Bases extends Component
                 'cantidadMinima' => $this->cantidadMinima,
             ];
 
-            if ($rol === 2 && $personal) {
+            if ($rol === 4 && $personal) {
                 $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
                 $existenciaData['sucursal_id'] = $sucursal_id;
             }
@@ -150,8 +158,16 @@ class Bases extends Component
     {
         $this->modal = false;
         $this->reset([
-            'base_id', 'capacidad', 'estado', 'descripcion', 'tipo',
-            'observaciones', 'imagen', 'imagenExistente', 'baseSeleccionada', 'cantidadMinima'
+            'base_id',
+            'capacidad',
+            'estado',
+            'descripcion',
+            'tipo',
+            'observaciones',
+            'imagen',
+            'imagenExistente',
+            'baseSeleccionada',
+            'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }
@@ -163,7 +179,7 @@ class Bases extends Component
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $base->existencias = $base->existencias->where('sucursal_id', $sucursal_id);
         }

@@ -61,7 +61,13 @@ class MapaClienteController extends Controller
             'foto' => 'nullable|image|max:4096',
             'estado' => 'required|boolean',
             'categoria' => 'required|integer|in:1,2,3',
-            'email' => 'required|email|unique:users,email',
+            'email' => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^[a-zA-Z0-9]+$/',
+                'unique:users,email'
+            ],
             'password' => 'required|string|min:6',
             'personal_id' => 'nullable|exists:personals,id',
             'fijar_personal' => 'nullable|boolean',
@@ -112,7 +118,6 @@ class MapaClienteController extends Controller
             ]);
 
             return Redirect::route('home')->with('success', "Cliente registrado con éxito. Código: $codigo");
-
         } catch (\Exception $e) {
             return Redirect::back()
                 ->withErrors(['error' => 'Error al registrar el cliente: ' . $e->getMessage()])

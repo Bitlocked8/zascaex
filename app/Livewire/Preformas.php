@@ -25,7 +25,7 @@ class Preformas extends Component
     public $color = '';
     public $estado = 1;
     public $observaciones = '';
-    public $imagen; 
+    public $imagen;
     public $imagenExistente;
 
     public $accion = 'create';
@@ -45,12 +45,14 @@ class Preformas extends Component
         $personal = $usuario->personal;
 
         $preformasQuery = Preforma::query()
-            ->when($this->search, fn($q) => $q->where('descripcion', 'like', "%{$this->search}%")
-                ->orWhere('detalle', 'like', "%{$this->search}%")
-                ->orWhere('insumo', 'like', "%{$this->search}%")
+            ->when(
+                $this->search,
+                fn($q) => $q->where('descripcion', 'like', "%{$this->search}%")
+                    ->orWhere('detalle', 'like', "%{$this->search}%")
+                    ->orWhere('insumo', 'like', "%{$this->search}%")
             );
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $preformasQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
@@ -63,8 +65,20 @@ class Preformas extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'preforma_id', 'detalle', 'insumo', 'gramaje', 'cuello', 'descripcion', 'capacidad', 'color',
-            'estado', 'observaciones', 'imagen', 'imagenExistente', 'preformaSeleccionada', 'cantidadMinima'
+            'preforma_id',
+            'detalle',
+            'insumo',
+            'gramaje',
+            'cuello',
+            'descripcion',
+            'capacidad',
+            'color',
+            'estado',
+            'observaciones',
+            'imagen',
+            'imagenExistente',
+            'preformaSeleccionada',
+            'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -150,7 +164,7 @@ class Preformas extends Component
                 'cantidadMinima' => $this->cantidadMinima,
             ];
 
-            if ($rol === 2 && $personal) {
+            if ($rol === 4 && $personal) {
                 $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
                 $existenciaData['sucursal_id'] = $sucursal_id;
             }
@@ -170,8 +184,20 @@ class Preformas extends Component
     {
         $this->modal = false;
         $this->reset([
-            'preforma_id', 'detalle', 'insumo', 'gramaje', 'cuello', 'descripcion', 'capacidad', 'color',
-            'estado', 'observaciones', 'imagen', 'imagenExistente', 'preformaSeleccionada', 'cantidadMinima'
+            'preforma_id',
+            'detalle',
+            'insumo',
+            'gramaje',
+            'cuello',
+            'descripcion',
+            'capacidad',
+            'color',
+            'estado',
+            'observaciones',
+            'imagen',
+            'imagenExistente',
+            'preformaSeleccionada',
+            'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }
@@ -184,7 +210,7 @@ class Preformas extends Component
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $preforma->existencias = $preforma->existencias->where('sucursal_id', $sucursal_id);
         }

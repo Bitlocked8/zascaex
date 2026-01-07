@@ -137,7 +137,7 @@
           <div class="border border-gray-300 rounded-md p-2 bg-gray-50 text-xs sm:text-sm">
             <div class="flex justify-between items-center mb-1">
               <span class="font-bold text-gray-900 truncate">{{ $solicitud->codigo }}</span>
-              <button wire:click="quitarSolicitud" class="px-2 py-1 text-white bg-red-500 rounded hover:bg-red-600 text-xs">Quitar</button>
+              <button wire:click="quitarSolicitud" class="px-2 py-1 text-white bg-cyan-500 rounded hover:bg-cyan-600 text-xs">Quitar</button>
             </div>
 
             <div class="flex justify-between items-center">
@@ -254,26 +254,27 @@
             <button type="button" wire:click="$set('cliente_id', null)"
               class="w-full px-3 py-3 rounded-lg border-2 text-left transition-all
             {{ is_null($cliente_id)
-                ? 'bg-red-500 text-white border-red-600 shadow-lg'
-                : 'bg-gray-50 text-gray-800 border-gray-300 hover:bg-red-50 hover:border-red-500 hover:text-red-600' }}">
-              <p class="font-semibold text-sm">-- Ningún cliente --</p>
+                ? 'bg-cyan-500 text-white border-cyan-600 shadow-lg'
+                : 'bg-gray-50 text-gray-800 border-gray-300 hover:bg-cyan-50 hover:border-cyan-500 hover:text-cyan-600' }}">
+              <p class="font-semibold text-sm">Sin cliente</p>
             </button>
 
             @forelse($clientes as $cliente)
-            <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})"
+            <button type="button"
+              wire:click="$set('cliente_id', {{ $cliente->id }})"
               class="w-full px-3 py-3 rounded-lg border-2 text-left transition-all
-                {{ $cliente_id == $cliente->id
-                    ? 'bg-cyan-600 text-white border-cyan-700 shadow-lg'
-                    : 'bg-gray-50 text-gray-800 border-gray-300 hover:bg-cyan-50 hover:border-cyan-500 hover:text-cyan-700' }}">
+        {{ $cliente_id == $cliente->id
+            ? 'border-cyan-700'
+            : 'border-gray-300 hover:border-cyan-500' }}">
 
-              <p class="font-semibold text-sm">{{ $cliente->nombre }}</p>
-              <p class="text-sm text-white {{ $cliente_id == $cliente->id ? 'text-cyan-200' : '' }}">
-                {{ $cliente->empresa?->nombre ?? 'Sin empresa' }}
-              </p>
-              <p class="text-sm text-white {{ $cliente_id == $cliente->id ? 'text-cyan-200' : '' }}">
-                {{ $cliente->telefono ?? 'Sin teléfono' }}
+              <p class="text-sm font-semibold text-cyan-700 truncate">
+                {{ $cliente->nombre }}
+                <span class="font-normal">
+                  {{ $cliente->telefono ?? 'Sin teléfono' }}
+                </span>
               </p>
             </button>
+
             @empty
             <p class="text-center text-gray-500 py-3 text-sm">
               No hay clientes disponibles
@@ -282,7 +283,7 @@
           </div>
 
           @error('cliente_id')
-          <span class="error-message text-red-500 text-xs">{{ $message }}</span>
+          <span class="error-message text-cyan-500 text-xs">{{ $message }}</span>
           @enderror
         </div>
         @else
@@ -497,22 +498,11 @@
 
         <div class="modal-footer">
           <button wire:click="cerrarModal" class="btn-cyan" title="Cerrar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-              <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-            </svg>
+
             CERRAR
           </button>
           <button wire:click="guardarPedido" class="btn-cyan">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-              <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-              <path d="M14 4l0 4l-6 0l0 -4" />
-            </svg>
+
             Guardar
           </button>
         </div>
@@ -632,24 +622,11 @@
           </p>
         </div>
       </div>
-
-      <div class="modal-footer flex justify-center gap-2 mt-4">
-        <button type="button" wire:click="eliminarPedidoConfirmado" class="btn-cyan flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <path d="M5 12l5 5l10 -10" />
-          </svg>
+      <div class="modal-footer">
+        <button type="button" wire:click="eliminarPedidoConfirmado" class="btn-cyan">
           Confirmar
         </button>
-
-        <button type="button" wire:click="$set('modalEliminarPedido', false)" class="btn-cyan flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-            <path stroke="none" d="M0 0h24v24H0z" />
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+        <button type="button" wire:click="$set('modalEliminarPedido', false)" class="btn-cyan">
           Cancelar
         </button>
       </div>

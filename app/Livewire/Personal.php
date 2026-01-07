@@ -35,16 +35,17 @@ class Personal extends Component
         'direccion' => 'nullable|string|max:255',
         'celular' => 'nullable|string|max:15',
         'estado' => 'nullable|boolean',
-        'email' => 'required|email|max:255|unique:users,email',
+        'email' => [
+            'required',
+            'string',
+            'max:255',
+            'regex:/^[A-Za-z0-9]+$/',
+            'unique:users,email',
+        ],
+
         'password' => 'required|string|min:8',
         'rol_id' => 'nullable|exists:rols,id',
     ];
-
-    public function mount()
-    {
-        $this->rules['email'] = 'required|email|max:255|unique:users,email,' . $this->personalId . ',personal_id';
-        $this->rules['password'] = 'nullable|string|min:8';
-    }
 
     public function render()
     {
@@ -115,7 +116,14 @@ class Personal extends Component
                 'direccion' => 'nullable|string|max:255',
                 'celular' => 'nullable|string|max:15',
                 'estado' => 'nullable|boolean',
-                'email' => 'required|email|max:255|unique:users,email',
+                'email' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    'regex:/^[A-Za-z0-9]+$/',
+                    'unique:users,email',
+                ],
+
                 'password' => 'required|string|min:8',
                 'rol_id' => 'required|exists:rols,id',
             ]);
@@ -175,4 +183,3 @@ class Personal extends Component
         $this->resetErrorBag();
     }
 }
-

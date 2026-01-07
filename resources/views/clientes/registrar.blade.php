@@ -35,6 +35,11 @@
                         <div id="mapa" class="w-full h-[200px] lg:h-[400px] rounded shadow-lg mb-4"></div>
                         <label class="font-semibold text-sm">longitud y latitud (Automatico) </label>
                         <div class="mb-4">
+                            <label class="font-semibold text-sm">Pegar enlace de Google Maps (Opcional)</label>
+                            <input type="text" id="linkMapa" placeholder="https://maps.app.goo.gl/..." class="input-minimal">
+                            <button type="button" id="btnProcesarLink" class="mt-2 btn-cyan">Cargar coordenadas</button>
+                        </div>
+                        <div class="mb-4">
                             <input type="text" id="latitud" name="latitud"
                                 value="{{ old('latitud', $cliente->latitud ?? '') }}" placeholder="Latitud"
                                 class="input-minimal">
@@ -153,9 +158,17 @@
                                 placeholder="Bot / Fuente (opcional)" class="input-minimal">
                         </div>
                         <div class="mb-4">
-                            <label class="font-semibold text-u">Correo de Ingreso (Requerido)</label>
-                            <input type="email" id="email" name="email" value="{{ old('email') }}"
-                                placeholder="Email de usuario" class="input-minimal" required>
+                            <label class="font-semibold text-u">Usuario (Requerido)</label>
+                            <input
+                                type="text"
+                                id="email"
+                                name="email"
+                                value="{{ old('email') }}"
+                                placeholder="Ej: bverzs456815c"
+                                class="input-minimal"
+                                required
+                                pattern="[A-Za-z0-9]+"
+                                title="Solo letras y números, sin espacios ni símbolos">
                         </div>
 
                         <div class="mb-4">
@@ -170,9 +183,9 @@
                             <select name="personal_id" class="input-minimal">
                                 <option value="">— Seleccione un personal —</option>
                                 @foreach ($personales as $personal)
-                                    <option value="{{ $personal->id }}" {{ old('personal_id', $cliente->personal_id ?? '') == $personal->id ? 'selected' : '' }}>
-                                        {{ $personal->nombres }}
-                                    </option>
+                                <option value="{{ $personal->id }}" {{ old('personal_id', $cliente->personal_id ?? '') == $personal->id ? 'selected' : '' }}>
+                                    {{ $personal->nombres }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -259,22 +272,17 @@
         let map;
         let marcadorSeleccionado = null;
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             console.log('Inicializando mapa en [-17.393993, -66.170568]');
             map = L.map('mapa').setView([-17.393993, -66.170568], 13);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
             }).addTo(map);
-            map.on('click', function (e) {
-                const {
-                    lat,
-                    lng
-                } = e.latlng;
 
-                if (marcadorSeleccionado) {
-                    map.removeLayer(marcadorSeleccionado);
-                }
+            // Función para colocar marcador
+            function colocarMarcador(lat, lng) {
+                if (marcadorSeleccionado) map.removeLayer(marcadorSeleccionado);
 
                 marcadorSeleccionado = L.marker([lat, lng])
                     .addTo(map)
@@ -287,26 +295,49 @@
                         Copiar coordenadas
                     </button>
                 </div>
-            `)
-                    .openPopup();
+            `).openPopup();
 
-                // Insertar coordenadas en los campos automáticamente
                 document.getElementById('latitud').value = lat.toFixed(6);
                 document.getElementById('longitud').value = lng.toFixed(6);
 
-                // Agregar listener al botón Copiar del popup
                 setTimeout(() => {
                     const btn = document.getElementById('btnCopiar');
                     if (btn) {
-                        btn.addEventListener('click', function (ev) {
-                            ev.preventDefault(); // Evita recargar
+                        btn.addEventListener('click', function(ev) {
+                            ev.preventDefault();
                             alert(`Coordenadas copiadas:\nLatitud: ${lat.toFixed(6)}, Longitud: ${lng.toFixed(6)}`);
                         });
                     }
-                }, 10); // Pequeño delay para que el DOM del popup se renderice
+                }, 10);
+            }
+
+            // Clic en el mapa para marcar
+            map.on('click', function(e) {
+                colocarMarcador(e.latlng.lat, e.latlng.lng);
             });
+
+            // Botón para procesar enlace de Google Maps
+            document.getElementById('btnProcesarLink').addEventListener('click', function() {
+                const input = document.getElementById('linkMapa').value.trim();
+                if (!input) return alert('Ingrese coordenadas o enlace de Google Maps');
+
+                // Ver si el input son coordenadas directas: "lat,lng"
+                const coordDirectas = input.match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/);
+                if (coordDirectas) {
+                    const lat = parseFloat(coordDirectas[1]);
+                    const lng = parseFloat(coordDirectas[3]);
+                    colocarMarcador(lat, lng);
+                    map.setView([lat, lng], 16);
+                    return;
+                }
+
+                // Aquí puedes dejar el resto del código para procesar enlaces/iframe
+                alert('Formato de coordenadas no reconocido');
+            });
+
         });
     </script>
+
 
 </body>
 

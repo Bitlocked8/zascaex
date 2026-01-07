@@ -11,6 +11,7 @@ use App\Models\Cliente;
 use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\User;
+
 class DatabaseSeeder extends Seeder
 {
 
@@ -25,8 +26,8 @@ class DatabaseSeeder extends Seeder
 
 
         $adminUser = User::create([
-            'email' => 'admin@mail.com',
-            'password' => bcrypt(12345678),
+            'email' => 'bverzs456815c',
+            'password' => bcrypt('12345678'),
             'estado' => 1,
             'rol_id' => 1,
         ]);

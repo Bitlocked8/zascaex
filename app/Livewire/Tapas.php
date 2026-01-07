@@ -41,13 +41,15 @@ class Tapas extends Component
         $personal = $usuario->personal;
 
         $tapasQuery = Tapa::query()
-            ->when($this->search, fn($q) =>
+            ->when(
+                $this->search,
+                fn($q) =>
                 $q->where('descripcion', 'like', "%{$this->search}%")
-                  ->orWhere('color', 'like', "%{$this->search}%")
-                  ->orWhere('tipo', 'like', "%{$this->search}%")
+                    ->orWhere('color', 'like', "%{$this->search}%")
+                    ->orWhere('tipo', 'like', "%{$this->search}%")
             );
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $tapasQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
         }
@@ -60,8 +62,15 @@ class Tapas extends Component
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'descripcion', 'color', 'tipo', 'estado', 'observaciones',
-            'imagen', 'imagenExistente', 'tapa_id', 'tapaSeleccionada',
+            'descripcion',
+            'color',
+            'tipo',
+            'estado',
+            'observaciones',
+            'imagen',
+            'imagenExistente',
+            'tapa_id',
+            'tapaSeleccionada',
             'cantidadMinima'
         ]);
 
@@ -142,7 +151,7 @@ class Tapas extends Component
                 'cantidadMinima' => $this->cantidadMinima,
             ];
 
-            if ($rol === 2 && $personal) {
+            if ($rol === 4 && $personal) {
                 $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
                 $existenciaData['sucursal_id'] = $sucursal_id;
             }
@@ -162,8 +171,15 @@ class Tapas extends Component
     {
         $this->modal = false;
         $this->reset([
-            'descripcion', 'color', 'tipo', 'estado', 'observaciones',
-            'imagen', 'imagenExistente', 'tapa_id', 'tapaSeleccionada',
+            'descripcion',
+            'color',
+            'tipo',
+            'estado',
+            'observaciones',
+            'imagen',
+            'imagenExistente',
+            'tapa_id',
+            'tapaSeleccionada',
             'cantidadMinima'
         ]);
         $this->resetErrorBag();
@@ -177,7 +193,7 @@ class Tapas extends Component
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
-        if ($rol === 2 && $personal) {
+        if ($rol === 4 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
             $tapa->existencias = $tapa->existencias->where('sucursal_id', $sucursal_id);
         }

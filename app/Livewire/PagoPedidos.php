@@ -12,7 +12,7 @@ use Carbon\Carbon;
 class PagoPedidos extends Component
 {
     use WithFileUploads;
-
+    public $searchCliente = '';
     public $pedidoSeleccionado = null;
     public $modalAbierto = false;
     public $detallesPago = [];
@@ -54,7 +54,6 @@ class PagoPedidos extends Component
     {
         foreach ($this->detallesPago as $detalleId => $data) {
             $detalle = $this->pedidoSeleccionado->detalles->find($detalleId);
-
             $cantidad = isset($detalle->cantidad) ? (float) $detalle->cantidad : 0;
             $precioBase = isset($data['precio_base']) ? (float) $data['precio_base'] : 0;
             $precioAplicado = isset($data['precio_aplicado']) && $data['precio_aplicado'] !== null && $data['precio_aplicado'] !== ''
@@ -75,8 +74,6 @@ class PagoPedidos extends Component
 
         $this->cerrarModal();
     }
-
-
 
     public function cerrarModal()
     {
@@ -120,32 +117,31 @@ class PagoPedidos extends Component
         ];
     }
 
-   public function eliminarPago($index)
-{
-    $pago = $this->pagos[$index] ?? null;
-
-    if ($pago && isset($pago['id']) && $pago['id']) {
-        PagoPedido::find($pago['id'])?->delete();
+    public function eliminarPago($index)
+    {
+        $pago = $this->pagos[$index] ?? null;
+        if ($pago && isset($pago['id']) && $pago['id']) {
+            PagoPedido::find($pago['id'])?->delete();
+        }
+        unset($this->pagos[$index]);
+        $this->pagos = array_values($this->pagos);
     }
-
-    unset($this->pagos[$index]);
-    $this->pagos = array_values($this->pagos);
-}
-
 
     public function guardarPagos()
     {
         if (!$this->pedidoSeleccionado) return;
 
-        foreach ($this->pagos as $pago) {
+        foreach ($this->pagos as $index => $pago) {
 
-            $archivoFacturaPath = $pago['archivoFactura']
-                ? $pago['archivoFactura']->store('pagos/facturas', 'public')
-                : $pago['archivoFactura'];
+            $archivoFacturaPath = $pago['archivoFactura'];
+            if (is_object($archivoFacturaPath) && method_exists($archivoFacturaPath, 'store')) {
+                $archivoFacturaPath = $archivoFacturaPath->store('pagos/facturas', 'public');
+            }
 
-            $archivoComprobantePath = $pago['archivoComprobante']
-                ? $pago['archivoComprobante']->store('pagos/comprobantes', 'public')
-                : $pago['archivoComprobante'];
+            $archivoComprobantePath = $pago['archivoComprobante'];
+            if (is_object($archivoComprobantePath) && method_exists($archivoComprobantePath, 'store')) {
+                $archivoComprobantePath = $archivoComprobantePath->store('pagos/comprobantes', 'public');
+            }
 
             PagoPedido::updateOrCreate(
                 ['id' => $pago['id']],
@@ -168,7 +164,6 @@ class PagoPedidos extends Component
         $this->cerrarModalPagoPedido();
     }
 
-
     public function cerrarModalPagoPedido()
     {
         $this->modalPagoPedido = false;
@@ -177,13 +172,23 @@ class PagoPedidos extends Component
 
     public function render()
     {
+        $query = Pedido::with([
+            'cliente',
+            'solicitudPedido',
+            'detalles.existencia.existenciable',
+            'pagos'
+        ]);
+
+        if ($this->searchCliente) {
+            $query->whereHas('cliente', function ($q) {
+                $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
+            });
+        }
+
+        $pedidos = $query->get();
+
         return view('livewire.pago-pedidos', [
-            'pedidos' => Pedido::with([
-                'cliente',
-                'solicitudPedido',
-                'detalles.existencia.existenciable',
-                'pagos'
-            ])->get()
+            'pedidos' => $pedidos
         ]);
     }
 }

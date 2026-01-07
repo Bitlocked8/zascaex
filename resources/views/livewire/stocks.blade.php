@@ -5,48 +5,44 @@
             Reposición de materiales
         </h3>
 
-        <div class="flex items-center gap-2 mb-4">
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
             <input type="text" wire:model.live="searchCodigo" placeholder="Buscar por código..."
-                class="input-minimal w-full" />
-            <button wire:click="abrirModal('create')" class="btn-cyan">
-                Añadir
-            </button>
+                class="input-minimal w-full sm:w-auto flex-1" />
+            <button wire:click="abrirModal('create')" class="btn-cyan">Añadir</button>
+
             @php $usuario = auth()->user(); @endphp
             @if($usuario && $usuario->rol_id === 1)
-            <button wire:click="abrirModalConfigGlobal" class="btn-cyan">
-                Config
-            </button>
+            <button wire:click="abrirModalConfigGlobal" class="btn-cyan">Config</button>
             @endif
-            <button wire:click="abrirModalNotificaciones" class="btn-cyan">
-                Bajo stock
-            </button>
+
+            <button wire:click="abrirModalNotificaciones" class="btn-cyan">Bajo stock</button>
         </div>
 
-        <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+        <div class="overflow-auto max-h-[400px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="bg-teal-50 sticky top-0 z-10">
                     <tr>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Código</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Tipo</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Descripción</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Capacidad</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Cantidad inicial</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Cantidad disponible</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Proveedor</th>
-                        <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado</th>
-                        <th class="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Código</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Tipo</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Descripción</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Capacidad</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Cantidad inicial</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Cantidad disponible</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Proveedor</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
+                        <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
                     </tr>
                 </thead>
+
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($reposiciones as $repo)
                     @php
-                    $tipoModelo = $repo->existencia->existenciable_type ?? 'N/A';
-                    $tipoModelo = $tipoModelo !== 'N/A' ? class_basename($tipoModelo) : 'N/A';
-                    $descripcion = $repo->existencia->existenciable->descripcion ?? 'sin descripción';
+                    $tipoModelo = $repo->existencia->existenciable_type ? class_basename($repo->existencia->existenciable_type) : 'N/A';
+                    $descripcion = $repo->existencia->existenciable->descripcion ?? 'Sin descripción';
                     $capacidad = $repo->existencia->existenciable->capacidad ?? '-';
                     $unidad = $repo->existencia->existenciable->unidad ?? '';
                     @endphp
-                    <tr>
+                    <tr class="hover:bg-teal-50">
                         <td class="px-4 py-2 text-sm text-gray-700">{{ $repo->codigo ?? 'N/A' }}</td>
                         <td class="px-4 py-2 text-sm text-gray-700">{{ $tipoModelo }}</td>
                         <td class="px-4 py-2 text-sm text-gray-700">{{ $descripcion }}</td>
@@ -81,6 +77,7 @@
                 </tbody>
             </table>
         </div>
+
         @if($reposiciones->count() >= 50)
         <div class="col-span-full text-center mt-4 flex justify-center gap-2">
             <button wire:click="disminuirCantidad"
@@ -95,8 +92,8 @@
         </div>
         @endif
 
-    </div>
 
+    </div>
 
 
 

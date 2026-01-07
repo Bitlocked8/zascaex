@@ -179,39 +179,62 @@ class Pedidos extends Component
                 }
             }
         }
-        $pedidos = Pedido::with(['solicitudPedido.cliente', 'personal', 'detalles.existencia.sucursal'])
-            ->when($this->search, function ($q) {
+        $pedidosQuery = Pedido::with([
+            'solicitudPedido.cliente',
+            'personal',
+            'detalles.existencia.sucursal'
+        ]);
+
+        if ($rol === 3) {
+            $pedidosQuery
+                ->where('personal_id', $personal->id)
+                ->whereHas(
+                    'detalles.existencia',
+                    fn($q) => $q->where('sucursal_id', $sucursalId)
+                );
+        }
+
+        if ($rol === 2) {
+            $pedidosQuery->whereHas(
+                'detalles.existencia',
+                fn($q) => $q->where('sucursal_id', $sucursalId)
+            );
+        }
+
+
+        if ($this->search) {
+            $pedidosQuery->where(function ($q) {
                 $q->where('codigo', 'like', '%' . $this->search . '%')
                     ->orWhereHas(
                         'solicitudPedido.cliente',
                         fn($c) =>
                         $c->where('nombre', 'like', '%' . $this->search . '%')
                     );
-            })
-            ->when($rol === 3, function ($q) use ($personal, $sucursalId) {
-                $q->where('personal_id', $personal->id)
-                    ->whereHas(
-                        'detalles.existencia',
-                        fn($e) =>
-                        $e->where('sucursal_id', $sucursalId)
-                    );
-            })
-            ->when($rol === 2, function ($q) use ($sucursalId) {
-                $q->whereHas(
-                    'detalles.existencia',
-                    fn($e) =>
-                    $e->where('sucursal_id', $sucursalId)
-                );
-            })
+            });
+        }
+
+        $pedidos = $pedidosQuery
             ->latest()
             ->take($this->cantidad)
             ->get();
 
+        $clientesQuery = Cliente::query();
 
 
-        $clientes = Cliente::when($this->searchCliente, function ($q) {
-            $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
-        })
+        if ($rol === 3) {
+            $clientesQuery->where('personal_id', $personal->id);
+        }
+        if ($this->searchCliente) {
+            $clientesQuery->where(function ($q) {
+                $q->where('nombre', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('codigo', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('empresa', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('razonSocial', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('nitCi', 'like', '%' . $this->searchCliente . '%');
+            });
+        }
+
+        $clientes = $clientesQuery
             ->orderBy('nombre')
             ->get();
 

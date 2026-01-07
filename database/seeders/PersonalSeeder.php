@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Personal;
 use App\Models\Trabajo;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class PersonalSeeder extends Seeder
@@ -50,17 +51,10 @@ class PersonalSeeder extends Seeder
         $nombre = $partes[0];
         $apellido = $partes[1] ?? '';
 
-        $emailBase = strtolower(str_replace(' ', '.', $nombreCompleto));
-        $email = $emailBase . '@mail.com';
-
-        $contador = 1;
-        while (User::where('email', $email)->exists()) {
-            $email = $emailBase . $contador . '@mail.com';
-            $contador++;
-        }
+        $codigo = strtolower(str_replace(' ', '', $nombreCompleto)) . rand(1000, 9999) . Str::lower(Str::random(1));
 
         $user = User::create([
-            'email' => $email,
+            'email' => $codigo,
             'password' => Hash::make('trabajadorverzasca2025'),
             'rol_id' => $rol_id,
             'estado' => 1,
@@ -86,17 +80,10 @@ class PersonalSeeder extends Seeder
 
     private function crearPersonalConDatos(string $nombre, string $apellidos, string $direccion, string $celular, int $rol_id, int $sucursal_id)
     {
-        $emailBase = strtolower(str_replace(' ', '.', $nombre . ' ' . $apellidos));
-        $email = $emailBase . '@mail.com';
-
-        $contador = 1;
-        while (User::where('email', $email)->exists()) {
-            $email = $emailBase . $contador . '@mail.com';
-            $contador++;
-        }
+        $codigo = strtolower(str_replace(' ', '', $nombre . $apellidos)) . rand(1000, 9999) . Str::lower(Str::random(1));
 
         $user = User::create([
-            'email' => $email,
+            'email' => $codigo,
             'password' => Hash::make('trabajadorverzasca2025'),
             'rol_id' => $rol_id,
             'estado' => 1,

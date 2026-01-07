@@ -171,7 +171,14 @@ class Cliente extends Component
         ];
 
         if ($this->accion === 'create') {
-            $rules['email'] = 'required|email|unique:users,email';
+            $rules['email'] = [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z0-9]+$/',
+                'unique:users,email',
+            ];
+
             $rules['password'] = 'required|string|min:6';
         }
 
@@ -186,7 +193,10 @@ class Cliente extends Component
                         ->where('id', '!=', $cliente->user->id)
                         ->exists();
                     if ($emailExiste) {
-                        return $this->mostrarAlerta('El email ya existe, intente con otro.', 'error');
+                        return $this->mostrarAlerta(
+                            'El código ya existe, intente con otro.',
+                            'error'
+                        );
                     }
 
                     $userData = ['email' => $this->email];
@@ -233,7 +243,6 @@ class Cliente extends Component
             }
 
             if ($this->accion === 'create') {
-                // Aquí puedes agregar la lógica de creación si es necesario
             }
 
             $this->cerrarModal();
