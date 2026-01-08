@@ -180,10 +180,12 @@ class Pedidos extends Component
             }
         }
         $pedidosQuery = Pedido::with([
+            'cliente',
             'solicitudPedido.cliente',
             'personal',
             'detalles.existencia.sucursal'
         ]);
+
 
         if ($rol === 3) {
             $pedidosQuery
@@ -205,13 +207,21 @@ class Pedidos extends Component
         if ($this->search) {
             $pedidosQuery->where(function ($q) {
                 $q->where('codigo', 'like', '%' . $this->search . '%')
-                    ->orWhereHas(
-                        'solicitudPedido.cliente',
-                        fn($c) =>
+                    ->orWhereHas('cliente', function ($c) {
                         $c->where('nombre', 'like', '%' . $this->search . '%')
-                    );
+                            ->orWhere('empresa', 'like', '%' . $this->search . '%')
+                            ->orWhere('razonSocial', 'like', '%' . $this->search . '%')
+                            ->orWhere('nitCi', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhereHas('solicitudPedido.cliente', function ($c) {
+                        $c->where('nombre', 'like', '%' . $this->search . '%')
+                            ->orWhere('empresa', 'like', '%' . $this->search . '%')
+                            ->orWhere('razonSocial', 'like', '%' . $this->search . '%')
+                            ->orWhere('nitCi', 'like', '%' . $this->search . '%');
+                    });
             });
         }
+
 
         $pedidos = $pedidosQuery
             ->latest()

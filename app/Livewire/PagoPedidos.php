@@ -12,17 +12,50 @@ use Carbon\Carbon;
 class PagoPedidos extends Component
 {
     use WithFileUploads;
+
     public $searchCliente = '';
     public $pedidoSeleccionado = null;
     public $modalAbierto = false;
     public $detallesPago = [];
-
     public $modalPagoPedido = false;
     public $pagos = [];
 
+    private function puedeVerPedido(Pedido $pedido): bool
+    {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+        $sucursalId = $personal->trabajos()->latest()->first()?->sucursal_id;
+
+        if ($rol === 1) return true;
+
+        if ($rol === 3) {
+            return $pedido->personal_id === $personal->id
+                && $pedido->detalles()
+                    ->whereHas('existencia', fn($q) =>
+                        $q->where('sucursal_id', $sucursalId)
+                    )->exists();
+        }
+
+        if ($rol === 2) {
+            return $pedido->detalles()
+                ->whereHas('existencia', fn($q) =>
+                    $q->where('sucursal_id', $sucursalId)
+                )->exists();
+        }
+
+        return false;
+    }
+
     public function abrirModal(Pedido $pedido)
     {
-        $this->pedidoSeleccionado = $pedido->load('detalles.existencia.existenciable', 'pagos');
+        if (!$this->puedeVerPedido($pedido)) return;
+
+        $this->pedidoSeleccionado = $pedido->load(
+            'detalles.existencia.existenciable',
+            'pagos'
+        );
+
         $this->detallesPago = [];
 
         foreach ($this->pedidoSeleccionado->detalles as $detalle) {
@@ -52,11 +85,13 @@ class PagoPedidos extends Component
 
     public function guardarDetalles()
     {
+        if (!$this->pedidoSeleccionado || !$this->puedeVerPedido($this->pedidoSeleccionado)) return;
+
         foreach ($this->detallesPago as $detalleId => $data) {
             $detalle = $this->pedidoSeleccionado->detalles->find($detalleId);
-            $cantidad = isset($detalle->cantidad) ? (float) $detalle->cantidad : 0;
-            $precioBase = isset($data['precio_base']) ? (float) $data['precio_base'] : 0;
-            $precioAplicado = isset($data['precio_aplicado']) && $data['precio_aplicado'] !== null && $data['precio_aplicado'] !== ''
+            $cantidad = (float) ($detalle->cantidad ?? 0);
+            $precioBase = (float) ($data['precio_base'] ?? 0);
+            $precioAplicado = isset($data['precio_aplicado']) && $data['precio_aplicado'] !== ''
                 ? (float) $data['precio_aplicado']
                 : $precioBase;
 
@@ -83,7 +118,14 @@ class PagoPedidos extends Component
 
     public function abrirModalPagoPedido($pedidoId)
     {
-        $this->pedidoSeleccionado = Pedido::with('detalles.existencia.existenciable', 'pagos')->find($pedidoId);
+        $pedido = Pedido::with('detalles.existencia', 'pagos')->findOrFail($pedidoId);
+
+        if (!$this->puedeVerPedido($pedido)) return;
+
+        $this->pedidoSeleccionado = $pedido->load(
+            'detalles.existencia.existenciable',
+            'pagos'
+        );
 
         $this->pagos = $this->pedidoSeleccionado->pagos->map(fn($p) => [
             'id' => $p->id,
@@ -91,7 +133,9 @@ class PagoPedidos extends Component
             'metodo' => $p->metodo,
             'referencia' => $p->referencia,
             'codigo_factura' => $p->codigo_factura,
-            'fecha' => $p->fecha ? Carbon::parse($p->fecha)->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i'),
+            'fecha' => $p->fecha
+                ? Carbon::parse($p->fecha)->format('Y-m-d\TH:i')
+                : now()->format('Y-m-d\TH:i'),
             'observaciones' => $p->observaciones,
             'monto' => $p->monto,
             'archivoFactura' => $p->archivo_factura,
@@ -119,20 +163,23 @@ class PagoPedidos extends Component
 
     public function eliminarPago($index)
     {
+        if (!$this->pedidoSeleccionado || !$this->puedeVerPedido($this->pedidoSeleccionado)) return;
+
         $pago = $this->pagos[$index] ?? null;
-        if ($pago && isset($pago['id']) && $pago['id']) {
+
+        if ($pago && !empty($pago['id'])) {
             PagoPedido::find($pago['id'])?->delete();
         }
+
         unset($this->pagos[$index]);
         $this->pagos = array_values($this->pagos);
     }
 
     public function guardarPagos()
     {
-        if (!$this->pedidoSeleccionado) return;
+        if (!$this->pedidoSeleccionado || !$this->puedeVerPedido($this->pedidoSeleccionado)) return;
 
-        foreach ($this->pagos as $index => $pago) {
-
+        foreach ($this->pagos as $pago) {
             $archivoFacturaPath = $pago['archivoFactura'];
             if (is_object($archivoFacturaPath) && method_exists($archivoFacturaPath, 'store')) {
                 $archivoFacturaPath = $archivoFacturaPath->store('pagos/facturas', 'public');
@@ -172,6 +219,11 @@ class PagoPedidos extends Component
 
     public function render()
     {
+        $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
+        $sucursalId = $personal->trabajos()->latest()->first()?->sucursal_id;
+
         $query = Pedido::with([
             'cliente',
             'solicitudPedido',
@@ -179,16 +231,34 @@ class PagoPedidos extends Component
             'pagos'
         ]);
 
+        if ($rol === 3) {
+            $query
+                ->where('personal_id', $personal->id)
+                ->whereHas(
+                    'detalles.existencia',
+                    fn($q) => $q->where('sucursal_id', $sucursalId)
+                );
+        }
+
+        if ($rol === 2) {
+            $query->whereHas(
+                'detalles.existencia',
+                fn($q) => $q->where('sucursal_id', $sucursalId)
+            );
+        }
+
         if ($this->searchCliente) {
             $query->whereHas('cliente', function ($q) {
-                $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
+                $q->where('nombre', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('codigo', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('empresa', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('razonSocial', 'like', '%' . $this->searchCliente . '%')
+                    ->orWhere('nitCi', 'like', '%' . $this->searchCliente . '%');
             });
         }
 
-        $pedidos = $query->get();
-
         return view('livewire.pago-pedidos', [
-            'pedidos' => $pedidos
+            'pedidos' => $query->latest()->get()
         ]);
     }
 }

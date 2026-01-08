@@ -367,24 +367,27 @@
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Bases' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Bases' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
+                                        <path d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2" />
+                                        <path d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
+                                        <path d="M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Envases de botellas</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Botellas</span>
                             </button>
                             <button type="button" wire:click="$set('seleccion', 'Tapas')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Tapas' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Tapas' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
+                                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                        <path d="M13 12h5" />
+                                        <path d="M13 15h4" />
+                                        <path d="M13 18h1" />
+                                        <path d="M13 9h4" />
+                                        <path d="M13 6h1" />
                                     </svg>
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Tapas</span>
@@ -394,11 +397,10 @@
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Preformas' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Preformas' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
+                                        <path d="M5 6a7 3 0 1 0 14 0a7 3 0 1 0 -14 0" />
+                                        <path d="M5 6v12c0 1.657 3.134 3 7 3s7 -1.343 7 -3v-12" />
                                     </svg>
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Preformas</span>
@@ -417,17 +419,17 @@
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Asignaciones' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Asignaciones' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M19.875 6.27a2.225 2.225 0 0 1 1.125 1.948v7.284c0 .809 -.443 1.555 -1.158 1.948l-6.75 4.27a2.269 2.269 0 0 1 -2.184 0l-6.75 -4.27a2.225 2.225 0 0 1 -1.158 -1.948v-7.285c0 -.809 .443 -1.554 1.158 -1.947l6.75 -3.98a2.33 2.33 0 0 1 2.25 0l6.75 3.98h-.033z" />
-                                        <path
-                                            d="M10 9a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2h2a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1" />
+                                        <path d="M9 4.55a8 8 0 0 1 6 14.9m0 -4.45v5h5" />
+                                        <path d="M5.63 7.16l0 .01" />
+                                        <path d="M4.06 11l0 .01" />
+                                        <path d="M4.63 15.1l0 .01" />
+                                        <path d="M7.16 18.37l0 .01" />
+                                        <path d="M11 19.94l0 .01" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Distribucion por areas</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Sacar items</span>
                             </button>
                             <button type="button" wire:click="$set('seleccion', 'Traspaso')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Traspaso' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
@@ -441,21 +443,20 @@
                                         <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Traspaso entre
-                                    sucursales</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Traspaso de sucursales</span>
                             </button>
                             <button type="button" wire:click="$set('seleccion', 'Soplados')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Soplados' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Soplados' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M10 8v3a1 1 0 0 0 1 1h3" />
-                                        <path d="M14 8v8" />
-                                        <path
-                                            d="M5 7.2a2.2 2.2 0 0 1 2.2 -2.2h1a2.2 2.2 0 0 0 1.55 -.64l.7 -.7a2.2 2.2 0 0 1 3.12 0l.7 .7c.412 .41 .97 .64 1.55 .64h1a2.2 2.2 0 0 1 2.2 2.2v1c0 .58 .23 1.138 .64 1.55l.7 .7a2.2 2.2 0 0 1 0 3.12l-.7 .7a2.2 2.2 0 0 0 -.64 1.55v1a2.2 2.2 0 0 1 -2.2 2.2h-1a2.2 2.2 0 0 0 -1.55 .64l-.7 .7a2.2 2.2 0 0 1 -3.12 0l-.7 -.7a2.2 2.2 0 0 0 -1.55 -.64h-1a2.2 2.2 0 0 1 -2.2 -2.2v-1a2.2 2.2 0 0 0 -.64 -1.55l-.7 -.7a2.2 2.2 0 0 1 0 -3.12l.7 -.7a2.2 2.2 0 0 0 .64 -1.55v-1" />
+                                        <path d="M3 15a6 6 0 1 0 12 0a6 6 0 1 0 -12 0" />
+                                        <path d="M7 15a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M17 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M14.218 17.975l6.619 -12.174" />
+                                        <path d="M6.079 9.756l12.217 -6.631" />
+                                        <path d="M7 15a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                                     </svg>
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Soplado de Preformas</span>
@@ -464,14 +465,14 @@
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Llenados' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Llenados' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M10 8v3a1 1 0 0 0 1 1h3" />
-                                        <path d="M14 8v8" />
-                                        <path
-                                            d="M5 7.2a2.2 2.2 0 0 1 2.2 -2.2h1a2.2 2.2 0 0 0 1.55 -.64l.7 -.7a2.2 2.2 0 0 1 3.12 0l.7 .7c.412 .41 .97 .64 1.55 .64h1a2.2 2.2 0 0 1 2.2 2.2v1c0 .58 .23 1.138 .64 1.55l.7 .7a2.2 2.2 0 0 1 0 3.12l-.7 .7a2.2 2.2 0 0 0 -.64 1.55v1a2.2 2.2 0 0 1 -2.2 2.2h-1a2.2 2.2 0 0 0 -1.55 .64l-.7 .7a2.2 2.2 0 0 1 -3.12 0l-.7 -.7a2.2 2.2 0 0 0 -1.55 -.64h-1a2.2 2.2 0 0 1 -2.2 -2.2v-1a2.2 2.2 0 0 0 -.64 -1.55l-.7 -.7a2.2 2.2 0 0 1 0 -3.12l.7 -.7a2.2 2.2 0 0 0 .64 -1.55v-1" />
+                                        <path d="M3 15a6 6 0 1 0 12 0a6 6 0 1 0 -12 0" />
+                                        <path d="M7 15a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M17 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M14.218 17.975l6.619 -12.174" />
+                                        <path d="M6.079 9.756l12.217 -6.631" />
+                                        <path d="M7 15a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
                                     </svg>
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Llenados y envasado</span>
@@ -528,59 +529,73 @@
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Cliente' ? 'border-orange-600 shadow-lg text-orange-700' : 'border-gray-200 text-gray-700 hover:border-orange-600 hover:text-orange-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Cliente' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="currentColor">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M12 2c5.523 0 10 4.477 10 10s-4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10zm.994 5.886c-.083 -.777 -1.008 -1.16 -1.617 -.67l-.084 .077l-2 2l-.083 .094a1 1 0 0 0 0 1.226l.083 .094l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l.293 -.293v5.586l.007 .117a1 1 0 0 0 1.986 0l.007 -.117v-8l-.006 -.114z" />
+                                        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                                        <path d="M6 21v-2a4 4 0 0 1 4 -4h1.5" />
+                                        <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                                        <path d="M20.2 20.2l1.8 1.8" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Clientes</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Registrar
+                                    Clientes</span>
                             </button>
                             <button type="button" wire:click="$set('seleccion', 'Coche')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Coche' ? 'border-orange-600 shadow-lg text-orange-700' : 'border-gray-200 text-gray-700 hover:border-orange-600 hover:text-orange-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Coche' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M10 8h3a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3" />
-                                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                                        <path d="M5 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M15 17a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5" />
                                     </svg>
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Coches</span>
+                            </button>
+                            <button type="button" wire:click="$set('seleccion', 'Pedidos')"
+                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pedidos' ? 'border-orange-600 shadow-lg text-orange-700' : 'border-gray-200 text-gray-700 hover:border-orange-600 hover:text-orange-600 hover:shadow-md' }}">
+                                <div
+                                    class="p-3 rounded-full{{ $seleccion == 'Pedidos' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M13 21h-7a1 1 0 0 1 -1 -1v-16a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v6" />
+                                        <path d="M11 17a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                                        <path d="M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" />
+                                        <path d="M19 21v1m0 -8v1" />
+                                    </svg>
+                                </div>
+                                <span class="mt-2 text-sm font-semibold text-center">Pedidos de clientes</span>
+                            </button>
+                            <button type="button" wire:click="$set('seleccion', 'Pago-pedidos')"
+                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pago-pedidos' ? 'border-orange-600 shadow-lg text-orange-700' : 'border-gray-200 text-gray-700 hover:border-orange-600 hover:text-orange-600 hover:shadow-md' }}">
+                                <div
+                                    class="p-3 rounded-full{{ $seleccion == 'Pago-pedidos' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M13 21h-7a1 1 0 0 1 -1 -1v-16a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v6" />
+                                        <path d="M11 17a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                                        <path d="M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" />
+                                        <path d="M19 21v1m0 -8v1" />
+                                    </svg>
+                                </div>
+                                <span class="mt-2 text-sm font-semibold text-center">Ajuste de Precios y Pagos</span>
                             </button>
                             <button type="button" wire:click="$set('seleccion', 'Pedidospersonal')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pedidospersonal' ? 'border-orange-600 shadow-lg text-orange-700' : 'border-gray-200 text-gray-700 hover:border-orange-600 hover:text-orange-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Pedidospersonal' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M10 8h3a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3" />
-                                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
+                                        <path d="M16 12.5l-5 -3l5 -3l5 3v5.5l-5 3l0 -5.5" />
+                                        <path d="M11 9.5v5.5l5 3" />
+                                        <path d="M16 12.545l5 -3.03" />
+                                        <path d="M7 9h-5" />
+                                        <path d="M7 12h-3" />
+                                        <path d="M7 15h-1" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Pedidospersonal</span>
-                            </button>
-                            <button type="button" wire:click="$set('seleccion', 'Pedidos')"
-                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pedidos' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
-                                <div
-                                    class="p-3 rounded-full{{ $seleccion == 'Pedidos' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path
-                                            d="M10 8h3a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-2a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3" />
-                                        <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" />
-                                    </svg>
-                                </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Pedidos de clientes</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Entregas</span>
                             </button>
                         </div>
                     </div>
@@ -631,18 +646,12 @@
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pruebaestilo' ? 'border-slate-600 shadow-lg text-slate-700' : 'border-gray-200 text-gray-700 hover:border-slate-600 hover:text-slate-600 hover:shadow-md' }}">
                                 <div
                                     class="p-3 rounded-full{{ $seleccion == 'Pruebaestilo' ? 'bg-slate-100 text-slate-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M10 5h4v-2a1 1 0 0 0 -1 -1h-2a1 1 0 0 0 -1 1v2z" />
-                                        <path
-                                            d="M14 3.5c0 1.626 .507 3.212 1.45 4.537l.05 .07a8.093 8.093 0 0 1 1.5 4.694v6.199a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2v-6.2c0 -1.682 .524 -3.322 1.5 -4.693l.05 -.07a7.823 7.823 0 0 0 1.45 -4.537" />
-                                        <path
-                                            d="M7 14.803a2.4 2.4 0 0 0 1 -.803a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 1 -.805" />
+                                        <path d="M6 4l6 16l6 -16" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Inicio</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Mi informacion</span>
                             </button>
                         </div>
                     </div>

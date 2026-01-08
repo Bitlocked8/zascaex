@@ -315,13 +315,9 @@
             map.on('click', function(e) {
                 colocarMarcador(e.latlng.lat, e.latlng.lng);
             });
-
-            // Botón para procesar enlace de Google Maps
             document.getElementById('btnProcesarLink').addEventListener('click', function() {
                 const input = document.getElementById('linkMapa').value.trim();
                 if (!input) return alert('Ingrese coordenadas o enlace de Google Maps');
-
-                // Ver si el input son coordenadas directas: "lat,lng"
                 const coordDirectas = input.match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/);
                 if (coordDirectas) {
                     const lat = parseFloat(coordDirectas[1]);
@@ -330,8 +326,6 @@
                     map.setView([lat, lng], 16);
                     return;
                 }
-
-                // Aquí puedes dejar el resto del código para procesar enlaces/iframe
                 alert('Formato de coordenadas no reconocido');
             });
 

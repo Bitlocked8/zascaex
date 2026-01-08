@@ -29,112 +29,78 @@ class Personal extends Component
 
     public $personalSeleccionado = null;
 
-    protected $rules = [
-        'nombres' => 'required|string|max:255',
-        'apellidos' => 'nullable|string|max:255',
-        'direccion' => 'nullable|string|max:255',
-        'celular' => 'nullable|string|max:15',
-        'estado' => 'nullable|boolean',
-        'email' => [
-            'required',
-            'string',
-            'max:255',
-            'regex:/^[A-Za-z0-9]+$/',
-            'unique:users,email',
-        ],
-
-        'password' => 'required|string|min:8',
-        'rol_id' => 'nullable|exists:rols,id',
-    ];
-
     public function render()
     {
-        $personales = ModelPersonal::query()
-            ->when($this->search, function ($query) {
-                $query->where('nombres', 'like', '%' . $this->search . '%')
-                    ->orWhere('apellidos', 'like', '%' . $this->search . '%')
-                    ->orWhere('celular', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('id', 'desc')
-            ->with('user')
-            ->get();
-
-        $roles = Rol::all();
-
-        return view('livewire.personal', compact('personales', 'roles'));
+        return view('livewire.personal', [
+            'personales' => ModelPersonal::with('user')
+                ->when($this->search, function ($q) {
+                    $q->where('nombres', 'like', "%{$this->search}%")
+                      ->orWhere('apellidos', 'like', "%{$this->search}%")
+                      ->orWhere('celular', 'like', "%{$this->search}%");
+                })
+                ->orderByDesc('id')
+                ->get(),
+            'roles' => Rol::all()
+        ]);
     }
 
     public function abrirModal($accion = 'create', $id = null)
     {
-        $this->reset(['nombres', 'apellidos', 'direccion', 'celular', 'estado', 'personalId', 'email', 'password', 'rol_id']);
+        $this->reset();
         $this->accion = $accion;
+
         if ($accion === 'edit' && $id) {
             $this->editar($id);
         }
+
         $this->modal = true;
     }
 
     public function editar($id)
     {
-        $personal = ModelPersonal::with('user')->findOrFail($id);
-        $this->personalId = $personal->id;
-        $this->nombres = $personal->nombres;
-        $this->apellidos = $personal->apellidos;
-        $this->direccion = $personal->direccion;
-        $this->celular = $personal->celular;
-        $this->estado = $personal->estado;
-        $this->email = $personal->user->email ?? '';
-        $this->rol_id = $personal->user->rol_id ?? '';
-        $this->password = '';
-        $this->accion = 'edit';
-        $this->modal = true;
-        $this->detalleModal = false;
-    }
-
-    public function verDetalle($id)
-    {
         $this->personalSeleccionado = ModelPersonal::with('user')->findOrFail($id);
-        $this->modal = false;
-        $this->detalleModal = true;
+
+        $this->personalId = $id;
+        $this->nombres = $this->personalSeleccionado->nombres;
+        $this->apellidos = $this->personalSeleccionado->apellidos;
+        $this->direccion = $this->personalSeleccionado->direccion;
+        $this->celular = $this->personalSeleccionado->celular;
+        $this->estado = $this->personalSeleccionado->estado;
+        $this->email = $this->personalSeleccionado->user->email;
+        $this->rol_id = $this->personalSeleccionado->user->rol_id;
+        $this->password = '';
     }
 
     public function guardarPersonal()
     {
-        if ($this->accion === 'edit') {
-            $this->validate([
-                'nombres' => 'required|string|max:255',
-                'apellidos' => 'nullable|string|max:255',
-                'direccion' => 'nullable|string|max:255',
-                'celular' => 'nullable|string|max:15',
-                'estado' => 'nullable|boolean',
-                'rol_id' => 'required|exists:rols,id',
-            ]);
-        } else {
-            $this->validate([
-                'nombres' => 'required|string|max:255',
-                'apellidos' => 'nullable|string|max:255',
-                'direccion' => 'nullable|string|max:255',
-                'celular' => 'nullable|string|max:15',
-                'estado' => 'nullable|boolean',
-                'email' => [
-                    'required',
-                    'string',
-                    'max:255',
-                    'regex:/^[A-Za-z0-9]+$/',
-                    'unique:users,email',
-                ],
+        $rules = [
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'nullable|string|max:255',
+            'direccion' => 'nullable|string|max:255',
+            'celular' => 'nullable|string|max:15',
+            'estado' => 'boolean',
+            'rol_id' => 'required|exists:rols,id',
+            'email' => 'required|string|max:255|regex:/^[A-Za-z0-9]+$/'
+        ];
 
-                'password' => 'required|string|min:8',
-                'rol_id' => 'required|exists:rols,id',
-            ]);
+        if ($this->accion === 'create') {
+            $rules['email'] .= '|unique:users,email';
+            $rules['password'] = 'required|string|min:8';
+        } else {
+            $rules['email'] .= '|unique:users,email,' . $this->personalSeleccionado->user->id;
+            if ($this->password) {
+                $rules['password'] = 'min:8';
+            }
         }
 
-        try {
-            DB::beginTransaction();
+        $this->validate($rules);
 
-            if ($this->accion === 'edit' && $this->personalId) {
-                $personal = ModelPersonal::findOrFail($this->personalId);
-                $personal->update([
+        DB::beginTransaction();
+
+        try {
+            if ($this->accion === 'edit') {
+
+                $this->personalSeleccionado->update([
                     'nombres' => $this->nombres,
                     'apellidos' => $this->apellidos,
                     'direccion' => $this->direccion,
@@ -142,14 +108,20 @@ class Personal extends Component
                     'estado' => $this->estado,
                 ]);
 
-                $user = $personal->user;
-                if ($user) {
-                    $user->update([
-                        'rol_id' => $this->rol_id,
-                        'estado' => $this->estado,
-                    ]);
+                $dataUser = [
+                    'email' => $this->email,
+                    'rol_id' => $this->rol_id,
+                    'estado' => $this->estado,
+                ];
+
+                if ($this->password) {
+                    $dataUser['password'] = Hash::make($this->password);
                 }
+
+                $this->personalSeleccionado->user->update($dataUser);
+
             } else {
+
                 $personal = ModelPersonal::create([
                     'nombres' => $this->nombres,
                     'apellidos' => $this->apellidos,
@@ -170,16 +142,16 @@ class Personal extends Component
 
             DB::commit();
             $this->cerrarModal();
+
         } catch (\Exception $e) {
             DB::rollBack();
+            throw $e;
         }
     }
 
     public function cerrarModal()
     {
-        $this->modal = false;
-        $this->detalleModal = false;
-        $this->reset(['nombres', 'apellidos', 'direccion', 'celular', 'estado', 'personalId', 'personalSeleccionado', 'email', 'password', 'rol_id']);
+        $this->reset();
         $this->resetErrorBag();
     }
 }
