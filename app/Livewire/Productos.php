@@ -22,7 +22,8 @@ class Productos extends Component
     public $descripcion = '';
     public $unidad = '';
     public $tipoContenido = '';
-    public $tipoProducto = '';
+    public $tipoProducto = 0;
+    public $precioAlternativo = null;
     public $capacidad = '';
     public $precioReferencia = '';
     public $paquete = null;
@@ -80,6 +81,7 @@ class Productos extends Component
             'tipoProducto',
             'capacidad',
             'precioReferencia',
+            'precioAlternativo',
             'paquete',
             'tipo',
             'observaciones',
@@ -89,6 +91,7 @@ class Productos extends Component
             'productoSeleccionado',
             'cantidadMinima'
         ]);
+
 
         $this->accion = $accion;
 
@@ -110,6 +113,7 @@ class Productos extends Component
         $this->tipoProducto = $producto->tipoProducto;
         $this->capacidad = $producto->capacidad;
         $this->precioReferencia = $producto->precioReferencia;
+        $this->precioAlternativo = $producto->precioAlternativo;
         $this->paquete = $producto->paquete;
         $this->tipo = $producto->tipo;
         $this->observaciones = $producto->observaciones;
@@ -128,10 +132,11 @@ class Productos extends Component
 
         $this->validate([
             'descripcion' => 'required|string|max:500',
-            'tipoContenido' => 'required|string|max:255',
-            'tipoProducto' => 'required|string|max:255',
-            'capacidad' => 'required|numeric|min:0',
+            'tipoContenido' => 'nullable|string|max:255',
+            'tipoProducto' => 'required|integer|in:0,1,2,3',
+            'capacidad' => 'nullable|numeric|min:0',
             'precioReferencia' => 'required|numeric|min:0',
+            'precioAlternativo' => 'nullable|numeric|min:0',
             'unidad' => 'nullable|string|max:50',
             'paquete' => 'nullable|integer|min:0',
 
@@ -157,6 +162,7 @@ class Productos extends Component
                 'tipoProducto' => $this->tipoProducto,
                 'capacidad' => $this->capacidad,
                 'precioReferencia' => $this->precioReferencia,
+                'precioAlternativo' => $this->precioAlternativo,
                 'paquete' => $this->paquete,
                 'tipo' => $this->tipo,
                 'observaciones' => $this->observaciones,
@@ -204,6 +210,7 @@ class Productos extends Component
             'tipoProducto',
             'capacidad',
             'precioReferencia',
+            'precioAlternativo',
             'paquete',
             'tipo',
             'observaciones',

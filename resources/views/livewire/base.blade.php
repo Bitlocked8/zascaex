@@ -248,6 +248,20 @@
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Pedidos de clientes</span>
                             </button>
+                            <button type="button" wire:click="$set('seleccion', 'Ordenes')"
+                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Ordenes' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
+                                <div
+                                    class="p-3 rounded-full{{ $seleccion == 'Ordenes' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M13 21h-7a1 1 0 0 1 -1 -1v-16a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v6" />
+                                        <path d="M11 17a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                                        <path d="M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" />
+                                        <path d="M19 21v1m0 -8v1" />
+                                    </svg>
+                                </div>
+                                <span class="mt-2 text-sm font-semibold text-center">Ordenes del dia</span>
+                            </button>
                             <button type="button" wire:click="$set('seleccion', 'Pago-pedidos')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pago-pedidos' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
@@ -415,6 +429,20 @@
                         </h3>
 
                         <div class="flex flex-wrap justify-center gap-4">
+                            <button type="button" wire:click="$set('seleccion', 'Ordenes')"
+                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Ordenes' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
+                                <div
+                                    class="p-3 rounded-full{{ $seleccion == 'Ordenes' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M13 21h-7a1 1 0 0 1 -1 -1v-16a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v6" />
+                                        <path d="M11 17a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                                        <path d="M21 15h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" />
+                                        <path d="M19 21v1m0 -8v1" />
+                                    </svg>
+                                </div>
+                                <span class="mt-2 text-sm font-semibold text-center">Ordenes del dia</span>
+                            </button>
                             <button type="button" wire:click="$set('seleccion', 'Asignaciones')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Asignaciones' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
@@ -774,6 +802,9 @@
             @endif
             @if ($seleccion == 'Cliente-etiquetas')
             @livewire('cliente-etiquetas')
+            @endif
+            @if ($seleccion == 'Ordenes')
+            @livewire('ordenes')
             @endif
         </div>
     </main>

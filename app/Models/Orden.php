@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Orden extends Model
+{
+    /** @use HasFactory<\Database\Factories\OrdenFactory> */
+    use HasFactory;
+    protected $table = 'ordens';
+    protected $fillable = [
+        'fecha',
+        'detalle',
+        'cantidad_total',
+        'cantidad_preparada',
+        'estado',
+    ];
+}
