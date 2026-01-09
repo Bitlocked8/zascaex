@@ -40,6 +40,7 @@ class ClienteSeeder extends Seeder
             $cliente['user_id'] = $user->id;
             $cliente['personal_id'] = $personales->random();
             $cliente['fijar_personal'] = 0;
+            $cliente['sucursal_id'] = 1;
 
             Cliente::create($cliente);
         }

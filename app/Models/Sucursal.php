@@ -21,8 +21,10 @@ class Sucursal extends Model
     {
         return $this->belongsTo(Empresa::class);
     }
-
-
+    public function clientes()
+    {
+        return $this->hasMany(Cliente::class);
+    }
     public function existencias()
     {
         return $this->hasMany(Existencia::class);

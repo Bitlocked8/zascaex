@@ -16,9 +16,10 @@ return new class extends Migration {
             $table->string('unidad')->nullable();
             $table->string('descripcion');
             $table->string('tipoContenido')->nullable();
-            $table->string('tipoProducto')->nullable();
+            $table->tinyInteger('tipoProducto')->default(0);
             $table->decimal('capacidad', 8, 2)->nullable();
-            $table->decimal('precioReferencia', 8, 2)->comment('Precio de referencia');
+            $table->decimal('precioReferencia', 8, 2);
+            $table->decimal('precioAlternativo', 8, 2)->nullable();
             $table->integer('paquete')->nullable();
             $table->text('observaciones')->nullable();
             $table->boolean('estado')->default(1);

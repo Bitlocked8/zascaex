@@ -4,173 +4,161 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\Distribucion;
+use App\Models\Pedido;
 use App\Models\PagoPedido;
-use App\Models\SucursalPago;
 use Carbon\Carbon;
+use App\Models\SucursalPago;
 
 class Pedidospersonal extends Component
 {
     use WithFileUploads;
 
     public $search = '';
-
-    public $modalPagos = false;
-    public $pedidoParaPago = null;
+    public $modalPagoPedido = false;
+    public $pedidoSeleccionado = null;
     public $pagos = [];
-    public $sucursalesPago = [];
-    public $imagenPreviewModal = null;
-    public $modalImagenAbierta = false;
-
-    protected $rules = [
-        'pagos.*.monto' => 'required|numeric|min:0.01',
-    ];
-
-    protected $messages = [
-        'pagos.*.monto.required' => 'El campo monto es obligatorio.',
-        'pagos.*.monto.numeric' => 'El monto debe ser un número.',
-        'pagos.*.monto.min' => 'El monto debe ser mayor que cero.',
-    ];
-
-    public function abrirModalPagosPedido($pedido_id)
-    {
-        $this->pedidoParaPago = $pedido_id;
-
-        $this->sucursalesPago = SucursalPago::where('estado', 1)->get();
-
-        $this->pagos = PagoPedido::where('pedido_id', $pedido_id)
-            ->get()
-            ->map(fn($p) => [
-                'id' => $p->id,
-                'codigo_pago' => $p->codigo_pago ?? 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-
-                // FECHA COMPLETA
-                'fecha_pago' => $p->fecha_pago
-                    ? Carbon::parse($p->fecha_pago)->format('Y-m-d H:i:s')
-                    : now()->format('Y-m-d H:i:s'),
-
-                'monto' => $p->monto,
-                'observaciones' => $p->observaciones,
-                'imagen_comprobante' => $p->imagen_comprobante,
-                'metodo' => $p->metodo,
-                'referencia' => $p->referencia,
-                'estado' => $p->estado,
-                'sucursal_pago_id' => $p->sucursal_pago_id,
-            ])
-            ->toArray();
-
-        $this->modalPagos = true;
-    }
-
-    public function guardarPagosPedido()
-    {
-        foreach ($this->pagos as $index => $pago) {
-            $this->validate([
-                "pagos.$index.monto" => "required",
-            ], [
-                "pagos.$index.monto.required" => "El monto es obligatorio.",
-            ]);
-
-            $imagenPath = $pago['imagen_comprobante'];
-
-            if ($imagenPath instanceof \Illuminate\Http\UploadedFile) {
-                $imagenPath = $imagenPath->store('pagos_pedido', 'public');
-            }
-
-            PagoPedido::updateOrCreate(
-                ['id' => $pago['id'] ?? 0],
-                [
-                    'pedido_id' => $this->pedidoParaPago,
-                    'codigo_pago' => $pago['codigo_pago'],
-                    'monto' => $pago['monto'],
-                    'fecha_pago' => Carbon::parse($pago['fecha_pago']),
-                    'observaciones' => $pago['observaciones'],
-                    'imagen_comprobante' => $imagenPath,
-                    'metodo' => (int) $pago['metodo'],
-                    'referencia' => $pago['referencia'],
-                    'estado' => (bool) $pago['estado'],
-                    'sucursal_pago_id' => $pago['sucursal_pago_id'],
-                ]
-            );
-        }
-
-        $this->reset(['pagos']);
-        $this->modalPagos = false;
-    }
-
-
-    public function agregarPagoPedido()
-    {
-        $this->pagos[] = [
-            'id' => null,
-            'codigo_pago' => 'PAGO-' . now()->format('YmdHis') . '-' . rand(100, 999),
-            'fecha_pago' => now()->format('Y-m-d H:i:s'),
-
-            'monto' => null,
-            'observaciones' => null,
-            'imagen_comprobante' => null,
-            'metodo' => null,
-            'referencia' => null,
-            'estado' => 0,
-            'sucursal_pago_id' => null,
-        ];
-    }
-
-
-    public function eliminarPagoPedido($index)
-    {
-        $pago = $this->pagos[$index] ?? null;
-
-        if ($pago && isset($pago['id']) && $pago['id']) {
-            PagoPedido::find($pago['id'])?->delete();
-        }
-
-        unset($this->pagos[$index]);
-        $this->pagos = array_values($this->pagos);
-    }
 
     public function render()
     {
         $usuario = auth()->user();
         $personalId = optional($usuario->personal)->id;
-
         if (!$personalId || $usuario->rol_id != 3) {
             return view('livewire.pedidospersonal', [
-                'distribuciones' => collect()
+                'pedidos' => collect()
             ]);
         }
 
         $search = $this->search;
 
-        $query = Distribucion::with([
-            'coche',
-            'pedidos.solicitudPedido.cliente'
+        $pedidos = Pedido::with([
+            'cliente',
+            'solicitudPedido',
+            'pagos'
         ])
-            ->where('personal_id', $personalId)
-            ->whereHas('pedidos', function ($p) use ($search) {
-                $p->where('codigo', 'like', "%{$search}%")
+            ->whereHas('cliente', function ($q) use ($personalId) {
+                $q->where('personal_id', $personalId);
+            })
+            ->where(function ($q) use ($search) {
+                $q->where('codigo', 'like', "%{$search}%")
+                    ->orWhereHas('cliente', function ($c) use ($search) {
+                        $c->where('nombre', 'like', "%{$search}%");
+                    })
                     ->orWhereHas('solicitudPedido', function ($s) use ($search) {
-                        $s->where('codigo', 'like', "%{$search}%")
-                            ->orWhereHas('cliente', function ($c) use ($search) {
-                                $c->where('nombre', 'like', "%{$search}%");
-                            });
+                        $s->where('codigo', 'like', "%{$search}%");
                     });
             })
-            ->latest();
+            ->latest()
+            ->get();
+
+        $sucursalesPago = SucursalPago::where('estado', true)
+            ->select('id', 'nombre', 'imagen_qr')
+            ->orderBy('nombre')
+            ->get();
 
         return view('livewire.pedidospersonal', [
-            'distribuciones' => $query->get()
+            'pedidos' => $pedidos,
+            'sucursalesPago' => $sucursalesPago
         ]);
     }
 
     public function cambiarEstadoPedido($pedidoId, $nuevoEstado)
     {
-        $pedido = \App\Models\Pedido::find($pedidoId);
-
+        $pedido = Pedido::find($pedidoId);
         if ($pedido) {
             $pedido->estado_pedido = $nuevoEstado;
             $pedido->save();
         }
     }
 
+    public function abrirModalPagoPedido($pedidoId)
+    {
+        $pedido = Pedido::with('pagos')->findOrFail($pedidoId);
+        $this->pedidoSeleccionado = $pedido;
+
+        $this->pagos = $pedido->pagos->map(fn($p) => [
+            'id' => $p->id,
+            'sucursal_pago_id' => $p->sucursal_pago_id,
+            'metodo' => $p->metodo,
+            'estado' => $p->estado ? 1 : 0,
+            'referencia' => $p->referencia,
+            'codigo_factura' => $p->codigo_factura,
+            'fecha' => $p->fecha
+                ? Carbon::parse($p->fecha)->format('Y-m-d\TH:i')
+                : now()->format('Y-m-d\TH:i'),
+            'observaciones' => $p->observaciones,
+            'monto' => $p->monto,
+            'archivoFactura' => $p->archivo_factura,
+            'archivoComprobante' => $p->archivo_comprobante
+        ])->toArray();
+
+        $this->modalPagoPedido = true;
+    }
+
+    public function agregarPago()
+    {
+        $this->pagos[] = [
+            'id' => null,
+            'sucursal_pago_id' => null,
+            'metodo' => 0,
+            'estado' => 0,
+            'referencia' => null,
+            'codigo_factura' => null,
+            'fecha' => now()->format('Y-m-d\TH:i'),
+            'observaciones' => null,
+            'monto' => null,
+            'archivoFactura' => null,
+            'archivoComprobante' => null
+        ];
+    }
+
+    public function eliminarPago($index)
+    {
+        $pago = $this->pagos[$index] ?? null;
+        if ($pago && !empty($pago['id'])) {
+            PagoPedido::find($pago['id'])?->delete();
+        }
+        unset($this->pagos[$index]);
+        $this->pagos = array_values($this->pagos);
+    }
+
+    public function guardarPagos()
+    {
+        foreach ($this->pagos as $pago) {
+            $archivoFacturaPath = $pago['archivoFactura'];
+            if (is_object($archivoFacturaPath) && method_exists($archivoFacturaPath, 'store')) {
+                $archivoFacturaPath = $archivoFacturaPath->store('pagos/facturas', 'public');
+            }
+
+            $archivoComprobantePath = $pago['archivoComprobante'];
+            if (is_object($archivoComprobantePath) && method_exists($archivoComprobantePath, 'store')) {
+                $archivoComprobantePath = $archivoComprobantePath->store('pagos/comprobantes', 'public');
+            }
+
+            PagoPedido::updateOrCreate(
+                ['id' => $pago['id']],
+                [
+                    'pedido_id' => $this->pedidoSeleccionado->id,
+                    'sucursal_pago_id' => $pago['sucursal_pago_id'],
+                    'monto' => $pago['monto'] ?? 0,
+                    'metodo' => $pago['metodo'] ?? 0,
+                    'estado' => (bool) ($pago['estado'] ?? 0),
+                    'referencia' => $pago['referencia'],
+                    'codigo_factura' => $pago['codigo_factura'],
+                    'fecha' => $pago['fecha'],
+                    'archivo_factura' => $archivoFacturaPath,
+                    'archivo_comprobante' => $archivoComprobantePath,
+                    'observaciones' => $pago['observaciones']
+                ]
+            );
+        }
+
+        $this->cerrarModalPagoPedido();
+    }
+
+    public function cerrarModalPagoPedido()
+    {
+        $this->modalPagoPedido = false;
+        $this->pedidoSeleccionado = null;
+        $this->pagos = [];
+    }
 }

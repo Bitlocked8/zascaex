@@ -35,9 +35,10 @@ return new class extends Migration {
             $table->boolean('fijar_personal')->default(false);
 
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('sucursal_id')->nullable()->constrained('sucursals')->nullOnDelete();
+
             $table->timestamps();
         });
-
     }
 
     public function down(): void

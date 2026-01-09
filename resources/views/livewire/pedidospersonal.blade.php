@@ -1,401 +1,268 @@
 <div class="p-2 mt-20 flex justify-center bg-white">
-    <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="w-full max-w-screen-xl">
 
-        <h3
-            class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">
-            Mis Pedidos Asignados
+        <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
+            Pedidos
         </h3>
 
-        <div class="flex items-center gap-2 mb-4 col-span-full">
-            <input type="text" wire:model.live="search"
-                placeholder="Buscar por código de pedido, solicitud o cliente..." class="input-minimal w-full" />
+        <div class="flex items-center gap-2 mb-4 flex-wrap">
+            <input
+                type="text"
+                wire:model.live="search"
+                placeholder="Buscar por código, cliente o solicitud..."
+                class="input-minimal w-full sm:w-auto flex-1" />
         </div>
 
-        @php
-            $pedidosTotales = $distribuciones->flatMap(function ($dist) {
-                return $dist->pedidos->filter(function ($pedido) {
-                    $search = strtolower($this->search);
-                    $codigoPedido = strtolower($pedido->codigo);
-                    $codigoSolicitud = strtolower($pedido->solicitudPedido->codigo ?? '');
-                    $nombreCliente = strtolower($pedido->solicitudPedido->cliente->nombre ?? '');
+        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-teal-50 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Código</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Cliente</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Solicitud</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Fecha del pedido</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
+                        <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
+                    </tr>
+                </thead>
 
-                    return str_contains($codigoPedido, $search)
-                        || str_contains($codigoSolicitud, $search)
-                        || str_contains($nombreCliente, $search);
-                });
-            });
-        @endphp
-
-        @if($pedidosTotales->isEmpty())
-            <div class="col-span-full text-center py-4 text-gray-600">
-                No hay pedidos que coincidan con la búsqueda.
-            </div>
-        @else
-            @foreach($distribuciones as $dist)
-                @php
-                    $pedidosFiltrados = $dist->pedidos->filter(function ($pedido) {
-                        $search = strtolower($this->search);
-                        $codigoPedido = strtolower($pedido->codigo);
-                        $codigoSolicitud = strtolower($pedido->solicitudPedido->codigo ?? '');
-                        $nombreCliente = strtolower($pedido->solicitudPedido->cliente->nombre ?? '');
-
-                        return str_contains($codigoPedido, $search)
-                            || str_contains($codigoSolicitud, $search)
-                            || str_contains($nombreCliente, $search);
-                    });
-                @endphp
-
-                @foreach($pedidosFiltrados as $pedido)
-                    @php
-                        $pagoPedidos = $pedido->pagoPedidos ?? collect();
-                        $creditos = $pagoPedidos->where('metodo', 2);
-                        $totalCredito = $creditos->sum('monto');
-                        $pagosConfirmados = $pagoPedidos->where('metodo', '<>', 2);
-                        $totalPagado = $pagosConfirmados->where('estado', 1)->sum('monto');
-                        $saldoPendiente = max($totalCredito - $totalPagado, 0);
-                        $baseSaldo = $totalCredito;
-                    @endphp
-
-                    <div class="card-teal flex flex-col gap-4 p-4">
-
-                        <p class="text-cyan-700 uppercase font-semibold">
-                            Pedido: {{ $pedido->codigo }}
-                        </p>
-
-                        <p><strong>Cliente:</strong> {{ $pedido->solicitudPedido->cliente->nombre ?? 'N/A' }}</p>
-                        <p><strong>Código Solicitud:</strong> {{ $pedido->solicitudPedido->codigo ?? 'N/A' }}</p>
-                        <p><strong>Coche:</strong> {{ $dist->coche->placa ?? 'N/A' }}</p>
-
-                        <div class="mt-2">
-                            <div class="w-full mt-2">
-                                <p class="font-semibold text-teal-600 mb-1">Productos:</p>
-
-                                <ul class="text-gray-600 max-h-32 overflow-y-auto space-y-2">
-                                    @foreach($pedido->solicitudPedido->detalles as $detalle)
-                                        <li class="border-b pb-2">
-
-                                            <div class="font-semibold text-gray-800">
-                                                @if($detalle->producto)
-                                                    {{ $detalle->producto->descripcion }} {{ $detalle->producto->unidad }}
-                                                @elseif($detalle->otro)
-                                                    {{ $detalle->otro->descripcion }}
-                                                @else
-                                                    Producto base N/A
-                                                @endif
-                                            </div>
-
-                                            <div class="text-sm text-gray-500 ml-2">
-                                                @if($detalle->tapa)
-                                                    • Tapa: {{ $detalle->tapa->descripcion }}
-                                                @endif
-
-                                                @if($detalle->etiqueta)
-                                                    <br>• Etiqueta: {{ $detalle->etiqueta->descripcion }}
-                                                @endif
-
-                                                @if($detalle->otro)
-                                                    <br>• Otro: {{ $detalle->otro->descripcion }}
-                                                @endif
-                                            </div>
-
-                                            @php
-                                                $paquetes = $detalle->cantidad;
-                                                $unidadesPorPaquete = $detalle->producto->paquete ?? 1;
-                                                $totalUnidades = $paquetes * $unidadesPorPaquete;
-                                            @endphp
-
-
-                                            <div class="mt-1 text-sm">
-                                                Paquetes:
-                                                <span class="font-semibold">{{ $paquetes }}</span>
-
-                                                <span class="text-gray-400 mx-1">|</span>
-
-                                                Total unidades:
-                                                <span class="font-semibold text-teal-700">
-                                                    {{ $totalUnidades }}                                                
-                                                </span>
-                                            </div>
-
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-
-
-                            <p><strong>Pagos:</strong>
-                                @if($pagosConfirmados->count())
-                                    <ul class="flex flex-wrap gap-2 mt-1">
-                                        @foreach($pagosConfirmados as $pago)
-                                            <li
-                                                class="px-2 py-1 rounded-full font-bold {{ $pago->estado ? 'text-emerald-700' : 'text-red-600' }}">
-                                                Bs {{ number_format($pago->monto, 2) }}
-                                                ({{ $pago->metodo == 0 ? 'QR' : ($pago->metodo == 1 ? 'Efectivo' : 'Otro') }})
-                                                {{ $pago->estado ? 'Pagado' : 'No pagado' }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                Bs 0.00
-                            @endif
-                            </p>
-
-                            <p><strong>Saldo Pendiente:</strong>
-                                <span class="text-indigo-600 font-bold">Bs {{ number_format($saldoPendiente, 2) }}</span>
-                                <br>
-                                <span class="text-gray-500">(Crédito monto: Bs {{ number_format($baseSaldo, 2) }})</span>
-                            </p>
-                        </div>
-
-                        <div class="flex gap-2 mt-3">
-                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 0)"
-                                class="px-3 py-1 rounded-lg text-sm font-semibold border transition
-                                                        {{ $pedido->estado_pedido == 0 ? 'bg-yellow-500 text-white border-yellow-600 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                Preparando
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($pedidos as $pedido)
+                    <tr class="hover:bg-teal-50">
+                        <td class="px-4 py-2 font-medium">{{ $pedido->codigo }}</td>
+                        <td class="px-4 py-2">{{ $pedido->cliente->nombre ?? 'Sin cliente' }}</td>
+                        <td class="px-4 py-2">{{ $pedido->solicitudPedido->codigo ?? '—' }}</td>
+                        <td class="px-4 py-2">{{ $pedido->fecha_pedido ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') : '—' }}</td>
+                        <td class="px-4 py-2">
+                            @php
+                            $estados = [
+                            0 => ['Pendiente', 'text-yellow-600'],
+                            1 => ['En proceso de pago', 'text-blue-600'],
+                            2 => ['Pedido Entregado', 'text-green-600'],
+                            ];
+                            [$texto, $color] = $estados[$pedido->estado_pedido] ?? ['Desconocido', 'text-gray-600'];
+                            @endphp
+                            <span class="{{ $color }} font-semibold">{{ $texto }}</span>
+                        </td>
+                        <td class="px-4 py-2 flex justify-center gap-1">
+                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 1)" class="btn-cyan text-sm">
+                                Aun no pagado
                             </button>
-                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 1)"
-                                class="px-3 py-1 rounded-lg text-sm font-semibold border transition
-                                                        {{ $pedido->estado_pedido == 1 ? 'bg-blue-500 text-white border-blue-600 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                En Revisión
+                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 2)" class="btn-cyan text-sm">
+                                Entregar
                             </button>
-                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 2)"
-                                class="px-3 py-1 rounded-lg text-sm font-semibold border transition
-                                                        {{ $pedido->estado_pedido == 2 ? 'bg-green-600 text-white border-green-700 shadow' : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                Completado
-                            </button>
-                        </div>
 
-                        <div class="flex justify-center mt-2">
-                            <button wire:click="abrirModalPagosPedido({{ $pedido->id }})" class="btn-cyan"
-                                title="Ver/Agregar Pagos">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="2">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                                    <path d="M14.8 9a2 2 0 0 0 -1.8 -1h-2a2 2 0 1 0 0 4h2a2 2 0 1 1 0 4h-2a2 2 0 0 1 -1.8 -1" />
-                                    <path d="M12 7v10" />
-                                </svg>
+                            <button wire:click="abrirModalPagoPedido({{ $pedido->id }})" class="btn-cyan text-sm">
                                 Pagos
                             </button>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-gray-600">No hay pedidos registrados.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    @if($modalPagoPedido)
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-content">
+
+                @foreach($pagos as $index => $pago)
+                <div class="border p-4 rounded mb-4 flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold">Pago {{ $index + 1 }}</span>
+                        <button type="button" wire:click="eliminarPago({{ $index }})" class="text-red-500 font-bold">Eliminar</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                        <div class="sm:col-span-2">
+                            <label class="font-semibold text-sm block mb-2 text-center">
+                                Método de pago
+                            </label>
+
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.metodo', 0)"
+                                    class="px-4 py-2 rounded-full border text-sm
+            {{ $pagos[$index]['metodo'] == 0 ? 'bg-teal-600 text-white' : 'bg-white text-gray-700' }}">
+                                    Efectivo
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.metodo', 1)"
+                                    class="px-4 py-2 rounded-full border text-sm
+            {{ $pagos[$index]['metodo'] == 1 ? 'bg-teal-600 text-white' : 'bg-white text-gray-700' }}">
+                                    QR
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.metodo', 2)"
+                                    class="px-4 py-2 rounded-full border text-sm
+            {{ $pagos[$index]['metodo'] == 2 ? 'bg-teal-600 text-white' : 'bg-white text-gray-700' }}">
+                                    Contrato
+                                </button>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="font-semibold text-sm block mb-2 text-center">
+                                Estado del pago
+                            </label>
+
+                            <div class="flex justify-center gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.estado', 0)"
+                                    class="px-5 py-2 rounded-full text-sm border
+            {{ empty($pagos[$index]['estado']) ? 'bg-yellow-500 text-white' : 'bg-white text-gray-700' }}">
+                                    Sin pagar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.estado', 1)"
+                                    class="px-5 py-2 rounded-full text-sm border
+            {{ !empty($pagos[$index]['estado']) ? 'bg-green-600 text-white' : 'bg-white text-gray-700' }}">
+                                    Pagado
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="font-semibold text-sm block mb-2 text-center">
+                                Sucursal de pago
+                            </label>
+
+                            <div class="flex flex-wrap justify-center gap-2 mb-2">
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.sucursal_pago_id', null)"
+                                    class="px-4 py-2 rounded-full border text-sm
+                {{ empty($pagos[$index]['sucursal_pago_id']) ? 'bg-gray-500 text-white' : 'bg-white text-gray-700' }}">
+                                    Ninguna
+                                </button>
+
+                                @foreach($sucursalesPago as $sucursal)
+                                <button
+                                    type="button"
+                                    wire:click="$set('pagos.{{ $index }}.sucursal_pago_id', {{ $sucursal->id }})"
+                                    class="px-4 py-2 rounded-full border text-sm
+                    {{ ($pagos[$index]['sucursal_pago_id'] ?? null) == $sucursal->id
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-gray-700' }}">
+                                    {{ $sucursal->nombre }}
+                                </button>
+                                @endforeach
+                            </div>
+                            @php
+                            $sucursalSeleccionada = $sucursalesPago->firstWhere('id', $pagos[$index]['sucursal_pago_id'] ?? null);
+                            $qrUrl = $sucursalSeleccionada && $sucursalSeleccionada->imagen_qr
+                            ? Storage::url($sucursalSeleccionada->imagen_qr)
+                            : null;
+                            @endphp
+
+                            @if($qrUrl)
+                            <div class="flex justify-center mt-2">
+                                <img src="{{ $qrUrl }}" alt="QR Sucursal" class="h-50 w-50 rounded shadow">
+                            </div>
+                            @endif
+                        </div>
+
+
+                        <div>
+                            <label>Monto</label>
+                            <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal w-full">
+                        </div>
+
+
+                        <div>
+                            <label>Referencia</label>
+                            <input type="text" wire:model="pagos.{{ $index }}.referencia" class="input-minimal w-full">
+                        </div>
+
+                        <div>
+                            <label>Código factura</label>
+                            <input type="text" wire:model="pagos.{{ $index }}.codigo_factura" class="input-minimal w-full">
+                        </div>
+
+                        <div>
+                            <label>Fecha</label>
+                            <input type="datetime-local" wire:model="pagos.{{ $index }}.fecha" class="input-minimal w-full">
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label>Observaciones</label>
+                            <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal w-full">
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label class="font-semibold text-sm">Archivo Factura (Opcional)</label>
+                            <input type="file" wire:model="pagos.{{ $index }}.archivoFactura" class="input-minimal">
+
+                            @php
+                            $archivo = $pagos[$index]['archivoFactura'] ?? null;
+                            $archivoUrl = null;
+                            $esImagen = false;
+
+                            if ($archivo) {
+                            if (is_object($archivo)) {
+                            $mime = $archivo->getClientMimeType();
+                            $esImagen = str_starts_with($mime, 'image');
+                            if ($esImagen) $archivoUrl = $archivo->temporaryUrl();
+                            } else {
+                            $ext = pathinfo($archivo, PATHINFO_EXTENSION);
+                            $esImagen = in_array(strtolower($ext), ['jpg','jpeg','png','gif','bmp','svg']);
+                            $archivoUrl = Storage::url($archivo);
+                            }
+                            }
+                            @endphp
+
+                            @if($archivo)
+                            @if($esImagen)
+                            <img src="{{ $archivoUrl }}" class="mt-2 max-w-xs rounded shadow">
+                            @else
+                            <a href="{{ $archivoUrl }}" target="_blank" class="text-blue-600 underline mt-2 block">
+                                Descargar archivo
+                            </a>
+                            @endif
+                            @endif
+                        </div>
+
+
+                        <div class="sm:col-span-2">
+                            <label>Comprobante (imagen)</label>
+                            <input type="file" wire:model="pagos.{{ $index }}.archivoComprobante" class="input-minimal w-full">
+
+                            @if(isset($pagos[$index]['archivoComprobante']))
+                            @php
+                            $archivo = $pagos[$index]['archivoComprobante'];
+                            $url = is_string($archivo) ? Storage::url($archivo) : $archivo->temporaryUrl();
+                            @endphp
+                            <img src="{{ $url }}" alt="Vista previa" class="mt-2 max-w-xs rounded shadow">
+                            @endif
                         </div>
 
                     </div>
+                </div>
                 @endforeach
-            @endforeach
-        @endif
+                <div class="modal-footer">
+                    <button type="button" wire:click="agregarPago" class="btn-cyan">Agregar pago</button>
 
-    </div>
-
-
-    @if($modalPagos)
-        <div class="modal-overlay">
-            <div class="modal-box">
-                <div class="modal-content flex flex-col gap-4">
-                    <div class="space-y-4">
-
-                        @foreach($pagos as $index => $pago)
-                                    <div class="border p-4 rounded flex flex-col gap-2">
-
-
-                                        <div class="flex justify-between items-center">
-                                            <strong>Código: {{ $pago['codigo_pago'] }}</strong>
-                                            <p class="text-sm text-gray-600">
-                                                Fecha: {{ $pago['fecha_pago'] }}
-                                            </p>
-
-                                            <button type="button" wire:click="eliminarPagoPedido({{ $index }})" class="btn-cyan"
-                                                title="Eliminar">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                    <path d="M4 7l16 0" />
-                                                    <path d="M10 11l0 6" />
-                                                    <path d="M14 11l0 6" />
-                                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
-                                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
-                                                </svg>
-                                                Eliminar pago
-                                            </button>
-                                        </div>
-
-
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                                            <div class="sm:col-span-2">
-                                                <label class="font-semibold text-u">Monto (Requerido)</label>
-                                                <input type="number" wire:model="pagos.{{ $index }}.monto" class="input-minimal"
-                                                    min="0">
-                                            </div>
-
-                                            <div class="sm:col-span-2">
-                                                <label class="font-semibold text-sm">Método de Pago</label>
-
-                                                <div class="flex justify-center gap-3 mt-2">
-                                                    <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 0)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition {{ $pagos[$index]['metodo'] === 0
-                            ? 'bg-blue-700 text-white border-blue-800 shadow-md'
-                            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                                        QR
-                                                    </button>
-                                                    <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 1)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition {{ $pagos[$index]['metodo'] === 1
-                            ? 'bg-blue-700 text-white border-blue-800 shadow-md'
-                            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                                        Efectivo
-                                                    </button>
-                                                    <button type="button" wire:click="$set('pagos.{{ $index }}.metodo', 2)" class="px-4 py-2 rounded-lg border text-sm font-semibold transition {{ $pagos[$index]['metodo'] === 2
-                            ? 'bg-blue-700 text-white border-blue-800 shadow-md'
-                            : 'bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-300' }}">
-                                                        Crédito
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div class="sm:col-span-2 mt-3">
-                                                <label class="font-semibold text-sm block text-center">Pago Confirmado</label>
-
-                                                <div class="flex justify-center mt-2">
-                                                    <button type="button"
-                                                        wire:click="$set('pagos.{{ $index }}.estado', {{ $pago['estado'] ? 0 : 1 }})"
-                                                        class="px-6 py-2 rounded-lg text-white font-semibold border shadow-md transition {{ $pagos[$index]['estado']
-                            ? 'bg-green-600 border-green-700 hover:bg-green-700'
-                            : 'bg-gray-500 border-gray-600 hover:bg-gray-600' }}">
-                                                        {{ $pagos[$index]['estado'] ? 'PAGADO' : 'NO PAGADO' }}
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div class="sm:col-span-2">
-                                                <label class="text-u">Método QR auxiliar (Sucursal)</label>
-
-                                                <div
-                                                    class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[180px] overflow-y-auto">
-
-
-                                                    <button type="button" wire:click="$set('pagos.{{ $index }}.sucursal_pago_id', null)"
-                                                        class="w-full p-4 rounded-lg border-2 text-center {{ empty($pagos[$index]['sucursal_pago_id']) ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800' }}">
-                                                        <span class="font-medium">Ninguno </span>
-                                                    </button>
-
-                                                    @foreach($sucursalesPago as $sp)
-                                                        <button type="button"
-                                                            wire:click="$set('pagos.{{ $index }}.sucursal_pago_id', {{ $sp->id }})"
-                                                            class="w-full p-4 rounded-lg border-2 text-center {{ $pagos[$index]['sucursal_pago_id'] == $sp->id ? 'border-cyan-600 text-cyan-600' : 'border-gray-300 text-gray-800' }}">
-                                                            <span class="font-medium">{{ $sp->nombre }}</span>
-
-                                                            @if($sp->tipo)
-                                                                <span class="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full mt-1">
-                                                                    {{ $sp->tipo }}
-                                                                </span>
-                                                            @endif
-
-                                                            @if($sp->sucursal)
-                                                                <span class="text-gray-500 text-xs mt-1">(Sucursal:
-                                                                    {{ $sp->sucursal->nombre }})</span>
-                                                            @endif
-                                                        </button>
-                                                    @endforeach
-                                                </div>
-
-                                                @if(isset($pagos[$index]['sucursal_pago_id']) && $pagos[$index]['sucursal_pago_id'])
-                                                    @php $metodo = $sucursalesPago->firstWhere('id', $pagos[$index]['sucursal_pago_id']); @endphp
-
-                                                    @if($metodo && $metodo->imagen_qr)
-                                                        <div class="mt-3 flex flex-col items-center space-y-2">
-                                                            <img src="{{ Storage::url($metodo->imagen_qr) }}"
-                                                                class="w-48 h-48 object-cover rounded shadow cursor-pointer"
-                                                                wire:click="$set('imagenPreviewModal', '{{ Storage::url($metodo->imagen_qr) }}'); $set('modalImagenAbierta', true)">
-                                                            <p class="text-sm text-gray-600 text-center">
-                                                                {{ $metodo->nombre }} — {{ $metodo->tipo }}
-                                                            </p>
-                                                        </div>
-                                                    @endif
-                                                @endif
-                                            </div>
-
-
-                                            <div class="sm:col-span-2">
-                                                <label class="font-semibold text-sm">Imagen del comprobante</label>
-                                                <input type="file" wire:model="pagos.{{ $index }}.imagen_comprobante"
-                                                    class="input-minimal">
-
-                                                @php
-                                                    $imagenUrl = isset($pagos[$index]['imagen_comprobante'])
-                                                        ? (is_string($pagos[$index]['imagen_comprobante'])
-                                                            ? Storage::url($pagos[$index]['imagen_comprobante'])
-                                                            : $pagos[$index]['imagen_comprobante']->temporaryUrl())
-                                                        : null;
-                                                @endphp
-
-                                                @if($imagenUrl)
-                                                    <div class="mt-2 flex flex-col items-center space-y-2">
-
-                                                        <img src="{{ $imagenUrl }}"
-                                                            class="w-80 h-80 object-cover rounded-lg shadow cursor-pointer"
-                                                            wire:click="$set('imagenPreviewModal', '{{ $imagenUrl }}'); $set('modalImagenAbierta', true)">
-
-                                                        @if(is_string($pagos[$index]['imagen_comprobante']))
-                                                            <a href="{{ $imagenUrl }}" download class="btn-cyan">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                                    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                                                                    <path d="M7 11l5 5l5 -5" />
-                                                                    <path d="M12 4l0 12" />
-                                                                </svg>
-
-                                                            </a>
-                                                        @endif
-
-                                                    </div>
-
-                                                @endif
-
-                                            </div>
-
-                                        </div>
-                                    </div>
-                        @endforeach
-                    </div>
-
-
-                    <div class="modal-footer">
-
-                        <button type="button" wire:click="agregarPagoPedido" class="btn-cyan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path
-                                    d="M18.333 2a3.667 3.667 0 0 1 3.667 3.667v8.666a3.667 3.667 0 0 1 -3.667 3.667h-8.666a3.667 3.667 0 0 1 -3.667 -3.667v-8.666a3.667 3.667 0 0 1 3.667 -3.667zm-4.333 4a1 1 0 0 0 -1 1v2h-2a1 1 0 0 0 0 2h2v2a1 1 0 0 0 2 0v-2h2a1 1 0 0 0 0 -2h-2v-2a1 1 0 0 0 -1 -1" />
-                                <path
-                                    d="M3.517 6.391a1 1 0 0 1 .99 1.738c-.313 .178 -.506 .51 -.507 .868v10c0 .548 .452 1 1 1h10c.284 0 .405 -.088 .626 -.486a1 1 0 0 1 1.748 .972c-.546 .98 -1.28 1.514 -2.374 1.514h-10c-1.652 0 -3 -1.348 -3 -3v-10.002a3 3 0 0 1 1.517 -2.605" />
-                            </svg>
-                            añadir pago
-                        </button>
-                        <button type="button" wire:click="guardarPagosPedido" class="btn-cyan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                                <path d="M14 4l0 4l-6 0l0 -4" />
-                            </svg>
-                            guardar pago
-                        </button>
-
-                        <button type="button" wire:click="$set('modalPagos', false)" class="btn-cyan" title="Cerrar">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                                <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                            </svg>
-                            CERRAR
-                        </button>
-
-                    </div>
+                    <button type="button" wire:click="guardarPagos" class="btn-cyan">Guardar pagos</button>
+                    <button type="button" wire:click="cerrarModalPagoPedido" class="btn-cyan">Cerrar</button>
 
                 </div>
             </div>
         </div>
+    </div>
     @endif
 
 

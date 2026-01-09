@@ -35,6 +35,7 @@ class Cliente extends Model
         'categoria',
         'personal_id',
         'fijar_personal',
+        'sucursal_id',
     ];
 
     public function ventas()
@@ -52,5 +53,10 @@ class Cliente extends Model
     public function itemPromos()
     {
         return $this->hasMany(ItemPromo::class);
+    }
+
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursal::class);
     }
 }

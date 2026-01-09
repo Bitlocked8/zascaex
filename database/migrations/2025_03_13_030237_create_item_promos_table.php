@@ -13,10 +13,6 @@ return new class extends Migration
     {
         Schema::create('item_promos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
-            $table->foreignId('promo_id')->constrained('promos')->onDelete('cascade');
-            $table->string('codigo')->nullable(); // código único opcional
-            $table->date('fecha_asignacion')->nullable(); // fecha cuando se asignó
             $table->timestamps(); // para historial de creación/actualización
         });
     }
