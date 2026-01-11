@@ -9,6 +9,7 @@
             <input type="text" wire:model.live="search" placeholder="Buscar por descripción o tipo..."
                 class="input-minimal w-full sm:w-auto flex-1" />
             <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
+            
         </div>
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200">
@@ -35,17 +36,25 @@
                             {{ $producto->unidad ?? '' }}
                         </td>
 
-
                         <td class="px-4 py-2">
                             <div class="flex flex-col">
-                                <span class="text-xs text-gray-500">Precio normal:{{ $producto->precioReferencia ?? 'N/A' }} Bs</span>
+                                <span class="text-xs text-gray-500">
+                                    Precio normal:
+                                    {{ $producto->precioReferencia == floor($producto->precioReferencia) 
+                ? intval($producto->precioReferencia) 
+                : number_format($producto->precioReferencia, 2, '.', '') }} Bs
+                                </span>
                                 @if(!is_null($producto->precioAlternativo))
                                 <span class="text-xs text-gray-500">
-                                    Precio facturado: {{ $producto->precioAlternativo }} Bs
+                                    Precio facturado:
+                                    {{ $producto->precioAlternativo == floor($producto->precioAlternativo) 
+                    ? intval($producto->precioAlternativo) 
+                    : number_format($producto->precioAlternativo, 2, '.', '') }} Bs
                                 </span>
                                 @endif
                             </div>
                         </td>
+
 
                         <td class="px-4 py-2">
                             <span class="{{ $producto->estado == 0 ? 'text-red-600' : 'text-green-600' }}">

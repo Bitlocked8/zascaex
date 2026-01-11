@@ -8,6 +8,7 @@ use Livewire\WithFileUploads;
 use App\Models\Cliente as ModeloCliente;
 use App\Models\User;
 use App\Models\Personal;
+use App\Models\Sucursal;
 use Illuminate\Support\Facades\Storage;
 
 class Cliente extends Component
@@ -41,7 +42,9 @@ class Cliente extends Component
 
     public $personal_id = null;
     public $fijar_personal = false;
+    public $sucursal_id = 1;
     public $personales = [];
+    public $sucursales = [];
 
     public $search = '';
     public $modal = false;
@@ -56,6 +59,11 @@ class Cliente extends Component
     public $showAlert = false;
 
     protected $listeners = ['ocultarAlerta'];
+
+    public function mount()
+    {
+        $this->sucursales = Sucursal::all();
+    }
 
     public function render()
     {
@@ -73,7 +81,6 @@ class Cliente extends Component
         $this->personales = Personal::whereHas('user', function ($q) {
             $q->where('rol_id', 3);
         })->get();
-
 
         return view('livewire.cliente', compact('clientes'));
     }
@@ -99,6 +106,7 @@ class Cliente extends Component
         $this->accion = $accion;
         $this->estado = 1;
         $this->categoria = 1;
+        $this->sucursal_id = 1;
         $this->modal = true;
         $this->detalleModal = false;
     }
@@ -126,6 +134,7 @@ class Cliente extends Component
         $this->foto = $cliente->foto;
         $this->estado = $cliente->estado;
         $this->categoria = $cliente->categoria;
+        $this->sucursal_id = $cliente->sucursal_id ?? 1;
         $this->email = $cliente->user->email ?? '';
         $this->password = '';
         $this->personal_id = $cliente->personal_id;
@@ -133,13 +142,6 @@ class Cliente extends Component
         $this->accion = 'edit';
         $this->modal = true;
         $this->detalleModal = false;
-    }
-
-    public function verDetalle($id)
-    {
-        $this->clienteSeleccionado = ModeloCliente::findOrFail($id);
-        $this->modal = false;
-        $this->detalleModal = true;
     }
 
     public function guardarCliente()
@@ -168,17 +170,12 @@ class Cliente extends Component
             'categoria' => 'required|integer|min:1',
             'personal_id' => 'nullable|exists:personals,id',
             'fijar_personal' => 'boolean',
+            'sucursal_id' => 'nullable|exists:sucursals,id',
+
         ];
 
         if ($this->accion === 'create') {
-            $rules['email'] = [
-                'required',
-                'string',
-                'max:255',
-                'regex:/^[A-Za-z0-9]+$/',
-                'unique:users,email',
-            ];
-
+            $rules['email'] = ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9]+$/', 'unique:users,email'];
             $rules['password'] = 'required|string|min:6';
         }
 
@@ -193,12 +190,8 @@ class Cliente extends Component
                         ->where('id', '!=', $cliente->user->id)
                         ->exists();
                     if ($emailExiste) {
-                        return $this->mostrarAlerta(
-                            'El código ya existe, intente con otro.',
-                            'error'
-                        );
+                        return $this->mostrarAlerta('El código ya existe, intente con otro.', 'error');
                     }
-
                     $userData = ['email' => $this->email];
                     if ($this->password) {
                         $userData['password'] = bcrypt($this->password);
@@ -237,12 +230,52 @@ class Cliente extends Component
                     'categoria' => $this->categoria,
                     'personal_id' => $this->personal_id,
                     'fijar_personal' => $this->fijar_personal ? 1 : 0,
+                    'sucursal_id' => $this->sucursal_id,
                 ]);
 
                 $this->mostrarAlerta('Cliente actualizado con éxito.', 'success');
             }
 
             if ($this->accion === 'create') {
+                $rutaFoto = is_object($this->foto) ? $this->foto->store('clientes', 'public') : null;
+                $user = User::create([
+                    'email' => $this->email,
+                    'password' => bcrypt($this->password),
+                    'rol_id' => 5,
+                    'estado' => 1,
+                ]);
+
+                $ultimoCliente = ModeloCliente::latest('id')->first();
+                $codigo = 'C-' . str_pad(($ultimoCliente->id ?? 0) + 1, 4, '0', STR_PAD_LEFT);
+
+                ModeloCliente::create([
+                    'codigo' => $codigo,
+                    'nombre' => $this->nombre,
+                    'empresa' => $this->empresa,
+                    'razonSocial' => $this->razonSocial,
+                    'nitCi' => $this->nitCi,
+                    'telefono' => $this->telefono,
+                    'celular' => $this->celular,
+                    'direccion' => $this->direccion,
+                    'ubicacion' => $this->ubicacion,
+                    'departamento_localidad' => $this->departamento_localidad,
+                    'establecimiento' => $this->establecimiento,
+                    'disponible' => $this->disponible,
+                    'movil' => $this->movil,
+                    'dias' => $this->dias,
+                    'bot' => $this->bot,
+                    'latitud' => $this->latitud,
+                    'longitud' => $this->longitud,
+                    'foto' => $rutaFoto,
+                    'estado' => $this->estado,
+                    'categoria' => $this->categoria,
+                    'user_id' => $user->id,
+                    'personal_id' => $this->personal_id,
+                    'fijar_personal' => $this->fijar_personal ? 1 : 0,
+                    'sucursal_id' => $this->sucursal_id,
+                ]);
+
+                $this->mostrarAlerta("Cliente creado con éxito. Código: $codigo", 'success');
             }
 
             $this->cerrarModal();
@@ -308,6 +341,7 @@ class Cliente extends Component
             'password',
             'personal_id',
             'fijar_personal',
+            'sucursal_id',
             'clienteSeleccionado',
         ]);
     }
@@ -319,6 +353,13 @@ class Cliente extends Component
         $this->showAlert = true;
         $this->dispatch('hide-alert');
     }
+    public function verDetalle($id)
+    {
+        $this->clienteSeleccionado = ModeloCliente::findOrFail($id);
+        $this->modal = false;
+        $this->detalleModal = true;
+    }
+
 
     public function ocultarAlerta()
     {

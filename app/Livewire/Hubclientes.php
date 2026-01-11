@@ -15,6 +15,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+
 class Hubclientes extends Component
 {
     use WithFileUploads;
@@ -45,27 +46,29 @@ class Hubclientes extends Component
     public function abrirModalProducto($uid)
     {
         $producto = $this->productos()->firstWhere('uid', $uid);
-        if (!$producto)
-            return;
+        if (!$producto) return;
 
         $this->productoSeleccionado = $producto;
-        $sucursalId = $producto['modelo']->existencias->first()->sucursal->id ?? null;
 
-        $this->tapas = Tapa::where('estado', 1)
-            ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
-            ->orderBy('descripcion')
-            ->get();
+        if ($producto['tipo_modelo'] === 'producto') {
+            $sucursalId = $producto['modelo']->existencias->first()->sucursal->id ?? null;
 
-        $clienteId = Auth::user()->cliente->id ?? null;
+            $this->tapas = Tapa::where('estado', 1)
+                ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
+                ->orderBy('descripcion')
+                ->get();
 
-        $this->etiquetas = Etiqueta::where('estado', 1)
-            ->where('cliente_id', $clienteId)
-            ->whereHas('existencias', function ($q) use ($sucursalId) {
-                $q->where('sucursal_id', $sucursalId);
-            })
-            ->orderBy('descripcion')
-            ->get();
+            $clienteId = Auth::user()->cliente->id ?? null;
 
+            $this->etiquetas = Etiqueta::where('estado', 1)
+                ->where('cliente_id', $clienteId)
+                ->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursalId))
+                ->orderBy('descripcion')
+                ->get();
+        } else {
+            $this->tapas = collect();
+            $this->etiquetas = collect();
+        }
 
         $this->tapaSeleccionada = null;
         $this->etiquetaSeleccionada = null;
@@ -143,7 +146,8 @@ class Hubclientes extends Component
                 'detalles.otro.existencias.sucursal',
                 'detalles.tapa',
                 'detalles.etiqueta',
-                'pedido.pagoPedidos.sucursalPago'
+                'pedido.pagos.sucursalPago'
+
             ])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -261,10 +265,17 @@ class Hubclientes extends Component
 
     public function productos()
     {
+        // Obtenemos la sucursal del cliente logueado
+        $cliente = Auth::user()->cliente ?? null;
+        $sucursalId = $cliente->sucursal_id ?? null;
+
         $productos = Producto::where('estado', 1)
             ->with('existencias.sucursal')
             ->orderBy('descripcion')
             ->get()
+            ->filter(function ($p) use ($sucursalId) {
+                return $p->existencias->contains(fn($e) => $e->sucursal_id == $sucursalId);
+            })
             ->map(fn($p) => [
                 'uid' => 'producto_' . $p->id,
                 'modelo' => $p,
@@ -275,6 +286,9 @@ class Hubclientes extends Component
             ->with('existencias.sucursal')
             ->orderBy('descripcion')
             ->get()
+            ->filter(function ($o) use ($sucursalId) {
+                return $o->existencias->contains(fn($e) => $e->sucursal_id == $sucursalId);
+            })
             ->map(fn($o) => [
                 'uid' => 'otro_' . $o->id,
                 'modelo' => $o,
@@ -284,14 +298,11 @@ class Hubclientes extends Component
         return $productos->concat($otros);
     }
 
+
     public function render()
     {
         $sucursales = Sucursal::orderBy('nombre')->get();
         $productos = $this->productos();
-
-        if ($this->sucursalFiltro) {
-            $productos = $productos->filter(fn($item) => $item['modelo']->existencias->contains(fn($e) => $e->sucursal_id == $this->sucursalFiltro));
-        }
 
         return view('livewire.hubclientes', [
             'productos' => $productos,
@@ -340,7 +351,7 @@ class Hubclientes extends Component
             'sucursal' => $sucursal,
         ])->setPaper('letter', 'portrait');
         return response()->streamDownload(
-            fn() => print ($pdf->output()),
+            fn() => print($pdf->output()),
             'cotizacion.pdf'
         );
     }

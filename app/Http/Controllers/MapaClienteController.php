@@ -41,7 +41,7 @@ class MapaClienteController extends Controller
 
     public function store(Request $request)
     {
-        $rules = [
+        $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'empresa' => 'nullable|string|max:255',
             'razonSocial' => 'nullable|string|max:255',
@@ -61,19 +61,9 @@ class MapaClienteController extends Controller
             'foto' => 'nullable|image|max:4096',
             'estado' => 'required|boolean',
             'categoria' => 'required|integer|in:1,2,3',
-            'email' => [
-                'required',
-                'string',
-                'max:50',
-                'regex:/^[a-zA-Z0-9]+$/',
-                'unique:users,email'
-            ],
-            'password' => 'required|string|min:6',
             'personal_id' => 'nullable|exists:personals,id',
             'fijar_personal' => 'nullable|boolean',
-        ];
-
-        $validated = $request->validate($rules);
+        ]);
 
         try {
             $fotoPath = null;
@@ -81,9 +71,12 @@ class MapaClienteController extends Controller
                 $fotoPath = $request->file('foto')->store('clientes', 'public');
             }
 
+            $nombreBase = strtolower(preg_replace('/\s+/', '', $validated['nombre']));
+            $usuario = $nombreBase . rand(1000, 9999) . 'v';
+
             $user = User::create([
-                'email' => $validated['email'],
-                'password' => bcrypt($validated['password']),
+                'email' => $usuario,
+                'password' => bcrypt($usuario),
                 'rol_id' => 5,
                 'estado' => 1,
             ]);
@@ -115,12 +108,17 @@ class MapaClienteController extends Controller
                 'user_id' => $user->id,
                 'personal_id' => $validated['personal_id'] ?? null,
                 'fijar_personal' => $validated['fijar_personal'] ?? false,
+                'sucursal_id' => 1,
             ]);
 
-            return Redirect::route('home')->with('success', "Cliente registrado con éxito. Código: $codigo");
+
+            return Redirect::route('home')->with(
+                'success',
+                "Cliente registrado con éxito. Código: $codigo | Usuario: $usuario | Contraseña: $usuario"
+            );
         } catch (\Exception $e) {
             return Redirect::back()
-                ->withErrors(['error' => 'Error al registrar el cliente: ' . $e->getMessage()])
+                ->withErrors(['error' => $e->getMessage()])
                 ->withInput();
         }
     }
@@ -134,19 +132,16 @@ class MapaClienteController extends Controller
 
         try {
             $cliente = Cliente::findOrFail($id);
-            $cliente->latitud = $validated['latitud'];
-            $cliente->longitud = $validated['longitud'];
-            $cliente->save();
+            $cliente->update($validated);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Coordenadas actualizadas correctamente.',
                 'cliente' => $cliente
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al actualizar coordenadas: ' . $e->getMessage()
+                'message' => $e->getMessage()
             ], 500);
         }
     }

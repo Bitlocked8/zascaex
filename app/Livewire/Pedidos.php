@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Auth;
 class Pedidos extends Component
 {
     use WithFileUploads;
+    public $modalResumenExistencias = false;
+
     public $cliente_id = null;
     public $cantidad = 50;
     public $observaciones;

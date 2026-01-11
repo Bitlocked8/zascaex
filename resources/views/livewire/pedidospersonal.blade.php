@@ -19,7 +19,7 @@
                     <tr>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Código</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Cliente</th>
-                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Solicitud</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Items para entrega</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Fecha del pedido</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
                         <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
@@ -28,11 +28,61 @@
 
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($pedidos as $pedido)
-                    <tr class="hover:bg-teal-50">
+                    <tr class="hover:bg-teal-50 align-top">
                         <td class="px-4 py-2 font-medium">{{ $pedido->codigo }}</td>
                         <td class="px-4 py-2">{{ $pedido->cliente->nombre ?? 'Sin cliente' }}</td>
-                        <td class="px-4 py-2">{{ $pedido->solicitudPedido->codigo ?? '—' }}</td>
+
+                        <td class="px-4 py-2">
+                            <h4 class="font-bold text-sm text-gray-700 mb-1">Pedido</h4>
+                            @foreach($pedido->detalles as $detallePedido)
+                            @php
+                            $item = $detallePedido->existencia->existenciable ?? null;
+                            $tipo = $item instanceof \App\Models\Producto ? 'producto' : 'otro';
+                            $descripcion = $item->descripcion ?? 'Sin descripción';
+                            @endphp
+                            <div class="flex justify-between text-xs border-b py-1">
+                                <div>
+                                    <span class="font-semibold">{{ $descripcion }} ({{ $tipo }})</span>
+                                    @if(!empty($detallePedido->tipo_contenido))
+                                    <span class="block text-indigo-600 text-[10px]">Contenido: {{ $detallePedido->tipo_contenido }}</span>
+                                    @endif
+                                </div>
+                                <div class="font-semibold text-teal-600">
+                                    {{ $detallePedido->cantidad }} unidades
+                                </div>
+                            </div>
+                            @endforeach
+
+
+                            @if($pedido->solicitudPedido)
+                            <h4 class="font-bold text-sm text-gray-700 mt-2 mb-1">
+                                Solicitud: {{ $pedido->solicitudPedido->codigo }}
+                            </h4>
+                            @foreach($pedido->solicitudPedido->detalles as $detalleSolicitud)
+                            @php
+                            $existencia = $detalleSolicitud->existencia;
+                            $item = $existencia?->producto ?? $existencia?->otro;
+                            $tipo = $existencia?->producto ? 'producto' : 'otro';
+                            @endphp
+                            <div class="flex justify-between text-xs border-b py-1">
+                                <div>
+                                    <span class="font-semibold">{{ $item?->descripcion ?? 'Sin descripción' }} ({{ $tipo }})</span>
+                                    @if(!empty($detalleSolicitud->tipo_contenido))
+                                    <span class="block text-indigo-600 text-[10px]">Contenido: {{ $detalleSolicitud->tipo_contenido }}</span>
+                                    @endif
+                                </div>
+                                <div class="font-semibold text-teal-600">
+                                    {{ $detalleSolicitud->cantidad }} unidades
+                                </div>
+                            </div>
+                            @endforeach
+                            @endif
+                        </td>
+
+
+
                         <td class="px-4 py-2">{{ $pedido->fecha_pedido ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') : '—' }}</td>
+
                         <td class="px-4 py-2">
                             @php
                             $estados = [
@@ -44,17 +94,11 @@
                             @endphp
                             <span class="{{ $color }} font-semibold">{{ $texto }}</span>
                         </td>
-                        <td class="px-4 py-2 flex justify-center gap-1">
-                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 1)" class="btn-cyan text-sm">
-                                Aun no pagado
-                            </button>
-                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 2)" class="btn-cyan text-sm">
-                                Entregar
-                            </button>
 
-                            <button wire:click="abrirModalPagoPedido({{ $pedido->id }})" class="btn-cyan text-sm">
-                                Pagos
-                            </button>
+                        <td class="px-4 py-2 flex justify-center gap-1">
+                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 1)" class="btn-cyan text-sm">Aun no pagado</button>
+                            <button wire:click="cambiarEstadoPedido({{ $pedido->id }}, 2)" class="btn-cyan text-sm">Entregar</button>
+                            <button wire:click="abrirModalPagoPedido({{ $pedido->id }})" class="btn-cyan text-sm">Pagos</button>
                         </td>
                     </tr>
                     @empty
@@ -63,6 +107,7 @@
                     </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
 

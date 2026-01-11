@@ -21,24 +21,24 @@ class Pedidospersonal extends Component
     public function render()
     {
         $usuario = auth()->user();
-        $personalId = optional($usuario->personal)->id;
-        if (!$personalId || $usuario->rol_id != 3) {
-            return view('livewire.pedidospersonal', [
-                'pedidos' => collect()
-            ]);
-        }
-
         $search = $this->search;
 
-        $pedidos = Pedido::with([
+        $query = Pedido::with([
             'cliente',
-            'solicitudPedido',
+            'detalles.existencia.existenciable',
+            'solicitudPedido.detalles.existencia.existenciable',
             'pagos'
-        ])
-            ->whereHas('cliente', function ($q) use ($personalId) {
+        ]);
+        if ($usuario->rol_id == 3 && $usuario->personal) {
+            $personalId = $usuario->personal->id;
+
+            $query->whereHas('cliente', function ($q) use ($personalId) {
                 $q->where('personal_id', $personalId);
-            })
-            ->where(function ($q) use ($search) {
+            });
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('codigo', 'like', "%{$search}%")
                     ->orWhereHas('cliente', function ($c) use ($search) {
                         $c->where('nombre', 'like', "%{$search}%");
@@ -46,9 +46,10 @@ class Pedidospersonal extends Component
                     ->orWhereHas('solicitudPedido', function ($s) use ($search) {
                         $s->where('codigo', 'like', "%{$search}%");
                     });
-            })
-            ->latest()
-            ->get();
+            });
+        }
+
+        $pedidos = $query->latest()->get();
 
         $sucursalesPago = SucursalPago::where('estado', true)
             ->select('id', 'nombre', 'imagen_qr')
@@ -60,6 +61,7 @@ class Pedidospersonal extends Component
             'sucursalesPago' => $sucursalesPago
         ]);
     }
+
 
     public function cambiarEstadoPedido($pedidoId, $nuevoEstado)
     {

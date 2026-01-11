@@ -86,6 +86,19 @@
                     @endif
                 </div>
                 <div>
+                    <div>
+                        <label class="font-semibold text-sm mb-2 block">Sucursal (Opcional)</label>
+                        <select wire:model="sucursal_id" class="input-minimal w-full">
+                            <option value="">-- Ninguna --</option>
+                            @foreach($sucursales as $sucursal)
+                            <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('sucursal_id') <span class="error-message">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div>
                     <label class="font-semibold text-sm mb-1 block">Nombre (requerido)</label>
                     <input type="text" wire:model="nombre" class="input-minimal" placeholder="Nombre">
                     @error('nombre') <span class="error-message">{{ $message }}</span> @enderror
@@ -184,21 +197,6 @@
                     @error('password') <span class="error-message">{{ $message }}</span> @enderror
                 </div>
 
-
-                <div class="mb-4">
-                    <label class="font-semibold text-sm mb-1 block">Latitud</label>
-                    <p class="px-3 py-2 bg-gray-100 rounded text-gray-700">
-                        {{ $latitud ?? 'No disponible' }}
-                    </p>
-                </div>
-
-                <div class="mb-4">
-                    <label class="font-semibold text-sm mb-1 block">Longitud</label>
-                    <p class="px-3 py-2 bg-gray-100 rounded text-gray-700">
-                        {{ $longitud ?? 'No disponible' }}
-                    </p>
-                </div>
-
                 <div class="flex flex-wrap justify-center gap-2 mt-2">
                     @foreach([1 => 'Cliente Nuevo', 2 => 'Cliente Regular', 3 => 'Cliente Antiguo'] as $key => $label)
                     <button type="button" wire:click="$set('categoria', {{ $key }})"
@@ -278,8 +276,7 @@
             </div>
             @if($showAlert)
             <div
-                class="px-4 py-2 mb-2 rounded text-white
-                                                                                            {{ $alertType == 'success' ? 'bg-green-500' : ($alertType == 'error' ? 'bg-red-500' : 'bg-yellow-500') }}">
+                class="px-4 py-2 mb-2 rounded text-white {{ $alertType == 'success' ? 'bg-green-500' : ($alertType == 'error' ? 'bg-red-500' : 'bg-yellow-500') }}">
                 {{ $alertMessage }}
             </div>
             @endif
@@ -412,7 +409,7 @@
 
             </div>
 
-            <div class="modal-footer mt-6 flex justify-center">
+            <div class="modal-footer">
                 <button wire:click="$set('detalleModal', false)" class="btn-cyan" title="Cerrar">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

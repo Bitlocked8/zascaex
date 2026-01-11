@@ -13,258 +13,142 @@
 
     <div class="p-6">
         <div class="flex items-center justify-between mb-4">
-            <h1 class="text-u">Crear Nuevos Clientes</h1>
-            <a href="{{ route('home') }}" class="btn-cyan" title="Cerrar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M5 5l3.585 3.585a4.83 4.83 0 0 0 6.83 0l3.585 -3.585" />
-                    <path d="M5 19l3.585 -3.585a4.83 4.83 0 0 1 6.83 0l3.585 3.584" />
-                </svg>
-                CERRAR
-
-            </a>
+            <a href="{{ route('home') }}" class="btn-cyan">Volver</a>
         </div>
 
-        <div>
-            <form id="clienteForm" action="{{ route('clientes.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="order-1 lg:order-1 w-full shadow-md sm:rounded-lg p-6 bg-white">
-                        <label class="font-semibold text-sm">Haga click en el mapa para asignar una direccion </label>
-                        <div id="mapa" class="w-full h-[200px] lg:h-[400px] rounded shadow-lg mb-4"></div>
-                        <label class="font-semibold text-sm">longitud y latitud (Automatico) </label>
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Pegar enlace de Google Maps (Opcional)</label>
-                            <input type="text" id="linkMapa" placeholder="https://maps.app.goo.gl/..." class="input-minimal">
-                            <button type="button" id="btnProcesarLink" class="mt-2 btn-cyan">Cargar coordenadas</button>
-                        </div>
-                        <div class="mb-4">
-                            <input type="text" id="latitud" name="latitud"
-                                value="{{ old('latitud', $cliente->latitud ?? '') }}" placeholder="Latitud"
-                                class="input-minimal">
-                        </div>
-                        <div class="mb-4">
-                            <input type="text" id="longitud" name="longitud"
-                                value="{{ old('longitud', $cliente->longitud ?? '') }}" placeholder="Longitud"
-                                class="input-minimal">
-                        </div>
+        <form id="clienteForm" action="{{ route('clientes.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <div class="lg:col-span-2 w-full shadow-md sm:rounded-lg p-6 bg-white">
+                    <label class="font-semibold text-sm block mb-2">
+                        Haga click en el mapa para asignar una dirección
+                    </label>
+                    <div id="mapa" class="w-full h-[300px] lg:h-[520px] rounded shadow-lg"></div>
+                </div>
+
+                <div class="lg:col-span-1 w-full shadow-md sm:rounded-lg p-6 bg-white">
+
+                    <p class="mb-4 text-gray-700 text-sm">
+                        Código de Cliente:
+                        <span class="font-semibold text-cyan-600">
+                            {{ $cliente->codigo ?? 'Se generará al guardar' }}
+                        </span>
+                    </p>
+
+                    <div class="mb-4">
+                        <label class="font-semibold text-sm">Pegar enlace Google Maps</label>
+                        <input type="text" id="linkMapa" placeholder="https://maps.app.goo.gl/..." class="input-minimal">
+                        <button type="button" id="btnProcesarLink" class="mt-2 w-full btn-cyan">
+                            Cargar coordenadas
+                        </button>
                     </div>
-                    <div class="order-1 lg:order-1 w-full shadow-md sm:rounded-lg p-6 bg-white">
 
-
-                        <p class="mb-4 text-gray-700">
-                            Código de Cliente:
-                            <span class="font-semibold text-cyan-600">
-                                {{ $cliente->codigo ?? 'Se generará al guardar' }}
-                            </span>
-                        </p>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-u">Nombre (Requerido)</label>
-                            <input type="text" id="nombre" name="nombre"
-                                value="{{ old('nombre', $cliente->nombre ?? '') }}" placeholder="Nombre"
-                                class="input-minimal">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Nombre empresa (Opcional)</label>
-                            <input type="text" id="empresa" name="empresa"
-                                value="{{ old('empresa', $cliente->empresa ?? '') }}" placeholder="Empresa"
-                                class="input-minimal">
-
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Razon Social (Opcional)</label>
-                            <input type="text" id="razonSocial" name="razonSocial"
-                                value="{{ old('razonSocial', $cliente->razonSocial ?? '') }}" placeholder="Razón Social"
-                                class="input-minimal">
-
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">NIT (Opcional)</label>
-                            <input type="text" id="nitCi" name="nitCi" value="{{ old('nitCi', $cliente->nitCi ?? '') }}"
-                                placeholder="NIT/CI" class="input-minimal">
-
-                        </div>
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Telefono (Opcional)</label>
-                            <input type="text" id="telefono" name="telefono"
-                                value="{{ old('telefono', $cliente->telefono ?? '') }}" placeholder="Teléfono"
-                                class="input-minimal">
-
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Celular (Opcional)</label>
-                            <input type="text" id="celular" name="celular"
-                                value="{{ old('celular', $cliente->celular ?? '') }}" placeholder="Celular"
-                                class="input-minimal">
-                        </div>
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Direccion,Domcicilio (Opcional)</label>
-                            <input type="text" id="direccion" name="direccion"
-                                value="{{ old('direccion', $cliente->direccion ?? '') }}" placeholder="Dirección"
-                                class="input-minimal">
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Nombre empresa (Opcional)</label>
-                            <input type="text" id="ubicacion" name="ubicacion"
-                                value="{{ old('ubicacion', $cliente->ubicacion ?? '') }}"
-                                placeholder="Referencia / Ubicación" class="input-minimal">
-
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Nombre empresa (Opcional)</label>
-                            <input type="text" id="departamento_localidad" name="departamento_localidad"
-                                value="{{ old('departamento_localidad', $cliente->departamento_localidad ?? '') }}"
-                                placeholder="Departamento / Localidad" class="input-minimal">
-
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Establecimiento (Opcional)</label>
-                            <input type="text" id="establecimiento" name="establecimiento"
-                                value="{{ old('establecimiento', $cliente->establecimiento ?? '') }}"
-                                placeholder="Casa. empresa ,edificio" class="input-minimal">
-                        </div>
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <input type="text" id="latitud" name="latitud"
+                            value="{{ old('latitud', $cliente->latitud ?? '') }}"
+                            placeholder="Latitud" class="input-minimal">
+                        <input type="text" id="longitud" name="longitud"
+                            value="{{ old('longitud', $cliente->longitud ?? '') }}"
+                            placeholder="Longitud" class="input-minimal">
                     </div>
-                    <div class="order-1 lg:order-1 w-full shadow-md sm:rounded-lg p-6 bg-white">
 
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Disponibilidad del cliente (Opcional)</label>
-                            <input type="text" id="disponible" name="disponible"
-                                value="{{ old('disponible', $cliente->disponible ?? '') }}" placeholder="Disponibilidad"
-                                class="input-minimal">
-                        </div>
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Movil de Entrega (Opcional)</label>
-                            <input type="text" id="movil" name="movil" value="{{ old('movil', $cliente->movil ?? '') }}"
-                                placeholder="Móvil asignado" class="input-minimal">
-                        </div>
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Dias de atencion (Opcional)</label>
-                            <input type="text" id="dias" name="dias" value="{{ old('dias', $cliente->dias ?? '') }}"
-                                placeholder="Días de visita / atención" class="input-minimal">
-                        </div>
+                    <div class="mb-4">
+                        <label class="font-semibold text-sm">Nombre (Requerido)</label>
+                        <input type="text" id="nombre" name="nombre"
+                            value="{{ old('nombre', $cliente->nombre ?? '') }}"
+                            class="input-minimal" required>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="font-semibold text-sm">Bot (Opcional)</label>
-                            <input type="text" id="bot" name="bot" value="{{ old('bot', $cliente->bot ?? '') }}"
-                                placeholder="Bot / Fuente (opcional)" class="input-minimal">
-                        </div>
-                        <div class="mb-4">
-                            <label class="font-semibold text-u">Usuario (Requerido)</label>
-                            <input
-                                type="text"
-                                id="email"
-                                name="email"
-                                value="{{ old('email') }}"
-                                placeholder="Ej: bverzs456815c"
-                                class="input-minimal"
-                                required
-                                pattern="[A-Za-z0-9]+"
-                                title="Solo letras y números, sin espacios ni símbolos">
-                        </div>
+                    <div class="mb-4">
+                        <label class="font-semibold text-sm">Asignar Personal</label>
+                        <select name="personal_id" class="input-minimal">
+                            <option value="">— Seleccione un personal —</option>
+                            @foreach ($personales as $personal)
+                            <option value="{{ $personal->id }}"
+                                {{ old('personal_id', $cliente->personal_id ?? '') == $personal->id ? 'selected' : '' }}>
+                                {{ $personal->nombres }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                        <div class="mb-4">
-                            <label class="font-semibold text-u">Contraseña (Requerido)</label>
-                            <input type="password" id="password" name="password" placeholder="Contraseña"
-                                class="input-minimal" required>
+                    <div class="flex items-center gap-2 mb-6">
+                        <input type="checkbox" id="fijar_personal" name="fijar_personal" value="1"
+                            {{ old('fijar_personal', $cliente->fijar_personal ?? false) ? 'checked' : '' }}
+                            class="w-4 h-4 text-cyan-600">
+                        <label for="fijar_personal" class="text-sm font-semibold">
+                            Fijar personal asignado
+                        </label>
+                    </div>
 
-                        </div>
+                    <div class="mb-6 text-center">
+                        <label class="font-semibold text-sm block mb-2">Categoría del cliente</label>
+                        <div class="flex gap-2 justify-center">
+                            <input type="radio" id="categoria1" name="categoria" value="1"
+                                class="hidden peer/c1"
+                                {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'checked' : '' }}>
+                            <label for="categoria1"
+                                class="px-4 py-2 text-sm rounded-lg border cursor-pointer
+                                   peer-checked/c1:bg-cyan-600 peer-checked/c1:text-white">
+                                Cliente Nuevo
+                            </label>
 
-                        <div class="mb-6">
-                            <label class="font-semibold text-sm block mb-2">Asignar Personal (Opcional)</label>
-                            <select name="personal_id" class="input-minimal">
-                                <option value="">— Seleccione un personal —</option>
-                                @foreach ($personales as $personal)
-                                <option value="{{ $personal->id }}" {{ old('personal_id', $cliente->personal_id ?? '') == $personal->id ? 'selected' : '' }}>
-                                    {{ $personal->nombres }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
+                            <input type="radio" id="categoria2" name="categoria" value="2"
+                                class="hidden peer/c2"
+                                {{ old('categoria', $cliente->categoria ?? 1) == 2 ? 'checked' : '' }}>
+                            <label for="categoria2"
+                                class="px-4 py-2 text-sm rounded-lg border cursor-pointer
+                                   peer-checked/c2:bg-cyan-600 peer-checked/c2:text-white">
+                                Cliente Regular
+                            </label>
 
-                        <div class="mb-6 flex items-center gap-2">
-                            <input type="checkbox" id="fijar_personal" name="fijar_personal" value="1" {{ old('fijar_personal', $cliente->fijar_personal ?? false) ? 'checked' : '' }}
-                                class="w-4 h-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500">
-                            <label for="fijar_personal" class="text-sm font-semibold">
-                                Fijar personal asignado
+                            <input type="radio" id="categoria3" name="categoria" value="3"
+                                class="hidden peer/c3"
+                                {{ old('categoria', $cliente->categoria ?? 1) == 3 ? 'checked' : '' }}>
+                            <label for="categoria3"
+                                class="px-4 py-2 text-sm rounded-lg border cursor-pointer
+                                   peer-checked/c3:bg-cyan-600 peer-checked/c3:text-white">
+                                Cliente Antiguo
                             </label>
                         </div>
+                    </div>
 
-                        <div class="mb-6 text-center">
-                            <label class="font-semibold text-sm block mb-2">Categoría del cliente (Automático)</label>
-                            <div class="flex gap-2">
-                                <input type="radio" id="categoria1" name="categoria" value="1" class="hidden peer/cat1"
-                                    {{ old('categoria', $cliente->categoria ?? 1) == 1 ? 'checked' : '' }}>
-                                <label for="categoria1" class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
-                   peer-checked/cat1:bg-cyan-600 peer-checked/cat1:text-white
-                   hover:bg-cyan-100 hover:border-cyan-500">
-                                    Cliente Nuevo
-                                </label>
+                    <div class="mb-6 text-center">
+                        <label class="font-semibold text-sm block mb-2">Estado del Cliente</label>
+                        <div class="inline-flex gap-3">
+                            <input type="radio" id="estado1" name="estado" value="1"
+                                class="hidden peer/e1"
+                                {{ old('estado', $cliente->estado ?? 1) == 1 ? 'checked' : '' }}>
+                            <label for="estado1"
+                                class="px-5 py-2 text-sm rounded-full border cursor-pointer
+                                   peer-checked/e1:bg-green-600 peer-checked/e1:text-white">
+                                Activo
+                            </label>
 
-                                <input type="radio" id="categoria2" name="categoria" value="2" class="hidden peer/cat2"
-                                    {{ old('categoria', $cliente->categoria ?? 1) == 2 ? 'checked' : '' }}>
-                                <label for="categoria2" class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
-                   peer-checked/cat2:bg-cyan-600 peer-checked/cat2:text-white
-                   hover:bg-cyan-100 hover:border-cyan-500">
-                                    Cliente Regular
-                                </label>
-
-                                <input type="radio" id="categoria3" name="categoria" value="3" class="hidden peer/cat3"
-                                    {{ old('categoria', $cliente->categoria ?? 1) == 3 ? 'checked' : '' }}>
-                                <label for="categoria3" class="px-4 py-2 text-sm rounded-lg border border-gray-300 cursor-pointer transition-all duration-200
-                   peer-checked/cat3:bg-cyan-600 peer-checked/cat3:text-white
-                   hover:bg-cyan-100 hover:border-cyan-500">
-                                    Cliente antiguo
-
-                                </label>
-                            </div>
-                        </div>
-
-
-                        <div class="mb-6 text-center">
-                            <label class="font-semibold text-sm block mb-3">Estado del Cliente (Automático)</label>
-                            <div class="inline-flex gap-3 justify-center">
-                                <input type="radio" id="estado1" name="estado" value="1" class="hidden peer/activo" {{ old('estado', $cliente->estado ?? 1) == 1 ? 'checked' : '' }}>
-                                <label for="estado1" class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
-                   peer-checked/activo:bg-green-600 peer-checked/activo:text-white
-                   hover:bg-green-100 hover:border-green-500">
-                                    Activo
-                                </label>
-
-                                <input type="radio" id="estado0" name="estado" value="0" class="hidden peer/inactivo" {{ old('estado', $cliente->estado ?? 1) == 0 ? 'checked' : '' }}>
-                                <label for="estado0" class="px-5 py-2.5 text-sm rounded-full border border-gray-300 cursor-pointer transition-all duration-200
-                   peer-checked/inactivo:bg-red-500 peer-checked/inactivo:text-white
-                   hover:bg-red-100 hover:border-red-500">
-                                    Inactivo
-                                </label>
-                            </div>
+                            <input type="radio" id="estado0" name="estado" value="0"
+                                class="hidden peer/e0"
+                                {{ old('estado', $cliente->estado ?? 1) == 0 ? 'checked' : '' }}>
+                            <label for="estado0"
+                                class="px-5 py-2 text-sm rounded-full border cursor-pointer
+                                   peer-checked/e0:bg-red-500 peer-checked/e0:text-white">
+                                Inactivo
+                            </label>
                         </div>
                     </div>
+                    <div class="flex justify-center mt-6">
+                        <button type="submit" class="btn-cyan">
+                            Guardar
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                <div class="flex justify-center mt-6">
-                    <button type="submit" class="btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
-                            <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-                            <path d="M14 4l0 4l-6 0l0 -4" />
-                        </svg>
-                        Guardar
-                    </button>
-                </div>
-            </form>
-        </div>
+
+        </form>
     </div>
+
     @vite('resources/js/app.js')
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 

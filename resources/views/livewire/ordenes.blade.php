@@ -2,7 +2,7 @@
     <div class="w-full max-w-screen-xl">
 
         <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
-            ÓOrdenes del dia
+            Ordenes del dia
         </h3>
         <div class="flex items-center gap-2 mb-4 flex-wrap">
             <input type="text" wire:model.live="search" placeholder="Buscar por detalle..." class="input-minimal w-full sm:w-auto flex-1" />

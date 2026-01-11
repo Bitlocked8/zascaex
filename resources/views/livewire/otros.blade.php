@@ -23,9 +23,8 @@
                     <tr>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Descripción</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Tipo</th>
-                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Unidad</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Capacidad</th>
-                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Precio Ref.</th>
+                        <th class="px-4 py-2 text-left text-teal-700 font-semibold">Precio Producto</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Estado</th>
                         <th class="px-4 py-2 text-left text-teal-700 font-semibold">Existencias</th>
                         <th class="px-4 py-2 text-center text-teal-700 font-semibold">Acciones</th>
@@ -44,16 +43,33 @@
                         </td>
 
                         <td class="px-4 py-2">
-                            {{ $otro->unidad ?? 'N/A' }}
+                            {{ $otro->capacidad == intval($otro->capacidad)
+        ? intval($otro->capacidad)
+        : number_format($otro->capacidad, 2) }}
+                            {{ $otro->unidad ?? '' }}
                         </td>
 
                         <td class="px-4 py-2">
-                            {{ $otro->capacidad ?? 'N/A' }}
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-500">
+                                    Precio normal:
+                                    {{ $otro->precioReferencia == floor($otro->precioReferencia) 
+        ? intval($otro->precioReferencia) 
+        : number_format($otro->precioReferencia, 2, '.', '') }} Bs
+                                </span>
+
+                                @if(!is_null($otro->precioAlternativo))
+                                <span class="text-xs text-gray-500">
+                                    Precio facturado:
+                                    {{ $otro->precioAlternativo == floor($otro->precioAlternativo) 
+            ? intval($otro->precioAlternativo) 
+            : number_format($otro->precioAlternativo, 2, '.', '') }} Bs
+                                </span>
+                                @endif
+
+                            </div>
                         </td>
 
-                        <td class="px-4 py-2">
-                            {{ $otro->precioReferencia ?? 'N/A' }} Bs
-                        </td>
 
                         <td class="px-4 py-2">
                             <span class="{{ $otro->estado == 0 ? 'text-red-600' : 'text-green-600' }}">
@@ -132,7 +148,25 @@
                 </div>
                 <div>
                     <label class="text-u">Tipo de Producto (Requerido)</label>
-                    <input wire:model="tipoProducto" class="input-minimal" placeholder="Botella, botellón, etc">
+
+                    <div class="flex flex-wrap justify-center gap-2 mt-2">
+                        @foreach([
+                        0 => 'Botella',
+                        1 => 'Botella especial',
+                        2 => 'Botellón',
+                        3 => 'hielo',
+                        4 => 'Otro'
+                        ] as $key => $label)
+                        <button type="button"
+                            wire:click="$set('tipoProducto', {{ $key }})"
+                            class="px-4 py-2 rounded-full text-sm transition
+                {{ $tipoProducto == $key
+                    ? 'bg-cyan-600 text-white shadow-md'
+                    : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                            {{ $label }}
+                        </button>
+                        @endforeach
+                    </div>
                 </div>
                 <div>
                     <label>Tipo / Material (Opcional)</label>

@@ -142,6 +142,17 @@
                             Agregar Nuevo Producto
                         </h3>
                         <div class="flex flex-wrap justify-center gap-4">
+                            <button type="button" wire:click="$set('seleccion', 'Proveedores')"
+                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Proveedores' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
+                                <div
+                                    class="p-3 rounded-full{{ $seleccion == 'Proveedores' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M7.5 10.625l-4.5 -2.813l4.5 -2.812l4.5 2.813m-4.5 2.812l4.5 -2.813m-4.5 2.813l-4.5 2.823l4.5 2.802m0 -5.625l4.5 2.823m0 -5.636l4.5 2.791l4.5 -2.812l-4.5 -2.791l-4.5 2.813m-4.5 8.438l4.5 -2.802m-4.5 2.802v1.123l4.5 2.627l4.5 -2.627v-1.123m-4.5 -2.802l4.5 -2.823l4.5 2.823l-4.5 2.802m-4.5 -2.802l4.5 2.802" />
+                                    </svg>
+                                </div>
+                                <span class="mt-2 text-sm font-semibold text-center">Proovedores</span>
+                            </button>
                             <button type="button" wire:click="$set('seleccion', 'Etiquetas')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Etiquetas' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
@@ -196,17 +207,7 @@
                         </h3>
                         <div class="flex flex-wrap justify-center gap-4">
 
-                            <button type="button" wire:click="$set('seleccion', 'Proveedores')"
-                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Proveedores' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
-                                <div
-                                    class="p-3 rounded-full{{ $seleccion == 'Proveedores' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M7.5 10.625l-4.5 -2.813l4.5 -2.812l4.5 2.813m-4.5 2.812l4.5 -2.813m-4.5 2.813l-4.5 2.823l4.5 2.802m0 -5.625l4.5 2.823m0 -5.636l4.5 2.791l4.5 -2.812l-4.5 -2.791l-4.5 2.813m-4.5 8.438l4.5 -2.802m-4.5 2.802v1.123l4.5 2.627l4.5 -2.627v-1.123m-4.5 -2.802l4.5 -2.823l4.5 2.823l-4.5 2.802m-4.5 -2.802l4.5 2.802" />
-                                    </svg>
-                                </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Proovedores</span>
-                            </button>
+
                             <button type="button" wire:click="$set('seleccion', 'Cliente')"
                                 class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Cliente' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
                                 <div
@@ -231,7 +232,7 @@
                                         <path d="M7.5 10.625l-4.5 -2.813l4.5 -2.812l4.5 2.813m-4.5 2.812l4.5 -2.813m-4.5 2.813l-4.5 2.823l4.5 2.802m0 -5.625l4.5 2.823m0 -5.636l4.5 2.791l4.5 -2.812l-4.5 -2.791l-4.5 2.813m-4.5 8.438l4.5 -2.802m-4.5 2.802v1.123l4.5 2.627l4.5 -2.627v-1.123m-4.5 -2.802l4.5 -2.823l4.5 2.823l-4.5 2.802m-4.5 -2.802l4.5 2.802" />
                                     </svg>
                                 </div>
-                                <span class="mt-2 text-sm font-semibold text-center">Deposito de items</span>
+                                <span class="mt-2 text-sm font-semibold text-center">Compra de items</span>
                             </button>
 
                             <button type="button" wire:click="$set('seleccion', 'Pedidos')"
@@ -275,6 +276,22 @@
                                     </svg>
                                 </div>
                                 <span class="mt-2 text-sm font-semibold text-center">Ajuste de Precios y Pagos</span>
+                            </button>
+                            <button type="button" wire:click="$set('seleccion', 'Pedidospersonal')"
+                                class="w-28 h-28 flex flex-col items-center justify-center rounded-2xl border transition-all bg-white {{ $seleccion == 'Pedidospersonal' ? 'border-emerald-600 shadow-lg text-emerald-700' : 'border-gray-200 text-gray-700 hover:border-emerald-600 hover:text-emerald-600 hover:shadow-md' }}">
+                                <div
+                                    class="p-3 rounded-full{{ $seleccion == 'Pedidospersonal' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M16 12.5l-5 -3l5 -3l5 3v5.5l-5 3l0 -5.5" />
+                                        <path d="M11 9.5v5.5l5 3" />
+                                        <path d="M16 12.545l5 -3.03" />
+                                        <path d="M7 9h-5" />
+                                        <path d="M7 12h-3" />
+                                        <path d="M7 15h-1" />
+                                    </svg>
+                                </div>
+                                <span class="mt-2 text-sm font-semibold text-center">Entregas</span>
                             </button>
                         </div>
                     </div>

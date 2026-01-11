@@ -30,6 +30,7 @@ class Otros extends Component
     public $observaciones = '';
     public $estado = 1;
     public $cantidadMinima = 0;
+    public $precioAlternativo = null;
 
     public $accion = 'create';
     public $otroSeleccionado = null;
@@ -53,14 +54,21 @@ class Otros extends Component
         $personal = $usuario->personal;
 
         $otrosQuery = OtroModel::query()
-            ->when($this->search, fn($q) => $q
-                ->where('descripcion', 'like', "%{$this->search}%")
-                ->orWhere('capacidad', 'like', "%{$this->search}%")
-            );
+            ->when($this->search, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('descripcion', 'like', "%{$this->search}%")
+                        ->orWhere('capacidad', 'like', "%{$this->search}%");
+                });
+            });
 
         if ($rol === 2 && $personal) {
-            $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $otrosQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
+            $sucursal_id = $personal->trabajos()
+                ->latest('fechaInicio')
+                ->value('sucursal_id');
+
+            $otrosQuery->whereHas('existencias', function ($q) use ($sucursal_id) {
+                $q->where('sucursal_id', $sucursal_id);
+            });
         }
 
         $otros = $otrosQuery->with('existencias')->get();
@@ -68,12 +76,26 @@ class Otros extends Component
         return view('livewire.otros', compact('otros'));
     }
 
+
     public function abrirModal($accion = 'create', $id = null)
     {
         $this->reset([
-            'otro_id', 'descripcion', 'unidad', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'paquete', 'tipo', 'observaciones', 'estado',
-            'imagen', 'imagenExistente', 'otroSeleccionado', 'cantidadMinima'
+            'otro_id',
+            'descripcion',
+            'unidad',
+            'tipoContenido',
+            'tipoProducto',
+            'capacidad',
+            'precioReferencia',
+            'precioAlternativo',
+            'paquete',
+            'tipo',
+            'observaciones',
+            'estado',
+            'imagen',
+            'imagenExistente',
+            'otroSeleccionado',
+            'cantidadMinima'
         ]);
 
         $this->accion = $accion;
@@ -96,6 +118,8 @@ class Otros extends Component
         $this->tipoProducto = $otro->tipoProducto;
         $this->capacidad = $otro->capacidad;
         $this->precioReferencia = $otro->precioReferencia;
+        $this->precioAlternativo = $otro->precioAlternativo;
+
         $this->paquete = $otro->paquete;
         $this->tipo = $otro->tipo;
         $this->observaciones = $otro->observaciones;
@@ -113,12 +137,13 @@ class Otros extends Component
     {
         $this->validate([
             'descripcion' => 'required|string|max:500',
-            'tipoContenido' => 'required|string|max:255',
-            'tipoProducto' => 'required|string|max:255',
-            'capacidad' => 'required|numeric|min:0',
+            'tipoContenido' => 'nullable|string|max:255',
+            'tipoProducto' => 'required|integer|in:0,1,2,3',
+
+            'capacidad' => 'nullable|numeric|min:0',
             'precioReferencia' => 'required|numeric|min:0',
             'unidad' => 'nullable|string|max:50',
-          'paquete' => 'nullable|integer|min:0',
+            'paquete' => 'nullable|integer|min:0',
             'tipo' => 'nullable|string|max:50',
             'observaciones' => 'nullable|string|max:1000',
             'estado' => 'required|boolean',
@@ -181,9 +206,22 @@ class Otros extends Component
     {
         $this->modal = false;
         $this->reset([
-            'otro_id', 'descripcion', 'unidad', 'tipoContenido', 'tipoProducto',
-            'capacidad', 'precioReferencia', 'paquete', 'tipo', 'observaciones', 'estado',
-            'imagen', 'imagenExistente', 'otroSeleccionado', 'cantidadMinima'
+            'otro_id',
+            'descripcion',
+            'unidad',
+            'tipoContenido',
+            'tipoProducto',
+            'capacidad',
+            'precioReferencia',
+            'precioAlternativo',
+            'paquete',
+            'tipo',
+            'observaciones',
+            'estado',
+            'imagen',
+            'imagenExistente',
+            'otroSeleccionado',
+            'cantidadMinima'
         ]);
         $this->resetErrorBag();
     }

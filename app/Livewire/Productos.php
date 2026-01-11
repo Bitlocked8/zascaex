@@ -54,17 +54,21 @@ class Productos extends Component
         $personal = $usuario->personal;
 
         $productosQuery = Producto::query()
-            ->when(
-                $this->search,
-                fn($q) => $q
-                    ->where('descripcion', 'like', "%{$this->search}%")
-                    ->orWhere('capacidad', 'like', "%{$this->search}%")
-            );
+            ->when($this->search, function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('descripcion', 'like', "%{$this->search}%")
+                        ->orWhere('capacidad', 'like', "%{$this->search}%");
+                });
+            });
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $productosQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
+
+            $productosQuery->whereHas('existencias', function ($q) use ($sucursal_id) {
+                $q->where('sucursal_id', $sucursal_id);
+            });
         }
+
 
         $productos = $productosQuery->with('existencias')->get();
 
