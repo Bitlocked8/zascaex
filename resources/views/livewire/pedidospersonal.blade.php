@@ -68,31 +68,30 @@
 
                             @foreach($pedido->solicitudPedido->detalles as $detalleSolicitud)
                             @php
+                            $item = $detalleSolicitud->producto ?? $detalleSolicitud->otro;
                             $tipo = $detalleSolicitud->producto ? 'producto' : 'otro';
+                            $cantidadPaquetes = $detalleSolicitud->cantidad ?? 0;
+                            $unidadesPorPaquete = $item?->paquete ?? 1;
+                            $cantidadUnidades = $cantidadPaquetes * $unidadesPorPaquete;
                             @endphp
 
                             <div class="flex flex-col text-xs border-b py-1 mb-1">
-                                {{-- Nombre y tipo --}}
                                 <div class="flex justify-between">
-                                    <span class="font-semibold">{{ $detalleSolicitud->producto?->descripcion ?? $detalleSolicitud->otro?->descripcion ?? 'Sin descripción' }} ({{ $tipo }})</span>
+                                    <span class="font-semibold">{{ $item?->descripcion ?? 'Sin descripción' }} ({{ $tipo }})</span>
                                     <span class="font-semibold text-teal-600">
-                                        {{ $detalleSolicitud->cantidad }} unidades
+                                        {{ $cantidadPaquetes }} Paquete(s) / {{ $cantidadUnidades }} Unidad(es)
                                     </span>
                                 </div>
 
-                                {{-- Si es producto, mostrar tapa, etiqueta y unidades por paquete --}}
                                 @if($detalleSolicitud->producto)
                                 <div class="text-gray-500 text-[10px] mt-0.5">
                                     <div>Producto: {{ $detalleSolicitud->producto?->descripcion ?? '-' }}</div>
                                     <div>Tapa: {{ $detalleSolicitud->tapa?->descripcion ?? '-' }}</div>
                                     <div>Etiqueta: {{ $detalleSolicitud->etiqueta?->descripcion ?? '-' }}</div>
-                                    @if(!empty($detalleSolicitud->unidades_por_paquete))
-                                    <div>{{ $detalleSolicitud->unidades_por_paquete }} unidad/paquete</div>
-                                    @endif
+                                    <div>{{ $unidadesPorPaquete }} unidad/paquete</div>
                                 </div>
                                 @endif
 
-                                {{-- Contenido u otro detalle --}}
                                 @if(!empty($detalleSolicitud->tipo_contenido))
                                 <span class="block text-indigo-600 text-[10px] mt-0.5">
                                     Contenido: {{ $detalleSolicitud->tipo_contenido }}
@@ -102,12 +101,7 @@
                             @endforeach
                             @endif
                         </td>
-
-
-
-
                         <td class="px-4 py-2">{{ $pedido->fecha_pedido ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') : '—' }}</td>
-
                         <td class="px-4 py-2">
                             @php
                             $estados = [
