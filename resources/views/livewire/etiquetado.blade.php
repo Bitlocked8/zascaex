@@ -1,4 +1,4 @@
-<div class="p-text p-2 mt-10 flex justify-center">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
   <div class="w-full max-w-screen-xl grid grid-cols-1 gap-6">
     <div>
       <h6 class="text-xl font-bold mb-4 px-4 p-text">Gestión de Etiquetado</h6>

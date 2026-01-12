@@ -1,4 +1,4 @@
-<div class="p-2 mt-20 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
     <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <h3
             class="col-span-full text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto">

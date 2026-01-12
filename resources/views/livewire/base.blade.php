@@ -45,7 +45,7 @@
     </header>
 
     <nav id="menu"
-        class="w-[95%] max-w-[1700px] text-cyan-600 bg-white px-6 py-2 mt-4 shadow-lg fixed left-1/2 -translate-x-1/2 top-[65px] hidden transition-all rounded-xl backdrop-blur-md z-20 ">
+        class="w-[95%] max-w-[1700px] text-cyan-600 bg-transparent px-6 py-2 mt-4 shadow-lg fixed left-1/2 -translate-x-1/2 top-[65px] hidden transition-all rounded-xl backdrop-blur-md z-20 ">
         <div class="max-h-[80vh] overflow-y-auto ">
             <div class="">
                 <div>
@@ -706,8 +706,8 @@
         </div>
     </nav>
 
-    <main class="w-full min-h-screen bg-white" id="main-content">
-        <div class="w-full p-2  bg-white">
+    <main class="w-full min-h-screen bg-transparent" id="main-content">
+        <div class="w-full p-2  bg-transparent">
 
             @if ($seleccion == 'Personal')
             @livewire('personal')

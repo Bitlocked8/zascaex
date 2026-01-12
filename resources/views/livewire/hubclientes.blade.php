@@ -1,7 +1,7 @@
-<div class="p-2 mt-20 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
     <div class="w-full max-w-screen-xl mx-auto px-4">
         <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6
-                    bg-cyan-600 text-white rounded-3xl px-6 py-5 shadow-lg">
+                    bg-transparent text-white rounded-3xl px-6 py-5 shadow-lg">
             <div class="flex flex-wrap justify-center xl:justify-start gap-3">
                 <button wire:click="verMisPedidos"
                     class="px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 transition font-semibold shadow">
@@ -20,6 +20,7 @@
             </div>
 
         </div>
+        <br>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
             @forelse ($productos as $p)
@@ -35,9 +36,10 @@
             $precioPaqueteFacturado = ($precioFacturado && $modelo->paquete) ? $precioFacturado * $modelo->paquete : null;
             @endphp
 
-            <div class="bg-white rounded-3xl shadow-md border border-cyan-100
-            hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col">
-                <div class="flex justify-center items-center h-44 bg-cyan-50">
+            <div class="bg-white rounded-2xl shadow-md border border-cyan-100 flex flex-col">
+
+                <div class="flex justify-center items-center h-44 bg-cyan-50 rounded-t-2xl">
+
                     @if($modelo->imagen)
                     <img src="{{ asset('storage/' . $modelo->imagen) }}" class="h-full object-contain p-4">
                     @else
@@ -89,8 +91,8 @@
 
 
 
-  @if($modalProducto)
-@php
+    @if($modalProducto)
+    @php
     $modelo = $productoSeleccionado['modelo'];
     $sucursalProducto = $modelo->existencias->first()?->sucursal->nombre ?? 'Sin sucursal';
 
@@ -99,122 +101,122 @@
 
     $precioPaqueteNormal = ($precioNormal && $modelo->paquete) ? $precioNormal * $modelo->paquete : null;
     $precioPaqueteFacturado = ($precioFacturado && $modelo->paquete) ? $precioFacturado * $modelo->paquete : null;
-@endphp
+    @endphp
 
-<div class="modal-overlay">
-    <div class="modal-box max-w-3xl w-full p-4 sm:p-6">
-        <div class="modal-content flex flex-col gap-4">
+    <div class="modal-overlay">
+        <div class="modal-box max-w-3xl w-full p-4 sm:p-6">
+            <div class="modal-content flex flex-col gap-4">
 
-            <!-- Título -->
-            <h2 class="text-center text-lg sm:text-2xl font-bold text-cyan-700">
-                {{ $modelo->descripcion }} 
-                <span class="text-sm text-cyan-500">{{ $modelo->unidad ?? '-' }}</span>
-            </h2>
-            <p class="text-center text-gray-600 text-sm">
-                Sucursal: <span class="font-semibold">{{ $sucursalProducto }}</span>
-            </p>
-
-            <!-- Imagen -->
-            <div class="flex justify-center">
-                @if(!empty($modelo->imagen))
-                    <img src="{{ asset('storage/' . $modelo->imagen) }}" class="h-48 sm:h-64 md:h-80 w-full object-contain border rounded-lg p-1">
-                @else
-                    <div class="h-48 sm:h-64 md:h-80 w-full flex items-center justify-center bg-gray-200 text-gray-500 text-sm border rounded-lg">
+                <h2 class="text-center text-lg sm:text-2xl font-bold text-cyan-700">
+                    {{ $modelo->descripcion }}
+                    <span class="text-sm text-cyan-500">{{ $modelo->unidad ?? '-' }}</span>
+                </h2>
+                <p class="text-center text-gray-600 text-sm">
+                    Sucursal: <span class="font-semibold">{{ $sucursalProducto }}</span>
+                </p>
+                <div class="flex justify-center">
+                    @if(!empty($modelo->imagen))
+                    <img
+                        src="{{ asset('storage/' . $modelo->imagen) }}"
+                        class="w-full max-w-3xl h-auto object-contain border rounded-lg p-2"
+                        alt="Imagen del modelo">
+                    @else
+                    <div class="w-full max-w-3xl h-96 flex items-center justify-center bg-gray-200 text-gray-500 text-sm border rounded-lg p-2">
                         No hay imagen
                     </div>
-                @endif
-            </div>
+                    @endif
+                </div>
 
-            <!-- Info del producto -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-gray-50 border rounded-lg p-3 text-sm">
-                <p><span class="font-semibold">Contenido:</span> {{ $modelo->unidad ?? '-' }}</p>
-                <p><span class="font-semibold">Tipo de contenido:</span> {{ $modelo->tipoContenido ?? '-' }}</p>
-                <p><span class="font-semibold">Tipo de producto:</span> {{ $modelo->tipoProducto ?? '-' }}</p>
-                <p><span class="font-semibold">Capacidad:</span> {{ $modelo->capacidad ?? '-' }}</p>
 
-                <p><span class="font-semibold text-cyan-700">Precio normal:</span>
-                    <span class="text-gray-800">{{ $precioNormal ? number_format($precioNormal, 2) . ' Bs' : '-' }}</span>
-                </p>
-                <p><span class="font-semibold text-cyan-700">Precio facturado:</span>
-                    <span class="text-gray-800">{{ $precioFacturado ? number_format($precioFacturado, 2) . ' Bs' : '-' }}</span>
-                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-gray-50 border rounded-lg p-3 text-sm">
+                    <p><span class="font-semibold">Contenido:</span> {{ $modelo->unidad ?? '-' }}</p>
+                    <p><span class="font-semibold">Tipo de contenido:</span> {{ $modelo->tipoContenido ?? '-' }}</p>
+                    <p><span class="font-semibold">Tipo de producto:</span> {{ $modelo->tipoProducto ?? '-' }}</p>
+                    <p><span class="font-semibold">Capacidad:</span> {{ $modelo->capacidad ?? '-' }}</p>
 
-                @if($modelo->paquete)
+                    <p><span class="font-semibold text-cyan-700">Precio normal:</span>
+                        <span class="text-gray-800">{{ $precioNormal ? number_format($precioNormal, 2) . ' Bs' : '-' }}</span>
+                    </p>
+                    <p><span class="font-semibold text-cyan-700">Precio facturado:</span>
+                        <span class="text-gray-800">{{ $precioFacturado ? number_format($precioFacturado, 2) . ' Bs' : '-' }}</span>
+                    </p>
+
+                    @if($modelo->paquete)
                     <p><span class="font-semibold text-cyan-700">Por paquete normal:</span>
                         <span class="text-gray-800">{{ $precioPaqueteNormal ? number_format($precioPaqueteNormal, 2) . ' Bs' : '-' }}</span>
                     </p>
                     <p><span class="font-semibold text-cyan-700">Por paquete facturado:</span>
                         <span class="text-gray-800">{{ $precioPaqueteFacturado ? number_format($precioPaqueteFacturado, 2) . ' Bs' : '-' }}</span>
                     </p>
-                @endif
+                    @endif
 
-                <p class="col-span-full"><span class="font-semibold">Observaciones:</span> {{ $modelo->observaciones ?? 'Sin observaciones' }}</p>
-            </div>
+                    <p class="col-span-full"><span class="font-semibold">Observaciones:</span> {{ $modelo->observaciones ?? 'Sin observaciones' }}</p>
+                </div>
 
-            <!-- Cantidad -->
-            <div class="flex flex-col items-center gap-2">
-                <label class="font-semibold text-sm">Cantidad de paquetes (mínimo 1)</label>
-                <input type="number" wire:model="cantidadSeleccionada" min="1" class="input-minimal w-24 text-center">
-            </div>
+                <!-- Cantidad -->
+                <div class="flex flex-col items-center gap-2">
+                    <label class="font-semibold text-sm">Cantidad de paquetes (mínimo 1)</label>
+                    <input type="number" wire:model="cantidadSeleccionada" min="1" class="input-minimal w-24 text-center">
+                </div>
 
-            <!-- Tapas y etiquetas -->
-            @if($productoSeleccionado['tipo_modelo'] === 'producto')
+                <!-- Tapas y etiquetas -->
+                @if($productoSeleccionado['tipo_modelo'] === 'producto')
                 <div class="flex flex-col gap-3">
                     @if($tapas->count())
-                        <div>
-                            <h3 class="text-center font-semibold mb-1 text-sm">Elige una Tapa</h3>
-                            <div class="flex overflow-x-auto gap-2 py-2">
-                                @foreach($tapas as $tapa)
-                                    @php $sucursalTapa = $tapa->existencias->first()?->sucursal->nombre ?? 'Sin sucursal'; @endphp
-                                    <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
-                                        class="flex-shrink-0 border rounded-lg cursor-pointer p-1 transition {{ $tapaSeleccionada == $tapa->id ? 'border-cyan-600 ring-2 ring-cyan-400' : '' }}">
-                                        <img src="{{ $tapa->imagen ? asset('storage/' . $tapa->imagen) : '' }}" 
-                                            class="h-24 w-24 sm:h-28 sm:w-28 object-contain mx-auto border rounded-lg p-1"
-                                            alt="{{ $tapa->descripcion }}">
-                                        <p class="text-xs text-center mt-1">{{ $tapa->descripcion }}</p>
-                                        <p class="text-xs text-gray-500 text-center">{{ $sucursalTapa }}</p>
-                                    </div>
-                                @endforeach
+                    <div>
+                        <h3 class="text-center font-semibold mb-1 text-sm">Elige una Tapa</h3>
+                        <div class="flex overflow-x-auto gap-2 py-2">
+                            @foreach($tapas as $tapa)
+                            @php $sucursalTapa = $tapa->existencias->first()?->sucursal->nombre ?? 'Sin sucursal'; @endphp
+                            <div wire:click="$set('tapaSeleccionada', {{ $tapa->id }})"
+                                class="flex-shrink-0 border rounded-lg cursor-pointer p-1 transition {{ $tapaSeleccionada == $tapa->id ? 'border-cyan-600 ring-2 ring-cyan-400' : '' }}">
+                                <img src="{{ $tapa->imagen ? asset('storage/' . $tapa->imagen) : '' }}"
+                                    class="h-24 w-24 sm:h-28 sm:w-28 object-contain mx-auto border rounded-lg p-1"
+                                    alt="{{ $tapa->descripcion }}">
+                                <p class="text-xs text-center mt-1">{{ $tapa->descripcion }}</p>
+                                <p class="text-xs text-gray-500 text-center">{{ $sucursalTapa }}</p>
                             </div>
+                            @endforeach
                         </div>
+                    </div>
                     @endif
 
                     @if($etiquetas->count())
-                        <div>
-                            <h3 class="text-center font-semibold mb-1 text-sm">Elige una Etiqueta</h3>
-                            <div class="flex overflow-x-auto gap-2 py-2">
-                                @foreach($etiquetas as $etiqueta)
-                                    @php $sucursalEtiqueta = $etiqueta->existencias->first()?->sucursal->nombre ?? 'Sin sucursal'; @endphp
-                                    <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
-                                        class="flex-shrink-0 border rounded-lg cursor-pointer p-1 transition {{ $etiquetaSeleccionada == $etiqueta->id ? 'border-cyan-600 ring-2 ring-cyan-400' : '' }}">
-                                        <img src="{{ $etiqueta->imagen ? asset('storage/' . $etiqueta->imagen) : '' }}" 
-                                            class="h-24 w-24 sm:h-28 sm:w-28 object-contain mx-auto border rounded-lg p-1"
-                                            alt="{{ $etiqueta->descripcion }}">
-                                        <p class="text-xs text-center mt-1">{{ $etiqueta->descripcion }}</p>
-                                        <p class="text-xs text-gray-500 text-center">{{ $sucursalEtiqueta }}</p>
-                                    </div>
-                                @endforeach
+                    <div>
+                        <h3 class="text-center font-semibold mb-1 text-sm">Elige una Etiqueta</h3>
+                        <div class="flex overflow-x-auto gap-2 py-2">
+                            @foreach($etiquetas as $etiqueta)
+                            @php $sucursalEtiqueta = $etiqueta->existencias->first()?->sucursal->nombre ?? 'Sin sucursal'; @endphp
+                            <div wire:click="$set('etiquetaSeleccionada', {{ $etiqueta->id }})"
+                                class="flex-shrink-0 border rounded-lg cursor-pointer p-1 transition {{ $etiquetaSeleccionada == $etiqueta->id ? 'border-cyan-600 ring-2 ring-cyan-400' : '' }}">
+                                <img src="{{ $etiqueta->imagen ? asset('storage/' . $etiqueta->imagen) : '' }}"
+                                    class="h-24 w-24 sm:h-28 sm:w-28 object-contain mx-auto border rounded-lg p-1"
+                                    alt="{{ $etiqueta->descripcion }}">
+                                <p class="text-xs text-center mt-1">{{ $etiqueta->descripcion }}</p>
+                                <p class="text-xs text-gray-500 text-center">{{ $sucursalEtiqueta }}</p>
                             </div>
+                            @endforeach
                         </div>
+                    </div>
                     @endif
                 </div>
-            @endif
+                @endif
+
+            </div>
+
+            <!-- Footer botones -->
+            <div class="modal-footer flex justify-center gap-2 mt-3">
+                <button type="button" wire:click="$set('modalProducto', false)" class="btn-cyan">
+                    CERRAR
+                </button>
+                <button type="button" wire:click="agregarAlCarritoDesdeModal" class="btn-cyan">
+                    AÑADIR AL CARRITO
+                </button>
+            </div>
 
         </div>
-
-        <!-- Footer botones -->
-        <div class="modal-footer flex justify-center gap-2 mt-3">
-            <button type="button" wire:click="$set('modalProducto', false)" class="btn-cyan">
-                CERRAR
-            </button>
-            <button type="button" wire:click="agregarAlCarritoDesdeModal" class="btn-cyan">
-                AÑADIR AL CARRITO
-            </button>
-        </div>
-
     </div>
-</div>
-@endif
+    @endif
 
 
 

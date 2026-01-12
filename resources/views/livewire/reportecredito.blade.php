@@ -1,4 +1,4 @@
-<div class="p-4 bg-gray-50 min-h-screen mt-20">
+<div class="p-4 bg-transparent min-h-screen mt-20">
     <h2 class="text-2xl font-bold mb-6 text-center text-teal-700">
         Reporte de Distribución
     </h2>

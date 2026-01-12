@@ -1,4 +1,4 @@
-<div class="p-2 mt-20 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
     <div class="w-full max-w-screen-xl">
 
         <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
@@ -36,7 +36,6 @@
                         </td>
                         <td class="px-4 py-2 flex justify-center gap-1">
                             <button wire:click="abrirModal({{ $pedido->id }})" class="btn-cyan" title="Editar Pago">Editar Costo</button>
-                            <button wire:click="abrirModalPagoPedido({{ $pedido->id }})" class="btn-cyan" title="Registrar Pago">Registrar Pago</button>
                         </td>
                     </tr>
                     @empty
@@ -113,7 +112,7 @@
     @endif
 
 
-    @if($modalPagoPedido && $pedidoSeleccionado)
+    <!-- @if($modalPagoPedido && $pedidoSeleccionado)
     <div class="modal-overlay flex justify-center items-center p-4">
         <div class="modal-box max-w-3xl w-full overflow-auto p-4">
             <div class="modal-content flex flex-col gap-4 items-center w-full">
@@ -257,7 +256,7 @@
             </div>
         </div>
     </div>
-    @endif
+    @endif -->
 
 
 </div>

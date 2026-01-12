@@ -1,4 +1,4 @@
-<div class="flex justify-center mt-20 px-4">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
     <div class="grid grid-cols-1 {{ $cliente ? 'md:grid-cols-2' : '' }} gap-6 w-full max-w-6xl">
         <div
             class="p-6 bg-white rounded-3xl shadow-xl border border-cyan-200">

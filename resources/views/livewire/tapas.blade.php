@@ -1,18 +1,16 @@
-<div class="p-2 mt-20 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
   <div class="w-full max-w-screen-xl">
 
     <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
       Tapas
     </h3>
 
-    <!-- Buscador y botón -->
     <div class="flex items-center gap-2 mb-4 flex-wrap">
       <input type="text" wire:model.live="search" placeholder="Buscar por nombre o descripción..."
         class="input-minimal w-full sm:w-auto flex-1" />
       <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
     </div>
 
-    <!-- Tabla scrollable -->
     <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-teal-50 sticky top-0 z-10">

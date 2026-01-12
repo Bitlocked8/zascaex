@@ -1,4 +1,4 @@
-<div class="p-2 mt-20 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
     <div class="w-full max-w-screen-xl">
 
         <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
@@ -32,52 +32,77 @@
                         <td class="px-4 py-2 font-medium">{{ $pedido->codigo }}</td>
                         <td class="px-4 py-2">{{ $pedido->cliente->nombre ?? 'Sin cliente' }}</td>
 
-                        <td class="px-4 py-2">
+                        <td class="px-4 py-2 align-top">
                             <h4 class="font-bold text-sm text-gray-700 mb-1">Pedido</h4>
                             @foreach($pedido->detalles as $detallePedido)
                             @php
                             $item = $detallePedido->existencia->existenciable ?? null;
                             $tipo = $item instanceof \App\Models\Producto ? 'producto' : 'otro';
-                            $descripcion = $item->descripcion ?? 'Sin descripción';
+                            $descripcion = $item?->descripcion ?? 'Sin descripción';
+                            $cantidad = $detallePedido->cantidad;
+                            $cantidadMostrar = ($cantidad == floor($cantidad))
+                            ? intval($cantidad)
+                            : $cantidad;
                             @endphp
                             <div class="flex justify-between text-xs border-b py-1">
                                 <div>
                                     <span class="font-semibold">{{ $descripcion }} ({{ $tipo }})</span>
                                     @if(!empty($detallePedido->tipo_contenido))
-                                    <span class="block text-indigo-600 text-[10px]">Contenido: {{ $detallePedido->tipo_contenido }}</span>
+                                    <span class="block text-indigo-600 text-[10px]">
+                                        Contenido: {{ $detallePedido->tipo_contenido }}
+                                    </span>
                                     @endif
                                 </div>
                                 <div class="font-semibold text-teal-600">
-                                    {{ $detallePedido->cantidad }} unidades
+                                    {{ $cantidadMostrar }} unidades
                                 </div>
                             </div>
                             @endforeach
 
 
+
                             @if($pedido->solicitudPedido)
-                            <h4 class="font-bold text-sm text-gray-700 mt-2 mb-1">
+                            <h4 class="font-bold text-sm text-gray-700 mt-3 mb-1">
                                 Solicitud: {{ $pedido->solicitudPedido->codigo }}
                             </h4>
+
                             @foreach($pedido->solicitudPedido->detalles as $detalleSolicitud)
                             @php
-                            $existencia = $detalleSolicitud->existencia;
-                            $item = $existencia?->producto ?? $existencia?->otro;
-                            $tipo = $existencia?->producto ? 'producto' : 'otro';
+                            $tipo = $detalleSolicitud->producto ? 'producto' : 'otro';
                             @endphp
-                            <div class="flex justify-between text-xs border-b py-1">
-                                <div>
-                                    <span class="font-semibold">{{ $item?->descripcion ?? 'Sin descripción' }} ({{ $tipo }})</span>
-                                    @if(!empty($detalleSolicitud->tipo_contenido))
-                                    <span class="block text-indigo-600 text-[10px]">Contenido: {{ $detalleSolicitud->tipo_contenido }}</span>
+
+                            <div class="flex flex-col text-xs border-b py-1 mb-1">
+                                {{-- Nombre y tipo --}}
+                                <div class="flex justify-between">
+                                    <span class="font-semibold">{{ $detalleSolicitud->producto?->descripcion ?? $detalleSolicitud->otro?->descripcion ?? 'Sin descripción' }} ({{ $tipo }})</span>
+                                    <span class="font-semibold text-teal-600">
+                                        {{ $detalleSolicitud->cantidad }} unidades
+                                    </span>
+                                </div>
+
+                                {{-- Si es producto, mostrar tapa, etiqueta y unidades por paquete --}}
+                                @if($detalleSolicitud->producto)
+                                <div class="text-gray-500 text-[10px] mt-0.5">
+                                    <div>Producto: {{ $detalleSolicitud->producto?->descripcion ?? '-' }}</div>
+                                    <div>Tapa: {{ $detalleSolicitud->tapa?->descripcion ?? '-' }}</div>
+                                    <div>Etiqueta: {{ $detalleSolicitud->etiqueta?->descripcion ?? '-' }}</div>
+                                    @if(!empty($detalleSolicitud->unidades_por_paquete))
+                                    <div>{{ $detalleSolicitud->unidades_por_paquete }} unidad/paquete</div>
                                     @endif
                                 </div>
-                                <div class="font-semibold text-teal-600">
-                                    {{ $detalleSolicitud->cantidad }} unidades
-                                </div>
+                                @endif
+
+                                {{-- Contenido u otro detalle --}}
+                                @if(!empty($detalleSolicitud->tipo_contenido))
+                                <span class="block text-indigo-600 text-[10px] mt-0.5">
+                                    Contenido: {{ $detalleSolicitud->tipo_contenido }}
+                                </span>
+                                @endif
                             </div>
                             @endforeach
                             @endif
                         </td>
+
 
 
 

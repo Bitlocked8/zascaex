@@ -1,4 +1,4 @@
-<div class="p-4 mt-20 flex justify-center bg-white">
+<div class="p-2 mt-20 flex justify-center bg-transparent">
   <div class="w-full max-w-screen-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
     <h3
@@ -8,50 +8,50 @@
 
     @if ($empresa)
       <div>
-        <label class="text-sm font-semibold text-teal-700">Nombre</label>
+        <label class="text-sm font-semibold text-white">Nombre</label>
         <input type="text" wire:model.defer="nombre" class="input-minimal w-full mt-1" placeholder="Nombre de la empresa">
         @error('nombre') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div>
-        <label class="text-sm font-semibold text-teal-700">Slogan</label>
+        <label class="text-sm font-semibold text-white">Slogan</label>
         <input type="text" wire:model.defer="slogan" class="input-minimal w-full mt-1" placeholder="Slogan">
         @error('slogan') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div>
-        <label class="text-sm font-semibold text-teal-700">Número de Contacto</label>
+        <label class="text-sm font-semibold text-white">Número de Contacto</label>
         <input type="text" wire:model.defer="nroContacto" class="input-minimal w-full mt-1" placeholder="Ej: +591 77777777">
         @error('nroContacto') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div>
-        <label class="text-sm font-semibold text-teal-700">Facebook</label>
+        <label class="text-sm font-semibold text-white">Facebook</label>
         <input type="text" wire:model.defer="facebook" class="input-minimal w-full mt-1" placeholder="URL de Facebook">
         @error('facebook') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div>
-        <label class="text-sm font-semibold text-teal-700">Instagram</label>
+        <label class="text-sm font-semibold text-white">Instagram</label>
         <input type="text" wire:model.defer="instagram" class="input-minimal w-full mt-1" placeholder="URL de Instagram">
         @error('instagram') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div>
-        <label class="text-sm font-semibold text-teal-700">TikTok</label>
+        <label class="text-sm font-semibold text-white">TikTok</label>
         <input type="text" wire:model.defer="tiktok" class="input-minimal w-full mt-1" placeholder="URL de TikTok">
         @error('tiktok') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div class="col-span-full">
-        <label class="text-sm font-semibold text-teal-700">Misión</label>
+        <label class="text-sm font-semibold text-white">Misión</label>
         <textarea wire:model.defer="mision" class="input-minimal w-full mt-1" rows="3"
           placeholder="Escribe la misión de la empresa"></textarea>
         @error('mision') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror
       </div>
 
       <div class="col-span-full">
-        <label class="text-sm font-semibold text-teal-700">Visión</label>
+        <label class="text-sm font-semibold text-white">Visión</label>
         <textarea wire:model.defer="vision" class="input-minimal w-full mt-1" rows="3"
           placeholder="Escribe la visión de la empresa"></textarea>
         @error('vision') <span class="text-red-600 text-xs">{{ $message }}</span> @enderror

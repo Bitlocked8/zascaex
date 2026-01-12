@@ -26,9 +26,15 @@ class Pedidospersonal extends Component
         $query = Pedido::with([
             'cliente',
             'detalles.existencia.existenciable',
-            'solicitudPedido.detalles.existencia.existenciable',
+            'detalles.existencia.sucursal',
+            'solicitudPedido.detalles.producto',
+            'solicitudPedido.detalles.otro',
+            'solicitudPedido.detalles.tapa',
+            'solicitudPedido.detalles.etiqueta',
+
             'pagos'
         ]);
+
         if ($usuario->rol_id == 3 && $usuario->personal) {
             $personalId = $usuario->personal->id;
 
