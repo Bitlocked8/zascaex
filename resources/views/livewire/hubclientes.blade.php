@@ -363,96 +363,88 @@
                                 {{ $expandido ? 'Ocultar detalles' : 'Ver detalles' }}
                             </button>
                         </div>
-                     @if($expandido)
-<div class="mt-4 flex flex-col gap-6">
+                        @if($expandido)
+                        <div class="mt-4 flex flex-col gap-6">
+                            @if($estado == 0)
+                            <div class="flex flex-col items-center gap-3 p-4 bg-white rounded-xl shadow-md border">
+                                <p class="text-sm font-medium text-gray-700 text-center">
+                                    Selecciona un método de pago:
+                                </p>
+                                <div class="flex gap-3 mt-2">
+                                    <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
+                                        class="px-4 py-2 rounded-md font-semibold transition {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                        QR
+                                    </button>
+                                    <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
+                                        class="px-4 py-2 rounded-md font-semibold transition {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                                        Transferencia Bancaria
+                                    </button>
+                                </div>
+                            </div>
+                            @endif
+                            @if(!empty($pedido['detalles']))
+                            <div class="flex flex-col gap-4">
+                                @foreach($pedido['detalles'] as $detalle)
+                                @php
+                                $producto = $detalle['producto'] ?? $detalle['otro'] ?? null;
+                                $descripcion = $producto['descripcion'] ?? '';
+                                $sucursalProd = $producto['existencias'][0]['sucursal']['nombre'] ?? '-';
+                                $tapa = $detalle['tapa'] ?? null;
+                                $etiqueta = $detalle['etiqueta'] ?? null;
+                                @endphp
 
-    {{-- Selección de método de pago si el pedido está en revisión --}}
-    @if($estado == 0)
-    <div class="flex flex-col items-center gap-3 p-4 bg-white rounded-xl shadow-md border">
-        <p class="text-sm font-medium text-gray-700 text-center">
-            Selecciona un método de pago:
-        </p>
-        <div class="flex gap-3 mt-2">
-            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 0)"
-                class="px-4 py-2 rounded-md font-semibold transition {{ $pedido['metodo_pago'] == 0 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                QR
-            </button>
-            <button wire:click="actualizarMetodoPago({{ $pedido['id'] }}, 1)"
-                class="px-4 py-2 rounded-md font-semibold transition {{ $pedido['metodo_pago'] == 1 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                Transferencia Bancaria
-            </button>
-        </div>
-    </div>
-    @endif
+                                <div class="bg-white rounded-xl shadow-md border p-4 flex flex-col gap-4">
+                                    <div class="text-center">
+                                        <p class="text-xl font-semibold text-gray-800">{{ $descripcion }}</p>
+                                        <p class="text-sm text-gray-600"><span class="font-semibold">Sucursal:</span> {{ $sucursalProd }}</p>
+                                        <p class="text-sm text-gray-600"><span class="font-semibold">Cantidad:</span> {{ $detalle['cantidad'] }} paquetes</p>
+                                    </div>
 
-    {{-- Detalles de los productos --}}
-    @if(!empty($pedido['detalles']))
-    <div class="flex flex-col gap-4">
-        @foreach($pedido['detalles'] as $detalle)
-        @php
-            $producto = $detalle['producto'] ?? $detalle['otro'] ?? null;
-            $descripcion = $producto['descripcion'] ?? '';
-            $sucursalProd = $producto['existencias'][0]['sucursal']['nombre'] ?? '-';
-            $tapa = $detalle['tapa'] ?? null;
-            $etiqueta = $detalle['etiqueta'] ?? null;
-        @endphp
+                                    @if($tapa || $etiqueta)
+                                    <div class="flex flex-col gap-2">
+                                        @if($tapa)
+                                        <p class="text-sm"><span class="font-semibold">Tapa:</span> {{ $tapa['descripcion'] }}</p>
+                                        @endif
+                                        @if($etiqueta)
+                                        <p class="text-sm"><span class="font-semibold">Etiqueta:</span> {{ $etiqueta['descripcion'] }}</p>
+                                        @endif
+                                    </div>
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            @if(!empty($pedido['pedido']['pagos']))
+                            <div class="flex flex-col gap-3 mt-4 p-4 bg-gray-50 rounded-xl border">
+                                <h3 class="font-semibold text-gray-700 mb-2">Pagos del pedido:</h3>
+                                @foreach($pedido['pedido']['pagos'] as $pago)
+                                <div class="flex justify-between items-center p-2 border rounded-md bg-white">
+                                    <div class="flex flex-col">
+                                        <span>Monto: {{ number_format($pago['monto'], 2) }}</span>
+                                        <span>Estado: {{ $pago['estado'] ? 'Pagado' : 'Sin pagar' }}</span>
+                                        <span>Método: {{ $pago['metodo'] == 0 ? 'QR' : 'Transferencia' }}</span>
+                                    </div>
+                                    @if($pago['metodo'] == 0 && !empty($pago['sucursal_pago']['imagen_qr']))
+                                    <button wire:click="verQr({{ $pago['id'] }})"
+                                        class="px-4 py-2 rounded-md bg-cyan-500 text-white font-semibold hover:bg-cyan-600 transition">
+                                        Ver QR
+                                    </button>
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                            @if($estado == 0)
+                            <div class="flex justify-center mt-4">
+                                <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
+                                    class="px-4 py-2 border border-red-600 text-red-600 font-semibold rounded-md hover:bg-red-600 hover:text-white transition">
+                                    Eliminar Pedido
+                                </button>
+                            </div>
+                            @endif
 
-        <div class="bg-white rounded-xl shadow-md border p-4 flex flex-col gap-4">
-            <div class="text-center">
-                <p class="text-xl font-semibold text-gray-800">{{ $descripcion }}</p>
-                <p class="text-sm text-gray-600"><span class="font-semibold">Sucursal:</span> {{ $sucursalProd }}</p>
-                <p class="text-sm text-gray-600"><span class="font-semibold">Cantidad:</span> {{ $detalle['cantidad'] }} paquetes</p>
-            </div>
-
-            @if($tapa || $etiqueta)
-            <div class="flex flex-col gap-2">
-                @if($tapa)
-                <p class="text-sm"><span class="font-semibold">Tapa:</span> {{ $tapa['descripcion'] }}</p>
-                @endif
-                @if($etiqueta)
-                <p class="text-sm"><span class="font-semibold">Etiqueta:</span> {{ $etiqueta['descripcion'] }}</p>
-                @endif
-            </div>
-            @endif
-        </div>
-        @endforeach
-    </div>
-    @endif
-
-    {{-- Pagos asociados al pedido --}}
-    @if(!empty($pedido['pedido']['pagos']))
-    <div class="flex flex-col gap-3 mt-4 p-4 bg-gray-50 rounded-xl border">
-        <h3 class="font-semibold text-gray-700 mb-2">Pagos del pedido:</h3>
-        @foreach($pedido['pedido']['pagos'] as $pago)
-        <div class="flex justify-between items-center p-2 border rounded-md bg-white">
-            <div class="flex flex-col">
-                <span>Monto: {{ number_format($pago['monto'], 2) }}</span>
-                <span>Estado: {{ $pago['estado'] ? 'Pagado' : 'Sin pagar' }}</span>
-                <span>Método: {{ $pago['metodo'] == 0 ? 'QR' : 'Transferencia' }}</span>
-            </div>
-            @if($pago['metodo'] == 0 && !empty($pago['sucursal_pago']['imagen_qr']))
-            <button wire:click="verQr({{ $pago['id'] }})"
-                class="px-4 py-2 rounded-md bg-cyan-500 text-white font-semibold hover:bg-cyan-600 transition">
-                Ver QR
-            </button>
-            @endif
-        </div>
-        @endforeach
-    </div>
-    @endif
-
-    {{-- Botón eliminar solicitud si aún está en revisión --}}
-    @if($estado == 0)
-    <div class="flex justify-center mt-4">
-        <button wire:click="eliminarSolicitud({{ $pedido['id'] }})"
-            class="px-4 py-2 border border-red-600 text-red-600 font-semibold rounded-md hover:bg-red-600 hover:text-white transition">
-            Eliminar Pedido
-        </button>
-    </div>
-    @endif
-
-</div>
-@endif
+                        </div>
+                        @endif
 
                     </div>
                     @endforeach
@@ -472,22 +464,90 @@
     </div>
     @endif
 
-    @if($modalVerQR && $qrSeleccionado)
+    @if($modalVerQR && $pagoSeleccionado)
     <div class="modal-overlay">
-        <div class="modal-box">
+        <div class="modal-box max-w-md">
+
+            {{-- CONTENIDO --}}
             <div class="modal-content flex flex-col gap-4">
-                <h3 class="text-2xl font-bold text-teal-700 text-center">QR de Pago</h3>
+
+                <h3 class="text-2xl font-bold text-teal-700 text-center">
+                    QR de Pago
+                </h3>
+
+                {{-- QR --}}
                 <div class="w-full flex justify-center">
-                    <img src="{{ asset('storage/' . $qrSeleccionado) }}" class="w-100 h-100 object-contain rounded-xl shadow-md border border-cyan-300" alt="QR de Pago">
+                    <img
+                        src="{{ asset('storage/' . $qrSeleccionado) }}"
+                        class="w-64 h-64 object-contain rounded-xl shadow-md border"
+                        alt="QR de Pago">
+                </div>
+
+                {{-- COMPROBANTE --}}
+                <div class="border-t pt-4 flex flex-col gap-3">
+                    <label class="font-semibold text-gray-700">
+                        Comprobante de pago
+                    </label>
+
+                    <input
+                        type="file"
+                        wire:model="archivoPago"
+                        class="input-minimal w-full">
+
+                    {{-- PREVIEW --}}
+                    @php
+                    $pago = \App\Models\PagoPedido::find($pagoSeleccionado);
+                    @endphp
+
+                    @if($archivoPago)
+                    <img
+                        src="{{ $archivoPago->temporaryUrl() }}"
+                        class="max-w-xs rounded shadow mt-2">
+                    @elseif($pago && $pago->archivo_comprobante)
+                    <img
+                        src="{{ Storage::url($pago->archivo_comprobante) }}"
+                        class="max-w-xs rounded shadow mt-2">
+                    @endif
+
+                    {{-- BOTONES --}}
+                    <div class="flex gap-2 mt-2">
+                        <button
+                            wire:click="subirComprobante({{ $pagoSeleccionado }})"
+                            class="btn-cyan flex-1">
+                            Guardar comprobante
+                        </button>
+
+                        @if($pago && $pago->archivo_comprobante)
+                        <button
+                            wire:click="eliminarComprobante({{ $pagoSeleccionado }})"
+                            class="px-4 py-2 bg-red-500 text-white rounded-md">
+                            Eliminar
+                        </button>
+                        @endif
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer flex justify-between mt-4">
-                <button type="button" wire:click="$set('modalVerQR', false)" class="btn-cyan">Cerrar</button>
-                <a href="{{ asset('storage/' . $qrSeleccionado) }}" download class="btn-cyan">Descargar QR</a>
+
+            {{-- FOOTER --}}
+            <div class="modal-footer mt-4 flex justify-center gap-2">
+                <button
+                    wire:click="$set('modalVerQR', false)"
+                    class="btn-cyan">
+                    Cerrar
+                </button>
+
+                <a
+                    href="{{ asset('storage/' . $qrSeleccionado) }}"
+                    download
+                    class="btn-cyan">
+                    Descargar QR
+                </a>
             </div>
+
         </div>
     </div>
     @endif
+
 
 
     @if($modalCotizacion)

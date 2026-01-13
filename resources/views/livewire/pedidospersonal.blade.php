@@ -156,7 +156,7 @@
                                     wire:click="$set('pagos.{{ $index }}.metodo', 0)"
                                     class="px-4 py-2 rounded-full border text-sm
             {{ $pagos[$index]['metodo'] == 0 ? 'bg-teal-600 text-white' : 'bg-white text-gray-700' }}">
-                                    Efectivo
+                                    QR
                                 </button>
 
                                 <button
@@ -164,7 +164,7 @@
                                     wire:click="$set('pagos.{{ $index }}.metodo', 1)"
                                     class="px-4 py-2 rounded-full border text-sm
             {{ $pagos[$index]['metodo'] == 1 ? 'bg-teal-600 text-white' : 'bg-white text-gray-700' }}">
-                                    QR
+                                    Efectivo
                                 </button>
 
                                 <button
@@ -172,7 +172,7 @@
                                     wire:click="$set('pagos.{{ $index }}.metodo', 2)"
                                     class="px-4 py-2 rounded-full border text-sm
             {{ $pagos[$index]['metodo'] == 2 ? 'bg-teal-600 text-white' : 'bg-white text-gray-700' }}">
-                                    Contrato
+                                    Contrato/Otro
                                 </button>
                             </div>
                         </div>

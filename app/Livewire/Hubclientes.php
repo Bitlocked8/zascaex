@@ -213,45 +213,51 @@ class Hubclientes extends Component
 
     public function subirComprobante($pagoId)
     {
-        if (!$this->archivoPago)
+        if (!$this->archivoPago) {
             return;
-
-        $pago = PagoPedido::find($pagoId);
-        if (!$pago)
-            return;
-
-        if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
-            \Storage::disk('public')->delete($pago->imagen_comprobante);
         }
 
-        $path = $this->archivoPago->store('pagos', 'public');
+        $pago = PagoPedido::find($pagoId);
+        if (!$pago) {
+            return;
+        }
 
-        $pago->imagen_comprobante = $path;
+
+        if ($pago->archivo_comprobante && \Storage::disk('public')->exists($pago->archivo_comprobante)) {
+            \Storage::disk('public')->delete($pago->archivo_comprobante);
+        }
+        $path = $this->archivoPago->store('pagos/comprobantes', 'public');
+        $pago->archivo_comprobante = $path;
         $pago->estado = true;
-        $pago->fecha_pago = now();
+        $pago->fecha = now();
         $pago->save();
 
         $this->archivoPago = null;
-        $this->verMisPedidos();
-    }
-
-    public function eliminarComprobante($pagoId)
-    {
-        $pago = PagoPedido::find($pagoId);
-        if (!$pago)
-            return;
-
-        if ($pago->imagen_comprobante && \Storage::disk('public')->exists($pago->imagen_comprobante)) {
-            \Storage::disk('public')->delete($pago->imagen_comprobante);
-        }
-
-        $pago->imagen_comprobante = null;
-        $pago->estado = false;
-        $pago->fecha_pago = null;
-        $pago->save();
 
         $this->verMisPedidos();
     }
+
+
+   public function eliminarComprobante($pagoId)
+{
+    $pago = PagoPedido::find($pagoId);
+    if (!$pago) {
+        return;
+    }
+    if (
+        $pago->archivo_comprobante &&
+        \Storage::disk('public')->exists($pago->archivo_comprobante)
+    ) {
+        \Storage::disk('public')->delete($pago->archivo_comprobante);
+    }
+    $pago->archivo_comprobante = null;
+    $pago->estado = false;
+    $pago->fecha = null;
+
+    $pago->save();
+
+    $this->verMisPedidos();
+}
 
     public function verQr($pagoId)
     {
@@ -259,13 +265,15 @@ class Hubclientes extends Component
         if (!$pago || !$pago->sucursalPago || !$pago->sucursalPago->imagen_qr)
             return;
 
+        $this->pagoSeleccionado = $pago->id;
         $this->qrSeleccionado = $pago->sucursalPago->imagen_qr;
         $this->modalVerQR = true;
     }
 
+
     public function productos()
     {
-        // Obtenemos la sucursal del cliente logueado
+
         $cliente = Auth::user()->cliente ?? null;
         $sucursalId = $cliente->sucursal_id ?? null;
 
