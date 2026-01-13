@@ -117,6 +117,7 @@
       @endif
     </div>
   </div>
+
   @if($modalPedido)
   <div class="modal-overlay">
     <div class="modal-box">
@@ -140,6 +141,14 @@
             <div class="flex justify-between items-center">
               <span class="text-cyan-600 font-semibold truncate">{{ $solicitud->cliente->nombre ?? 'Sin cliente' }}</span>
               <span class="text-gray-500 text-[10px] ml-2">{{ $solicitud->created_at->format('d/m/Y H:i') }}</span>
+            </div>
+
+            <div class="mt-1 text-[10px]">
+              Método de pago:
+              <span
+                class="font-semibold {{ $solicitud->metodo_pago == 1 ? 'text-emerald-600' : 'text-blue-600' }}">
+                {{ $solicitud->metodo_pago == 1 ? 'Transferencia Bancaria' : 'QR' }}
+              </span>
             </div>
 
             <div class="mt-2 space-y-1">

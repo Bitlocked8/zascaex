@@ -2,7 +2,7 @@
     <div class="w-full max-w-screen-xl">
 
         <h3 class="text-center text-2xl font-bold uppercase text-teal-700 bg-teal-100 px-6 py-2 rounded-full mx-auto mb-4">
-            Pedidos
+            Pedidos para entregar
         </h3>
 
         <div class="flex items-center gap-2 mb-4 flex-wrap">
@@ -13,7 +13,7 @@
                 class="input-minimal w-full sm:w-auto flex-1" />
         </div>
 
-        <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
+        <div class="overflow-auto max-h-[400px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-teal-50 sticky top-0 z-10">
                     <tr>
