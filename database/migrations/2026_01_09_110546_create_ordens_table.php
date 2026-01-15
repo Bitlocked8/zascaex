@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('ordens', function (Blueprint $table) {
             $table->id();
             $table->datetime('fecha');
+            $table->datetime('fecha_fin')->nullable();
             $table->text('detalle')->nullable();
             $table->integer('cantidad_total');
             $table->integer('cantidad_preparada')->default(0);

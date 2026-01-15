@@ -12,6 +12,7 @@ class Orden extends Model
     protected $table = 'ordens';
     protected $fillable = [
         'fecha',
+        'fecha_fin',
         'detalle',
         'cantidad_total',
         'cantidad_preparada',

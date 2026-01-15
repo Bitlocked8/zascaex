@@ -25,16 +25,6 @@ class DatabaseSeeder extends Seeder
         Rol::create(['id' => 5, 'nombre' => 'Cliente', 'descripcion' => 'Acceso la aplicacion móvil, catálogo y compras por internet.']);
 
 
-        $adminUser = User::create([
-            'email' => 'bverzs456815c',
-            'password' => bcrypt('12345678'),
-            'estado' => 1,
-            'rol_id' => 1,
-        ]);
-        Personal::factory()->create(['user_id' => $adminUser->id]);
-
-
-
         $empresa = Empresa::create([
             'id' => 1,
             'nombre' => 'Verzasca',
@@ -73,7 +63,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductoSeeder::class);
         $this->call(OtroSeeder::class);
         $this->call(PersonalSeeder::class);
-        // $this->call(ClienteSeeder::class);
+        $this->call(ClienteSeeder::class);
         $this->call(ProveedorSeeder::class);
     }
 }
