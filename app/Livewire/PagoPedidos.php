@@ -32,14 +32,18 @@ class PagoPedidos extends Component
         if ($rol === 3) {
             return $pedido->personal_id === $personal->id
                 && $pedido->detalles()
-                    ->whereHas('existencia', fn($q) =>
-                        $q->where('sucursal_id', $sucursalId)
-                    )->exists();
+                ->whereHas(
+                    'existencia',
+                    fn($q) =>
+                    $q->where('sucursal_id', $sucursalId)
+                )->exists();
         }
 
         if ($rol === 2) {
             return $pedido->detalles()
-                ->whereHas('existencia', fn($q) =>
+                ->whereHas(
+                    'existencia',
+                    fn($q) =>
                     $q->where('sucursal_id', $sucursalId)
                 )->exists();
         }
@@ -248,14 +252,20 @@ class PagoPedidos extends Component
         }
 
         if ($this->searchCliente) {
-            $query->whereHas('cliente', function ($q) {
-                $q->where('nombre', 'like', '%' . $this->searchCliente . '%')
-                    ->orWhere('codigo', 'like', '%' . $this->searchCliente . '%')
-                    ->orWhere('empresa', 'like', '%' . $this->searchCliente . '%')
-                    ->orWhere('razonSocial', 'like', '%' . $this->searchCliente . '%')
-                    ->orWhere('nitCi', 'like', '%' . $this->searchCliente . '%');
+            $buscar = $this->searchCliente;
+
+            $query->where(function ($q) use ($buscar) {
+                $q->where('codigo', 'like', "%{$buscar}%")
+                    ->orWhereHas('cliente', function ($c) use ($buscar) {
+                        $c->where('nombre', 'like', "%{$buscar}%")
+                            ->orWhere('codigo', 'like', "%{$buscar}%")
+                            ->orWhere('empresa', 'like', "%{$buscar}%")
+                            ->orWhere('razonSocial', 'like', "%{$buscar}%")
+                            ->orWhere('nitCi', 'like', "%{$buscar}%");
+                    });
             });
         }
+
 
         return view('livewire.pago-pedidos', [
             'pedidos' => $query->latest()->get()

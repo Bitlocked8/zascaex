@@ -7,6 +7,7 @@ use App\Models\Pedido;
 use App\Models\Gasto;
 use App\Models\Personal;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class Reporteventa extends Component
 {
@@ -54,7 +55,7 @@ class Reporteventa extends Component
                 'existencia.existenciable',
                 'pagoDetalles',
             ])
-        ]);
+        ])->where('estado_pedido', 2);
 
         $queryGastos = Gasto::with('personal');
 
@@ -133,5 +134,78 @@ class Reporteventa extends Component
             'totalGastos',
             'totalVentas'
         ));
+    }
+    public function exportarPDF()
+    {
+        $queryPedidos = Pedido::with([
+            'cliente.personal',
+            'pagos',
+            'detalles' => fn($q) => $q->with([
+                'existencia.existenciable',
+                'pagoDetalles',
+            ])
+        ]);
+
+        $queryGastos = Gasto::with('personal');
+
+        if ($this->filtroPersonal) {
+            $queryPedidos->whereHas('cliente.personal', fn($q) => $q->where('id', $this->filtroPersonal));
+            $queryGastos->where('personal_id', $this->filtroPersonal);
+        }
+
+        $inicio = $this->parseFecha($this->fechaInicio);
+        $fin = $this->parseFecha($this->fechaFin);
+
+        if ($inicio) {
+            $queryPedidos->where('fecha_pedido', '>=', $inicio . ' 00:00:00');
+            $queryGastos->where('fecha', '>=', $inicio . ' 00:00:00');
+        }
+
+        if ($fin) {
+            $queryPedidos->where('fecha_pedido', '<=', $fin . ' 23:59:59');
+            $queryGastos->where('fecha', '<=', $fin . ' 23:59:59');
+        }
+
+        $pedidos = $queryPedidos->get();
+        $gastos = $queryGastos->get();
+
+        $ventasPorMetodo = ['qr' => 0, 'efectivo' => 0, 'credito' => 0];
+
+        foreach ($pedidos as $pedido) {
+            foreach ($pedido->detalles as $detalle) {
+                $pagoDetalle = $detalle->pagoDetalles->first();
+                $pago = $pedido->pagos->first();
+                if (!$pagoDetalle || !$pago) continue;
+
+                match ($pago->metodo) {
+                    0 => $ventasPorMetodo['qr'] += $pagoDetalle->subtotal,
+                    1 => $ventasPorMetodo['efectivo'] += $pagoDetalle->subtotal,
+                    2 => $ventasPorMetodo['credito'] += $pagoDetalle->subtotal,
+                };
+            }
+        }
+
+        $totalGastos = $gastos->sum('monto');
+
+        $totalVentas =
+            $ventasPorMetodo['qr'] +
+            $ventasPorMetodo['efectivo'] +
+            $ventasPorMetodo['credito'] -
+            $totalGastos;
+
+        $pdf = Pdf::loadView('pdf.reporteventa', [
+            'pedidos' => $pedidos,
+            'gastos' => $gastos,
+            'ventasPorMetodo' => $ventasPorMetodo,
+            'totalGastos' => $totalGastos,
+            'totalVentas' => $totalVentas,
+            'fechaInicio' => $this->fechaInicio,
+            'fechaFin' => $this->fechaFin,
+        ])->setPaper('letter', 'landscape');
+
+        return response()->streamDownload(
+            fn() => print($pdf->output()),
+            'reporte-ventas.pdf'
+        );
     }
 }
