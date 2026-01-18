@@ -248,7 +248,7 @@
 
 
                         <div>
-                            <label>Referencia</label>
+                            <label>Cdigo Recibo/Comprobante</label>
                             <input type="text" wire:model="pagos.{{ $index }}.referencia" class="input-minimal w-full">
                         </div>
 
@@ -258,14 +258,15 @@
                         </div>
 
                         <div>
-                            <label>Fecha</label>
-                            <input type="datetime-local" wire:model="pagos.{{ $index }}.fecha" class="input-minimal w-full">
-                        </div>
-
-                        <div class="sm:col-span-2">
                             <label>Observaciones</label>
                             <input type="text" wire:model="pagos.{{ $index }}.observaciones" class="input-minimal w-full">
                         </div>
+
+                        <div>
+                            <label>Fecha</label>
+                            <input type="datetime-local" wire:model="pagos.{{ $index }}.fecha" class="input-minimal w-full" readonly>
+                        </div>
+
 
                         <div class="sm:col-span-2">
                             <label class="font-semibold text-sm">Archivo Factura (Opcional)</label>

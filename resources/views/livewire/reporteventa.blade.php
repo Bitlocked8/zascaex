@@ -35,7 +35,6 @@
                         {{ $hoy ? 'Todos' : 'Hoy' }}
                     </button>
 
-
                     <div class="flex items-center gap-2">
                         <label class="text-gray-700 text-sm">Inicio:</label>
                         <input type="text"
@@ -63,12 +62,27 @@
                     </div>
                 </div>
             </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                <div class="flex-1">
+                    <input type="text" wire:model.live="searchCliente"
+                        placeholder="Buscar cliente..."
+                        class="border rounded px-2 py-1 w-full text-sm">
+                </div>
+                <div class="flex-1">
+                    <input type="text" wire:model.live="searchExistencia"
+                        placeholder="Buscar producto..."
+                        class="border rounded px-2 py-1 w-full text-sm">
+                </div>
+            </div>
+
             <button
                 wire:click="exportarPDF"
                 class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm shadow">
                 Exportar PDF
             </button>
         </div>
+
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md p-3 bg-gray-50">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 
@@ -113,7 +127,11 @@
 
             </div>
         </div>
+
         <br>
+
+        <br>
+
         <div class="overflow-auto max-h-[300px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-teal-50 sticky top-0 z-10 text-xs sm:text-sm">
@@ -122,7 +140,6 @@
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Personal</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Descripción</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Monto</th>
-
                     </tr>
                 </thead>
 
@@ -144,7 +161,6 @@
                         <td class="px-2 sm:px-4 py-1 sm:py-2 text-right font-bold text-red-500">
                             {{ $gasto->monto ? 'Bs '.number_format($gasto->monto, 2) : '-' }}
                         </td>
-
                     </tr>
                     @empty
                     <tr>
@@ -154,7 +170,87 @@
                 </tbody>
             </table>
         </div>
+
         <br>
+
+        @php
+        $resumenExistencias = [];
+        foreach ($pedidos as $pedido) {
+        foreach ($pedido->detalles as $detalle) {
+        $existencia = $detalle->existencia;
+        $pagoDetalle = $detalle->pagoDetalles->first();
+
+        if (!$existencia || !$pagoDetalle) continue;
+
+        $key = $existencia->id;
+
+        if (!isset($resumenExistencias[$key])) {
+        $resumenExistencias[$key] = [
+        'codigo' => $existencia->codigo ?? $existencia->id,
+        'descripcion' => $existencia->existenciable?->descripcion ?? 'Sin descripción',
+        'cantidad' => 0,
+        'subtotal' => 0,
+        ];
+        }
+
+        $resumenExistencias[$key]['cantidad'] += $detalle->cantidad;
+        $resumenExistencias[$key]['subtotal'] += $pagoDetalle->subtotal;
+        }
+        }
+        @endphp
+
+        <div class="overflow-auto max-h-[400px] border border-gray-200 rounded-md mb-4">
+            <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+                <thead class="bg-teal-50 sticky top-0 z-10">
+                    <tr>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Código</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Existencia</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Cantidad total</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Subtotal total</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Precio unitario</th>
+                    </tr>
+                </thead>
+
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($resumenExistencias as $existencia)
+                    @php
+                    $precioUnitario = $existencia['cantidad'] > 0
+                    ? $existencia['subtotal'] / $existencia['cantidad']
+                    : 0;
+                    @endphp
+
+                    <tr class="hover:bg-teal-50">
+                        <td class="px-2 sm:px-4 py-1 sm:py-2 font-semibold">
+                            {{ $existencia['codigo'] }}
+                        </td>
+
+                        <td class="px-2 sm:px-4 py-1 sm:py-2">
+                            {{ $existencia['descripcion'] }}
+                        </td>
+
+                        <td class="px-2 sm:px-4 py-1 sm:py-2 text-right font-semibold">
+                            {{ $existencia['cantidad'] }}
+                        </td>
+
+                        <td class="px-2 sm:px-4 py-1 sm:py-2 text-right font-bold text-teal-700">
+                            Bs {{ number_format($existencia['subtotal'], 2) }}
+                        </td>
+
+                        <td class="px-2 sm:px-4 py-1 sm:py-2 text-right">
+                            Bs {{ number_format($precioUnitario, 2) }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-2 text-gray-500 italic">
+                            No hay existencias para agrupar.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
                 <thead class="bg-teal-50 sticky top-0 z-10 text-xs sm:text-sm">
@@ -168,17 +264,24 @@
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Precio A.</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Subtotal</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Método</th>
-                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">N° factura</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">N° factura(s)</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">
+                            N° recibo
+                        </th>
                     </tr>
                 </thead>
 
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($pedidos as $pedido)
+                    @php
+                    $pago = $pedido->pagos->first();
+                    @endphp
+
                     @forelse($pedido->detalles as $detalle)
                     @php
                     $pagoDetalle = $detalle->pagoDetalles->first();
-                    $pagoPedido = $pedido->pagos->first();
                     @endphp
+
                     <tr class="hover:bg-teal-50 text-xs sm:text-sm">
                         <td class="px-2 sm:px-4 py-1 sm:py-2 whitespace-nowrap">
                             {{ $pedido->fecha_pedido ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') : 'Sin fecha' }}
@@ -213,50 +316,54 @@
                         </td>
 
                         <td class="px-2 sm:px-4 py-1 sm:py-2">
-                            @if($pedido->pagos->isNotEmpty())
-                            @foreach($pedido->pagos as $pago)
-                            <div class="mb-1">
-                                <span class="{{ $pago->estado == 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
-                                    @switch($pago->metodo)
-                                    @case(0) QR @break
-                                    @case(1) Efectivo @break
-                                    @case(2) Crédito/Contrato @break
-                                    @default Otro
-                                    @endswitch
-                                </span>
-                            </div>
-                            @endforeach
+                            @if($pago)
+                            <span class="{{ $pago->estado == 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
+                                @switch($pago->metodo)
+                                @case(0) QR @break
+                                @case(1) Efectivo @break
+                                @case(2) Crédito/Contrato @break
+                                @default Otro
+                                @endswitch
+                            </span>
+                            @else
+                            -
+                            @endif
+                        </td>
+
+                        <td class="px-2 sm:px-4 py-1 sm:py-2 bg-white">
+                            @if($pago)
+                            <span class="{{ $pago->estado == 0 ? 'text-red-500' : 'text-green-500 font-semibold' }}">
+                                {{ $pago->codigo_factura ?? '-' }}
+                            </span>
                             @else
                             -
                             @endif
                         </td>
 
                         <td class="px-2 sm:px-4 py-1 sm:py-2">
-                            @if($pedido->pagos->isNotEmpty())
-                            @foreach($pedido->pagos as $pago)
-                            <div class="mb-1">
-                                <span class="{{ $pago->estado == 0 ? 'text-red-500' : 'text-green-500 font-semibold' }}">
-                                    {{ $pago->codigo_factura ?? '-' }}
-                                </span>
-                            </div>
-                            @endforeach
+                            @if($pago)
+                            {{ $pago->referencia ?? '-' }}
                             @else
                             -
                             @endif
                         </td>
-
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-2 text-gray-500 italic">Pedido sin detalles</td>
+                        <td colspan="12" class="text-center py-2 text-gray-500 italic">
+                            Pedido sin detalles
+                        </td>
                     </tr>
                     @endforelse
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-2 text-gray-600">No hay pedidos registrados.</td>
+                        <td colspan="12" class="text-center py-2 text-gray-600">
+                            No hay pedidos registrados.
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
     </div>

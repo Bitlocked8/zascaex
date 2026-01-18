@@ -13,7 +13,8 @@ class Reporteventa extends Component
 {
     public $filtroPersonal = null;
     public $hoy = false;
-
+    public $searchCliente = '';
+    public $searchExistencia = '';
     public $fechaInicio = null;
     public $fechaFin = null;
 
@@ -76,6 +77,19 @@ class Reporteventa extends Component
             $queryPedidos->where('fecha_pedido', '<=', $fin . ' 23:59:59');
             $queryGastos->where('fecha', '<=', $fin . ' 23:59:59');
         }
+
+        if ($this->searchCliente) {
+            $queryPedidos->whereHas('cliente', function ($q) {
+                $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
+            });
+        }
+
+        if ($this->searchExistencia) {
+            $queryPedidos->whereHas('detalles.existencia.existenciable', function ($q) {
+                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%');
+            });
+        }
+
 
         $pedidos = $queryPedidos->orderBy('fecha_pedido', 'desc')->get();
         $gastos = $queryGastos->orderBy('fecha', 'desc')->get();
@@ -166,6 +180,24 @@ class Reporteventa extends Component
             $queryGastos->where('fecha', '<=', $fin . ' 23:59:59');
         }
 
+        // FILTRO POR CLIENTE
+        if ($this->searchCliente) {
+            $queryPedidos->whereHas(
+                'cliente',
+                fn($q) =>
+                $q->where('nombre', 'like', '%' . $this->searchCliente . '%')
+            );
+        }
+
+        // FILTRO POR EXISTENCIA (DESCRIPCION)
+        if ($this->searchExistencia) {
+            $queryPedidos->whereHas(
+                'detalles.existencia.existenciable',
+                fn($q) =>
+                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%')
+            );
+        }
+
         $pedidos = $queryPedidos->get();
         $gastos = $queryGastos->get();
 
@@ -193,12 +225,15 @@ class Reporteventa extends Component
             $ventasPorMetodo['credito'] -
             $totalGastos;
 
+        $resumenExistencias = $this->resumenExistencias($pedidos);
+
         $pdf = Pdf::loadView('pdf.reporteventa', [
             'pedidos' => $pedidos,
             'gastos' => $gastos,
             'ventasPorMetodo' => $ventasPorMetodo,
             'totalGastos' => $totalGastos,
             'totalVentas' => $totalVentas,
+            'resumenExistencias' => $resumenExistencias,
             'fechaInicio' => $this->fechaInicio,
             'fechaFin' => $this->fechaFin,
         ])->setPaper('letter', 'landscape');
@@ -207,5 +242,36 @@ class Reporteventa extends Component
             fn() => print($pdf->output()),
             'reporte-ventas.pdf'
         );
+    }
+
+
+    private function resumenExistencias($pedidos)
+    {
+        $resumenExistencias = [];
+
+        foreach ($pedidos as $pedido) {
+            foreach ($pedido->detalles as $detalle) {
+                $existencia = $detalle->existencia;
+                $pagoDetalle = $detalle->pagoDetalles->first();
+
+                if (!$existencia || !$pagoDetalle) continue;
+
+                $key = $existencia->id;
+
+                if (!isset($resumenExistencias[$key])) {
+                    $resumenExistencias[$key] = [
+                        'codigo' => $existencia->codigo ?? $existencia->id,
+                        'descripcion' => $existencia->existenciable?->descripcion ?? 'Sin descripción',
+                        'cantidad' => 0,
+                        'subtotal' => 0,
+                    ];
+                }
+
+                $resumenExistencias[$key]['cantidad'] += $detalle->cantidad;
+                $resumenExistencias[$key]['subtotal'] += $pagoDetalle->subtotal;
+            }
+        }
+
+        return $resumenExistencias;
     }
 }

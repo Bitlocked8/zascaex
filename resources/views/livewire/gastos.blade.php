@@ -29,15 +29,15 @@
                         <td class="px-4 py-2">{{ number_format($gasto->monto, 2) }}</td>
                         <td class="px-4 py-2">
                             @if($gasto->archivo_evidencia)
-                                <a href="{{ asset('storage/'.$gasto->archivo_evidencia) }}" target="_blank" class="text-blue-600 underline">Ver</a>
+                            <a href="{{ asset('storage/'.$gasto->archivo_evidencia) }}" target="_blank" class="text-blue-600 underline">Ver</a>
                             @endif
                         </td>
                         <td class="px-4 py-2 flex justify-center gap-1">
                             @if($gasto->personal_id === auth()->user()->personal->id || auth()->user()->rol_id === 1)
-                                <button wire:click="abrirModal({{ $gasto->id }})" class="btn-cyan" title="Editar">Editar</button>
-                                <button wire:click="eliminarGasto({{ $gasto->id }})" class="btn-red" title="Eliminar">Eliminar</button>
+                            <button wire:click="abrirModal({{ $gasto->id }})" class="btn-cyan" title="Editar">Editar</button>
+                            <button wire:click="eliminarGasto({{ $gasto->id }})" class="btn-cyan" title="Eliminar">Eliminar</button>
                             @else
-                                <span class="text-gray-400 text-sm">Sin permisos</span>
+                            <span class="text-gray-400 text-sm">Sin permisos</span>
                             @endif
                         </td>
                     </tr>
@@ -77,8 +77,8 @@
                 </div>
             </div>
 
-            <div class="modal-footer flex justify-end gap-2 mt-4">
-                <button type="button" wire:click="cerrarModal" class="btn-gray">Cerrar</button>
+            <div class="modal-footer">
+                <button type="button" wire:click="cerrarModal" class="btn-cyan">Cerrar</button>
                 <button type="button" wire:click="guardarGasto" class="btn-cyan">
                     {{ $gastoSeleccionado ? 'Actualizar' : 'Agregar' }}
                 </button>
