@@ -8,6 +8,12 @@
         <div class="flex items-center gap-2 mb-4 flex-wrap">
             <input type="text" wire:model.live="searchCliente" placeholder="Buscar por código o cliente..."
                 class="input-minimal w-full sm:w-auto flex-1" />
+            <button
+                wire:click="$toggle('soloHoy')"
+                class="btn-cyan
+               {{ $soloHoy ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white' }}">
+                {{ $soloHoy ? ' todos' : ' hoy' }}
+            </button>
         </div>
 
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">

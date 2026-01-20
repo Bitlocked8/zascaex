@@ -20,7 +20,7 @@ class Pedidos extends Component
 {
     use WithFileUploads;
     public $modalResumenExistencias = false;
-
+    public $soloHoy = true;
     public $cliente_id = null;
     public $cantidad = 50;
     public $observaciones;
@@ -187,7 +187,9 @@ class Pedidos extends Component
             'personal',
             'detalles.existencia.sucursal'
         ]);
-
+        if ($this->soloHoy) {
+            $pedidosQuery->whereDate('fecha_pedido', Carbon::today());
+        }
 
         if ($rol === 3) {
             $pedidosQuery

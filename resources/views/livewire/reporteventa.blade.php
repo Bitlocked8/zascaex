@@ -7,7 +7,7 @@
 
         <div class="flex flex-col sm:flex-row gap-2 mb-4 items-center">
             <div class="mb-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Personal</label>
+                <label class="block text-sm font-semibold text-white mb-1">Personal</label>
                 <div class="border rounded-md h-40 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     <button
                         wire:click="$set('filtroPersonal', null)"
@@ -26,7 +26,7 @@
             </div>
 
             <div class="mb-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Fechas</label>
+                <label class="block text-sm font-semibold text-white">Fechas</label>
 
                 <div class="border rounded-md h-40 overflow-y-auto bg-white p-2 flex flex-col gap-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     <button

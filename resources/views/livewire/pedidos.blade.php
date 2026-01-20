@@ -19,6 +19,12 @@
         Produccion
       </button>
       @endif
+      <button
+        wire:click="$toggle('soloHoy')"
+        class="btn-cyan
+               {{ $soloHoy ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white' }}">
+        {{ $soloHoy ? ' todos' : ' hoy' }}
+      </button>
     </div>
 
     <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">

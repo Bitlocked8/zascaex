@@ -11,6 +11,12 @@
                 wire:model.live="search"
                 placeholder="Buscar por código, cliente o solicitud..."
                 class="input-minimal w-full sm:w-auto flex-1" />
+            <button
+                wire:click="$toggle('soloHoy')"
+                class="btn-cyan
+               {{ $soloHoy ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white' }}">
+                {{ $soloHoy ? ' todos' : ' hoy' }}
+            </button>
         </div>
 
         <div class="overflow-auto max-h-[400px] border border-gray-200 rounded-md">

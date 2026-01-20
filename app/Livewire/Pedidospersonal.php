@@ -17,7 +17,7 @@ class Pedidospersonal extends Component
     public $modalPagoPedido = false;
     public $pedidoSeleccionado = null;
     public $pagos = [];
-
+    public $soloHoy = true;
     public function render()
     {
         $usuario = auth()->user();
@@ -34,6 +34,10 @@ class Pedidospersonal extends Component
 
             'pagos'
         ]);
+
+        if ($this->soloHoy) {
+            $query->whereDate('created_at', Carbon::today());
+        }
 
         if ($usuario->rol_id == 3 && $usuario->personal) {
             $personalId = $usuario->personal->id;

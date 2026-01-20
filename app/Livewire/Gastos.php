@@ -17,7 +17,7 @@ class Gastos extends Component
     public $gastoSeleccionado = null;
     public $modalVisible = false;
     public $search = '';
-
+    public $soloHoy = true;
     public function mount()
     {
         $this->cargarGastos();
@@ -28,8 +28,11 @@ class Gastos extends Component
         $query = Gasto::query()->orderBy('fecha', 'desc');
 
         if (auth()->user()->rol_id !== 1) {
-            // Solo ver gastos del usuario logueado si no es admin
             $query->where('personal_id', auth()->user()->personal->id);
+        }
+
+        if ($this->soloHoy) {
+            $query->whereDate('fecha', now()->toDateString());
         }
 
         if ($this->search) {
@@ -43,8 +46,6 @@ class Gastos extends Component
     {
         if ($gastoId) {
             $gasto = Gasto::findOrFail($gastoId);
-
-            // Seguridad: solo el dueño o admin puede editar
             if ($gasto->personal_id !== auth()->user()->personal->id && auth()->user()->rol_id !== 1) {
                 return;
             }
@@ -76,12 +77,11 @@ class Gastos extends Component
             'archivo_evidencia' => 'nullable|file|max:10240',
         ]);
 
-        $rutaArchivo = $this->archivo_evidencia 
-            ? $this->archivo_evidencia->store('gastos', 'public') 
+        $rutaArchivo = $this->archivo_evidencia
+            ? $this->archivo_evidencia->store('gastos', 'public')
             : ($this->gastoSeleccionado->archivo_evidencia ?? null);
 
         if ($this->gastoSeleccionado) {
-            // Seguridad: solo el dueño o admin puede actualizar
             if ($this->gastoSeleccionado->personal_id !== auth()->user()->personal->id && auth()->user()->rol_id !== 1) {
                 return;
             }
@@ -105,11 +105,16 @@ class Gastos extends Component
         $this->cargarGastos();
     }
 
+    public function updated($property)
+    {
+        if (in_array($property, ['search', 'soloHoy'])) {
+            $this->cargarGastos();
+        }
+    }
+
     public function eliminarGasto($gastoId)
     {
         $gasto = Gasto::findOrFail($gastoId);
-
-        // Seguridad: solo el dueño o admin puede eliminar
         if ($gasto->personal_id !== auth()->user()->personal->id && auth()->user()->rol_id !== 1) {
             return;
         }

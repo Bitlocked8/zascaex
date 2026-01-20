@@ -12,7 +12,7 @@ use Carbon\Carbon;
 class PagoPedidos extends Component
 {
     use WithFileUploads;
-
+    public $soloHoy = true;
     public $searchCliente = '';
     public $pedidoSeleccionado = null;
     public $modalAbierto = false;
@@ -264,6 +264,9 @@ class PagoPedidos extends Component
                             ->orWhere('nitCi', 'like', "%{$buscar}%");
                     });
             });
+        }
+        if ($this->soloHoy) {
+            $query->whereDate('fecha_pedido', Carbon::today());
         }
 
 
