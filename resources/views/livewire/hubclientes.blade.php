@@ -1,7 +1,8 @@
 <div class="p-2 mt-20 flex justify-center bg-transparent">
     <div class="w-full max-w-screen-xl mx-auto px-4">
         <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6
-                    bg-transparent text-white rounded-3xl px-6 py-5 shadow-lg">
+            bg-transparent text-white rounded-3xl px-6 py-5 shadow-lg">
+
             <div class="flex flex-wrap justify-center xl:justify-start gap-3">
                 <button wire:click="verMisPedidos"
                     class="px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-800 transition font-semibold shadow">
@@ -13,13 +14,25 @@
                     Productos añadidos ({{ count($carrito) }})
                 </button>
             </div>
+
             <div class="flex flex-col gap-2 text-center xl:text-right text-sm font-semibold">
                 <span>
-                    <strong>Horarios de atencion de pedidos:</strong> 08:00 a 16:00
+                    <strong>Horarios de atención:</strong> 08:00 a 16:00
                 </span>
+
+                @if(auth()->user()?->cliente?->sucursal)
+                <span>
+                    <strong>Dirección:</strong> {{ auth()->user()->cliente->sucursal->direccion }}
+                </span>
+                <span>
+                    <strong>Teléfono:</strong> {{ auth()->user()->cliente->sucursal->telefono }}
+                </span>
+                @endif
             </div>
 
+
         </div>
+
         <br>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
@@ -297,7 +310,7 @@
                         </svg>
                         CERRAR
                     </button>
-                  
+
 
                     <button wire:click="hacerPedido" class="btn-cyan">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

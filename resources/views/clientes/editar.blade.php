@@ -14,7 +14,8 @@
         <div class="flex items-center justify-between mb-4">
             <h1 class="text-2xl font-bold">Editar Coordenadas: {{ $cliente->nombre }}</h1>
             <a href="{{ route('home') }}" class="btn-circle btn-cyan">
-               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M5 12h6m3 0h1.5m3 0h.5" />
                     <path d="M5 12l6 6" />
@@ -23,18 +24,35 @@
             </a>
         </div>
 
-        <!-- Información del cliente -->
         <div class="mb-6 bg-white p-4 rounded-lg shadow-md">
-            <h2 class="text-lg font-semibold text-gray-900">Información del Cliente</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-2">Información del Cliente</h2>
+
             <p><strong>Nombre:</strong> {{ $cliente->nombre }}</p>
             <p><strong>Empresa:</strong> {{ $cliente->empresa ?? 'N/A' }}</p>
-            <p>
+
+            <p class="flex items-center gap-2 mt-2">
                 <strong>Coordenadas:</strong>
-                <span id="coords-text">{{ $cliente->latitud ?? 'N/A' }}, {{ $cliente->longitud ?? 'N/A' }}</span>
+                <span id="coords-text">
+                    {{ $cliente->latitud ?? 'N/A' }}, {{ $cliente->longitud ?? 'N/A' }}
+                </span>
+                <button id="copiar-coords"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                    Copiar
+                </button>
             </p>
 
-            <!-- Botón Guardar Coordenadas -->
-            <button id="guardar-coords" class="btn-circle btn-cyan mt-2">
+            <div class="mt-4">
+                <label class="text-sm font-semibold">Pegar coordenadas</label>
+                <input type="text" id="input-coords"
+                    placeholder="-17.393993, -66.170568"
+                    class="input-minimal">
+
+                <button id="btn-procesar" class="mt-2 w-full btn-cyan">
+                    Cargar coordenadas
+                </button>
+            </div>
+
+            <button id="guardar-coords" class="btn-circle btn-cyan mt-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -46,7 +64,6 @@
             </button>
         </div>
 
-        <!-- Mapa -->
         <div id="mapa" class="w-full h-[400px] lg:h-[600px] rounded shadow-lg"></div>
     </div>
 
@@ -54,64 +71,65 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             let lat = @json($cliente->latitud ?? -17.393993);
             let lng = @json($cliente->longitud ?? -66.170568);
             const clienteId = @json($cliente->id);
 
-
             const map = L.map('mapa').setView([lat, lng], 13);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+                attribution: 'Map data © OpenStreetMap contributors',
             }).addTo(map);
 
-            let marker = L.marker([lat, lng], {
-                    draggable: false
-                }).addTo(map)
-                .bindPopup(`<strong>@json($cliente->nombre)</strong><br>Haz clic en el mapa para cambiar coordenadas.`)
+            let marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<strong>@json($cliente->nombre)</strong>`)
                 .openPopup();
 
-            map.on('click', function(e) {
+            map.on('click', function (e) {
                 lat = e.latlng.lat;
                 lng = e.latlng.lng;
 
-                marker.setLatLng([lat, lng])
-                    .getPopup()
-                    .setContent(`<strong>@json($cliente->nombre)</strong><br>Coordenadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
-                    .openOn(map);
-
-                document.getElementById('coords-text').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6);
+                marker.setLatLng([lat, lng]).openPopup();
+                document.getElementById('coords-text').textContent =
+                    lat.toFixed(6) + ', ' + lng.toFixed(6);
             });
 
-            document.getElementById('guardar-coords').addEventListener('click', function() {
+            document.getElementById('copiar-coords').addEventListener('click', function () {
+                const texto = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                navigator.clipboard.writeText(texto)
+                    .then(() => alert('Coordenadas copiadas: ' + texto));
+            });
+
+            document.getElementById('btn-procesar').addEventListener('click', function () {
+                const input = document.getElementById('input-coords').value.trim();
+                const match = input.match(/^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/);
+                if (!match) return alert('Formato inválido');
+
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[3]);
+
+                marker.setLatLng([lat, lng]).openPopup();
+                map.setView([lat, lng], 16);
+                document.getElementById('coords-text').textContent =
+                    lat.toFixed(6) + ', ' + lng.toFixed(6);
+            });
+
+            document.getElementById('guardar-coords').addEventListener('click', function () {
                 fetch(`/clientes/${clienteId}/actualizar-coordenadas`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            latitud: lat,
-                            longitud: lng
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Coordenadas guardadas correctamente.');
-                        } else {
-                            alert('Error: ' + data.message);
-                        }
-                    })
-                    .catch(err => {
-                        alert('Error al guardar coordenadas.');
-                        console.error(err);
-                    });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ latitud: lat, longitud: lng })
+                })
+                .then(res => res.json())
+                .then(data => alert(data.success ? 'Coordenadas guardadas' : 'Error'))
+                .catch(() => alert('Error al guardar'));
             });
         });
     </script>
-
 </body>
 
 </html>

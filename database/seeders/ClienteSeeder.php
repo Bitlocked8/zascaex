@@ -12,14 +12,11 @@ class ClienteSeeder extends Seeder
 {
     public function run(): void
     {
-        // 🔹 Cargar clientes desde archivo
         $clientes = require database_path('data/clientes.php');
 
-        // 🔹 SOLO 100 CLIENTES
-        $clientes = array_slice($clientes, 0, 100);
-
-        // 🔹 Obtener distribuidores (rol 3)
-        $personales = Personal::whereHas('user', fn ($q) =>
+        $personales = Personal::whereHas(
+            'user',
+            fn($q) =>
             $q->where('rol_id', 3)
         )->pluck('id');
 
@@ -30,7 +27,6 @@ class ClienteSeeder extends Seeder
 
         foreach ($clientes as $cliente) {
 
-            // 🔹 Generar usuario único
             $nombreUsuario = strtolower(str_replace(' ', '', $cliente['nombre']));
             $codigo = $nombreUsuario . rand(1000, 9999) . Str::lower(Str::random(1));
 
@@ -38,17 +34,15 @@ class ClienteSeeder extends Seeder
                 ['email' => $codigo],
                 [
                     'password' => bcrypt('verzasca1234'),
-                    'rol_id' => 5, // Cliente
+                    'rol_id' => 5,
                     'estado' => 1
                 ]
             );
 
-            // 🔹 Evitar duplicar cliente si ya existe
             if (Cliente::where('user_id', $user->id)->exists()) {
                 continue;
             }
 
-            // 🔹 Ubicación
             if (!empty($cliente['ubicacion'])) {
                 [$lat, $lng] = array_pad(explode(',', $cliente['ubicacion']), 2, null);
                 $cliente['latitud'] = trim($lat);
@@ -58,7 +52,6 @@ class ClienteSeeder extends Seeder
                 $cliente['longitud'] = null;
             }
 
-            // 🔹 Crear cliente
             Cliente::create([
                 ...$cliente,
                 'user_id' => $user->id,
