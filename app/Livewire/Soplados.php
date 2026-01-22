@@ -11,7 +11,7 @@ use App\Models\Existencia;
 use App\Models\Base;
 use App\Models\Preforma;
 use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
 class Soplados extends Component
 {
     public $modal = false;
@@ -35,7 +35,7 @@ class Soplados extends Component
     public $busquedaDestino = '';
     public $sucursalSeleccionada;
     public $existenciasDestino = [];
-
+    public $soloHoy = true;
     protected $rules = [
         'asignado_id' => 'required|exists:asignados,id',
         'existencia_destino_id' => 'required|exists:existencias,id',
@@ -56,6 +56,10 @@ class Soplados extends Component
                 fn($q) => $q->where('codigo', 'like', "%{$this->search}%")
                     ->orWhereHas('asignado', fn($q) => $q->where('codigo', 'like', "%{$this->search}%"))
             );
+
+        if ($this->soloHoy) {
+            $sopladosQuery->whereDate('fecha', Carbon::today());
+        }
 
         if ($rol === 4 && $personal) {
             $sucursalId = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -253,7 +257,6 @@ class Soplados extends Component
             }
 
             $existenciaDestino->save();
-
         });
 
         $this->cerrarModal();

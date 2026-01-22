@@ -86,6 +86,23 @@
 
 
         </div>
+
+        <button
+            onclick="scrollToTop()"
+            class="fixed bottom-24 right-4 z-50 bg-cyan-600 hover:bg-cyan-700 text-white
+           p-3 rounded-full shadow-lg transition"
+            title="Subir arriba">
+            arriba
+        </button>
+        <button
+            onclick="scrollToBottom()"
+            class="fixed bottom-8 right-4 z-50 bg-cyan-600 hover:bg-cyan-700 text-white
+           p-3 rounded-full shadow-lg transition"
+            title="Bajar abajo">
+            abajo
+        </button>
+
+
     </div>
 
 
@@ -153,8 +170,8 @@
                     <p class="col-span-full"><span class="font-semibold">Observaciones:</span> {{ $modelo->observaciones ?? 'Sin observaciones' }}</p>
                 </div>
                 <div class="flex flex-col items-center gap-2">
-                    <label class="font-semibold text-sm">Cantidad de paquetes (mínimo 1)</label>
-                    <input type="number" wire:model="cantidadSeleccionada" min="1" class="input-minimal w-24 text-center">
+                    <label class="font-semibold text-sm">Cantidad de paquetes (mínimo 5)</label>
+                    <input type="number" wire:model="cantidadSeleccionada" min="5" class="input-minimal w-24 text-center">
                 </div>
                 @if($productoSeleccionado['tipo_modelo'] === 'producto')
                 <div class="flex flex-col gap-3">
@@ -213,8 +230,6 @@
         </div>
     </div>
     @endif
-
-
 
     @if($mostrarCarrito)
     <div class="modal-overlay">
@@ -282,13 +297,7 @@
                         </svg>
                         CERRAR
                     </button>
-                    <button wire:click="cotizar" class="btn-cyan">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m0 0l-6-6m6 6H3" />
-                        </svg>
-                        Cotizar
-                    </button>
+                  
 
                     <button wire:click="hacerPedido" class="btn-cyan">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -336,6 +345,10 @@
                 <h2 class="text-2xl font-bold text-center text-teal-700 mb-4">
                     Mis Pedidos ({{ count($pedidosCliente) }})
                 </h2>
+                <h3 class="text-center text-sm text-yellow-700 mb-4">
+                    🔔 Recordatorio: los pedidos que no se atiendan serán eliminados automáticamente después de 12 horas.
+                </h3>
+
 
                 @if(count($pedidosCliente) > 0)
                 <div class="flex flex-col gap-4 max-h-[80vh] overflow-y-auto pr-2">
@@ -468,22 +481,17 @@
     <div class="modal-overlay">
         <div class="modal-box max-w-md">
 
-            {{-- CONTENIDO --}}
             <div class="modal-content flex flex-col gap-4">
 
                 <h3 class="text-2xl font-bold text-teal-700 text-center">
                     QR de Pago
                 </h3>
-
-                {{-- QR --}}
                 <div class="w-full flex justify-center">
                     <img
                         src="{{ asset('storage/' . $qrSeleccionado) }}"
                         class="w-64 h-64 object-contain rounded-xl shadow-md border"
                         alt="QR de Pago">
                 </div>
-
-                {{-- COMPROBANTE --}}
                 <div class="border-t pt-4 flex flex-col gap-3">
                     <label class="font-semibold text-gray-700">
                         Comprobante de pago
@@ -493,8 +501,6 @@
                         type="file"
                         wire:model="archivoPago"
                         class="input-minimal w-full">
-
-                    {{-- PREVIEW --}}
                     @php
                     $pago = \App\Models\PagoPedido::find($pagoSeleccionado);
                     @endphp
@@ -508,8 +514,6 @@
                         src="{{ Storage::url($pago->archivo_comprobante) }}"
                         class="max-w-xs rounded shadow mt-2">
                     @endif
-
-                    {{-- BOTONES --}}
                     <div class="flex gap-2 mt-2">
                         <button
                             wire:click="subirComprobante({{ $pagoSeleccionado }})"
@@ -527,8 +531,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- FOOTER --}}
             <div class="modal-footer mt-4 flex justify-center gap-2">
                 <button
                     wire:click="$set('modalVerQR', false)"
@@ -542,13 +544,16 @@
                     class="btn-cyan">
                     Descargar QR
                 </a>
+                @if($pago && $pago->archivo_factura)
+                <a href="{{ Storage::url($pago->archivo_factura) }}" download class="btn-cyan">
+                    Descargar factura
+                </a>
+                @endif
             </div>
 
         </div>
     </div>
     @endif
-
-
 
     @if($modalCotizacion)
     <div class="modal-overlay">
@@ -627,7 +632,4 @@
         </div>
     </div>
     @endif
-
-
-
 </div>

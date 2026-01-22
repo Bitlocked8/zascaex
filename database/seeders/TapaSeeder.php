@@ -11,10 +11,25 @@ class TapaSeeder extends Seeder
     public function run(): void
     {
         $tapas = [
-            ['descripcion' => 'normal - blanco', 'color' => 'blanco', 'tipo' => 'normal', 'imagen' => 'tapas/blanca.jpg'],
-            ['descripcion' => 'normal - azul', 'color' => 'azul', 'tipo' => 'normal', 'imagen' => 'tapas/azul.jpg'],
-            ['descripcion' => 'normal - negro', 'color' => 'negro', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
-            ['descripcion' => 'flip  top ', 'color' => 'azul', 'tipo' => 'flip top', 'imagen' => 'tapas/flip.jpg'],
+
+            ['descripcion' => 'Vidrio - plomo', 'color' => 'negro', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Vidrio - azul', 'color' => 'azul', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Vidrio - blanco', 'color' => 'blanco', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo - rosado', 'color' => 'rosado', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo - azul', 'color' => 'azul', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo - negro', 'color' => 'negro', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo - transparente', 'color' => 'transparente', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo -Cuello alto - transparente', 'color' => 'transparente', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo -Cuello alto - negro', 'color' => 'negro', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Apolo -Cuello alto - blanco', 'color' => 'blanco', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Preforsa - transparente', 'color' => 'transparente', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Preforsa - azul', 'color' => 'azul', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Deportiva - azul', 'color' => 'azul', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Deportiva - blanco', 'color' => 'blanco', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Deportiva - negro', 'color' => 'negro', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Deportiva - rojo', 'color' => 'rojo', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Botellon - blanco', 'color' => 'blanco', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
+            ['descripcion' => 'Botellon - negro', 'color' => 'negro', 'tipo' => 'normal', 'imagen' => 'tapas/negra.jpg'],
 
         ];
 

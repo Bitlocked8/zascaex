@@ -253,7 +253,7 @@
 
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
-                <thead class="bg-teal-50 sticky top-0 z-10 text-xs sm:text-sm">
+                <thead class="bg-teal-50 sticky top-0 z-10">
                     <tr>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Fecha</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Cliente</th>
@@ -265,9 +265,7 @@
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Subtotal</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Método</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">N° factura(s)</th>
-                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">
-                            N° recibo
-                        </th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">N° recibo</th>
                     </tr>
                 </thead>
 
@@ -275,16 +273,28 @@
                     @forelse($pedidos as $pedido)
                     @php
                     $pago = $pedido->pagos->first();
+
+                    // 🔥 FILTRAMOS LOS DETALLES SEGÚN searchExistencia
+                    $detallesFiltrados = $pedido->detalles->filter(function ($detalle) use ($searchExistencia) {
+                    if (!$searchExistencia) return true;
+
+                    return str_contains(
+                    mb_strtolower($detalle->existencia?->existenciable?->descripcion ?? ''),
+                    mb_strtolower($searchExistencia)
+                    );
+                    });
                     @endphp
 
-                    @forelse($pedido->detalles as $detalle)
+                    @forelse($detallesFiltrados as $detalle)
                     @php
                     $pagoDetalle = $detalle->pagoDetalles->first();
                     @endphp
 
-                    <tr class="hover:bg-teal-50 text-xs sm:text-sm">
+                    <tr class="hover:bg-teal-50 align-top">
                         <td class="px-2 sm:px-4 py-1 sm:py-2 whitespace-nowrap">
-                            {{ $pedido->fecha_pedido ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i') : 'Sin fecha' }}
+                            {{ $pedido->fecha_pedido
+                                ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i')
+                                : 'Sin fecha' }}
                         </td>
 
                         <td class="px-2 sm:px-4 py-1 sm:py-2">
@@ -295,7 +305,7 @@
                             {{ $pedido->cliente?->personal?->nombres ?? 'Sin vendedor' }}
                         </td>
 
-                        <td class="px-2 sm:px-4 py-1 sm:py-2 truncate">
+                        <td class="px-2 sm:px-4 py-1 sm:py-2 break-words whitespace-normal">
                             {{ $detalle->existencia?->existenciable?->descripcion ?? 'Sin producto' }}
                         </td>
 
@@ -317,7 +327,7 @@
 
                         <td class="px-2 sm:px-4 py-1 sm:py-2">
                             @if($pago)
-                            <span class="{{ $pago->estado == 0 ? 'text-red-500 font-bold' : 'text-green-500 font-bold' }}">
+                            <span class="{{ $pago->estado == 1 ? 'text-green-600 font-bold' : 'text-red-600 font-bold' }}">
                                 @switch($pago->metodo)
                                 @case(0) QR @break
                                 @case(1) Efectivo @break
@@ -330,41 +340,27 @@
                             @endif
                         </td>
 
-                        <td class="px-2 sm:px-4 py-1 sm:py-2 bg-white">
-                            @if($pago)
-                            <span class="{{ $pago->estado == 0 ? 'text-red-500' : 'text-green-500 font-semibold' }}">
-                                {{ $pago->codigo_factura ?? '-' }}
-                            </span>
-                            @else
-                            -
-                            @endif
+                        <td class="px-2 sm:px-4 py-1 sm:py-2">
+                            {{ $pago->codigo_factura ?? '-' }}
                         </td>
 
                         <td class="px-2 sm:px-4 py-1 sm:py-2">
-                            @if($pago)
                             {{ $pago->referencia ?? '-' }}
-                            @else
-                            -
-                            @endif
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="12" class="text-center py-2 text-gray-500 italic">
-                            Pedido sin detalles
-                        </td>
-                    </tr>
+                    {{-- Si el pedido no tiene detalles que coincidan con la búsqueda, NO mostramos nada --}}
                     @endforelse
                     @empty
                     <tr>
-                        <td colspan="12" class="text-center py-2 text-gray-600">
+                        <td colspan="11" class="text-center py-3 text-gray-500 italic">
                             No hay pedidos registrados.
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
-
             </table>
         </div>
+
     </div>
 </div>

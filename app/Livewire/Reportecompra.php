@@ -189,14 +189,10 @@ class Reportecompra extends Component
             'cantidadProductosDiferentes' => $cantidadProductosDiferentes,
             'productosCount' => $productosCount,
         ]);
-
+        $pdf->setPaper('letter', 'landscape');
         $filename = 'reporte-compra_' . now()->format('Ymd_His') . '.pdf';
-
-        // 🔹 USAR STREAM DOWNLOAD PARA EVITAR PROBLEMAS DE UTF-8
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, $filename);
     }
-
-
 }

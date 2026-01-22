@@ -92,6 +92,15 @@
                                 title="Editar">
                                 Editar
                             </button>
+                            @if($etiqueta->imagen)
+                            <a
+                                href="{{ asset('storage/' . $etiqueta->imagen) }}"
+                                download="etiqueta_{{ $etiqueta->id }}.jpg"
+                                class="btn-cyan"
+                                title="Descargar imagen">
+                                Descargar
+                            </a>
+                            @endif
                         </td>
                     </tr>
                     @empty

@@ -16,6 +16,12 @@
             @endif
 
             <button wire:click="abrirModalNotificaciones" class="btn-cyan">Bajo stock</button>
+            <button
+                wire:click="$toggle('soloHoy')"
+                class="btn-cyan
+               {{ $soloHoy ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white' }}">
+                {{ $soloHoy ? ' todos' : ' hoy' }}
+            </button>
         </div>
 
         <div class="overflow-auto max-h-[400px] border border-gray-200 rounded-md">

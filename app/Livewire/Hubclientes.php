@@ -238,26 +238,26 @@ class Hubclientes extends Component
     }
 
 
-   public function eliminarComprobante($pagoId)
-{
-    $pago = PagoPedido::find($pagoId);
-    if (!$pago) {
-        return;
-    }
-    if (
-        $pago->archivo_comprobante &&
-        \Storage::disk('public')->exists($pago->archivo_comprobante)
-    ) {
-        \Storage::disk('public')->delete($pago->archivo_comprobante);
-    }
-    $pago->archivo_comprobante = null;
-    $pago->estado = false;
-    $pago->fecha = null;
+    public function eliminarComprobante($pagoId)
+    {
+        $pago = PagoPedido::find($pagoId);
+        if (!$pago) {
+            return;
+        }
+        if (
+            $pago->archivo_comprobante &&
+            \Storage::disk('public')->exists($pago->archivo_comprobante)
+        ) {
+            \Storage::disk('public')->delete($pago->archivo_comprobante);
+        }
+        $pago->archivo_comprobante = null;
+        $pago->estado = false;
+        $pago->fecha = null;
 
-    $pago->save();
+        $pago->save();
 
-    $this->verMisPedidos();
-}
+        $this->verMisPedidos();
+    }
 
     public function verQr($pagoId)
     {
@@ -309,6 +309,7 @@ class Hubclientes extends Component
 
     public function render()
     {
+        $this->eliminarSolicitudesVencidas();
         $sucursales = Sucursal::orderBy('nombre')->get();
         $productos = $this->productos();
 
@@ -345,6 +346,21 @@ class Hubclientes extends Component
 
         $this->modalCotizacion = true;
     }
+
+    public function eliminarSolicitudesVencidas()
+    {
+        $clienteId = Auth::user()->cliente->id ?? null;
+        if (!$clienteId) return;
+
+        SolicitudPedido::where('cliente_id', $clienteId)
+            ->whereDoesntHave('pedido')
+            ->where('created_at', '<=', now()->subHours(12))
+            ->each(function ($solicitud) {
+                $solicitud->detalles()->delete();
+                $solicitud->delete();
+            });
+    }
+
     public function descargarCotizacionPdf()
     {
         if (empty($this->carrito)) {

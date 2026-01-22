@@ -52,10 +52,23 @@ class Reporteventa extends Component
         $queryPedidos = Pedido::with([
             'cliente.personal',
             'pagos',
-            'detalles' => fn($q) => $q->with([
-                'existencia.existenciable',
-                'pagoDetalles',
-            ])
+            'detalles' => function ($q) {
+                $q->with([
+                    'existencia.existenciable',
+                    'pagoDetalles',
+                ]);
+
+                if ($this->searchExistencia) {
+                    $q->whereHas('existencia.existenciable', function ($qq) {
+                        $qq->where(
+                            'descripcion',
+                            'like',
+                            '%' . $this->searchExistencia . '%'
+                        );
+                    });
+                }
+            }
+
         ])->where('estado_pedido', 2);
 
         $queryGastos = Gasto::with('personal');
@@ -83,13 +96,6 @@ class Reporteventa extends Component
                 $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
             });
         }
-
-        if ($this->searchExistencia) {
-            $queryPedidos->whereHas('detalles.existencia.existenciable', function ($q) {
-                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%');
-            });
-        }
-
 
         $pedidos = $queryPedidos->orderBy('fecha_pedido', 'desc')->get();
         $gastos = $queryGastos->orderBy('fecha', 'desc')->get();
@@ -154,11 +160,22 @@ class Reporteventa extends Component
         $queryPedidos = Pedido::with([
             'cliente.personal',
             'pagos',
-            'detalles' => fn($q) => $q->with([
-                'existencia.existenciable',
-                'pagoDetalles',
-            ])
+            'detalles' => function ($q) {
+                $q->with([
+                    'existencia.existenciable',
+                    'pagoDetalles',
+                ]);
+
+                if ($this->searchExistencia) {
+                    $q->whereHas(
+                        'existencia.existenciable',
+                        fn($qq) =>
+                        $qq->where('descripcion', 'like', '%' . $this->searchExistencia . '%')
+                    );
+                }
+            }
         ]);
+
 
         $queryGastos = Gasto::with('personal');
 
@@ -180,7 +197,6 @@ class Reporteventa extends Component
             $queryGastos->where('fecha', '<=', $fin . ' 23:59:59');
         }
 
-        // FILTRO POR CLIENTE
         if ($this->searchCliente) {
             $queryPedidos->whereHas(
                 'cliente',
@@ -189,14 +205,6 @@ class Reporteventa extends Component
             );
         }
 
-        // FILTRO POR EXISTENCIA (DESCRIPCION)
-        if ($this->searchExistencia) {
-            $queryPedidos->whereHas(
-                'detalles.existencia.existenciable',
-                fn($q) =>
-                $q->where('descripcion', 'like', '%' . $this->searchExistencia . '%')
-            );
-        }
 
         $pedidos = $queryPedidos->get();
         $gastos = $queryGastos->get();

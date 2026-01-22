@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 class Stocks extends Component
 {
     use WithFileUploads;
+
+    public $soloHoy = true;
     public $cantidadReposiciones = 50;
     public $modalNotificaciones = false;
     public $alertasBajoStock;
@@ -87,6 +89,10 @@ class Stocks extends Component
                 fn($q) =>
                 $q->whereHas('existencia', fn($sub) => $sub->where('sucursal_id', $this->filtroSucursal))
             );
+
+        if ($this->soloHoy) {
+            $queryReposiciones->whereDate('fecha', Carbon::today());
+        }
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');

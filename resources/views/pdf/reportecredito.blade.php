@@ -5,281 +5,212 @@
     <title>Reporte Créditos</title>
 
     <style>
-        @page { margin: 5mm 5mm; } /* menos margen */
+        @page { margin: 7mm 6mm; }
 
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 7px; /* más pequeño */
-            line-height: 1.0;
+            font-size: 8px;
+            line-height: 1.1;
         }
 
-        .container {
-            width: 100%;
-        }
-
-        h3 {
+        h2 {
             text-align: center;
-            font-size: 10px; /* más pequeño */
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #4f46e5;
-            background: #e0e7ff;
-            padding: 4px 8px;
-            border-radius: 999px;
+            font-size: 10px;
+            margin: 0 0 4px 0;
+        }
+
+        .resumen {
+            width: 100%;
             margin-bottom: 6px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-
-        .card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 5px;
-        }
-
-        .card .title {
-            color: #4b5563;
-            font-weight: 600;
-            font-size: 7px;
-        }
-
-        .card .value {
-            color: #312e81;
-            font-weight: 800;
-            font-size: 10px;
-        }
-
-        .card .value-small {
-            font-size: 7px;
-            font-weight: 700;
-        }
-
-        .table-wrapper {
-            width: 100%;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            overflow: hidden;
+        .resumen td {
+            border: 0.5px solid #aaa;
+            padding: 2px;
+            font-size: 8px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            font-size: 7px;
         }
 
         th, td {
-            border: 1px solid #d1d5db;
-            padding: 3px 4px; /* menos padding */
+            border: 0.5px solid #999;
+            padding: 1px 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 7px;
         }
 
         th {
-            background: #eef2ff;
-            color: #4f46e5;
-            font-weight: 700;
+            background: #eee;
+            font-weight: bold;
         }
 
         .right { text-align: right; }
         .center { text-align: center; }
 
-        .badge {
-            padding: 1px 4px;
-            border-radius: 6px;
-            font-size: 6px;
-            font-weight: 700;
+        .titulo {
+            font-weight: bold;
+            margin: 4px 0 2px;
         }
 
-        .badge-yellow { background: #fef3c7; color: #b45309; }
-        .badge-blue { background: #dbebff; color: #1d4ed8; }
-        .badge-green { background: #dcfce7; color: #15803d; }
-
-        .text-red { color: #b91c1c; font-weight: 700; }
-        .text-green { color: #15803d; font-weight: 700; }
+        .text-red { color: #e3342f; font-weight: bold; }
+        .text-green { color: #16a34a; font-weight: bold; }
         .text-gray { color: #6b7280; }
-
-        .divider {
-            border-bottom: 1px solid #e5e7eb;
-            margin: 3px 0;
-        }
-
-        .small {
-            font-size: 6px;
-        }
 
         .multiline {
             white-space: normal !important;
             word-break: break-word;
-            line-height: 1.0;
+            line-height: 1.1;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<h2>Reporte de Créditos</h2>
 
-    <h3>Reporte Créditos</h3>
+<p>
+    <strong>Desde:</strong> {{ $fechaInicio ?? '---' }}
+    &nbsp;&nbsp;
+    <strong>Hasta:</strong> {{ $fechaFin ?? '---' }}
+</p>
 
-    <p class="small">
-        <strong>Desde:</strong> {{ $fechaInicio ?? '---' }}
-        &nbsp;&nbsp;
-        <strong>Hasta:</strong> {{ $fechaFin ?? '---' }}
-    </p>
+<table class="resumen">
+    <tr>
+        <td>
+            Pedidos a Crédito<br>
+            <strong>{{ $pedidos->count() }}</strong>
+        </td>
 
-    <div class="grid">
+        <td>
+            QR<br>
+            <span class="text-red">
+                Pendientes: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo',0)->where('estado',0)->count()) }}
+            </span><br>
+            <span class="text-green">
+                Pagados: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo',0)->where('estado',1)->count()) }}
+            </span>
+        </td>
 
-        <div class="card">
-            <div class="title">Pedidos a Crédito</div>
-            <div class="value">{{ $pedidos->count() }}</div>
-        </div>
+        <td>
+            Efectivo<br>
+            <span class="text-red">
+                Pendientes: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo',1)->where('estado',0)->count()) }}
+            </span><br>
+            <span class="text-green">
+                Pagados: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo',1)->where('estado',1)->count()) }}
+            </span>
+        </td>
 
-        <div class="card">
-            <div class="title">QR</div>
-            <div class="value-small">
-                Sin pagar: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo', 0)->where('estado', 0)->count()) }}
-                <span class="text-gray">/</span>
-                Pagado: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo', 0)->where('estado', 1)->count()) }}
-            </div>
-        </div>
+        <td>
+            Crédito / Contrato<br>
+            <span class="text-red">
+                Pendientes: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo',2)->where('estado',0)->count()) }}
+            </span><br>
+            <span class="text-green">
+                Pagados: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo',2)->where('estado',1)->count()) }}
+            </span>
+        </td>
+    </tr>
+</table>
+<div class="titulo">Pedidos a Crédito</div>
 
-        <div class="card">
-            <div class="title">Efectivo</div>
-            <div class="value-small">
-                Sin pagar: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo', 1)->where('estado', 0)->count()) }}
-                <span class="text-gray">/</span>
-                Pagado: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo', 1)->where('estado', 1)->count()) }}
-            </div>
-        </div>
+<table>
+    <thead>
+        <tr>
+            <th style="width:12%">Fecha</th>
+            <th style="width:12%">Pedido</th>
+            <th style="width:22%">Cliente</th>
+            <th style="width:12%">Estado</th>
+            <th style="width:22%">Pagos</th>
+            <th style="width:10%" class="right">Saldo Crédito</th>
+        </tr>
+    </thead>
 
-        <div class="card">
-            <div class="title">Crédito/Contrato</div>
-            <div class="value-small">
-                Sin pagar: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo', 2)->where('estado', 0)->count()) }}
-                <span class="text-gray">/</span>
-                Pagado: {{ $pedidos->sum(fn($p) => $p->pagos->where('metodo', 2)->where('estado', 1)->count()) }}
-            </div>
-        </div>
+    <tbody>
+        @forelse($pedidos as $pedido)
 
-    </div>
+            @php
+                $baseCredito = $pedido->pagos->where('metodo',2)->sum('monto');
 
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:12%">Fecha</th>
-                    <th style="width:12%">Pedido</th>
-                    <th style="width:20%">Cliente</th>
-                    <th style="width:10%">Estado</th>
-                    <th style="width:15%">Pagos</th>
-                    <th style="width:15%" class="right">Total Crédito</th>
-                </tr>
-            </thead>
+                if ($baseCredito > 0) {
+                    $pagosPagados = $pedido->pagos
+                        ->whereIn('metodo',[0,1])
+                        ->where('estado',1)
+                        ->sum('monto');
 
-            <tbody>
-                @forelse($pedidos as $pedido)
-                    <tr>
-                        <td>
-                            {{ $pedido->fecha_pedido
-                                ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i')
-                                : '-' }}
-                        </td>
-                        <td class="font-semibold">{{ $pedido->codigo }}</td>
-                        <td>
-                            <div class="font-semibold">
-                                {{ $pedido->cliente->nombre ?? 'Sin cliente' }}
-                            </div>
-                            <div class="small text-gray">
-                                {{ $pedido->cliente->codigo ?? '' }}
-                            </div>
-                        </td>
+                    $saldo = $baseCredito - $pagosPagados;
+                } else {
+                    $saldo = 0;
+                }
+            @endphp
 
-                        <td>
-                            @if($pedido->estado_pedido == 0)
-                                <span class="badge badge-yellow">Pendiente</span>
-                            @elseif($pedido->estado_pedido == 1)
-                                <span class="badge badge-blue">En espera de pago</span>
-                            @elseif($pedido->estado_pedido == 2)
-                                <span class="badge badge-green">Entregado</span>
-                            @else
-                                <span class="text-gray">—</span>
-                            @endif
-                        </td>
+            <tr>
+                <td>
+                    {{ $pedido->fecha_pedido
+                        ? \Carbon\Carbon::parse($pedido->fecha_pedido)->format('d/m/Y H:i')
+                        : '-' }}
+                </td>
 
-                        <td class="multiline">
-                            @if($pedido->pagos->isEmpty())
-                                <span class="text-gray italic small">Sin pagos</span>
-                            @else
-                                @foreach($pedido->pagos as $pago)
-                                    @php
-                                        $metodo = match($pago->metodo) {
-                                            0 => 'QR',
-                                            1 => 'Efectivo',
-                                            2 => 'Crédito',
-                                            default => '—'
-                                        };
+                <td>{{ $pedido->codigo }}</td>
 
-                                        $estadoPago = $pago->estado ? 'Pagado' : 'Sin Pagar';
-                                        $claseEstado = $pago->estado ? 'text-green' : 'text-red';
-                                    @endphp
+                <td class="multiline">
+                    <strong>{{ $pedido->cliente->nombre ?? 'Sin cliente' }}</strong><br>
+                    <span class="text-gray">{{ $pedido->cliente->codigo ?? '' }}</span>
+                </td>
 
-                                    <div class="divider"></div>
+                <td>
+                    @switch($pedido->estado_pedido)
+                        @case(0) Pendiente @break
+                        @case(1) En espera de pago @break
+                        @case(2) Entregado @break
+                        @default -
+                    @endswitch
+                </td>
 
-                                    <div class="small">
-                                        <strong>{{ $metodo }}</strong> ·
-                                        <span class="{{ $claseEstado }}">{{ $estadoPago }}</span>
-                                    </div>
-
-                                    <div class="small text-gray">
-                                        Bs {{ number_format($pago->monto, 2) }}
-                                    </div>
-
-                                    <div class="small text-gray">
-                                        {{ $pago->fecha ? \Carbon\Carbon::parse($pago->fecha)->format('d/m/Y H:i') : '' }}
-                                    </div>
-                                @endforeach
-                            @endif
-                        </td>
-
+                <td class="multiline">
+                    @forelse($pedido->pagos as $pago)
                         @php
-                            $baseCredito = $pedido->pagos->where('metodo', 2)->sum('monto');
-
-                            if ($baseCredito > 0) {
-                                $pagosNoCreditoPagados = $pedido->pagos
-                                    ->whereIn('metodo', [0, 1])
-                                    ->where('estado', 1)
-                                    ->sum('monto');
-
-                                $totalNeto = $baseCredito - $pagosNoCreditoPagados;
-                            } else {
-                                $totalNeto = 0;
-                            }
+                            $metodo = match($pago->metodo) {
+                                0 => 'QR',
+                                1 => 'Efectivo',
+                                2 => 'Crédito',
+                                default => 'Otro'
+                            };
                         @endphp
 
-                        <td class="right text-red">
-                            Bs {{ number_format($totalNeto, 2) }}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="center text-gray italic">
-                            No hay pedidos a crédito
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                        <strong>{{ $metodo }}</strong> -
+                        <span class="{{ $pago->estado ? 'text-green' : 'text-red' }}">
+                            {{ $pago->estado ? 'Pagado' : 'Pendiente' }}
+                        </span><br>
 
-</div>
+                        Bs {{ number_format($pago->monto,2) }}<br>
+                        <span class="text-gray">
+                            {{ $pago->fecha ? \Carbon\Carbon::parse($pago->fecha)->format('d/m/Y H:i') : '' }}
+                        </span>
+                        <br><br>
+                    @empty
+                        <span class="text-gray">Sin pagos</span>
+                    @endforelse
+                </td>
+
+                <td class="right text-red">
+                    Bs {{ number_format($saldo,2) }}
+                </td>
+            </tr>
+
+        @empty
+            <tr>
+                <td colspan="6" class="center text-gray">
+                    No hay pedidos a crédito
+                </td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
 
 </body>
 </html>

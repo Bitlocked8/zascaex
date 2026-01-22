@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class Adornados extends Component
 {
     public $confirmingDeleteAdornadoId = null;
-
+    public $filtroEntrega = 'todos';
     public $solicitud_pedido_id;
     public $solicitudPedidos = [];
     public $detallesSolicitud = [];
@@ -48,6 +48,10 @@ class Adornados extends Component
             ->when($rol === 4, fn($q) => $q->whereHas('reposiciones.existencia', fn($q2) => $q2->where('sucursal_id', $sucursalId)))
             ->when($this->search, fn($q) => $q->where('codigo', 'like', "%{$this->search}%")
                 ->orWhereHas('pedido', fn($q2) => $q2->where('codigo', 'like', "%{$this->search}%")))
+            ->when($this->filtroEntrega === 'entregados', fn($q) => $q->whereHas('pedido', fn($q2) => $q2->where('estado_pedido', 2)))
+            ->when($this->filtroEntrega === 'no_entregados', fn($q) => $q->whereHas('pedido', fn($q2) => $q2->whereIn('estado_pedido', [0, 1])))
+            ->when($this->filtroEntrega === 'todos', fn($q) => $q->whereDate('created_at', now()->subDays(7))) // solo recientes
+
             ->latest()
             ->get();
 
@@ -295,5 +299,4 @@ class Adornados extends Component
         $this->eliminar($this->confirmingDeleteAdornadoId);
         $this->confirmingDeleteAdornadoId = null;
     }
-
 }

@@ -11,6 +11,7 @@ use App\Models\Base;
 use App\Models\Tapa;
 use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class Llenados extends Component
 {
@@ -35,7 +36,7 @@ class Llenados extends Component
     public $busquedaDestino = '';
     public $sucursalSeleccionada;
     public $existenciasDestino = [];
-
+    public $soloHoy = true;
     protected $rules = [
         'asignado_id' => 'required|exists:asignados,id',
         'existencia_destino_id' => 'required|exists:existencias,id',
@@ -56,6 +57,10 @@ class Llenados extends Component
                 fn($q) => $q->where('codigo', 'like', "%{$this->search}%")
                     ->orWhereHas('asignado', fn($q2) => $q2->where('codigo', 'like', "%{$this->search}%"))
             );
+
+        if ($this->soloHoy) {
+            $llenadosQuery->whereDate('fecha', Carbon::today());
+        }
 
         if ($rol === 4 && $personal) {
             $sucursalId = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
@@ -148,8 +153,8 @@ class Llenados extends Component
         $sucursales = $asignado->reposiciones->map(
             fn($r) =>
             in_array(class_basename($r->existencia->existenciable), ['Base', 'Tapa'])
-            ? $r->existencia->sucursal_id
-            : null
+                ? $r->existencia->sucursal_id
+                : null
         )->filter()->unique();
 
         if ($sucursales->isEmpty())
@@ -265,7 +270,6 @@ class Llenados extends Component
             }
 
             $existenciaDestino->save();
-
         });
 
         $this->cerrarModal();

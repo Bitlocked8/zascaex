@@ -138,7 +138,6 @@ class Reportecredito extends Component
             'creditoSinPagar' => $creditoSinPagar,
         ]);
 
-        // Tamaño carta horizontal
         $pdf->setPaper('letter', 'landscape');
 
         return response()->streamDownload(

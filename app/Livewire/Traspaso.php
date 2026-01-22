@@ -9,7 +9,7 @@ use App\Models\Personal;
 use App\Models\Asignado;
 use App\Models\Existencia;
 use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
 class Traspaso extends Component
 {
     public $confirmingDeleteId = null;
@@ -32,7 +32,7 @@ class Traspaso extends Component
     public $reposicionesDestino;
     public $personals;
     public $traspasoSeleccionado = null;
-
+    public $soloHoy = true;
     public function mount()
     {
         $usuario = auth()->user();
@@ -258,6 +258,9 @@ class Traspaso extends Component
 
         if ($usuario->rol_id == 4) {
             $query->where('personal_id', $usuario->personal->id);
+        }
+        if ($this->soloHoy) {
+            $query->whereDate('fecha_traspaso', Carbon::today());
         }
 
         if ($this->search) {

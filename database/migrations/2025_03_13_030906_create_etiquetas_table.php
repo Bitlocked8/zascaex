@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('imagen')->nullable();
             $table->string('descripcion')->nullable();
-            $table->string('capacidad');
-            $table->string('unidad')->nullable(); // [L, ml, g, Kg, unidad]
-            $table->tinyInteger('estado'); //si esta activo el item 
+            $table->string('capacidad')->nullable();
+            $table->string('unidad')->nullable(); 
+            $table->tinyInteger('estado');
             $table->tinyInteger('tipo');
-            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete(); // Relación opcional con Preforma
+            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->nullOnDelete();
             $table->timestamps();
         });
     }

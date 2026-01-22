@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Etiqueta;
 use App\Models\Existencia;
+use App\Models\Sucursal;
 use Illuminate\Support\Facades\Auth;
 
 class ClienteEtiquetas extends Component
@@ -23,18 +24,27 @@ class ClienteEtiquetas extends Component
     public $imagenExistente;
 
     protected $rules = [
-        'descripcion' => 'nullable|string|max:255',
-        'capacidad' => 'required|string|max:255',
+        'descripcion' => 'required|string|max:255',
+        'capacidad' => 'nullable|string|max:255',
         'unidad' => 'nullable|string|max:10',
         'estado' => 'required|boolean',
         'imagen' => 'nullable|image|max:5120',
     ];
 
+    public function mount()
+    {
+        $this->reset();
+    }
+
     public function render()
     {
-        $clienteId = Auth::user()->cliente->id;
+        $cliente = Auth::user()->cliente;
 
-        $etiquetas = Etiqueta::where('cliente_id', $clienteId)
+        if (!$cliente) {
+            return view('livewire.cliente-etiquetas', ['etiquetas' => collect()]);
+        }
+
+        $etiquetas = Etiqueta::where('cliente_id', $cliente->id)
             ->with('existencias')
             ->get();
 
@@ -79,7 +89,12 @@ class ClienteEtiquetas extends Component
 
         $this->validate($rules);
 
-        $clienteId = Auth::user()->cliente->id;
+        $cliente = Auth::user()->cliente;
+
+        if (!$cliente) {
+            session()->flash('error', 'No se encontró el cliente.');
+            return;
+        }
 
         if ($this->imagen) {
             $imagenPath = $this->imagen->store('etiquetas', 'public');
@@ -95,16 +110,22 @@ class ClienteEtiquetas extends Component
                 'unidad' => $this->unidad ?: null,
                 'estado' => $this->estado,
                 'imagen' => $imagenPath,
-                'cliente_id' => $clienteId,
+                'cliente_id' => $cliente->id,
                 'tipo' => 1,
             ]
         );
 
         if (!$this->etiqueta_id) {
+            $sucursal_id = $cliente->sucursal_id;
+
+            if (!$sucursal_id || !Sucursal::find($sucursal_id)) {
+                $sucursal_id = 1;
+            }
+
             Existencia::create([
                 'existenciable_type' => Etiqueta::class,
                 'existenciable_id' => $etiqueta->id,
-                'sucursal_id' => 1,
+                'sucursal_id' => $sucursal_id,
                 'cantidad' => 0,
                 'cantidadMinima' => 0,
             ]);
@@ -125,6 +146,7 @@ class ClienteEtiquetas extends Component
     public function cerrarModal()
     {
         $this->modal = false;
+
         $this->reset([
             'etiqueta_id',
             'descripcion',
@@ -134,6 +156,7 @@ class ClienteEtiquetas extends Component
             'imagen',
             'imagenExistente'
         ]);
+
         $this->resetErrorBag();
     }
 }

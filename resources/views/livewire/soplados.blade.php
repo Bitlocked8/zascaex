@@ -9,6 +9,12 @@
             <input type="text" wire:model.live="search" placeholder="Buscar por código o asignación..."
                 class="input-minimal w-full sm:w-auto flex-1" />
             <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
+            <button
+                wire:click="$toggle('soloHoy')"
+                class="btn-cyan
+               {{ $soloHoy ? 'bg-teal-600 text-white' : 'bg-cyan-600 text-white' }}">
+                {{ $soloHoy ? ' todos' : ' hoy' }}
+            </button>
         </div>
 
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">

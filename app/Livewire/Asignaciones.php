@@ -18,6 +18,7 @@ class Asignaciones extends Component
     public $modal = false;
     public $accion = 'create';
     public $asignacion_id;
+    public $soloHoy = true;
 
     public $codigo;
     public $fecha;
@@ -236,7 +237,6 @@ class Asignaciones extends Component
             DB::commit();
             session()->flash('message', 'Asignación registrada correctamente.');
             $this->cerrarModal();
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->mensajeError = $e->getMessage();
@@ -308,6 +308,7 @@ class Asignaciones extends Component
 
         $asignaciones = $query
             ->when($this->searchCodigo, fn($q) => $q->where('codigo', 'like', '%' . $this->searchCodigo . '%'))
+            ->when($this->soloHoy, fn($q) => $q->whereDate('fecha', Carbon::today()))
             ->latest()
             ->get();
 

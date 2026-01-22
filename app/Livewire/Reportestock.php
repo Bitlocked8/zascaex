@@ -9,6 +9,7 @@ use App\Models\Existencia;
 use App\Models\Sucursal;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+
 class ReporteStock extends Component
 {
     public $personal_id = '';
@@ -175,7 +176,7 @@ class ReporteStock extends Component
             'existencia_nombre' => $existencia_nombre,
             'fecha_inicio' => $fecha_inicio,
             'fecha_fin' => $fecha_fin,
-        ]);
+        ])->setPaper('letter', 'landscape');
 
         $filename = 'Reporte_Stock_' . now()->format('Ymd_His') . '.pdf';
 

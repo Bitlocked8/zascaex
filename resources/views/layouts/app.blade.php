@@ -16,8 +16,7 @@
 
 <body
   class="min-h-screen bg-no-repeat bg-cover bg-center bg-fixed"
-  style="background-image: url('{{ asset('dad.png') }}');"
->
+  style="background-image: url('{{ asset('dad.png') }}');">
   @livewire('base')
   <!-- <div id="mapa" class="w-99 h-80 rounded-lg shadow-md"></div> -->
   <!-- ========= All Javascript files linkup ======== -->
@@ -64,6 +63,20 @@
         setTimeout(() => menu.classList.add("hidden"), 300);
       }
     });
+
+    window.scrollToTop = function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    window.scrollToBottom = function() {
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   </script>
 </body>
 
