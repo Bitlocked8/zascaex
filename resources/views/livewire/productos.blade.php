@@ -9,7 +9,7 @@
             <input type="text" wire:model.live="search" placeholder="Buscar por descripción o tipo..."
                 class="input-minimal w-full sm:w-auto flex-1" />
             <button wire:click="abrirModal('create')" class="btn-cyan flex items-center gap-1">Añadir</button>
-            
+
         </div>
         <div class="overflow-auto max-h-[500px] border border-gray-200 rounded-md">
             <table class="min-w-full divide-y divide-gray-200">
@@ -113,30 +113,37 @@
                 </div>
 
                 <div>
-                    <label class="text-u">Tipo de Contenido</label>
+                    <label>Tipo de Contenido</label>
                     <input wire:model="tipoContenido" class="input-minimal" placeholder="Contenido">
                 </div>
                 <div>
                     <label class="text-u">Tipo de Producto (Requerido)</label>
 
+                    @php
+                    $tiposProducto = [
+                    0 => 'Agua',
+                    1 => 'Agua saborizada',
+                    2 => 'Botellones',
+                    3 => 'Hielos',
+                    4 => 'Otros',
+                    ];
+                    @endphp
+
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
-                        @foreach([
-                        0 => 'Botella',
-                        1 => 'Botella especial',
-                        2 => 'Botellón',
-                        3 => 'Otro'
-                        ] as $key => $label)
-                        <button type="button"
+                        @foreach($tiposProducto as $key => $label)
+                        <button
+                            type="button"
                             wire:click="$set('tipoProducto', {{ $key }})"
                             class="px-4 py-2 rounded-full text-sm transition
                 {{ $tipoProducto == $key
-                    ? 'bg-cyan-600 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                    ? 'bg-cyan-600 text-white shadow-md scale-105'
+                    : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' }}">
                             {{ $label }}
                         </button>
                         @endforeach
                     </div>
                 </div>
+
 
 
                 <div>
@@ -145,7 +152,7 @@
                 </div>
 
                 <div>
-                    <label class="text-u">Capacidad</label>
+                    <label >Capacidad</label>
                     <input type="number" wire:model="capacidad" class="input-minimal" min="0" step="1"
                         placeholder="Litros">
                 </div>

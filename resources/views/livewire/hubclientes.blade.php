@@ -32,7 +32,28 @@
 
 
         </div>
+        @php
+        $tiposProducto = [
+        0 => 'Agua',
+        1 => 'Agua saborizada',
+        2 => 'Botellones',
+        3 => 'Hielos',
+        4 => 'Otros',
+        ];
+        @endphp
 
+        <div class="flex flex-wrap justify-center gap-3 mb-6">
+            @foreach($tiposProducto as $valor => $label)
+            <button
+                wire:click="$set('filtroTipoProducto', {{ $valor }})"
+                class="px-4 py-2 rounded-full text-sm font-semibold transition
+            {{ $filtroTipoProducto === $valor
+                ? 'bg-cyan-600 text-white shadow-lg scale-105'
+                : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' }}">
+                {{ $label }}
+            </button>
+            @endforeach
+        </div>
         <br>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
@@ -42,23 +63,22 @@
             $existencia = $modelo->existencias->first();
             $sucursal = $existencia?->sucursal->nombre ?? 'Sin sucursal';
 
-            $precioNormal = $modelo->precioReferencia ?? null;
-            $precioFacturado = $modelo->precioAlternativo ?? null;
-
-            $precioPaqueteNormal = ($precioNormal && $modelo->paquete) ? $precioNormal * $modelo->paquete : null;
-            $precioPaqueteFacturado = ($precioFacturado && $modelo->paquete) ? $precioFacturado * $modelo->paquete : null;
+            $precio = $modelo->precioAlternativo ?? null;
+            $precioPaquete = ($precio && $modelo->paquete)
+            ? $precio * $modelo->paquete
+            : null;
             @endphp
 
             <div class="bg-white rounded-2xl shadow-md border border-cyan-100 flex flex-col">
 
                 <div class="flex justify-center items-center h-44 bg-cyan-50 rounded-t-2xl">
-
                     @if($modelo->imagen)
                     <img src="{{ asset('storage/' . $modelo->imagen) }}" class="h-full object-contain p-4">
                     @else
                     <span class="text-cyan-300 text-sm font-semibold">Sin imagen</span>
                     @endif
                 </div>
+
                 <div class="p-3 text-center flex flex-col gap-2 flex-1 text-sm">
 
                     <h2 class="font-bold text-cyan-700 leading-tight">
@@ -67,24 +87,24 @@
                     </h2>
 
                     <p class="text-gray-800">
-                        <strong>Precio por unidad:</strong> {{ $precioNormal ? number_format($precioNormal, 2) . ' Bs' : '-' }}
-                    </p>
-                    <p class="text-gray-800">
-                        <strong>Precio por unidad facturado:</strong> {{ $precioFacturado ? number_format($precioFacturado, 2) . ' Bs' : '-' }}
+                        <strong>Precio por unidad:</strong>
+                        {{ $precio ? number_format($precio, 2) . ' Bs' : '-' }}
                     </p>
 
                     @if($modelo->paquete)
                     <p class="text-gray-600">
-                        <strong>Por paquete:</strong> bas: {{ $precioPaqueteNormal ? number_format($precioPaqueteNormal, 2) . ' Bs' : '-' }},
-                        fac: {{ $precioPaqueteFacturado ? number_format($precioPaqueteFacturado, 2) . ' Bs' : '-' }}
+                        <strong>Precio por paquete:</strong>
+                        {{ $precioPaquete ? number_format($precioPaquete, 2) . ' Bs' : '-' }}
                     </p>
                     @endif
 
                     <p class="text-gray-500">
-                        Sucursal: <span class="font-semibold">{{ $sucursal }}</span>
+                        Sucursal:
+                        <span class="font-semibold">{{ $sucursal }}</span>
                     </p>
 
-                    <button wire:click="abrirModalProducto('{{ $p['uid'] }}')"
+                    <button
+                        wire:click="abrirModalProducto('{{ $p['uid'] }}')"
                         class="mt-auto w-full bg-cyan-500 text-white py-2 rounded-xl hover:bg-cyan-600 transition font-semibold text-sm">
                         Seleccionar
                     </button>
@@ -97,8 +117,11 @@
             </p>
             @endforelse
 
-
         </div>
+
+
+
+
 
         <button
             onclick="scrollToTop()"
@@ -117,20 +140,25 @@
 
 
     </div>
-
-
-
-
     @if($modalProducto)
     @php
     $modelo = $productoSeleccionado['modelo'];
     $sucursalProducto = $modelo->existencias->first()?->sucursal->nombre ?? 'Sin sucursal';
 
-    $precioNormal = $modelo->precioReferencia ?? null;
-    $precioFacturado = $modelo->precioAlternativo ?? null;
+    $precio = $modelo->precioAlternativo ?? null;
+    $unidadesPorPaquete = $modelo->paquete ?? null;
+    $precioPaquete = ($precio && $unidadesPorPaquete)
+    ? $precio * $unidadesPorPaquete
+    : null;
 
-    $precioPaqueteNormal = ($precioNormal && $modelo->paquete) ? $precioNormal * $modelo->paquete : null;
-    $precioPaqueteFacturado = ($precioFacturado && $modelo->paquete) ? $precioFacturado * $modelo->paquete : null;
+    $tipoProducto = match ($modelo->tipoProducto) {
+    0 => 'Agua',
+    1 => 'Agua saborizada',
+    2 => 'Botellones',
+    3 => 'Hielos',
+    4 => 'Otros',
+    default => 'Desconocido',
+    };
     @endphp
 
     <div class="modal-overlay">
@@ -141,13 +169,14 @@
                     {{ $modelo->descripcion }}
                     <span class="text-sm text-cyan-500">{{ $modelo->unidad ?? '-' }}</span>
                 </h2>
+
                 <p class="text-center text-gray-600 text-sm">
                     Sucursal: <span class="font-semibold">{{ $sucursalProducto }}</span>
                 </p>
+
                 <div class="flex justify-center">
                     @if(!empty($modelo->imagen))
-                    <img
-                        src="{{ asset('storage/' . $modelo->imagen) }}"
+                    <img src="{{ asset('storage/' . $modelo->imagen) }}"
                         class="w-full max-w-3xl h-auto object-contain border rounded-lg p-2"
                         alt="Imagen del modelo">
                     @else
@@ -157,37 +186,45 @@
                     @endif
                 </div>
 
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-gray-50 border rounded-lg p-3 text-sm">
                     <p><span class="font-semibold">Contenido:</span> {{ $modelo->unidad ?? '-' }}</p>
                     <p><span class="font-semibold">Tipo de contenido:</span> {{ $modelo->tipoContenido ?? '-' }}</p>
-                    <p><span class="font-semibold">Tipo de producto:</span> {{ $modelo->tipoProducto ?? '-' }}</p>
+                    <p><span class="font-semibold">Tipo de producto:</span> {{ $tipoProducto }}</p>
                     <p><span class="font-semibold">Capacidad:</span> {{ $modelo->capacidad ?? '-' }}</p>
 
-                    <p><span class="font-semibold text-cyan-700">Precio normal:</span>
-                        <span class="text-gray-800">{{ $precioNormal ? number_format($precioNormal, 2) . ' Bs' : '-' }}</span>
-                    </p>
-                    <p><span class="font-semibold text-cyan-700">Precio facturado:</span>
-                        <span class="text-gray-800">{{ $precioFacturado ? number_format($precioFacturado, 2) . ' Bs' : '-' }}</span>
-                    </p>
-
-                    @if($modelo->paquete)
-                    <p><span class="font-semibold text-cyan-700">Por paquete normal:</span>
-                        <span class="text-gray-800">{{ $precioPaqueteNormal ? number_format($precioPaqueteNormal, 2) . ' Bs' : '-' }}</span>
-                    </p>
-                    <p><span class="font-semibold text-cyan-700">Por paquete facturado:</span>
-                        <span class="text-gray-800">{{ $precioPaqueteFacturado ? number_format($precioPaqueteFacturado, 2) . ' Bs' : '-' }}</span>
+                    @if($unidadesPorPaquete)
+                    <p>
+                        <span class="font-semibold text-cyan-700">Unidades por paquete:</span>
+                        <span class="text-gray-800">{{ $unidadesPorPaquete }} unidades</span>
                     </p>
                     @endif
 
-                    <p class="col-span-full"><span class="font-semibold">Observaciones:</span> {{ $modelo->observaciones ?? 'Sin observaciones' }}</p>
+                    <p>
+                        <span class="font-semibold text-cyan-700">Precio por unidad:</span>
+                        <span class="text-gray-800">{{ $precio ? number_format($precio, 2) . ' Bs' : '-' }}</span>
+                    </p>
+
+                    @if($unidadesPorPaquete)
+                    <p>
+                        <span class="font-semibold text-cyan-700">Precio por paquete:</span>
+                        <span class="text-gray-800">{{ $precioPaquete ? number_format($precioPaquete, 2) . ' Bs' : '-' }}</span>
+                    </p>
+                    @endif
+
+                    <p class="col-span-full">
+                        <span class="font-semibold">Observaciones:</span>
+                        {{ $modelo->observaciones ?? 'Sin observaciones' }}
+                    </p>
                 </div>
+
                 <div class="flex flex-col items-center gap-2">
                     <label class="font-semibold text-sm">Cantidad de paquetes (mínimo 5)</label>
                     <input type="number" wire:model="cantidadSeleccionada" min="5" class="input-minimal w-24 text-center">
                 </div>
+
                 @if($productoSeleccionado['tipo_modelo'] === 'producto')
                 <div class="flex flex-col gap-3">
+
                     @if($tapas->count())
                     <div>
                         <h3 class="text-center font-semibold mb-1 text-sm">Elige una Tapa</h3>
@@ -225,13 +262,13 @@
                         </div>
                     </div>
                     @endif
+
                 </div>
                 @endif
 
             </div>
 
-            <!-- Footer botones -->
-            <div class="modal-footer flex justify-center gap-2 mt-3">
+            <div class="modal-footer">
                 <button type="button" wire:click="$set('modalProducto', false)" class="btn-cyan">
                     CERRAR
                 </button>
@@ -243,6 +280,7 @@
         </div>
     </div>
     @endif
+
 
     @if($mostrarCarrito)
     <div class="modal-overlay">

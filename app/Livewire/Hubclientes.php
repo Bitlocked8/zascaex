@@ -24,7 +24,7 @@ class Hubclientes extends Component
         'subtotal' => 0,
         'total' => 0,
     ];
-
+    public $filtroTipoProducto = 0;
     public $expandidoPedidos = [];
     public $sucursalFiltro = null;
     public $carrito = [];
@@ -273,17 +273,19 @@ class Hubclientes extends Component
 
     public function productos()
     {
-
         $cliente = Auth::user()->cliente ?? null;
         $sucursalId = $cliente->sucursal_id ?? null;
+        $tipo = $this->filtroTipoProducto;
 
         $productos = Producto::where('estado', 1)
+            ->where('tipoProducto', $tipo)
             ->with('existencias.sucursal')
             ->orderBy('descripcion')
             ->get()
-            ->filter(function ($p) use ($sucursalId) {
-                return $p->existencias->contains(fn($e) => $e->sucursal_id == $sucursalId);
-            })
+            ->filter(
+                fn($p) =>
+                $p->existencias->contains(fn($e) => $e->sucursal_id == $sucursalId)
+            )
             ->map(fn($p) => [
                 'uid' => 'producto_' . $p->id,
                 'modelo' => $p,
@@ -291,12 +293,14 @@ class Hubclientes extends Component
             ]);
 
         $otros = Otro::where('estado', 1)
+            ->where('tipoProducto', $tipo)
             ->with('existencias.sucursal')
             ->orderBy('descripcion')
             ->get()
-            ->filter(function ($o) use ($sucursalId) {
-                return $o->existencias->contains(fn($e) => $e->sucursal_id == $sucursalId);
-            })
+            ->filter(
+                fn($o) =>
+                $o->existencias->contains(fn($e) => $e->sucursal_id == $sucursalId)
+            )
             ->map(fn($o) => [
                 'uid' => 'otro_' . $o->id,
                 'modelo' => $o,
@@ -305,6 +309,7 @@ class Hubclientes extends Component
 
         return $productos->concat($otros);
     }
+
 
 
     public function render()
