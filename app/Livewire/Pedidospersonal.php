@@ -21,7 +21,10 @@ class Pedidospersonal extends Component
     public function render()
     {
         $usuario = auth()->user();
+        $rol = $usuario->rol_id;
+        $personal = $usuario->personal;
         $search = $this->search;
+        $sucursalId = $personal?->trabajos()->latest()->first()?->sucursal_id;
 
         $query = Pedido::with([
             'cliente',
@@ -31,7 +34,6 @@ class Pedidospersonal extends Component
             'solicitudPedido.detalles.otro',
             'solicitudPedido.detalles.tapa',
             'solicitudPedido.detalles.etiqueta',
-
             'pagos'
         ]);
 
@@ -39,11 +41,15 @@ class Pedidospersonal extends Component
             $query->whereDate('created_at', Carbon::today());
         }
 
-        if ($usuario->rol_id == 3 && $usuario->personal) {
-            $personalId = $usuario->personal->id;
+        if (in_array($rol, [2, 3]) && $sucursalId) {
+            $query->whereHas('detalles.existencia', function ($q) use ($sucursalId) {
+                $q->where('sucursal_id', $sucursalId);
+            });
+        }
 
-            $query->whereHas('cliente', function ($q) use ($personalId) {
-                $q->where('personal_id', $personalId);
+        if ($rol === 3 && $personal) {
+            $query->whereHas('cliente', function ($q) use ($personal) {
+                $q->where('personal_id', $personal->id);
             });
         }
 
@@ -60,7 +66,6 @@ class Pedidospersonal extends Component
         }
 
         $pedidos = $query->latest()->get();
-
         $sucursalesPago = SucursalPago::where('estado', true)
             ->select('id', 'nombre', 'imagen_qr')
             ->orderBy('nombre')
@@ -71,6 +76,7 @@ class Pedidospersonal extends Component
             'sucursalesPago' => $sucursalesPago
         ]);
     }
+
 
 
     public function cambiarEstadoPedido($pedidoId, $nuevoEstado)

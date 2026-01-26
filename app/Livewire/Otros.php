@@ -22,7 +22,7 @@ class Otros extends Component
     public $descripcion = '';
     public $unidad = '';
     public $tipoContenido = '';
-    public $tipoProducto = '';
+    public $tipoProducto = 0;
     public $capacidad = '';
     public $precioReferencia = '';
     public $paquete = null;
@@ -39,12 +39,8 @@ class Otros extends Component
         'descripcion.required' => 'La descripción es obligatoria.',
         'tipoContenido.required' => 'El tipo de contenido es obligatorio.',
         'tipoProducto.required' => 'El tipo de producto es obligatorio.',
-        'capacidad.required' => 'La capacidad es obligatoria.',
-        'capacidad.numeric' => 'La capacidad debe ser un número.',
-        'capacidad.min' => 'La capacidad no puede ser negativa.',
         'precioReferencia.required' => 'El precio de referencia es obligatorio.',
         'precioReferencia.numeric' => 'El precio de referencia debe ser un número.',
-        'estado.required' => 'El estado es obligatorio.',
     ];
 
     public function render()
@@ -138,17 +134,22 @@ class Otros extends Component
         $this->validate([
             'descripcion' => 'required|string|max:500',
             'tipoContenido' => 'nullable|string|max:255',
-            'tipoProducto' => 'required|integer|in:0,1,2,3',
-
+            'tipoProducto' => 'required|integer|in:0,1,2,3,4',
             'capacidad' => 'nullable|numeric|min:0',
             'precioReferencia' => 'required|numeric|min:0',
+            'precioAlternativo' => 'nullable|numeric|min:0',
             'unidad' => 'nullable|string|max:50',
             'paquete' => 'nullable|integer|min:0',
             'tipo' => 'nullable|string|max:50',
             'observaciones' => 'nullable|string|max:1000',
-            'estado' => 'required|boolean',
+            'estado' => 'boolean',
             'cantidadMinima' => 'nullable|integer|min:0',
         ]);
+
+
+        $this->capacidad = $this->capacidad === '' ? null : $this->capacidad;
+        $this->precioAlternativo = $this->precioAlternativo === '' ? null : $this->precioAlternativo;
+        $this->paquete = $this->paquete === '' ? null : $this->paquete;
 
         if ($this->imagen && is_object($this->imagen)) {
             $this->validate(['imagen' => 'image|max:5120']);
@@ -166,6 +167,7 @@ class Otros extends Component
                 'tipoProducto' => $this->tipoProducto,
                 'capacidad' => $this->capacidad,
                 'precioReferencia' => $this->precioReferencia,
+                'precioAlternativo' => $this->precioAlternativo,
                 'paquete' => $this->paquete,
                 'tipo' => $this->tipo,
                 'observaciones' => $this->observaciones,

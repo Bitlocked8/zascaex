@@ -143,26 +143,31 @@
                     <input wire:model="unidad" class="input-minimal" placeholder="Litros, ml, etc">
                 </div>
                 <div>
-                    <label class="text-u">Tipo de Contenido (Requerido)</label>
+                    <label>Tipo de Contenido (Requerido)</label>
                     <input wire:model="tipoContenido" class="input-minimal" placeholder="Contenido">
                 </div>
                 <div>
                     <label class="text-u">Tipo de Producto (Requerido)</label>
 
+                    @php
+                    $tiposProducto = [
+                    0 => 'Agua',
+                    1 => 'Agua saborizada',
+                    2 => 'Botellones',
+                    3 => 'Hielos',
+                    4 => 'Otros',
+                    ];
+                    @endphp
+
                     <div class="flex flex-wrap justify-center gap-2 mt-2">
-                        @foreach([
-                        0 => 'Botella',
-                        1 => 'Botella especial',
-                        2 => 'Botellón',
-                        3 => 'hielo',
-                        4 => 'Otro'
-                        ] as $key => $label)
-                        <button type="button"
+                        @foreach($tiposProducto as $key => $label)
+                        <button
+                            type="button"
                             wire:click="$set('tipoProducto', {{ $key }})"
                             class="px-4 py-2 rounded-full text-sm transition
                 {{ $tipoProducto == $key
-                    ? 'bg-cyan-600 text-white shadow-md'
-                    : 'bg-gray-200 text-gray-800 hover:bg-cyan-100' }}">
+                    ? 'bg-cyan-600 text-white shadow-md scale-105'
+                    : 'bg-cyan-100 text-cyan-700 hover:bg-cyan-200' }}">
                             {{ $label }}
                         </button>
                         @endforeach
@@ -173,7 +178,7 @@
                     <input wire:model="tipo" class="input-minimal" placeholder="Material">
                 </div>
                 <div>
-                    <label class="text-u">Capacidad (Requerido)</label>
+                    <label>Capacidad (Requerido)</label>
                     <input type="number" wire:model="capacidad" class="input-minimal" min="0" step="0.01"
                         placeholder="Litros">
                 </div>
@@ -182,8 +187,18 @@
                     <input wire:model="paquete" class="input-minimal" placeholder="Paquete(s)">
                 </div>
                 <div>
-                    <label class="text-u">Precio de Referencia (Bs) (Requerido)</label>
-                    <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.01" min="0">
+                    <label class="text-u">Precio de Referencia (Bs)</label>
+                    <input type="number" wire:model="precioReferencia" class="input-minimal" step="0.5" min="0">
+                </div>
+
+                <div>
+                    <label>Precio Alternativo (Bs)</label>
+                    <input type="number"
+                        wire:model="precioAlternativo"
+                        class="input-minimal"
+                        step="0.01"
+                        min="0"
+                        placeholder="Precio facturado / variable">
                 </div>
                 <div>
                     <label>Observaciones (Opcional)</label>

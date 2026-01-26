@@ -18,6 +18,7 @@ class Otro extends Model
         'tipoProducto',
         'capacidad',
         'precioReferencia',
+        'precioAlternativo',
         'paquete',
         'observaciones',
         'estado',
