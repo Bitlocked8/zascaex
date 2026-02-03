@@ -59,7 +59,10 @@ class Pedidos extends Component
     public function mount($pedido_id = null)
     {
         $this->pedido = $pedido_id ? Pedido::find($pedido_id) : new Pedido();
-        $this->personal_id = $this->pedido->personal_id ?? Auth::id();
+        $personal = auth()->user()?->personal;
+
+        $this->personal_id = $this->pedido->personal_id
+            ?? $personal?->id;
         $this->fecha_pedido = $this->pedido->fecha_pedido ? Carbon::parse($this->pedido->fecha_pedido) : now();
         $this->solicitud_pedido_id = $this->pedido->solicitud_pedido_id;
         $this->cliente_id = $this->pedido->cliente_id ?? null;
@@ -153,7 +156,13 @@ class Pedidos extends Component
             'detalles.tapa',
             'detalles.etiqueta'
         ])
-            ->whereDoesntHave('pedido')
+            ->where(function ($q) {
+                $q->whereDoesntHave('pedido');
+
+                if ($this->pedido && $this->pedido->exists && $this->pedido->solicitud_pedido_id) {
+                    $q->orWhere('id', $this->pedido->solicitud_pedido_id);
+                }
+            })
             ->whereHas('cliente', function ($q) use ($rol, $personal, $sucursalId) {
                 if (in_array($rol, [2, 3]) && $sucursalId) {
                     $q->where('sucursal_id', $sucursalId);
@@ -430,8 +439,12 @@ class Pedidos extends Component
     public function guardarPedido()
     {
         if ($this->solicitud_pedido_id) {
-            $this->validate(['solicitud_pedido_id' => 'exists:solicitud_pedidos,id']);
+            $this->validate([
+                'solicitud_pedido_id' => 'exists:solicitud_pedidos,id'
+            ]);
+
             $solicitud = SolicitudPedido::find($this->solicitud_pedido_id);
+
             if ($solicitud->pedido && !$this->pedido->exists) {
                 $this->setMensaje('Esta solicitud ya tiene un pedido asociado', 'error');
                 return;
@@ -448,8 +461,16 @@ class Pedidos extends Component
         }
 
         $pedido = $this->pedido;
+
         if (!$pedido->exists) {
-            $pedido->personal_id = $this->personal_id ?? Auth::id();
+            $personal = auth()->user()->personal;
+
+            if (!$personal) {
+                $this->setMensaje('Tu usuario no tiene un personal asignado', 'error');
+                return;
+            }
+
+            $pedido->personal_id = $personal->id;
         }
 
         $pedido->solicitud_pedido_id = $this->solicitud_pedido_id ?? null;
@@ -458,11 +479,11 @@ class Pedidos extends Component
         $pedido->observaciones = $this->observaciones;
         $pedido->cliente_id = $this->cliente_id;
 
-
         if (!$pedido->exists) {
             do {
                 $codigo = 'P-' . now()->format('YmdHis') . '-' . rand(100, 999);
             } while (Pedido::where('codigo', $codigo)->exists());
+
             $pedido->codigo = $codigo;
         }
 
@@ -471,6 +492,7 @@ class Pedidos extends Component
         foreach ($this->detalles as $index => $pd) {
             if (isset($pd['id']) && ($pd['eliminar'] ?? false)) {
                 $detalle = PedidoDetalle::find($pd['id']);
+
                 if ($detalle) {
                     $lote = Reposicion::find($detalle->reposicion_id);
                     if ($lote) {
@@ -479,17 +501,18 @@ class Pedidos extends Component
                     }
                     $detalle->delete();
                 }
+
                 unset($this->detalles[$index]);
             }
         }
 
         foreach ($detallesActivos as $pd) {
             if (!isset($pd['id']) || ($pd['nuevo'] ?? false)) {
-                $detalle = PedidoDetalle::create([
-                    'pedido_id' => $pedido->id,
+                PedidoDetalle::create([
+                    'pedido_id'     => $pedido->id,
                     'existencia_id' => $pd['existencia_id'],
                     'reposicion_id' => $pd['reposicion_id'],
-                    'cantidad' => $pd['cantidad'],
+                    'cantidad'      => $pd['cantidad'],
                 ]);
 
                 $lote = Reposicion::find($pd['reposicion_id']);
@@ -503,6 +526,7 @@ class Pedidos extends Component
         $this->setMensaje('Pedido guardado correctamente', 'success');
         $this->cerrarModal();
     }
+
     public function eliminarPedido($pedido_id, $eliminarSolicitud = false)
     {
         $pedido = Pedido::with('detalles')->find($pedido_id);

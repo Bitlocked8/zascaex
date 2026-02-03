@@ -132,27 +132,42 @@
         <div class="sm:w-full w-auto">
           <label class="text-sm font-semibold text-gray-700">Solicitud de Pedido</label>
 
-          @if($solicitud_pedido_id)
           @php
+          $solicitud = null;
+
+          if ($solicitud_pedido_id) {
           $solicitud = $solicitudPedidos->firstWhere('id', $solicitud_pedido_id);
+          }
+
           $detallesSolicitud = $solicitud?->detalles ?? collect();
           @endphp
 
+          @if($solicitud)
+          {{-- SOLICITUD SELECCIONADA --}}
           <div class="border border-gray-300 rounded-md p-2 bg-gray-50 text-xs sm:text-sm">
             <div class="flex justify-between items-center mb-1">
-              <span class="font-bold text-gray-900 truncate">{{ $solicitud->codigo }}</span>
-              <button wire:click="quitarSolicitud" class="px-2 py-1 text-white bg-cyan-500 rounded hover:bg-cyan-600 text-xs">Quitar</button>
+              <span class="font-bold text-gray-900 truncate">
+                {{ $solicitud->codigo }}
+              </span>
+              <button
+                wire:click="quitarSolicitud"
+                class="px-2 py-1 text-white bg-cyan-500 rounded hover:bg-cyan-600 text-xs">
+                Quitar
+              </button>
             </div>
 
             <div class="flex justify-between items-center">
-              <span class="text-cyan-600 font-semibold truncate">{{ $solicitud->cliente->nombre ?? 'Sin cliente' }}</span>
-              <span class="text-gray-500 text-[10px] ml-2">{{ $solicitud->created_at->format('d/m/Y H:i') }}</span>
+              <span class="text-cyan-600 font-semibold truncate">
+                {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+              </span>
+              <span class="text-gray-500 text-[10px] ml-2">
+                {{ $solicitud->created_at?->format('d/m/Y H:i') }}
+              </span>
             </div>
 
             <div class="mt-1 text-[10px]">
               Método de pago:
-              <span
-                class="font-semibold {{ $solicitud->metodo_pago == 1 ? 'text-emerald-600' : 'text-blue-600' }}">
+              <span class="font-semibold {{ $solicitud->metodo_pago == 1 ? 'text-emerald-600' : 'text-blue-600' }}">
                 {{ $solicitud->metodo_pago == 1 ? 'Transferencia Bancaria' : 'QR' }}
               </span>
             </div>
@@ -161,10 +176,13 @@
               @foreach($detallesSolicitud as $detalle)
               @php
               $item = $detalle->producto ?? $detalle->otro;
+              if (!$item) continue;
+
               $nombreCompleto = $item->descripcion ?? 'Sin descripción';
               $unidadPaq = $item->paquete ?? 1;
               $tipoContenido = $item->tipoContenido ?? null;
               $totalUnidadesDetalle = $detalle->cantidad * $unidadPaq;
+
               $tiposItems = collect([
               'Producto' => $detalle->producto,
               'Otro' => $detalle->otro,
@@ -176,26 +194,34 @@
               <div class="flex flex-col border-b border-gray-200 py-1">
                 <div class="flex justify-between items-center">
                   <div class="flex-1 truncate">
-                    <span class="font-medium text-gray-900 truncate">{{ $nombreCompleto }}</span>
+                    <span class="font-medium text-gray-900 truncate">
+                      {{ $nombreCompleto }}
+                    </span>
 
                     @if($tipoContenido)
-                    <span class="block text-indigo-600 text-[10px] truncate">({{ $tipoContenido }})</span>
+                    <span class="block text-indigo-600 text-[10px] truncate">
+                      ({{ $tipoContenido }})
+                    </span>
                     @endif
                   </div>
 
-                  <div class=" text-cyan text-[10px]">
+                  <div class="text-cyan text-[10px]">
                     <div>{{ $detalle->cantidad }} Paquete(s)</div>
                     <div>{{ $totalUnidadesDetalle }} Unidad(es)</div>
                   </div>
                 </div>
+
                 <div class="mt-1 text-[9px] text-gray-700 flex flex-wrap gap-1">
                   @foreach($tiposItems as $tipo => $obj)
                   <span class="inline-block bg-gray-200 px-1 rounded">
                     {{ $tipo }}: {{ $obj->descripcion ?? class_basename($obj) }}
                   </span>
                   @endforeach
+
                   @if($unidadPaq > 1)
-                  <span class="bg-gray-200 px-1 rounded">{{ $unidadPaq }} unidad/paquete</span>
+                  <span class="bg-gray-200 px-1 rounded">
+                    {{ $unidadPaq }} unidad/paquete
+                  </span>
                   @endif
                 </div>
               </div>
@@ -204,47 +230,32 @@
           </div>
 
           @else
+
           <div class="border border-gray-300 rounded-md p-2 bg-white max-h-60 overflow-y-auto text-xs sm:text-sm">
             @forelse($solicitudPedidos as $solicitud)
-            @php
-            $detallesSolicitud = $solicitud->detalles;
-            @endphp
+            <button
+              wire:click="seleccionarSolicitud({{ $solicitud->id }})"
+              class="w-full text-left p-2 mb-1 rounded-lg border-2 transition
+          {{ $solicitudSeleccionadaId == $solicitud->id
+              ? 'border-cyan-600'
+              : 'border-gray-300 hover:border-cyan-600' }}">
 
-            <button wire:click="seleccionarSolicitud({{ $solicitud->id }})"
-              class="w-full text-left p-2 mb-1 rounded-lg border-2 transition text-gray-800 bg-white {{ $solicitudSeleccionadaId == $solicitud->id ? 'border-cyan-600' : 'border-gray-300 hover:border-cyan-600' }}">
               <div class="flex justify-between items-center">
-                <span class="font-bold text-gray-900 truncate uppercase">{{ $solicitud->codigo }}</span>
-                <span class="font-semibold text-cyan-600 truncate uppercase ml-2">{{ $solicitud->cliente->nombre ?? 'Sin cliente' }}</span>
-                <span class="text-[10px] text-gray-500 ml-auto">{{ $solicitud->created_at->format('d/m/Y H:i') }}</span>
-              </div>
-
-              <div class="mt-1 space-y-1">
-                @foreach($detallesSolicitud as $detalle)
-                @php
-                $item = $detalle->producto ?? $detalle->otro;
-                $nombreCompleto = $item->descripcion ?? 'Sin descripción';
-                $unidadPaq = $item->paquete ?? 1;
-                $totalUnidadesDetalle = $detalle->cantidad * $unidadPaq;
-
-
-                @endphp
-
-                <div class="flex flex-col">
-                  <div class="flex justify-between items-center text-[10px]">
-                    <div class="flex-1 truncate">{{ $nombreCompleto }}</div>
-                    <div class="text-right">{{ $detalle->cantidad }} Paquetes / {{ $totalUnidadesDetalle }} Unidades</div>
-                  </div>
-                  <div class="mt-1 text-[9px] text-gray-700 flex flex-wrap gap-1">
-                    @if($unidadPaq > 1)
-                    <span class="bg-gray-200 px-1 rounded">{{ $unidadPaq }} unidad/paquete</span>
-                    @endif
-                  </div>
-                </div>
-                @endforeach
+                <span class="font-bold text-gray-900 truncate uppercase">
+                  {{ $solicitud->codigo }}
+                </span>
+                <span class="font-semibold text-cyan-600 truncate uppercase ml-2">
+                  {{ $solicitud->cliente->nombre ?? 'Sin cliente' }}
+                </span>
+                <span class="text-[10px] text-gray-500 ml-auto">
+                  {{ $solicitud->created_at?->format('d/m/Y H:i') }}
+                </span>
               </div>
             </button>
             @empty
-            <p class="text-center py-4 text-gray-500 text-[10px]">No hay solicitudes registradas.</p>
+            <p class="text-center py-4 text-gray-500 text-[10px]">
+              No hay solicitudes registradas.
+            </p>
             @endforelse
           </div>
           @endif

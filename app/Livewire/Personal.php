@@ -149,6 +149,12 @@ class Personal extends Component
         }
     }
 
+    public function verDetalle($id)
+{
+    $this->personalSeleccionado = ModelPersonal::with('user')->findOrFail($id);
+    $this->detalleModal = true;
+}
+
     public function cerrarModal()
     {
         $this->reset();

@@ -13,8 +13,9 @@ class Etiquetas extends Component
 {
     use WithFileUploads;
 
-    public $tipo = '';
+    public $tipo = 1;
     public $search = '';
+    public $searchCliente = '';
     public $modal = false;
     public $modalDetalle = false;
     public $etiqueta_id = null;
@@ -24,30 +25,35 @@ class Etiquetas extends Component
     public $unidad = '';
     public $estado = 1;
     public $cliente_id = '';
-    public $clientes;
+    public $clientes = [];
     public $descripcion = '';
     public $accion = 'create';
     public $etiquetaSeleccionada = null;
     public $cantidadMinima = 0;
 
     protected $rules = [
-        'capacidad' => 'required|string|max:255',
-        'unidad' => 'nullable|string|max:10', // <-- corregido
+        'capacidad' => 'nullable|string|max:255',
+        'unidad' => 'nullable|string|max:10',
         'descripcion' => 'nullable|string|max:255',
-        'estado' => 'required|boolean',
         'cliente_id' => 'nullable|exists:clientes,id',
         'cantidadMinima' => 'nullable|integer|min:0',
-        'tipo' => 'required|in:1,2',
-    ];
-
-    protected $messages = [
-        'capacidad.required' => 'La capacidad es obligatoria.',
-        'estado.required' => 'El estado es obligatorio.',
     ];
 
     public function mount()
     {
-        $this->clientes = Cliente::all();
+        $this->cargarClientes();
+    }
+
+    public function updatedSearchCliente()
+    {
+        $this->cargarClientes();
+    }
+
+    public function cargarClientes()
+    {
+        $this->clientes = Cliente::when($this->searchCliente, function ($q) {
+            $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
+        })->get();
     }
 
     public function render()
@@ -56,19 +62,27 @@ class Etiquetas extends Component
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
 
-        $etiquetasQuery = Etiqueta::query()->with('existencias')
-            ->when($this->search, fn($q) => $q->where('capacidad', 'like', "%{$this->search}%")
-                ->orWhere('descripcion', 'like', "%{$this->search}%"));
+        $etiquetasQuery = Etiqueta::with('existencias')
+            ->when($this->search, function ($q) {
+                $q->where('capacidad', 'like', '%' . $this->search . '%')
+                    ->orWhere('descripcion', 'like', '%' . $this->search . '%');
+            });
 
         if ($rol === 2 && $personal) {
             $sucursal_id = $personal->trabajos()->latest('fechaInicio')->value('sucursal_id');
-            $etiquetasQuery->whereHas('existencias', fn($q) => $q->where('sucursal_id', $sucursal_id));
+            $etiquetasQuery->whereHas('existencias', function ($q) use ($sucursal_id) {
+                $q->where('sucursal_id', $sucursal_id);
+            });
         }
 
         $etiquetas = $etiquetasQuery->get();
+        $clientesFiltrados = Cliente::when($this->searchCliente, function ($q) {
+            $q->where('nombre', 'like', '%' . $this->searchCliente . '%');
+        })->get();
 
-        return view('livewire.etiquetas', compact('etiquetas'));
+        return view('livewire.etiquetas', compact('etiquetas', 'clientesFiltrados'));
     }
+
 
     public function abrirModal($accion = 'create', $id = null)
     {
@@ -83,10 +97,12 @@ class Etiquetas extends Component
             'etiqueta_id',
             'etiquetaSeleccionada',
             'cantidadMinima',
-            'tipo'
+            'tipo',
+            'searchCliente'
         ]);
 
         $this->accion = $accion;
+        $this->cargarClientes();
 
         if ($accion === 'edit' && $id) {
             $this->editar($id);
@@ -117,7 +133,6 @@ class Etiquetas extends Component
     {
         $this->validate();
 
-        // Guardar imagen
         if ($this->imagen && is_object($this->imagen)) {
             $this->validate(['imagen' => 'image|max:5120']);
             $imagenPath = $this->imagen->store('etiquetas', 'public');
@@ -138,7 +153,6 @@ class Etiquetas extends Component
             ]
         );
 
-        // Crear o actualizar existencia
         $usuario = Auth::user();
         $rol = $usuario->rol_id;
         $personal = $usuario->personal;
@@ -181,7 +195,8 @@ class Etiquetas extends Component
             'etiqueta_id',
             'etiquetaSeleccionada',
             'cantidadMinima',
-            'tipo'
+            'tipo',
+            'searchCliente'
         ]);
         $this->resetErrorBag();
     }

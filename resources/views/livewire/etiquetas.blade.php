@@ -175,16 +175,28 @@
                             @endforeach
                         </div>
                     </div>
+                    <input type="text" wire:model.live="searchCliente" placeholder="Buscar cliente..." class="input-minimal mb-2 w-full" />
 
-
-                    <div>
-                        <label class="font-semibold text-sm mb-1 block">Cliente</label>
-                        <select wire:model="cliente_id" class="input-minimal">
-                            <option value="">Seleccionar cliente</option>
-                            @foreach($clientes as $cliente)
-                            <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                            @endforeach
-                        </select>
+                    <div class="w-full border border-gray-300 rounded-md shadow-sm p-2 bg-white grid grid-cols-1 gap-2 max-h-[170px] overflow-y-auto">
+                        @forelse($clientes as $cliente)
+                        <button type="button" wire:click="$set('cliente_id', {{ $cliente->id }})" class="w-full px-3 py-2 rounded-md border text-left transition
+            {{ $cliente_id == $cliente->id
+                ? 'bg-cyan-600 text-white border-cyan-700 shadow'
+                : 'bg-gray-100 text-gray-800 hover:bg-cyan-100'
+            }}">
+                            <p class="font-semibold text-sm">{{ $cliente->nombre }}</p>
+                            <p class="text-xs text-gray-600 {{ $cliente_id == $cliente->id ? 'text-cyan-100' : '' }}">
+                                {{ $cliente->empresa?->nombre ?? 'Sin empresa' }}
+                            </p>
+                            <p class="text-xs text-gray-600 {{ $cliente_id == $cliente->id ? 'text-cyan-100' : '' }}">
+                                {{ $cliente->telefono ?? 'Sin teléfono' }}
+                            </p>
+                        </button>
+                        @empty
+                        <p class="text-center text-gray-500 py-3 text-sm">
+                            No hay clientes disponibles
+                        </p>
+                        @endforelse
                     </div>
 
                     <div>
