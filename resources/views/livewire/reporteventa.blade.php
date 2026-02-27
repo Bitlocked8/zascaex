@@ -263,7 +263,7 @@
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Precio N.</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Precio A.</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-right text-teal-700 font-semibold">Subtotal</th>
-                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Método</th>
+                        <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">Forma de pago </th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">N° factura(s)</th>
                         <th class="px-2 sm:px-4 py-1 sm:py-2 text-left text-teal-700 font-semibold">N° recibo</th>
                     </tr>
@@ -273,8 +273,6 @@
                     @forelse($pedidos as $pedido)
                     @php
                     $pago = $pedido->pagos->first();
-
-                    // 🔥 FILTRAMOS LOS DETALLES SEGÚN searchExistencia
                     $detallesFiltrados = $pedido->detalles->filter(function ($detalle) use ($searchExistencia) {
                     if (!$searchExistencia) return true;
 
@@ -349,7 +347,6 @@
                         </td>
                     </tr>
                     @empty
-                    {{-- Si el pedido no tiene detalles que coincidan con la búsqueda, NO mostramos nada --}}
                     @endforelse
                     @empty
                     <tr>

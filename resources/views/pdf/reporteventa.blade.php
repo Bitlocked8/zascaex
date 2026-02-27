@@ -201,7 +201,7 @@
                 <th style="width:8%" class="right">Precio N.</th>
                 <th style="width:8%" class="right">Precio A.</th>
                 <th style="width:8%" class="right">Subtotal</th>
-                <th style="width:8%">Método</th>
+                <th style="width:8%">Forma de pago</th>
                 <th style="width:9%">N° factura(s)</th>
                 <th style="width:10%">N° recibo</th>
             </tr>

@@ -63,15 +63,29 @@ class PagoPedidos extends Component
         $this->detallesPago = [];
 
         foreach ($this->pedidoSeleccionado->detalles as $detalle) {
-            $pagoExistente = PagoDetalle::where('pedido_detalle_id', $detalle->id)->first();
+
+            $ultimoPago = PagoDetalle::whereHas('pedidoDetalle.pedido', function ($q) {
+                $q->where('cliente_id', $this->pedidoSeleccionado->cliente_id)
+                    ->where('id', '<>', $this->pedidoSeleccionado->id);
+            })
+                ->whereHas('pedidoDetalle', function ($q) use ($detalle) {
+                    $q->where('existencia_id', $detalle->existencia_id);
+                })
+                ->latest('id')
+                ->first();
+
             $precioBase = (float) ($detalle->existencia->existenciable->precioReferencia ?? 0);
-            $precioAplicado = $pagoExistente?->precio_aplicado ?? $precioBase;
+
+            $precioAplicado = $ultimoPago
+                ? (float) $ultimoPago->precio_aplicado
+                : $precioBase;
+
             $cantidad = $detalle->cantidad ?? 0;
 
             $this->detallesPago[$detalle->id] = [
                 'precio_base' => $precioBase,
-                'precio_aplicado' => (float) $precioAplicado,
-                'subtotal' => $cantidad * (float) $precioAplicado,
+                'precio_aplicado' => $precioAplicado,
+                'subtotal' => $cantidad * $precioAplicado,
             ];
         }
 

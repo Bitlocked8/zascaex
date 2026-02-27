@@ -45,9 +45,8 @@
                 </div>
             </div>
 
-            <!-- NUEVOS FILTROS DE CRÉDITO -->
             <div class="mb-2">
-                <label class="block text-sm font-semibold text-white mb-1">Método de pago</label>
+                <label class="block text-sm font-semibold text-white mb-1">Forma de pago</label>
                 <div class="border rounded-md h-40 overflow-y-auto bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     <button wire:click="$set('filtroMetodo', null)"
                         class="w-full text-left px-2 py-1 text-sm border-b {{ $filtroMetodo === null ? 'bg-teal-500 text-white' : 'bg-white text-gray-700' }}">

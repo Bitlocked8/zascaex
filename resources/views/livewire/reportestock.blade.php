@@ -175,8 +175,6 @@
                         $cantidad_restante = max($entrada - $total_salida, 0);
                         $monto_restante = $cantidad_restante * $precio_unitario;
                     @endphp
-
-                    {{-- FILA ENTRADA --}}
                     <tr class="text-sm font-semibold bg-green-50">
                         <td class="px-2 py-1 border text-emerald-600">{{ $rep->codigo }}</td>
                         <td class="px-2 py-1 border text-emerald-600">{{ $rep->personal->nombres ?? 'N/A' }}</td>
@@ -190,8 +188,6 @@
                             <td class="px-2 py-1 border text-emerald-600">{{ number_format($monto, 2) }}</td>
                         @endif
                     </tr>
-
-                    {{-- FILAS SALIDAS --}}
                     @foreach($rep->asignadoReposicions as $ar)
                         @php
                             $cantidad_asignada = $ar->cantidad_original ?? 0;
@@ -211,8 +207,6 @@
                             @endif
                         </tr>
                     @endforeach
-
-                    {{-- TOTAL --}}
                     <tr class="text-sm font-bold bg-cyan-100">
                         <td class="px-2 py-1 border">Total</td>
                         <td class="px-2 py-1 border">-</td>
